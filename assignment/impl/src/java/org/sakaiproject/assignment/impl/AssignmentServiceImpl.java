@@ -1506,6 +1506,8 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
             } else {
                 if (allowGrade)
                     status = resourceLoader.getString("ungra");
+                else if (submitTime == null)
+                    status = resourceLoader.getString("gen.notsta");
                 else
                     // submission saved, not submitted.
                     status = resourceLoader.getString("gen.dra2") + " " + resourceLoader.getString("gen.inpro");
