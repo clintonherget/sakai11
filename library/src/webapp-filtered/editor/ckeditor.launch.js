@@ -143,6 +143,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         // menu. In some cases (Firefox and Safari, at least), this supplies corrections, suggestions, etc.
         disableNativeSpellChecker: false,
         browserContextMenuOnCtrl: true,
+        entities_additional: '',
 
         // Fix the smileys to a single location
         smiley_path: "/library/editor/ckeditor/plugins/smiley/images/",
