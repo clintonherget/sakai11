@@ -183,6 +183,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             ['TextColor','BGColor'],
             ['Maximize', 'ShowBlocks']
             ,['A11ychecker']
+            ,['Audio', 'kalturaflash', 'magicembed', 'Youtube']
         ],
         toolbar: 'Full',
         resize_dir: 'both',
@@ -259,6 +260,12 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         // Accessibility checker has a dependency on balloonpanel
         CKEDITOR.plugins.addExternal('balloonpanel',webJars+'balloonpanel/${ckeditor.balloonpanel.version}/', 'plugin.js');
         CKEDITOR.plugins.addExternal('a11ychecker',webJars+'a11ychecker/${ckeditor.a11ychecker.version}/', 'plugin.js');
+
+        CKEDITOR.plugins.addExternal('audio',basePath+'audio/', 'plugin.js'); 
+        CKEDITOR.plugins.addExternal('kalturaflash',basePath+'kalturaflash/', 'plugin.js');
+        CKEDITOR.plugins.addExternal('magicembed',basePath+'magicembed/', 'plugin.js');
+        CKEDITOR.plugins.addExternal('youtube',basePath+'youtube/', 'plugin.js');
+
         /*
            To enable after the deadline uncomment these two lines and add atd-ckeditor to toolbar
            and to extraPlugins. This also needs extra stylesheets.
@@ -285,6 +292,9 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         } 
         CKEDITOR.dtd.$removeEmpty.span = false;
         CKEDITOR.dtd.$removeEmpty['i'] = false;
+
+        ckconfig.extraPlugins+=",audio,kalturaflash,magicembed,youtube";
+
         //Add greek special characters to set
         ckconfig.specialChars = CKEDITOR.config.specialChars.concat([ ["&alpha;","alpha"],["&beta;","beta"],["&gamma;","gamma"],["&delta;","delta"],["&epsilon;","epsilon"],["&zeta;","zeta"],["&eta;","eta"],["&theta;","theta"], ["&iota;","iota"],["&kappa;","kappa"],["&lambda;","lambda"],["&mu;","mu"],["&nu;","nu"],["&xi;","xi"],["&omicron;","omnicron"],["&pi;","pi"],["&rho;","rho"],["&sigma;","sigma"],["&tau;","tau"],["&upsilon;","upsilon"], ["&phi;","phi"],["&chi;","chi"],["&psi;","psi"],["&omega;","omega"],["&Alpha;","Alpha"],["&Beta;","Beta"],["&Gamma;","Gamma"],["&Delta;","Delta"],["&Epsilon;","Epsilon"],["&Zeta;","Zeta"],["&Eta;","Eta"],["&Theta;","Theta"], ["&Iota;","Iota"],["&Kappa;","Kappa"],["&Lambda;","Lambda"],["&Mu;","Mu"],["&Nu;","Nu"],["&Xi;","Xi"],["&Omicron;","Omnicron"],["&Pi;","Pi"],["&Rho;","Rho"],["&Sigma;","Sigma"],["&Tau;","Tau"],["&Upsilon;","Upsilon"], ["&Phi;","Phi"],["&Chi;","Chi"],["&Psi;","Psi"],["&Omega;","Omega"] ]);
 
