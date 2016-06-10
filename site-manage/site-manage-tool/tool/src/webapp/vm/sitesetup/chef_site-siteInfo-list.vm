@@ -193,6 +193,7 @@
 				</td>
 			</tr>
 
+			#if ($!allowUpdate)
                         <!-- NYU modifications here -->
 			<tr>
 				<th>School</th>
@@ -212,9 +213,10 @@
 					$!siteLocation
 				</td>
 			</tr>
+			#end
 
                         #if ($!siteInstructionMode)
-			<tr>
+			<tr class="summary-instruction-mode">
 				<th>Instruction Mode</th>
 				<td>
 					$!siteInstructionMode
@@ -277,6 +279,7 @@
 		#end
 		
 
+		#if ($!allowUpdate)
 			<tr>
 				<th>
 					$tlang.getString("sitegen.siteinfolist.sitecont")
@@ -285,6 +288,8 @@
 					$validator.escapeHtml($!contactName)#if($!contactEmail && !$contactEmail.equals("")), <a href="mailto:$!contactEmail">$!contactEmail</a>#end
 				</td>
 			</tr>
+		#end
+
 		#if ($!allowUpdate)
 			<tr> 
 				<th>
@@ -425,7 +430,7 @@
 		#end
 		#end
             #if ($isMathJaxInstalled)
-            <tr>
+            <tr class="summary-mathjax-allowed">
                 <th>
                 $tlang.getString("sinfo.mathjax.name")
                 </th>
