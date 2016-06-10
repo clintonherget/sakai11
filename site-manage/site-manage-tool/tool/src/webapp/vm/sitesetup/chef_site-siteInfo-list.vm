@@ -193,6 +193,7 @@
 				</td>
 			</tr>
 
+			#if ($!allowUpdate)
                         <!-- NYU modifications here -->
 			<tr>
 				<th>School</th>
@@ -212,6 +213,7 @@
 					$!siteLocation
 				</td>
 			</tr>
+			#end
 
                         #if ($!siteInstructionMode)
 			<tr>
@@ -277,6 +279,7 @@
 		#end
 		
 
+		#if ($!allowUpdate)
 			<tr>
 				<th>
 					$tlang.getString("sitegen.siteinfolist.sitecont")
@@ -285,6 +288,8 @@
 					$validator.escapeHtml($!contactName)#if($!contactEmail && !$contactEmail.equals("")), <a href="mailto:$!contactEmail">$!contactEmail</a>#end
 				</td>
 			</tr>
+		#end
+
 		#if ($!allowUpdate)
 			<tr> 
 				<th>
