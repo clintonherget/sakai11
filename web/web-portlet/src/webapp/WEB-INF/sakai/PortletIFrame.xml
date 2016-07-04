@@ -96,6 +96,7 @@
     </tool>
 
 
+<<<<<<< HEAD
     <tool id="nyu.libraries"
           title="NYU Libraries"
           description="For embedding NYU Libraries Resources within the site.">
@@ -122,6 +123,8 @@
     </tool>
 
 
+=======
+>>>>>>> CLASSES-2224 Create music resources External Link tool alias for Liberal Studies
     <tool id="nyu.ls-music-resources"
           title="LS Music Resources"
           description="LS Music Resources">
