@@ -170,12 +170,12 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             ['Link','Unlink','Anchor'],
             (sakai.editor.enableResourceSearch
                 ? ( sakai.editor.contentItemUrl
-                    ? ['ContentItem', 'AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
-                    : ['AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
+                    ? ['ContentItem', 'AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar','Mediasite']
+                    : ['AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar','Mediasite']
                   )
 		: ( sakai.editor.contentItemUrl
-                    ? ['ContentItem', 'AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
-                    : ['AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
+                    ? ['ContentItem', 'AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar','Mediasite']
+                    : ['AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar','Mediasite']
                   )
             ),
             '/',
@@ -267,6 +267,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         CKEDITOR.plugins.addExternal('magicembed',basePath+'magicembed/', 'plugin.js');
         CKEDITOR.plugins.addExternal('youtube',basePath+'youtube/', 'plugin.js');
         CKEDITOR.plugins.addExternal('ckeditor_wiris',basePath+'ckeditor_wiris/', 'plugin.js');
+        CKEDITOR.plugins.addExternal('Mediasite', basePath + 'Mediasite/', 'plugin.js');
 
 
         /*
@@ -298,6 +299,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
 
         ckconfig.extraPlugins+=",audio,kalturaflash,magicembed,youtube";
         ckconfig.extraPlugins+=",ckeditor_wiris";
+        ckconfig.extraPlugins+=",Mediasite";
 
         // CLASSES-1937
         if (sakai.editor.siteId && sakai.editor.templates) {
