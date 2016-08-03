@@ -170,12 +170,12 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             ['Link','Unlink','Anchor'],
             (sakai.editor.enableResourceSearch
                 ? ( sakai.editor.contentItemUrl
-                    ? ['ContentItem', 'AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar','Mediasite']
-                    : ['AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar','Mediasite']
+                    ? ['ContentItem', 'AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
+                    : ['AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
                   )
 		: ( sakai.editor.contentItemUrl
-                    ? ['ContentItem', 'AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar','Mediasite']
-                    : ['AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar','Mediasite']
+                    ? ['ContentItem', 'AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
+                    : ['AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
                   )
             ),
             '/',
