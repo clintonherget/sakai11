@@ -32,6 +32,7 @@ import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.ToolConfiguration;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.site.util.SiteConstants;
+import org.sakaiproject.tool.api.FindToolsContext;
 import org.sakaiproject.tool.api.Tool;
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.tool.api.ToolSession;
@@ -224,7 +225,7 @@ public class SitePageEditHandler {
             categories.add(site.getType());
         }
         
-        Set<Tool> toolRegistrations = toolManager.findTools(categories, null);
+        Set<Tool> toolRegistrations = toolManager.findTools(categories, null, new FindToolsContext().site(site));
         
         List<String> multiPlacementToolIds = new ArrayList<String>();
 

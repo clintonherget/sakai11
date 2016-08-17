@@ -22,7 +22,9 @@ import org.mockito.Mockito;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.sitestats.api.StatsManager;
 import org.sakaiproject.sitestats.test.data.FakeData;
+import org.sakaiproject.tool.api.FindToolsContext;
 import org.sakaiproject.tool.api.Placement;
+import org.sakaiproject.tool.api.StealthPolicy;
 import org.sakaiproject.tool.api.Tool;
 import org.sakaiproject.tool.api.ToolManager;
 
@@ -72,8 +74,11 @@ public abstract class FakeToolManager implements ToolManager {
 	public Placement getDefaultPlacementContext() {
 		return currentPlacement;
 	}
-	
-	public Set<Tool> findTools(Set categories, Set keywords) {
+
+	public void addStealthPolicy(StealthPolicy policy) {
+	}
+
+	public Set<Tool> findTools(Set categories, Set keywords, FindToolsContext context) {
 		return tools;
 	}
 

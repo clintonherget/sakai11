@@ -148,6 +148,8 @@ import org.sakaiproject.thread_local.cover.ThreadLocalManager;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
 import org.sakaiproject.time.cover.TimeService;
+import org.sakaiproject.tool.api.Session;
+import org.sakaiproject.tool.api.FindToolsContext;
 import org.sakaiproject.tool.api.Tool;
 import org.sakaiproject.tool.api.ToolException;
 import org.sakaiproject.tool.api.ToolSession;
@@ -1804,7 +1806,7 @@ public class SiteAction extends PagedResourceActionII {
 			
 			
 			// save all lists to context			
-			pageOrderToolTitleIntoContext(context, state, type, (site == null), site==null?null:site.getProperties().getProperty(SiteConstants.SITE_PROPERTY_OVERRIDE_HIDE_PAGEORDER_SITE_TYPES));
+			pageOrderToolTitleIntoContext(context, state, type, (site == null), site==null?null:site.getProperties().getProperty(SiteConstants.SITE_PROPERTY_OVERRIDE_HIDE_PAGEORDER_SITE_TYPES), site);
 			Boolean checkToolGroupHome = (Boolean) state.getAttribute(STATE_TOOL_HOME_SELECTED);
 
 			context.put("check_home", checkToolGroupHome);
@@ -2143,7 +2145,7 @@ public class SiteAction extends PagedResourceActionII {
 					
 					// if the page order helper is available, not
 					// stealthed and not hidden, show the link
-					if (notStealthOrHiddenTool("sakai-site-pageorder-helper")) {
+					if (notStealthOrHiddenTool("sakai-site-pageorder-helper", site)) {
 						
 						// in particular, need to check site types for showing the tool or not
 						if (isPageOrderAllowed(siteType, siteProperties.getProperty(SiteConstants.SITE_PROPERTY_OVERRIDE_HIDE_PAGEORDER_SITE_TYPES)))
@@ -2161,7 +2163,7 @@ public class SiteAction extends PagedResourceActionII {
 					if (!isMyWorkspace) {
 						// if the add participant helper is available, not
 						// stealthed and not hidden, show the link
-						if (notStealthOrHiddenTool(getAddUserHelper(site))) {
+						if (notStealthOrHiddenTool(getAddUserHelper(site), site)) {
 							b.add(new MenuEntry(rb.getString("java.addp"),
 									"doParticipantHelper"));
 						}
@@ -2200,12 +2202,12 @@ public class SiteAction extends PagedResourceActionII {
 				{
 					// show add parent sites menu
 					if (!isMyWorkspace) {
-						if (notStealthOrHiddenTool("sakai-site-manage-link-helper")) {
+						if (notStealthOrHiddenTool("sakai-site-manage-link-helper", site)) {
 							b.add(new MenuEntry(rb.getString("java.link"),
 									"doLinkHelper"));
 						}
 
-						if (notStealthOrHiddenTool("sakai.basiclti.admin.helper")) {
+						if (notStealthOrHiddenTool("sakai.basiclti.admin.helper", site)) {
 							b.add(new MenuEntry(rb.getString("java.external"),
 									"doExternalHelper"));
 						}
@@ -2284,7 +2286,7 @@ public class SiteAction extends PagedResourceActionII {
 					// show add parent sites menu
 					if (!isMyWorkspace) {
 						boolean eventLog = "true".equals(ServerConfigurationService.getString("user_audit_log_display", "true"));
-						if (notStealthOrHiddenTool("sakai.useraudit") && eventLog) {
+						if (notStealthOrHiddenTool("sakai.useraudit", site) && eventLog) {
 							b.add(new MenuEntry(rb.getString("java.userAuditEventLog"),
 									"doUserAuditEventLog"));
 						}
@@ -4035,7 +4037,7 @@ public class SiteAction extends PagedResourceActionII {
 			context.put("extraSelectedToolList", state.getAttribute(STATE_EXTRA_SELECTED_TOOL_LIST));
 		}
 		// put tool title into context if PageOrderHelper is enabled
-		pageOrderToolTitleIntoContext(context, state, siteType, false, overridePageOrderSiteTypes);
+		pageOrderToolTitleIntoContext(context, state, siteType, false, overridePageOrderSiteTypes, null);
 
 		context.put("check_home", state
 				.getAttribute(STATE_TOOL_HOME_SELECTED));
@@ -4196,9 +4198,9 @@ public class SiteAction extends PagedResourceActionII {
 	 * @param siteType
 	 * @param newSite
 	 */
-	private void pageOrderToolTitleIntoContext(Context context, SessionState state, String siteType, boolean newSite, String overrideSitePageOrderSetting) {
+	private void pageOrderToolTitleIntoContext(Context context, SessionState state, String siteType, boolean newSite, String overrideSitePageOrderSetting, Site site) {
 		// check if this is an existing site and PageOrder is enabled for the site. If so, show tool title
-		if (!newSite && notStealthOrHiddenTool("sakai-site-pageorder-helper") && isPageOrderAllowed(siteType, overrideSitePageOrderSetting))
+		if (!newSite && notStealthOrHiddenTool("sakai-site-pageorder-helper", site) && isPageOrderAllowed(siteType, overrideSitePageOrderSetting))
 		{
 			// the actual page titles
 			context.put(STATE_TOOL_REGISTRATION_TITLE_LIST, state.getAttribute(STATE_TOOL_REGISTRATION_TITLE_LIST));
@@ -4537,7 +4539,7 @@ public class SiteAction extends PagedResourceActionII {
 		{
 			state.setAttribute(stateHelperString, helperId);
 		}
-		if (notStealthOrHiddenTool(helperId)) {
+		if (notStealthOrHiddenTool(helperId, null)) {
 			return true;
 		}
 		return false;
@@ -5761,7 +5763,7 @@ public class SiteAction extends PagedResourceActionII {
 			addAlert(state, rb.getString("java.select") + " ");
 		} else {
 			state.setAttribute(STATE_TYPE_SELECTED, type);
-			setNewSiteType(state, type);
+			setNewSiteType(state, type, null);
 			if (SiteTypeUtil.isCourseSite(type)) { // UMICH-1035
 				// redirect
 				redirectCourseCreation(params, state, "selectTerm");
@@ -5817,7 +5819,7 @@ public class SiteAction extends PagedResourceActionII {
 				state.setAttribute(STATE_TEMPLATE_SITE, templateSite);
 			     
 				// the new site type is based on the template site
-				setNewSiteType(state, templateSite.getType());
+				setNewSiteType(state, templateSite.getType(), templateSite);
 			}catch (Exception e) {  
 				// should never happened, as the list of templates are generated
 				// from existing sites
@@ -6232,8 +6234,9 @@ public class SiteAction extends PagedResourceActionII {
 	 * 
 	 * @param state
 	 * @param type
+         * @param templateSite (or null)
 	 */
-	private void setNewSiteType(SessionState state, String type) {
+	private void setNewSiteType(SessionState state, String type, Site templateSite) {
 		state.setAttribute(STATE_SITE_TYPE, type);
 		
 		// start out with fresh site information
@@ -6251,7 +6254,7 @@ public class SiteAction extends PagedResourceActionII {
 		// set tool registration list
 		if (!"copy".equals(type))
 		{
-			setToolRegistrationList(state, type);
+			setToolRegistrationList(state, type, templateSite);
 		}
 	}
 
@@ -6301,7 +6304,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		for(Iterator<String> itr = groups.iterator(); itr.hasNext();) {
 			String groupId = itr.next();
 			String groupName = getGroupName(groupId);
-			toolList = getGroupedToolList(groupId, groupName, type, checkhome, moreInfoDir);
+			toolList = getGroupedToolList(groupId, groupName, type, checkhome, moreInfoDir, site);
 			if (toolList.size() > 0) {
 				toolGroup.put(groupName, toolList);
 			}
@@ -6415,7 +6418,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	}
 
 	// SAK-23811
-	private List getGroupedToolList(String groupId, String groupName, String type, boolean checkhome, File moreInfoDir ) {
+	private List getGroupedToolList(String groupId, String groupName, String type, boolean checkhome, File moreInfoDir, Site site) {
 		List toolsInGroup = new ArrayList();
 		MyTool newTool = null;
 		List toolList = ServerConfigurationService.getToolGroup(groupId);
@@ -6437,7 +6440,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 						if (tr != null) 
 						{
 								String toolId = tr.getId();
-								if (isSiteTypeInToolCategory(SiteTypeUtil.getTargetSiteType(type), tr) && notStealthOrHiddenTool(toolId) ) // SAK 23808
+								if (isSiteTypeInToolCategory(SiteTypeUtil.getTargetSiteType(type), tr) && notStealthOrHiddenTool(toolId, site) ) // SAK 23808
 								{
 									newTool = new MyTool();
 									newTool.title = tr.getTitle();
@@ -6681,8 +6684,9 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	 * Set the state variables for tool registration list basd on site type
 	 * @param state
 	 * @param type
+	 * @param templateSite (or null)
 	 */
-	private void setToolRegistrationList(SessionState state, String type) {
+	private void setToolRegistrationList(SessionState state, String type, Site templateSite) {
 		state.removeAttribute(STATE_TOOL_REGISTRATION_SELECTED_LIST);
 		state.removeAttribute(STATE_TOOL_REGISTRATION_OLD_SELECTED_LIST);
 		state.removeAttribute(STATE_TOOL_REGISTRATION_OLD_SELECTED_HOME);
@@ -6692,7 +6696,19 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		Set multipleToolIdSet = new HashSet();
 		HashMap multipleToolConfiguration = new HashMap<String, HashMap<String, String>>();
 		// get registered tools list
-		Set<Tool> toolRegistrations = getToolRegistrations(state, type);
+		Set categories = new HashSet();
+		categories.add(type);
+		categories.add(SiteTypeUtil.getTargetSiteType(type)); // UMICH-1035  
+		Set toolRegistrations = ToolManager.findTools(categories, null, new FindToolsContext().site(templateSite));
+		if ((toolRegistrations == null || toolRegistrations.size() == 0)
+			&& state.getAttribute(STATE_DEFAULT_SITE_TYPE) != null)
+		{
+			// use default site type and try getting tools again
+			type = (String) state.getAttribute(STATE_DEFAULT_SITE_TYPE);
+			categories.clear();
+			categories.add(SiteTypeUtil.getTargetSiteType(type)); //UMICH-1035
+			toolRegistrations = ToolManager.findTools(categories, null, new FindToolsContext().site(templateSite));
+		}
 
 		List tools = new Vector();
 		SortedIterator i = new SortedIterator(toolRegistrations.iterator(),
@@ -7887,7 +7903,9 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		}
 		else
 		{
-			Set<Tool>toolRegistrationSet = getToolRegistrations(state, (String) state.getAttribute(STATE_SITE_TYPE));
+			Set toolRegistrationSet = ToolManager.findTools(Collections.singleton(state.getAttribute(STATE_SITE_TYPE)), null, null);
+			Set categories = new HashSet();
+			categories.add((String) state.getAttribute(STATE_SITE_TYPE));
 			String rv = null;
 			if (toolRegistrationSet != null)
 			{
@@ -11211,7 +11229,12 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		boolean inChosenList;
 		boolean inWSetupPageList;
 
-		Set toolRegistrationSet = getToolRegistrations(state, siteType);
+		Set categories = new HashSet();
+		// UMICH 1035
+		categories.add(siteType);
+		categories.add(SiteTypeUtil.getTargetSiteType(siteType));
+		Set toolRegistrationSet = ToolManager.findTools(categories, null, new FindToolsContext().site(site));
+
 
 		// first looking for any tool for removal
 		Vector removePageIds = new Vector();
@@ -11524,7 +11547,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		Set<String> categories = new HashSet<>();
 		// UMICH 1035
 		categories.add(SiteTypeUtil.getTargetSiteType(siteType));
-		Set toolRegistrationSet = ToolManager.findTools(categories, null);
+		Set toolRegistrationSet = ToolManager.findTools(categories, null, null);
 		if ((toolRegistrationSet == null || toolRegistrationSet.size() == 0)
 				&& state.getAttribute(STATE_DEFAULT_SITE_TYPE) != null)
 		{
@@ -11532,7 +11555,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			String type = (String) state.getAttribute(STATE_DEFAULT_SITE_TYPE);
 			categories.clear();
 			categories.add(SiteTypeUtil.getTargetSiteType(type));
-			toolRegistrationSet = ToolManager.findTools(categories, null);
+			toolRegistrationSet = ToolManager.findTools(categories, null, null);
 		}
 		return toolRegistrationSet;
 	}
@@ -11602,9 +11625,9 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	 * @param toolId
 	 * @return
 	 */
-	private boolean notStealthOrHiddenTool(String toolId) {
+	private boolean notStealthOrHiddenTool(String toolId, Site site) {
 		Tool tool = ToolManager.getTool(toolId);
-		Set<Tool> tools = ToolManager.findTools(Collections.emptySet(), null);
+		Set<Tool> tools = ToolManager.findTools(Collections.emptySet(), null, new FindToolsContext().site(site));
 		boolean result =  tool != null && tools.contains(tool);
 		return result;
 
@@ -11619,7 +11642,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	 * SAK 23808
 	 */
 	private boolean isSiteTypeInToolCategory(String siteType, Tool tool) {
-		Set<Tool> tools = ToolManager.findTools(Collections.emptySet(), null);
+		Set<Tool> tools = ToolManager.findTools(Collections.emptySet(), null, null);
 		Set<String> categories = tool.getCategories();
 		Iterator<String> iterator = categories.iterator();
 		while(iterator.hasNext()) {
@@ -12232,7 +12255,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		}
 		
 		// set tool registration list
-		setToolRegistrationList(state, type);
+		setToolRegistrationList(state, type, site);
 		multipleToolIdAttributeMap = state.getAttribute(STATE_MULTIPLE_TOOL_CONFIGURATION) != null? (Map<String, Map<String, String>>) state.getAttribute(STATE_MULTIPLE_TOOL_CONFIGURATION):new HashMap();
 		
 		// for the selected tools

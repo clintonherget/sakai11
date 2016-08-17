@@ -73,7 +73,7 @@ public class SiteActionTestTools {
     public void testGetToolRegistrationsSimple() {
         // Normal project site type
         Tool projectTool = mock(Tool.class);
-        when(ToolManager.findTools(singleton("project"), null)).thenReturn(singleton(projectTool));
+        when(ToolManager.findTools(singleton("project"), null, null)).thenReturn(singleton(projectTool));
         when(SiteService.getSiteTypeStrings("project")).thenReturn(singletonList("project"));
         when(ServerConfigurationService.getString("projectSiteTargetType", "project")).thenReturn("project");
 
@@ -94,7 +94,7 @@ public class SiteActionTestTools {
     public void testGetToolRegistrationDefault() {
         // Check that we fallback to the default site type
         Tool projectTool = mock(Tool.class);
-        when(ToolManager.findTools(singleton("project"), null)).thenReturn(singleton(projectTool));
+        when(ToolManager.findTools(singleton("project"), null, null)).thenReturn(singleton(projectTool));
         when(SiteService.getSiteTypeStrings("new")).thenReturn(Arrays.asList("project", "new"));
         when(ServerConfigurationService.getString("projectSiteTargetType", "project")).thenReturn("project");
 
@@ -111,7 +111,7 @@ public class SiteActionTestTools {
         Tool multipleTool = mock(Tool.class);
         when(singleTool.getId()).thenReturn("sakai.single");
         when(multipleTool.getId()).thenReturn("sakai.multiple");
-        when(ToolManager.findTools(singleton("project"), null)).thenReturn(new HashSet<>(Arrays.asList(singleTool, multipleTool)));
+        when(ToolManager.findTools(singleton("project"), null, null)).thenReturn(new HashSet<>(Arrays.asList(singleTool, multipleTool)));
         when(ToolManager.getTool("sakai.single")).thenReturn(singleTool);
         when(ToolManager.getTool("sakai.multiple")).thenReturn(multipleTool);
         Properties singleToolProperties = new Properties();
