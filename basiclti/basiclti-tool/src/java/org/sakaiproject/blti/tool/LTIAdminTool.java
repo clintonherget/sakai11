@@ -116,7 +116,7 @@ public class LTIAdminTool extends VelocityPortletPaneledAction
 	private static String PARAM_SEARCH_VALUE = "search";
 
 	//default elements per page
-	private static int ELEMENTS_PER_PAGE = 50;
+	private static int ELEMENTS_PER_PAGE = 100;
 
 	//available paging events
 	private static String PAGE_EVENT_FIRST = "first";
