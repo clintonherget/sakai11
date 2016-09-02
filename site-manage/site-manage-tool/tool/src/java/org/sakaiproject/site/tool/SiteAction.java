@@ -7903,7 +7903,11 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		}
 		else
 		{
-			Set toolRegistrationSet = ToolManager.findTools(Collections.singleton(state.getAttribute(STATE_SITE_TYPE)), null, null);
+                        // This call can return all tools since we're not
+                        // exposing the list to the user anyway.  Otherwise we
+                        // risk the site context saying a tool is unstealthed
+                        // but this call not returning the tool.
+			Set toolRegistrationSet = ToolManager.findTools(Collections.singleton(state.getAttribute(STATE_SITE_TYPE)), null, new FindToolsContext().showAllTools());
 			Set categories = new HashSet();
 			categories.add((String) state.getAttribute(STATE_SITE_TYPE));
 			String rv = null;
@@ -11642,7 +11646,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	 * SAK 23808
 	 */
 	private boolean isSiteTypeInToolCategory(String siteType, Tool tool) {
-		Set<Tool> tools = ToolManager.findTools(Collections.emptySet(), null, null);
+		Set<Tool> tools = ToolManager.findTools(Collections.emptySet(), null, new FindToolsContext().showAllTools());
 		Set<String> categories = tool.getCategories();
 		Iterator<String> iterator = categories.iterator();
 		while(iterator.hasNext()) {
