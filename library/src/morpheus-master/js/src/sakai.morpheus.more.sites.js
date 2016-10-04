@@ -202,6 +202,8 @@ function showToolMenu(jqObj){
 
     goToSite.find('a span').addClass('icon-sakai--see-all-tools')
 
+    goToSite.addClass("gotosite");
+
     $PBJQ.getJSON(siteURL, function(data){
       $PBJQ.each(data, function(i, item){
 
