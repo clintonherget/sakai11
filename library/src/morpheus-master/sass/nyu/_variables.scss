@@ -12,6 +12,8 @@ $nyu-link-decoration:                                         underline;
 $nyu-link-hover-color:                                        #347EB2;
 $nyu-link-hover-decoration:                                   underline;
 
+$nyu-body-background-color:                                   #FAFAFA;
+
 $nyu-header-height:                                           52px;
 $nyu-header-background:                                       $nyu-purple;
 $nyu-header-logo-text-size:                                   50px;
@@ -248,3 +250,4 @@ $nyu-tablet-all-sites-link-color:                             $nyu-text-color;
 
 // Mobile Specific Variables (viewport width < $nyu-breakpoint-mobile)
 
+$nyu-mobile-body-background-color:                            #FFFFFF;
