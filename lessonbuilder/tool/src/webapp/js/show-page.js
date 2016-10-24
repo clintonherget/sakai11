@@ -2571,20 +2571,17 @@ $(document).ready(function() {
 		var col =  $('.currentlyediting');
 		var section = col.parent('.section');
 		var header = section.prev('.sectionHeader');
-		var color_index = $('#columnbackground')[0].selectedIndex; 
-		var color = '';
-		switch (color_index) {
-		case 0: color = ''; break;
-		case 1: color = 'trans'; break;
-		case 2: color = 'gray'; break;
-		case 3: color = 'red'; break;
-		case 4: color = 'blue'; break;
-		case 5: color = 'green'; break;
-		case 6: color = 'yellow'; break;
+
+		var color = $('#columnbackground').val();
+
+		if (color == 'none') {
+			color = '';
 		}
+
 		var collapsible = $('#collapsible').prop('checked') ? 1 : 0;
 		var defaultClosed = $('#defaultClosed').prop('checked') ? 1 : 0;
 		var sectionTitle = $('#sectionTitle').val();
+
 		setColumnProperties(itemid, width, split, color);
 		if (width === 2)
 		    col.addClass('double');		    
@@ -3222,7 +3219,10 @@ function buttonOpenDropdownc() {
     oldloc = $("#dropdownc");
     addAboveItem = "";
     $(".addbreak").hide();
-    openDropdown($("#addContentDiv"), $("#dropdownc"), msg("simplepage.add-content"));
+    openDropdown($("#addContentDiv"), $("#dropdownc"), msg("simplepage.add-content"),
+		 {
+                     width: Math.min($(window).width() - 20, 800),
+                 });
 }
 
 function buttonOpenDropdowna() {
@@ -3230,7 +3230,10 @@ function buttonOpenDropdowna() {
     oldloc = addAboveLI.find(".plus-edit-icon");
     addAboveItem = addAboveLI.find("span.itemid").text();
     $(".addbreak").show();
-    openDropdown($("#addContentDiv"), $("#dropdownc"), msg('simplepage.add-above'));
+    openDropdown($("#addContentDiv"), $("#dropdownc"), msg('simplepage.add-above'),
+                 {
+                     width: Math.min($(window).width() - 20, 800),
+                 });
 }
 
 function buttonOpenDropdownb() {
@@ -3238,23 +3241,35 @@ function buttonOpenDropdownb() {
     addAboveItem = '-' + $(this).closest('.column').find('div.mainList').children().last().find("span.itemid").text();
     addAboveLI = $(this).closest('.column').find('div.mainList').children().last().closest("div.item");
     $(".addbreak").show();
-    openDropdown($("#addContentDiv"), $("#dropdownc"), msg('simplepage.add-item-column'));
+    openDropdown($("#addContentDiv"), $("#dropdownc"), msg('simplepage.add-item-column'),
+		 {
+                     width: Math.min($(window).width() - 20, 800),
+                 });
     return false;
 }
 
-function openDropdown(dropDiv, button, title) {
+function openDropdown(dropDiv, button, title, dialogOpts) {
+    if (dialogOpts == undefined) {
+        dialogOpts = {
+            width: '300px',
+        };
+    }
+
     closeDropdowns();
     hideMultimedia();
     dropDiv.dialog('option', 'title', title);
     dropDiv.dialog('option', 'position', { my: 'left top', at: 'left bottom', of: button });
+    dropDiv.dialog('option', dialogOpts);
     dropDiv.dialog('open');
     dropDiv.find("a").first().focus();
+    /*
     if (addAboveItem === '')
 	dropDiv.find(".addContentMessage").show();
     else
 	dropDiv.find(".addContentMessage").hide();
     //jquery-ui#position does not work properly with large scrolls : https://bugs.jqueryui.com/ticket/15253. (if the ticket is solved, remove the line below)
     $("[aria-describedby='addContentDiv']").offset({top : button.offset().top + button.height()});
+    */
     return false;
 }
 
