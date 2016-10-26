@@ -118,7 +118,7 @@ body a[href] {
     border-left-color: red;
 
     label {
-      color: $text-color !important;
+      color: $nyu-header-menu-color !important;
     }
     input[type="text"], input[type="password"], input[type="email"] {
      border: 1px solid #CCC !important;
@@ -168,7 +168,7 @@ body a[href] {
   .logo:before{
     font-family: 'nyu-classes-icons';
     content: '\e000';
-    color: $nyu-purple;
+    color: $nyu-header-logo-color;
     font-size: 70px;
     line-height: 60px;
   }
