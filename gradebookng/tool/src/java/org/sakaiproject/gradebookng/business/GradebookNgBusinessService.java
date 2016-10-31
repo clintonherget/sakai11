@@ -44,6 +44,7 @@ import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.section.api.coursemanagement.CourseSection;
 import org.sakaiproject.section.api.facade.Role;
+import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.gradebookng.business.exception.GbAccessDeniedException;
@@ -349,6 +350,11 @@ public class GradebookNgBusinessService {
 			}
 		}
 		return gradebook;
+	}
+
+	public int getRemainingGradableItems() {
+		int maxItems = ServerConfigurationService.getInt("gradebookng.max-gradable-items", 3);
+		return Math.max((maxItems - getGradebookAssignments().size()), 0);
 	}
 
 	/**
