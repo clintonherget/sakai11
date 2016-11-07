@@ -353,7 +353,7 @@ public class GradebookNgBusinessService {
 	}
 
 	public int getRemainingGradableItems() {
-		int maxItems = ServerConfigurationService.getInt("gradebookng.max-gradable-items", 3);
+		int maxItems = ServerConfigurationService.getInt("gradebookng.max-gradable-items", 20);
 		return Math.max((maxItems - getGradebookAssignments().size()), 0);
 	}
 
