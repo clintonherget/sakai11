@@ -22,3 +22,8 @@ $(function() {
     $portlet.css("minHeight", menuHeight + "px");
   }
 });
+
+// Bind a dummy touch event on document to stop iOS from capturing
+// a click to enable a hover state
+$PBJQ(document).on("touchstart", function() { return true; });
+
