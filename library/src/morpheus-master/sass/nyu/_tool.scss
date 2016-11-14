@@ -387,6 +387,32 @@ body {
   .act {
     clear: both;
   }
+
+  // Tool Order
+  // needs to be after body, so drag clone pick up styles
+  li.sortable_item.ui-draggable {
+    &:before {
+      font-family: 'nyu-classes-icons' !important;
+      content: '\f1c5' !important;
+      font-size: 18px;
+      line-height: 18px;
+      display: inline-block;
+      width: 15px;
+      margin: 0 0 0 4px;
+      color: $nyu-all-sites-button-drag-color !important;
+      vertical-align: middle;
+    }
+
+    &:hover {
+      &:before {
+        color: $nyu-all-sites-button-drag-hover-color !important;
+      }
+    }
+    .item_control_box.dropdown > a {
+      padding: 0 10px !important;
+      line-height: 32px !important;
+    }
+  }
 }
 
 // -------------------------------------------------------------------------------------------------------------------
