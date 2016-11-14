@@ -489,8 +489,7 @@ body a[href] {
               font-weight: $nyu-all-sites-button-hover-text-weight !important;
             }
 
-            .toolMenus,
-            .fav-drag-handle {
+            .toolMenus {
               color: $nyu-all-sites-button-hover-dropdown-color !important;
             }
 
@@ -555,6 +554,35 @@ body a[href] {
                   }
                 }
               }
+            }
+          }
+
+          .fav-drag-handle {
+            right: -4px !important;
+            top: 4px !important;
+            display: inline-block;
+            position: relative;
+            padding: 0 6px;
+            color: $nyu-all-sites-button-drag-color !important;
+
+            i {
+              display: none;
+            }
+
+            &:before {
+              font-family: 'nyu-classes-icons' !important;
+              content: '\f1c5' !important;
+              font-size: 18px;
+            }
+
+            &:hover {
+              color: $nyu-all-sites-button-drag-hover-color !important;
+            }
+          }
+
+          &:hover {
+            .fav-drag-handle {
+              color: $nyu-all-sites-button-drag-hover-color !important;
             }
           }
         }
