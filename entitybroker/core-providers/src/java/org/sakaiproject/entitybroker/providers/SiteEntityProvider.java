@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import lombok.extern.slf4j.Slf4j;
-
+import org.sakaiproject.entitybroker.util.PageTitleHelper;
 import org.azeckoski.reflectutils.ReflectUtils;
 
 import org.sakaiproject.authz.api.AuthzGroup;
@@ -535,7 +535,7 @@ RESTful, ActionsExecutable, Redirectable, RequestStorable, DepthLimitable {
             pageData.put("position", page.getPosition());
             pageData.put("siteId", page.getSiteId());
             pageData.put("skin", page.getSkin());
-            pageData.put("title", page.getTitle());
+            pageData.put("title", PageTitleHelper.prefixTitle(siteId, page.getTitle()));
             pageData.put("url", page.getUrl());
             if (includeProps) {
                 // get the properties
