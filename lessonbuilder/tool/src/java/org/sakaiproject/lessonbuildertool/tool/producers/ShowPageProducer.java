@@ -727,8 +727,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		// put out link to index of pages
 		GeneralViewParameters showAll = new GeneralViewParameters(PagePickerProducer.VIEW_ID);
 		showAll.setSource("summary");
-		UIInternalLink.make(tofill, "print-view", messageLocator.getMessage("simplepage.print_view"), showAll);
-		UIInternalLink.make(tofill, "show-pages", messageLocator.getMessage("simplepage.showallpages"), showAll);
+		UIInternalLink.make(tofill, "print-view", showAll);
+		UIInternalLink.make(tofill, "show-pages", showAll);
 		
 		if (canEditPage) {
 			// show tool bar, but not if coming from grading pane

@@ -998,6 +998,20 @@ body {
     }
   }
 
+  #pageBody div.Mrphs-pagebody .Mrphs-sakai-lessonbuildertool .Mrphs-toolTitleNav .Mrphs-toolTitleNav__button_container {
+    top: 0 !important;
+    width: 400px;
+    text-align: right;
+
+    @media #{$tablet}{
+      top: -28px !important;
+      width: 120px;
+    }
+    @media #{$phone}{
+      position: absolute;
+      top: -40px !important;
+    }
+  }
 }
 
 
