@@ -2034,6 +2034,8 @@ body > .portletBody > .action {
 /* directURL popup */
 nav.Mrphs-container--toolTitleNav .Mrphs-directUrl__dropDown .active {
         z-index: 100001 !important;
+        padding-bottom: 0 !important;
+        margin-bottom: 1em !important;
 }
 /* chat open button */
 #Mrphs-footerApp__chat {
