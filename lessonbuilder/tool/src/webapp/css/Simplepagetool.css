@@ -1480,7 +1480,7 @@ padding: 10px 15px 0 15px
 }
 div.navIntraTool {
   border-top:none;
-  padding-top: 1em !important;
+  padding-top: 0 !important;
 }
 /* our additions to the top menu */
 
