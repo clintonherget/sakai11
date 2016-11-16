@@ -268,6 +268,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         CKEDITOR.plugins.addExternal('youtube',basePath+'youtube/', 'plugin.js');
         CKEDITOR.plugins.addExternal('ckeditor_wiris',basePath+'ckeditor_wiris/', 'plugin.js');
         CKEDITOR.plugins.addExternal('Mediasite', basePath + 'Mediasite/', 'plugin.js');
+        CKEDITOR.plugins.addExternal('nyupreview', basePath + 'nyupreview/', 'plugin.js');
 
 
         /*
@@ -301,6 +302,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         ckconfig.extraPlugins+=",ckeditor_wiris";
         ckconfig.extraPlugins+=",Mediasite";
         ckconfig.extraPlugins+=",autolink";
+        ckconfig.extraPlugins+=",nyupreview";
 
         // CLASSES-1937
         if (sakai.editor.siteId && sakai.editor.templates) {
