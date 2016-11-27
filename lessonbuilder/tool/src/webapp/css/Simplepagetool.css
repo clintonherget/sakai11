@@ -992,7 +992,7 @@ a.peer-eval-stats {
     border-top:none !important;
 }
 .dropDownDiv li a {
-    display:block;
+    display:inline;
     text-decoration: none;
 }
 .dropDownDiv li div {
