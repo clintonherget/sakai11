@@ -269,7 +269,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         CKEDITOR.plugins.addExternal('ckeditor_wiris',basePath+'ckeditor_wiris/', 'plugin.js');
         CKEDITOR.plugins.addExternal('Mediasite', basePath + 'Mediasite/', 'plugin.js');
         CKEDITOR.plugins.addExternal('nyupreview', basePath + 'nyupreview/', 'plugin.js');
-
+        CKEDITOR.plugins.addExternal('autosave',basePath+'autosave/', 'plugin.js');
 
         /*
            To enable after the deadline uncomment these two lines and add atd-ckeditor to toolbar
