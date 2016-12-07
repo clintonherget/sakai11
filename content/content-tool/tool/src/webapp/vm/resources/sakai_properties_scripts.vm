@@ -1198,6 +1198,9 @@
 	//this function needs jquery  - it resizes the parent iframe without bringing the scroll to the top
 	function resizeFrame(updown) 
 	{
+    // welcome to the new iframe-less world... did you not get the memo?
+    return;
+
 		var frame = parent.document.getElementById( window.name );
 	
 		if( frame ) 
