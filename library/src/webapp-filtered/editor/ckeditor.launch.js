@@ -101,6 +101,12 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         };
     }
 
+    var extraToolbarButtons = [];
+
+    if (sakai.editor.enableResourceSearch) {
+      extraToolbarButtons.push('ResourceSearch');
+    } 
+
     var ckconfig = {
 	//Some defaults for audio recorder
         audiorecorder : {
@@ -154,37 +160,32 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         ],
         toolbar_Full:
         [
-            ['About'],
-            ['Source','-','Templates','-','Preview'],
+            ['Undo','Redo','-','Find'],
             // Uncomment the next line and comment the following to enable the default spell checker.
             // Note that it uses spellchecker.net, displays ads and sends content to remote servers without additional setup.
             //['Cut','Copy','Paste','PasteText','-','Print', 'SpellChecker', 'Scayt'],
-            ['Cut','Copy','Paste','PasteText','-','Print', 'SakaiPreview'],
-            ['Undo','Redo','-','Find','Replace','-','SelectAll','RemoveFormat'],
-            ['NumberedList','BulletedList','-','Outdent','Indent','Blockquote','CreateDiv'],
+
+
+            ['Cut','Copy','Paste','PasteText','PasteFromWord','-','RemoveFormat'],
+            ['Image','AudioRecorder','Audio','magicembed','kalturaflash','Youtube','-','fmath_formula','ckeditor_wiris_formulaEditor','ckeditor_wiris_CAS','-','NYUPreview'],
+            extraToolbarButtons,
+            ['Maximize'],
+
             '/',
-            ['Bold','Italic','Underline','Strike','-','Subscript','Superscript'],
-						['atd-ckeditor'],
+            ['Bold','Italic','Underline','Strike','Subscript','Superscript'],
             ['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
             ['BidiLtr', 'BidiRtl' ],
-            ['Link','Unlink','Anchor'],
-            (sakai.editor.enableResourceSearch
-                ? ( sakai.editor.contentItemUrl
-                    ? ['ContentItem', 'AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
-                    : ['AudioRecorder','ResourceSearch', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
-                  )
-		: ( sakai.editor.contentItemUrl
-                    ? ['ContentItem', 'AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
-                    : ['AudioRecorder', 'Image','Movie','Table','HorizontalRule','Smiley','SpecialChar']
-                  )
-            ),
+            ['Link','Unlink'],
+            ['NumberedList','BulletedList','-','Outdent','Indent','Blockquote','-','Table','HorizontalRule','SpecialChar'],
             '/',
-            ['Styles','Format','Font','FontSize'],
+            ['Format'],
+            ['Font'],
+            ['FontSize'],
             ['TextColor','BGColor'],
-            ['Maximize', 'ShowBlocks']
-            ,['A11ychecker']
-            ,['Audio', 'kalturaflash', 'magicembed', 'Youtube']
-            ,['ckeditor_wiris_formulaEditor', 'ckeditor_wiris_CAS']
+            ['A11ychecker'],
+            ['Source','-','Templates'],
+            ['Print']
+
         ],
         toolbar: 'Full',
         resize_dir: 'both',
