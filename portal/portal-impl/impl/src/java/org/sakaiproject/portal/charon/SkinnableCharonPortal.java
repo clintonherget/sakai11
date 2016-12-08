@@ -1403,7 +1403,17 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
                         if (Boolean.valueOf(strMathJaxEnabledForSite))
                         {
                             // this call to MathJax.Hub.Config seems to be needed for MathJax to work in IE
-                            headJs.append("<script type=\"text/x-mathjax-config\">\nMathJax.Hub.Config({\ntex2jax: { inlineMath: [['\\\\(','\\\\)']] }\n});\n</script>\n");
+                            headJs.append("<script type=\"text/x-mathjax-config\">\n"+
+                                "MathJax.Hub.Config({\n" +
+                                "    tex2jax: {\n" +
+                                "        inlineMath:  [['$','$'], ['\\\\(','\\\\)']],\n" +
+                                "        displayMath: [['$$','$$'], ['\\\\[','\\\\]']]\n" +
+                                "    },\n"+
+                                "    asciimath2jax: {\n" +
+                                "        delimiters: [['`','`']]\n" +
+                                "    }\n" +
+                                "});\n" +
+                            "</script>\n");
                             headJs.append("<script src=\"").append(MATHJAX_SRC_PATH).append("\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
                         }                     
                     }
