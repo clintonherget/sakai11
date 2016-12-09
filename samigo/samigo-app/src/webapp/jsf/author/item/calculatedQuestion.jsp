@@ -44,7 +44,7 @@ confirmation dialog
 	<title><h:outputText value="#{authorMessages.item_display_author}"/></title>
 	<samigo:script path="/js/info.js"/>
 	<!-- AUTHORING -->
-	<samigo:script path="/js/authoring.js"/>
+	<samigo:script path="/js/authoring.js?_=1481259675"/>
 	<script type="text/javascript">
 	$(document).ready(function() {
 		initCalcQuestion();
