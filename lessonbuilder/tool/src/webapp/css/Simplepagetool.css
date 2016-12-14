@@ -2211,3 +2211,15 @@ nav.Mrphs-container--toolTitleNav .Mrphs-directUrl__dropDown .active {
     border: 1px solid #e5e5e5;
     border-top: none;
 }
+
+
+li.canEdit span.fa-plus.fa-edit-icon.plus-edit-icon:before {
+    font-family: "nyu-classes-icons" !important;
+    content: "\f1c7" !important;
+}
+
+
+
+#pageBody div.Mrphs-pagebody .Mrphs-toolTitleNav .Mrphs-toolTitleNav__button_container {
+    top: 28px !important;
+}
