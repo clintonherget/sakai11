@@ -153,10 +153,6 @@ public class GradebookEntityProvider extends AbstractEntityProvider implements
 		}
 		Site site = this.getSite(siteId);
 
-		if(!isToolAccessible(site)) {
-			throw new SecurityException("Gradebook is not accessible for site: "+ siteId);
-		}
-
 		// The gradebookUID is the siteId, the gradebookID is a long
 		if (!gradebookService.isGradebookDefined(siteId)) {
 			throw new IllegalArgumentException("No gradebook found for site: "
@@ -188,6 +184,11 @@ public class GradebookEntityProvider extends AbstractEntityProvider implements
 		} else {
 			// students or the rest
 			GradeCourse course = new GradeCourse(site);
+
+			if(!isToolAccessible(site)) {
+				// Don't give any details
+				return course;
+			}
 
 			List<Assignment> gbitems = gradebookService
 					.getViewableAssignmentsForCurrentUser(siteId);
