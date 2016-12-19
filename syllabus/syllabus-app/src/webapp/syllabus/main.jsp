@@ -213,7 +213,7 @@
 						<f:verbatim>"><h3></f:verbatim>
 						<f:subview id="actionIcons" rendered="#{SyllabusTool.editAble == 'true'}">
 							<h:graphicImage url="/images/cursor_drag_arrow.png" title="#{msgs.dragToReorder}"  styleClass="actionIcon"/>
-							<h:commandLink action="#{eachEntry.processListRead}" title="#{msgs.goToItem} #{eachEntry.entry.title}" styleClass="actionIcon">
+							<h:commandLink action="#{eachEntry.processListRead}" title="#{msgs.edit_details}" styleClass="actionIcon">
                                                           <f:param name="returnToMain" value="true"></f:param>
 							  <h:graphicImage url="/images/pencil.png"/>
 							</h:commandLink>
