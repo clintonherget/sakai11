@@ -70,9 +70,9 @@
 				draftTitlePrefix: $("#messages #draftTitlePrefix").html(),
 				noUndoWarning: $("#messages #noUndoWarning").html()
 			};
-		setupAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>',<h:outputText value="#{SyllabusTool.editAble == 'true' ? true : false}"/>, msgs, 
+		setupAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>',<h:outputText value="#{SyllabusTool.editAble == 'nyu_says_no' ? true : false}"/>, msgs, 
 							'<h:outputText value="#{SyllabusTool.openDataId}"/>');
-					if(<h:outputText value="#{SyllabusTool.editAble == 'true'}"/>){
+					if(<h:outputText value="#{SyllabusTool.editAble == 'nyu_says_no'}"/>){
 						//draft/publish toggle:
 						setupToggleImages("publish", "publish", "publishOn", "publishOff", msgs);
 						//Calendar Toggle
@@ -211,18 +211,15 @@
 						<h:outputText value="#{eachEntry.entry.syllabusId}"/>
 						<f:verbatim>"><h3></f:verbatim>
 						<f:subview id="actionIcons" rendered="#{SyllabusTool.editAble == 'true'}">
-						    <f:verbatim>
-							<span class="fa fa-arrows handleIcon" alt="</f:verbatim><h:outputText value="#{msgs.dragToReorder}"/><f:verbatim>" title="</f:verbatim><h:outputText value="#{msgs.dragToReorder}"/><f:verbatim>"></span>
-							<span class="edit-actions">
-							  <span class="fa fa-eye actionIcon publish publishOn" alt="</f:verbatim><h:outputText value="#{msgs.clickToUnpublish}"/><f:verbatim>" title="</f:verbatim><h:outputText value="#{msgs.clickToUnpublish}"/><f:verbatim>" style="</f:verbatim><h:outputText value="#{eachEntry.status == eachEntry.draftStatus ? 'display:none' : ''}"/><f:verbatim>"></span>
-							  <span class="fa fa-eye-slash actionIcon publish publishOff" alt="</f:verbatim><h:outputText value="#{msgs.clickToPublish}"/><f:verbatim>" title="</f:verbatim><h:outputText value="#{msgs.clickToPublish}"/><f:verbatim>" style="</f:verbatim><h:outputText value="#{eachEntry.status == eachEntry.draftStatus ? '' : 'display:none'}"/><f:verbatim>"></span>
-							  <span class="fa fa-calendar-check-o actionIcon linkCal linkCalOn" alt="</f:verbatim><h:outputText value="#{msgs.clickToRemoveCal}"/><f:verbatim>" title="</f:verbatim><h:outputText value="#{msgs.clickToRemoveCal}"/><f:verbatim>" style="</f:verbatim><h:outputText value="#{(eachEntry.entry.linkCalendar && SyllabusTool.calendarExistsForSite) ? '' : 'display:none'}"/><f:verbatim>"></span>
-							  <span class="fa fa-calendar-times-o actionIcon linkCal linkCalOff" alt="</f:verbatim><h:outputText value="#{msgs.clickToAddCal}"/><f:verbatim>" title="</f:verbatim><h:outputText value="#{msgs.clickToAddCal}"/><f:verbatim>" style="</f:verbatim><h:outputText value="#{(eachEntry.entry.linkCalendar  && SyllabusTool.calendarExistsForSite) ? 'display:none' : ''}"/><f:verbatim>"></span>
-							  <span class="fa fa-globe actionIcon linkWorld linkWorldOn" alt="</f:verbatim><h:outputText value="#{msgs.clickToHideWorld}"/><f:verbatim>" title="</f:verbatim><h:outputText value="#{msgs.clickToHideWorld}"/><f:verbatim>" style="</f:verbatim><h:outputText value="#{eachEntry.entry.view == 'yes' ? '' : 'display:none'}"/><f:verbatim>"></span>
-							  <span class="fa fa-lock actionIcon linkWorld linkWorldOff" alt="</f:verbatim><h:outputText value="#{msgs.clickToAddWorld}"/><f:verbatim>" title="</f:verbatim><h:outputText value="#{msgs.clickToAddWorld}"/><f:verbatim>" style="</f:verbatim><h:outputText value="#{eachEntry.entry.view == 'no' ? '' : 'display:none'}"/><f:verbatim>"></span>
-							  <span class="fa fa-trash actionImage delete" onclick="showConfirmDeleteHelper(this, event);" title="</f:verbatim><h:outputText value="#{msgs.clickToDelete}"/><f:verbatim>"></span>
-							</span>
-						    </f:verbatim>
+							<h:graphicImage url="/images/cursor_drag_arrow.png" title="#{msgs.dragToReorder}"  styleClass="actionIcon"/>
+							<h:commandLink action="#{eachEntry.processListRead}" title="#{msgs.goToItem} #{eachEntry.entry.title}" styleClass="actionIcon">
+							  <h:graphicImage url="/images/pencil.png"/>
+							</h:commandLink>
+							<h:graphicImage url="/images/lightbulb.gif" styleClass="actionIcon publish publishOn" title="#{msgs.clickToUnpublish}" style="#{eachEntry.status == eachEntry.draftStatus ? 'display:none' : ''}"/>
+							<h:graphicImage url="/images/lightbulb_off.gif" styleClass="actionIcon publish publishOff" title="#{msgs.clickToPublish}" style="#{eachEntry.status == eachEntry.draftStatus ? '' : 'display:none'}"/>
+							<f:verbatim>
+								<img src="/library/image/silk/cross.png" class="actionImage delete" onclick="showConfirmDeleteHelper(this, event);" title="</f:verbatim><h:outputText value="#{msgs.clickToDelete}"/><f:verbatim>">
+							</f:verbatim>
 						</f:subview>
 						<f:verbatim><a href="javascript:void(0)" </f:verbatim>
 							<f:subview id="draftclass" rendered="#{eachEntry.status == eachEntry.draftStatus}">
@@ -245,7 +242,7 @@
 									</h:outputText>
 								<f:verbatim></span></f:verbatim>
 							</f:subview>
-							<f:subview id="dateInstructor" rendered="#{SyllabusTool.editAble == 'true'}">
+							<f:subview id="dateInstructor" rendered="#{SyllabusTool.editAble == 'nyu_says_no'}">
 								<f:verbatim><span style="float: right; padding-right:1em; padding-left:1em"></f:verbatim>
 									<h:outputText styleClass="" value="#{eachEntry.entry.startDate}">
 										<f:convertDateTime type="date" pattern="yyyy/MM/dd h:mm a"/>
@@ -275,7 +272,7 @@
 									<h:outputLink styleClass="attachment" value="#{eachAttach.url}" target="_blank" title="#{msgs.openLinkNewWindow}">
 										<h:outputText value=" "/><h:outputText value="#{eachAttach.name}"/>
 									</h:outputLink>
-									<f:subview id="removeItem" rendered="#{SyllabusTool.editAble == 'true'}">
+									<f:subview id="removeItem" rendered="#{SyllabusTool.editAble == 'nyu_says_no'}">
 										<f:verbatim>
 										&nbsp;
 											<a attachmentId='</f:verbatim><h:outputText value="#{eachAttach.syllabusAttachId}"/><f:verbatim>' 
@@ -286,7 +283,7 @@
 									</f:subview>
 								</h:column>
 							</h:dataTable>
-							<f:subview id="instructorAddAttach" rendered="#{SyllabusTool.editAble == 'true'}">
+							<f:subview id="instructorAddAttach" rendered="#{SyllabusTool.editAble == 'nyu_says_no'}">
 								<f:verbatim>
 									<br/>
 								</f:verbatim>
