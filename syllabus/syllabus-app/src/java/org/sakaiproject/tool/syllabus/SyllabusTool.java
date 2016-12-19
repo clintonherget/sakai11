@@ -1274,7 +1274,7 @@ public class SyllabusTool
           entry = null;
           attachments.clear();
 
-          return "main_edit";
+          return "main";
         }
       }
     }
