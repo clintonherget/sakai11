@@ -960,7 +960,12 @@ public class SyllabusTool
     entry = null;
     attachments.clear();
 
-    return "main_edit";
+    ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
+    if ("true".equals(context.getRequestParameterMap().get("returnToMain"))) {
+        return "main";
+    } else {
+        return "main_edit";
+    }
   }
 
 
@@ -1039,7 +1044,12 @@ public class SyllabusTool
       entry = null;
       attachments.clear();
 
-      return "main_edit";
+      ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
+      if ("true".equals(context.getRequestParameterMap().get("returnToMain"))) {
+          return "main";
+      } else {
+          return "main_edit";
+      }
     }
     catch (Exception e)
     {
@@ -1373,6 +1383,9 @@ public class SyllabusTool
         entry.setJustCreated(true);
 
         entries.clear();
+
+        ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
+        returnToMain = "true".equals(context.getRequestParameterMap().get("returnToMain"));
 
         return "edit";
       }

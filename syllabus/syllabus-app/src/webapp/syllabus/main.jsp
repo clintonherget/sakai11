@@ -70,9 +70,9 @@
 				draftTitlePrefix: $("#messages #draftTitlePrefix").html(),
 				noUndoWarning: $("#messages #noUndoWarning").html()
 			};
-		setupAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>',<h:outputText value="#{SyllabusTool.editAble == 'nyu_says_no' ? true : false}"/>, msgs, 
+		setupAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>',<h:outputText value="#{SyllabusTool.editAble == 'true' ? true : false}"/>, msgs, 
 							'<h:outputText value="#{SyllabusTool.openDataId}"/>');
-					if(<h:outputText value="#{SyllabusTool.editAble == 'nyu_says_no'}"/>){
+					if(<h:outputText value="#{SyllabusTool.editAble == 'true'}"/>){
 						//draft/publish toggle:
 						setupToggleImages("publish", "publish", "publishOn", "publishOff", msgs);
 						//Calendar Toggle
@@ -126,6 +126,7 @@
 					<span>
 					</f:verbatim>
 						<h:commandLink action="#{SyllabusTool.processListNew}">
+							<f:param name="returnToMain" value="true"></f:param>
 							<h:outputText value="#{msgs.bar_new}"/>
 						</h:commandLink>
 					<f:verbatim>
