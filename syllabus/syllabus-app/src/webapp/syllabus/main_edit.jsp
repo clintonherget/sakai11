@@ -274,18 +274,6 @@
 							</f:facet>
 							<h:inputText styleClass="dateInput dateInputEnd" value="#{eachEntry.endDateString}" id="dataEndDate"/>
 						</h:column>
-						<h:column rendered="#{! SyllabusTool.displayNoEntryMsg && SyllabusTool.calendarExistsForSite}">
-							<f:facet name="header">
-								<h:panelGroup>
-									<h:outputText value="#{msgs.mainEditHeaderInCalendar}"/>
-									<f:verbatim>
-										<br/>
-										<input type="checkbox" onchange="toggleAllCalendarOptions(this);"/>
-									</f:verbatim>
-								</h:panelGroup>
-							</f:facet>
-							<h:selectBooleanCheckbox styleClass="calendarBox" value="#{eachEntry.entry.linkCalendar}" title="#{msgs.selectThisCheckBoxCal}" onchange="checkStartEndDates(this)"/>
-						</h:column>
 						<h:column rendered="#{! SyllabusTool.displayNoEntryMsg}">
 							<f:facet name="header">
 								<h:panelGroup>

@@ -213,6 +213,7 @@
 						<f:subview id="actionIcons" rendered="#{SyllabusTool.editAble == 'true'}">
 							<h:graphicImage url="/images/cursor_drag_arrow.png" title="#{msgs.dragToReorder}"  styleClass="actionIcon"/>
 							<h:commandLink action="#{eachEntry.processListRead}" title="#{msgs.goToItem} #{eachEntry.entry.title}" styleClass="actionIcon">
+                                                          <f:param name="returnToMain" value="true"></f:param>
 							  <h:graphicImage url="/images/pencil.png"/>
 							</h:commandLink>
 							<h:graphicImage url="/images/lightbulb.gif" styleClass="actionIcon publish publishOn" title="#{msgs.clickToUnpublish}" style="#{eachEntry.status == eachEntry.draftStatus ? 'display:none' : ''}"/>
@@ -228,7 +229,7 @@
 							<f:verbatim>></f:verbatim>
 							<h:outputText styleClass="draftTitlePrefix" rendered="#{eachEntry.status == eachEntry.draftStatus}" value="#{msgs.draftTitlePrefix}" />
 							<h:outputText styleClass="" value="#{eachEntry.entry.title}" />
-							<f:subview id="dateStudent" rendered="#{!SyllabusTool.editAble && (eachEntry.entry.startDate != null || eachEntry.entry.endDate != null)}">
+							<f:subview id="dateStudent" rendered="#{(eachEntry.entry.startDate != null || eachEntry.entry.endDate != null)}">
 								<f:verbatim><span style="float: right; padding-right: 1em; padding-left: 1em"></f:verbatim>
 									<h:outputText value="#{eachEntry.entry.startDate}">
 										<f:convertDateTime type="date" pattern="EEE MMM dd, yyyy hh:mm a"/>

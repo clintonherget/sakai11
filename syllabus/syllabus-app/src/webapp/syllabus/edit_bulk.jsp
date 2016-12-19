@@ -207,12 +207,6 @@
 							<h:inputText styleClass="timeInput timeInputEnd" value="#{SyllabusTool.bulkEntry.endTimeString}" id="dataEndTime"/>
 							<f:verbatim><span class="fa fa-calendar-times-o" onclick="$('.timeInputEnd').focus();"></span></f:verbatim>
 						</h:panelGroup>
-						<h:panelGroup styleClass="shorttext" rendered="#{SyllabusTool.calendarExistsForSite}">
-							<h:selectBooleanCheckbox id="linkCalendar" value="#{SyllabusTool.bulkEntry.linkCalendar}" />
-							<h:outputLabel for="linkCalendar">
-								<h:outputText value="#{msgs.linkcalendartitle}"/>
-							</h:outputLabel>
-						</h:panelGroup>
 						<h:panelGroup styleClass="shorttext">
 							<h:selectBooleanCheckbox id="monday" value="#{SyllabusTool.bulkEntry.monday}" />
 							<h:outputText value="#{msgs.monday}"/>
