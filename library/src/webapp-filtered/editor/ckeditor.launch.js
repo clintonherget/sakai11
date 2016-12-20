@@ -224,6 +224,14 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         templates_replaceContent: false
     };
 
+    ckconfig.autosave = {
+        saveDetectionSelectors : "form input[type='button'],form input[type='submit']",
+        //Delay for autosave
+        delay: 300,
+        //autosave_messageType can be "no" or "notification"
+        messageType : "statusbar",
+    };
+
     if (config != null && config.baseFloatZIndex) {
 	ckconfig.baseFloatZIndex = config.baseFloatZIndex;
     }
