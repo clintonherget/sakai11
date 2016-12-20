@@ -145,12 +145,13 @@ confirmation dialog
 				<li><h:outputText value="#{authorMessages.calc_question_simple_instructions_step_3b}" /></li>
 			</ol>
 		</ol>
-		<div class="mathjax-warning" style="display: none;">
-			<h:outputText value="#{authorMessages.accepted_characters}" escape="false"/>
-			<div class="alert alert-warning">
-				<h:outputText value="#{authorMessages.mathjax_usage_warning}" escape="false"/>
-			</div>
-		</div>
+    <div class="mathjax-warning" style="display: none;">
+      <strong>Acceptable Characters</strong>
+      <div class="alert alert-warning">
+        LaTeX and AsciiMath markup may conflict with notation required for this question type.
+        Use the <a href="http://www.nyu.edu/servicelink/041310214003342" target="_blank">WIRIS or MathML plugins</a> in the editor instead.
+      </div>
+    </div>
 		<label><h:outputText value="#{authorMessages.calc_question_example_label}"/></label>
 		<p class="tier2"><h:outputText value="#{authorMessages.calc_question_example1}"/></p>
 		<p class="tier2"><h:outputText value="#{authorMessages.calc_question_example1_formula}"/></p>

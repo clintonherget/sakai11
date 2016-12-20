@@ -121,7 +121,8 @@
     <div class="mathjax-warning" style="display: none;">
       <h:outputText value="#{authorMessages.accepted_characters}" escape="false"/>
       <div class="alert alert-warning">
-          <h:outputText value="#{authorMessages.mathjax_usage_warning}" escape="false"/>
+        LaTeX and AsciiMath markup may conflict with notation required for this question type.
+        Use the <a href="http://www.nyu.edu/servicelink/041310214003342" target="_blank">WIRIS or MathML plugins</a> in the editor instead.
       </div>
     </div>
 
