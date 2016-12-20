@@ -9,15 +9,16 @@
 
 		$('#submissionList input:checkbox').click(function()
 		{
-			var feedbackPanel = document.getElementById("sendFeedbackPanelContent");
+			// CLASSES-2484 removed feedback option
+			//var feedbackPanel = document.getElementById("sendFeedbackPanelContent");
 			var resubPanel = document.getElementById("allowResubmissionPanelContent");
 			var checkedCount = $("#submissionList input:checked").length;
 
-			if ( (checkedCount === 0 && feedbackPanel.style.display !== "none")
-				|| (checkedCount !== 0 && feedbackPanel.style.display === "none") )
-			{
-				ASN.toggleSendFeedbackPanel();
-			}
+			//if ( (checkedCount === 0 && feedbackPanel.style.display !== "none")
+			//	|| (checkedCount !== 0 && feedbackPanel.style.display === "none") )
+			//{
+			//	ASN.toggleSendFeedbackPanel();
+			//}
 
 			if ( resubPanel != null && ((checkedCount === 0 && resubPanel.style.display !== "none")
 				|| (checkedCount !== 0 && resubPanel.style.display === "none") ))
@@ -294,6 +295,8 @@ function printView(url) {
 				</div>
 			#end
 
+			## CLASSES-2484 disables this feedback mode
+			#if (false)
 			<div id="sendFeedbackPanel">
 				<p class="discTria">
 					<a href="javascript:void(0)" onclick="ASN.toggleSendFeedbackPanel();">
@@ -335,6 +338,7 @@ function printView(url) {
 					</div>
 				</div>
 			</div>
+			#end
 			<input type="hidden" name = "allowResToggle" id = "allowResToggle" value="" />
 			#if ($!value_SubmissionType != 4)
 			<div id="allowResubmissionPanel">
