@@ -422,10 +422,6 @@ public class GradebookItemTableRenderer extends Renderer {
 
 			}
 
-			// Render the ending of this row
-			writer.endElement("tr");
-			writer.writeText("\n", null);
-
 			if(isAssignment || isGradeRow)
 			{
 				if(expanded)
@@ -438,6 +434,11 @@ public class GradebookItemTableRenderer extends Renderer {
 
 				hideDivNo++;
 			}
+
+			// Render the ending of this row
+			writer.endElement("tr");
+			writer.writeText("\n", null);
+
 		}
 		writer.endElement("tbody");
 		writer.writeText("\n", null);
