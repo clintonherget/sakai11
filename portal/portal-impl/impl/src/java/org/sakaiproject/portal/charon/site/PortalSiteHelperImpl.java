@@ -467,6 +467,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 		m.put("siteTitle", siteTitle);
 		m.put("siteTitleTrunc", siteTitleTruncated);
 		m.put("fullTitle", siteTitle);
+		m.put("siteTabTitle", FormattedText.makeShortenedText(siteTitle, ServerConfigurationService.getInt("site.title.tab.maxlength", 25), null, null));
 		
 		m.put("siteDescription", s.getHtmlDescription());
 
