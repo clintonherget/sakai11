@@ -190,8 +190,8 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             ['TextColor','BGColor'],
             ['A11ychecker'],
             ['Source','-','Templates'],
-            ['Print']
-
+            ['Print'],
+            ['nyuhelp']
         ],
         toolbar: 'Full',
         resize_dir: 'both',
@@ -286,6 +286,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         CKEDITOR.plugins.addExternal('nyupreview', basePath + 'nyupreview/', 'plugin.js');
         CKEDITOR.plugins.addExternal('autosave',basePath+'autosave/', 'plugin.js');
         CKEDITOR.plugins.addExternal('encodedimage', basePath + 'encodedimage/', 'plugin.js');
+        CKEDITOR.plugins.addExternal('nyuhelp', basePath + 'nyuhelp/', 'plugin.js');
 
         /*
            To enable after the deadline uncomment these two lines and add atd-ckeditor to toolbar
@@ -320,6 +321,8 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         ckconfig.extraPlugins+=",autolink";
         ckconfig.extraPlugins+=",nyupreview";
         ckconfig.extraPlugins+=",encodedimage";
+        ckconfig.extraPlugins+=",nyuhelp";
+
 
         // CLASSES-1937
         if (sakai.editor.siteId && sakai.editor.templates) {
