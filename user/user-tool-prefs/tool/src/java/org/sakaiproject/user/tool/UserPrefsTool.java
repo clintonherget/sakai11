@@ -69,6 +69,9 @@ import org.sakaiproject.util.FormattedText;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.Web;
 
+import org.sakaiproject.coursemanagement.api.CourseManagementService;
+import org.sakaiproject.coursemanagement.api.AcademicSession;
+
 /**
  * UserPrefsTool is the Sakai end-user tool to view and edit one's preferences.
  */
@@ -2594,6 +2597,8 @@ public class UserPrefsTool
 		private List<Term> terms;
 		private List <String> termOrder;
 
+		private CourseManagementService courseManagementService = (CourseManagementService) ComponentManager.get(CourseManagementService.class);
+
 		public class Term implements Comparable<Term> {
 			private String label;
 			private List<Site> sites;
@@ -2673,11 +2678,41 @@ public class UserPrefsTool
 				terms.add(new Term(name, termsToSites.get(name)));
 			}
 
-			termOrder = PortalUtils.getPortalTermOrder(null);
-
-			Collections.sort(terms);
+			sortTerms();
 		}
 
+
+		private void sortTerms() {
+			if (courseManagementService == null) {
+				Collections.sort(terms);
+			} else {
+				List<AcademicSession> sessions = courseManagementService.getAcademicSessions();
+				final List<String> sessionTitles = new ArrayList<>();
+
+				for (AcademicSession session : sessions) {
+					sessionTitles.add(session.getTitle());
+				}
+
+				Collections.sort(terms, new Comparator<Term>() {
+					public boolean equals(Term us, Term them) {
+						return us.equals(them);
+					}
+
+					public int compare(Term us, Term them) {
+						int ourPos = sessionTitles.indexOf(us.getLabel());
+						int theirPos = sessionTitles.indexOf(them.getLabel());
+
+						if (ourPos == -1) {
+							return 1;
+						} else if (theirPos == -1) {
+							return -1;
+						} else {
+							return Integer.compare(ourPos, theirPos);
+						}
+					}
+				});
+			}
+		}
 
 		public List<Term> getTerms() {
 			return terms;
