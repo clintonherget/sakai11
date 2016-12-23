@@ -73,8 +73,8 @@ public class ProfileImage extends WebComponent {
 			}
 		}
 		
-		//Cache for a minute
-		String url = "/direct/profile/"+userUuid + "/image" + sizePart + "?t=" + TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+		//NYU Don't do: Cache for a minute
+		String url = "/direct/profile/"+userUuid + "/image" + sizePart + "?t=" + System.currentTimeMillis();
 		
 		tag.put("src", url);
 		tag.put("alt", "User profile image");
