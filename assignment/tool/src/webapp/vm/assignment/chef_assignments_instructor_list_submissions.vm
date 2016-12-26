@@ -81,7 +81,7 @@ function printView(url) {
 			#if (!$assignment.IsGroup)
 				#if (!$value_CheckAnonymousGrading && $!groups.hasNext())
 					<div class="form-group spinnerBesideContainer">
-						<label class="col-md-2" for="view">
+						<label for="view">
 							$tlang.getString("gen.view2")
 						</label>
 						<div class="col-md-10">
