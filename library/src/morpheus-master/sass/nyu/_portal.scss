@@ -114,7 +114,8 @@ body a[href] {
 
   .has-avatar {
     .#{$namespace}userNav__submenuitem--profilepicture {
-      border: 1px solid rgba(0,0,0,0.1);
+      //border: 1px solid rgba(0,0,0,0.1);
+      background-repeat: no-repeat;
     }
   }
 
@@ -1065,4 +1066,5 @@ body.#{$namespace}toolMenu-collapsed ul#subSites ul li a {
       }
     }
   }
+
 }
