@@ -8,6 +8,14 @@ body a[href] {
     text-decoration: $nyu-link-hover-decoration;
   }
 }
+// Override any jQuery-UI styles
+body {
+  .ui-dialog, .ui-widget, .ui-widget-content {
+    a[href] {
+      color: $nyu-link-color;
+    }
+  }
+}
 // --------------------------------------------------------------------------------------------------------------------
 //  Banner/Logo Header
 // --------------------------------------------------------------------------------------------------------------------
