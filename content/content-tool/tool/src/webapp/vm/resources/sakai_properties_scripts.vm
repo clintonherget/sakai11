@@ -1542,3 +1542,40 @@ document.calendarcounter = 0;
 #javascript("/library/calendar/sakai-calendar.js")
 #javascript("/library/calendar/js/calendar2.js")
 #end
+
+<script>
+  // NYU disable dates when "hidden" until SAK-31876 is fixed
+  function handleToggleDates(radio) {
+    var $radio = $(radio);
+
+    function showDates() {
+      var panel = $radio.closest(".panel");
+      var dates_panel = panel.find(".panel-body");
+      dates_panel.show()
+                 .find(":input").prop("disabled", false);
+    };
+
+    function hideDates() {
+      var panel = $radio.closest(".panel");
+      var dates_panel = panel.find(".panel-body");
+      dates_panel.hide()
+                 .find(":input").prop("disabled", true);
+    };
+
+    if ($radio.is("[id^='hidden_false_']:checked")) {
+      showDates();
+    } else if ($radio.is("[id^='hidden_true_']:checked")) {
+      hideDates();
+    } else {
+      return true;
+    }
+  }
+
+  $(":radio").on("click", function() {
+    handleToggleDates(this);
+  });
+
+  $(":radio").each(function() {
+    handleToggleDates(this);
+  });
+</script>
