@@ -54,6 +54,7 @@ import org.sakaiproject.tool.gradebook.ui.helpers.entity.model.GradebookData;
 import org.sakaiproject.tool.gradebook.ui.helpers.entity.model.GradebookItem;
 import org.sakaiproject.tool.gradebook.ui.helpers.entity.model.StudentGrade;
 import org.sakaiproject.site.api.ToolConfiguration;
+import org.sakaiproject.tool.gradebook.Gradebook;
 import org.sakaiproject.tool.gradebook.ui.helpers.params.GradebookItemViewParams;
 import org.sakaiproject.tool.gradebook.ui.helpers.producers.AuthorizationFailedProducer;
 import org.sakaiproject.tool.gradebook.ui.helpers.producers.GradebookItemProducer;
@@ -157,6 +158,11 @@ public class GradebookEntityProvider extends AbstractEntityProvider implements
 		if (!gradebookService.isGradebookDefined(siteId)) {
 			throw new IllegalArgumentException("No gradebook found for site: "
 					+ siteId);
+		}
+
+		Gradebook gb = (Gradebook)gradebookService.getGradebook(siteId);
+		if (gb == null || !gb.isAssignmentsDisplayed()) {
+		    throw new SecurityException("Grades not accessible for site: "+ siteId);
 		}
 
 		if (securityService.isSuperUser() || siteService.allowUpdateSite(siteId)) {
@@ -270,6 +276,11 @@ public class GradebookEntityProvider extends AbstractEntityProvider implements
 				continue; //skip site if not accessible
 			}
 
+			Gradebook gb = (Gradebook)gradebookService.getGradebook(siteId);
+			if (gb == null || !gb.isAssignmentsDisplayed()) {
+			    continue;
+			}
+
 			GradeCourse course = new GradeCourse(site);
 
 			List<Assignment> gbitems = gradebookService
@@ -329,6 +340,11 @@ public class GradebookEntityProvider extends AbstractEntityProvider implements
 		if (!gradebookService.isGradebookDefined(siteId)) {
 			throw new IllegalArgumentException(String.format(
 					"No gradebook for site %s", siteId));
+		}
+
+		Gradebook gb = (Gradebook)gradebookService.getGradebook(siteId);
+		if (gb == null || !gb.isAssignmentsDisplayed()) {
+		    throw new SecurityException("Grades not accessible for site: "+ siteId);
 		}
 
 		// linear search, slow, but no API for non-admin/non-instructor to get a
