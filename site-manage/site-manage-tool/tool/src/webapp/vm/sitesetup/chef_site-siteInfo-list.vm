@@ -216,7 +216,7 @@
 			#end
 
                         #if ($!siteInstructionMode)
-			<tr class="summary-instruction-mode">
+			<tr>
 				<th>Instruction Mode</th>
 				<td>
 					$!siteInstructionMode
@@ -430,7 +430,7 @@
 		#end
 		#end
             #if ($isMathJaxInstalled)
-            <tr class="summary-mathjax-allowed">
+            <tr>
                 <th>
                 $tlang.getString("sinfo.mathjax.name")
                 </th>
