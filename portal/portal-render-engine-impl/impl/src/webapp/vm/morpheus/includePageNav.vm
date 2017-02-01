@@ -145,7 +145,8 @@
 			</li>
 		#end ## End for each key 
 	
-				#if ( $subSites && $showSubsitesAsFlyout )
+				## NYU disable subsites
+				#if ( false && $subSites && $showSubsitesAsFlyout )
 	
 					<li class="Mrphs-toolsNav__menuitem--subsite">
 						<a id="toggleSubsitesLink" class="Mrphs-toolsNav__menuitem--link" href="javascript:;" title="${rloader.subsitesTitle}" aria-haspopup="true">
@@ -192,7 +193,7 @@
 			</ul>
 		</nav>
 	
-		#if ( $subSites )
+		#if ( false && $subSites )
 	
 			<nav id="subSites" #if ($showSubsitesAsFlyout) class="is-hidden"#end>
 					<ul>
