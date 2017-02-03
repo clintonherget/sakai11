@@ -735,6 +735,11 @@ body {
       #headers {
         line-height: 17px;
       }
+      .nyu-add-import-toolbar {
+        .navIntraTool.actionToolbar {
+          margin-top: 0;
+        }
+      }
     }
   }
 }
