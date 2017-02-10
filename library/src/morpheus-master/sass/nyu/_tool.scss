@@ -776,6 +776,18 @@ body {
         color: $nyu-link-color;
       }
     }
+    ul#toolbar {
+      li {
+        display: inline-block;
+      }
+    }
+    .textType {
+      overflow: hidden;
+      min-height: 24px;
+    }
+    .edit-col {
+      right: 0;
+    }
   }
 }
 
