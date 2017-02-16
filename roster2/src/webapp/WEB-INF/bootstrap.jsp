@@ -90,7 +90,7 @@
 <script type="text/javascript" src="/sakai-roster2-tool/templates.js"></script>
 <script type="text/javascript" src="/sakai-roster2-tool/lib/sakai_utils.js"></script>
 <script type="text/javascript" src="/sakai-roster2-tool/js/roster_permissions.js"></script>
-<script type="text/javascript" src="/sakai-roster2-tool/js/roster.js"></script>
+<script type="text/javascript" src="/sakai-roster2-tool/js/roster.js?_=10.4"></script>
 
 </body>
 </html>
