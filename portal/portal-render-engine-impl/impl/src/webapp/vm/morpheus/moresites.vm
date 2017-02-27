@@ -30,7 +30,7 @@
             #end ## END of IF (${tabsSites.prefsToolUrl})
 
             <li class="otherSitesMenuClose">
-                <a role="menuitem" href="javascript:void(0);">
+                <a role="menuitem" href="javascript:void(0);" title="Finish and Close">
                     <span class="sr-only">${rloader.sit_othersitesclose}</span>
                     <span class="fa fa-times" aria-hidden="true"></span>
                 </a>
