@@ -284,8 +284,6 @@ public class MembershipAction extends PagedResourceActionII
 		context.put("alertMessage", state.getAttribute(STATE_MESSAGE));
 		context.put("membershipTextEdit", new SiteTextEditUtil());
 
-		state.setAttribute("page-size", 100);
-
 		return template;
 
 	} // buildMainPanelContext
