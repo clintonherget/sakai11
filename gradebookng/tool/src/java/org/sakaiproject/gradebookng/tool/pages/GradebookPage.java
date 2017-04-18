@@ -508,7 +508,15 @@ public class GradebookPage extends BasePage {
 				.forUrl(String.format("/gradebookng-tool/scripts/gradebook-sorter.js?version=%s", version)));
 		response.render(JavaScriptHeaderItem
 			.forUrl(String.format("/gradebookng-tool/scripts/gradebook-connection-poll.js?version=%s", version)));
+
+		// NYU help popup resources
+		response.render(CssHeaderItem
+			.forUrl(String.format("/gradebookng-tool/styles/gradebook-help-popup.css?version=%s", version)));
+		response.render(JavaScriptHeaderItem
+			.forUrl(String.format("/gradebookng-tool/scripts/gradebook-help-popup.js?version=%s", version)));
+
 	}
+
 
 	@Override
 	public void onBeforeRender() {
