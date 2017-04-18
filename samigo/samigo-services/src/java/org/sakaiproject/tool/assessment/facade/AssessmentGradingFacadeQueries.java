@@ -106,6 +106,8 @@ import org.sakaiproject.user.api.UserDirectoryService;
 import org.springframework.orm.hibernate4.HibernateCallback;
 import org.springframework.orm.hibernate4.support.HibernateDaoSupport;
 
+import org.sakaiproject.tool.assessment.data.dao.assessment.PublishedAssessmentData;
+
 @Slf4j
 public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implements AssessmentGradingFacadeQueriesAPI {
 
@@ -114,6 +116,26 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
      */
     public AssessmentGradingFacadeQueries() {
     }
+
+  public Iterator<String> getOrderedQuestions(PublishedAssessmentService pubService, String publishedAssessmentId) {
+      List<PublishedSectionData> sections = pubService.getPublishedAssessment(publishedAssessmentId).getSectionArray();
+
+      Collections.sort(sections);
+
+      List<String> result = new ArrayList<>();
+
+      for (PublishedSectionData section : sections) {
+	  List<PublishedItemData> items = section.getItemArray();
+
+	  Collections.sort(items);
+
+	  for (Object item : items) {
+	      result.add(((PublishedItemData)item).getText());
+	  }
+      }
+
+      return result.iterator();
+  }
 
     /**
      * Injected Services
@@ -1949,6 +1971,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
     public List getExportResponsesData(String publishedAssessmentId, boolean anonymous, String audioMessage, String fileUploadMessage, String noSubmissionMessage, boolean showPartAndTotalScoreSpreadsheetColumns, String poolString, String partString, String questionString, String textString, String rationaleString, String itemGradingCommentsString, Map useridMap, String responseCommentString) {
         List dataList = new ArrayList();
         List headerList = new ArrayList();
+        ArrayList questionTextList = new ArrayList();
         List finalList = new ArrayList(2);
         PublishedAssessmentService pubService = new PublishedAssessmentService();
 
@@ -2015,9 +2038,11 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                     } catch (Exception e) {
                         log.error("Cannot get user");
                     }
+
+                    responseList.add(agentEid);
                     responseList.add(lastName);
                     responseList.add(firstName);
-                    responseList.add(agentEid);
+
                     if (assessmentGradingData.getForGrade()) {
                         if (lastAgentId.equals(agentId)) {
                             numSubmission++;
@@ -2089,6 +2114,8 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                         }
                     }
                 }
+
+                Iterator<String> questionTextIterator = getOrderedQuestions(pubService, publishedAssessmentId);
 
                 int questionNumber = 0;
                 for (Object oo : grades) {
@@ -2372,6 +2399,11 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                     // if question type is not matrix choices apply the original code
                     if (!matrixChoices) {
                         responseList.add(maintext);
+
+                        if (addRationale) {
+                            responseList.add(rationale);
+                        }
+
                         if (grade.getComments() != null) {
                             itemGradingComments = grade.getComments().replaceAll("<br\\s*/>", "");
                         }
@@ -2397,16 +2429,17 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                             Map.Entry e = (Map.Entry) it.next();
                             log.debug("Adding to response list " + e.getKey() + " and " + e.getValue());
                             responseList.add(e.getValue());
+
+                            if (addRationale) {
+                                responseList.add(rationale);
+                            }
+
                             if (grade.getComments() != null) {
                                 itemGradingComments = grade.getComments().replaceAll("<br\\s*/>", "");
                             }
                             responseList.add(itemGradingComments);
                             itemGradingComments = "";
                         }
-                    }
-
-                    if (addRationale) {
-                        responseList.add(rationale);
                     }
 
                     if (addResponseComment) {
@@ -2431,6 +2464,14 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                                     questionNumber,
                                     poolString,
                                     poolName));
+
+
+                            if (questionTextIterator.hasNext()) {
+                                questionTextList.add(questionTextIterator.next());
+                            } else {
+                                log.error("Ran out of question text before running out of responses!  Bug?");
+                            }
+
                             if (addRationale) {
                                 headerList.add(makeHeader(partString,
                                         sectionSequenceNumber,
@@ -2439,6 +2480,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                                         questionNumber,
                                         poolString,
                                         poolName));
+                                questionTextList.add("");
                             }
                             if (addResponseComment) {
                                 headerList.add(makeHeader(partString,
@@ -2448,6 +2490,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                                         questionNumber,
                                         poolString,
                                         poolName));
+                                questionTextList.add("");
                             }
                             headerList.add(makeHeader(partString,
                                     sectionSequenceNumber,
@@ -2456,8 +2499,18 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                                     questionNumber,
                                     poolString,
                                     poolName));
+                            questionTextList.add("");
                         } else {
                             int numberRows = responsesMap.size();
+
+                            String questionText = "";
+
+                            if (questionTextIterator.hasNext()) {
+				questionText = questionTextIterator.next();
+                            } else {
+				log.error("Matrix: Ran out of question text before running out of responses!  Bug?");
+                            }
+
                             for (int i = 0; i < numberRows; i = i + 1) {
                                 headerList.add(makeHeaderMatrix(partString,
                                         sectionSequenceNumber,
@@ -2467,6 +2520,9 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                                         i + 1,
                                         poolString,
                                         poolName));
+
+                                questionTextList.add(questionText);
+
                                 if (addRationale) {
                                     headerList.add(makeHeaderMatrix(partString,
                                             sectionSequenceNumber,
@@ -2476,6 +2532,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                                             i + 1,
                                             poolString,
                                             poolName));
+                                    questionTextList.add("");
                                 }
                                 if (addResponseComment) {
                                     headerList.add(makeHeaderMatrix(partString,
@@ -2486,6 +2543,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                                             i + 1,
                                             poolString,
                                             poolName));
+                                    questionTextList.add("");
                                 }
                                 headerList.add(makeHeaderMatrix(partString,
                                         sectionSequenceNumber,
@@ -2495,6 +2553,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                                         i + 1,
                                         poolString,
                                         poolName));
+                                questionTextList.add("");
                             }
                         }
                     }
@@ -2530,9 +2589,9 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
                     log.error("Cannot get user");
                 }
                 responseList = new ArrayList();
+                responseList.add(agentEid);
                 responseList.add(lastName);
                 responseList.add(firstName);
-                responseList.add(agentEid);
                 responseList.add(noSubmissionMessage);
                 dataList.add(responseList);
             }
@@ -2540,6 +2599,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
         Collections.sort(dataList, new ResponsesComparator(anonymous));
         finalList.add(dataList);
         finalList.add(headerList);
+        finalList.add(questionTextList);
         return finalList;
     }
 

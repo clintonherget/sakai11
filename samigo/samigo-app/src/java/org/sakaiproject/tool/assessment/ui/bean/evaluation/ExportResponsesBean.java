@@ -210,9 +210,9 @@ public class ExportResponsesBean implements Serializable, PhaseAware {
   		  headerList.add(ContextUtil.getLocalizedString(MSG_BUNDLE,"sub_id"));
   	  	}
   	  	else {
+  		  headerList.add(ContextUtil.getLocalizedString(MSG_BUNDLE,"user_name"));
   		  headerList.add(ContextUtil.getLocalizedString(MSG_BUNDLE,"last_name"));
   		  headerList.add(ContextUtil.getLocalizedString(MSG_BUNDLE,"first_name"));
-  		  headerList.add(ContextUtil.getLocalizedString(MSG_BUNDLE,"user_name"));
   		  headerList.add(ContextUtil.getLocalizedString(MSG_BUNDLE,"num_submission"));
   	  	}
 
@@ -231,11 +231,23 @@ public class ExportResponsesBean implements Serializable, PhaseAware {
 	        headerList.add(ContextUtil.getLocalizedString(MSG_BUNDLE,"tot"));
 	        headerList.add(itemGradingCommentsString);
         }
+
+	List questionTextList = new ArrayList();
+
+	// Pad our question text row to line up with the first question
+	for (int i = 0; i < headerList.size() - 1; i++) {
+		questionTextList.add("");
+	}
+
         //SAM-1693 the returned list could be null -DH
         if (exportResponsesDataList != null) {
         	headerList.addAll((ArrayList) exportResponsesDataList.get(1));
         }
   	  	
+	    questionTextList.addAll((ArrayList) exportResponsesDataList.get(2));
+
+	    // Add our new question text
+  	    list.add(0,questionTextList);
   	    list.add(0,headerList);
   	  	
   		ArrayList<Object> newSheetList;
