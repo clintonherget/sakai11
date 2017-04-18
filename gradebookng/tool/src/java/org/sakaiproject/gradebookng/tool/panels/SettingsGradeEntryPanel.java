@@ -70,7 +70,7 @@ public class SettingsGradeEntryPanel extends BasePanel {
 				new PropertyModel<Integer>(this.model, "gradebookInformation.gradeType"));
 
 		gradeEntry.add(new Radio<>("points", Model.of(GradingType.POINTS.getValue())));
-		gradeEntry.add(new Radio<>("percentages", Model.of(GradingType.PERCENTAGE.getValue())));
+		gradeEntry.add(new Radio<>("percentages", Model.of(GradingType.PERCENTAGE.getValue())).setEnabled(false));
 		settingsGradeEntryPanel.add(gradeEntry);
 
 	}
