@@ -1781,9 +1781,46 @@ GbGradeTable.setupDragAndDrop = function () {
   GbGradeTable._cancelDrag = cancelDrag;
 
 
+  function moveColumn(table, fromIndex, toIndex) {
+    if (fromIndex == toIndex) {
+      return;
+    }
+
+    if (fromIndex < toIndex) {
+      /* Moving left to right */
+      $.each(table, function (i, row) {
+        var fromValue = row[fromIndex]
+
+        /* Shift rows left to make space */
+        for (var i = fromIndex; i < toIndex; i++) {
+          row[i] = row[i + 1];
+        }
+
+        /* Place the moved value */
+        row[toIndex] = fromValue;
+      });
+    } else {
+      /* Moving right to left */
+      $.each(table, function (i, row) {
+        var fromValue = row[fromIndex]
+
+        /* Shift rows right to make space */
+        for (var i = fromIndex; i > toIndex; i--) {
+          row[i] = row[i - 1];
+        }
+
+        /* Place the moved value */
+        row[toIndex] = fromValue;
+      });
+    }
+  }
+
+
   $(document).on('mouseup', function (e) {
     if (currentlyDragging) {
       cancelDrag();
+
+      $('#gbReorderColumnsFailed').hide();
 
       if (dropTarget) {
         var targetAssignmentId = $.data(dropTarget[0], "assignmentid");
@@ -1814,6 +1851,20 @@ GbGradeTable.setupDragAndDrop = function () {
 
         var sourceModel = GbGradeTable.colModelForAssignment(sourceAssignmentId);
 
+        var handleColumnReorder = function () {
+          /* Reorder was successful.  Update local state to match */
+
+          /* Rearrange the grade columns */
+          moveColumn(GbGradeTable.grades, sourceColIndex, targetColIndex);
+
+          /* And the header columns */
+          moveColumn([GbGradeTable.columns],
+                     (sourceColIndex - numberOfFixedColumns),
+                     (targetColIndex - numberOfFixedColumns));
+
+          GbGradeTable.redrawTable(true);
+        };
+
         if (GbGradeTable.settings.isGroupedByCategory) {
           // subtract the category column offset
           newIndex = newIndex - GbGradeTable.indexOfFirstCategoryColumn(sourceModel.categoryId);
@@ -1823,23 +1874,23 @@ GbGradeTable.setupDragAndDrop = function () {
             sourceAssignmentId,
             sourceModel.categoryId,
             newIndex,
-            $.noop,
-            $.noop,
-            function() {
-              location.reload();
-            }
-          );
+            handleColumnReorder,
+            function () {
+              /* error! */
+              $('#gbReorderColumnsFailed').show();
+            },
+            $.noop);
         } else {
           GradebookAPI.updateAssignmentOrder(
             GbGradeTable.container.data("siteid"),
             sourceAssignmentId,
             newIndex,
-            $.noop,
-            $.noop,
-            function() {
-              location.reload();
-            }
-          )
+            handleColumnReorder,
+            function () {
+              /* error! */
+              $('#gbReorderColumnsFailed').show();
+            },
+            $.noop)
         }
 
         dragTarget = undefined;
