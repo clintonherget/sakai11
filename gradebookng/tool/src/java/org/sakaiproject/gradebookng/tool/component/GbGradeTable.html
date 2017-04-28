@@ -31,10 +31,15 @@
         <script id="assignmentHeaderTemplate" type="text/template">
             <span class="colHeader hide">${col}</span>
             <div class="relative">
+                {if extraCredit}
+                    <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracredit"></span>
+                {/if}
+                {if externallyMaintained}
+                    <span class="gb-external-app ${externalAppIconCSS}"
+                          wicket:message="title:label.gradeitem.externalapplabel">
+                    </span>
+                {/if}
                 <a class="gb-title">
-                    {if extraCredit}
-                        <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracredit"></span>
-                    {/if}
                     ${title}
                 </a>
                 {if settings.isCategoriesEnabled}
@@ -70,12 +75,6 @@
                     <wicket:message key="label.due"/> 
                     <span>${dueDate}</span>
                 </div>
-                {if externallyMaintained}
-                    <div class="gb-due-date">
-                        <wicket:message key="label.external"/> 
-                        <span>${externalAppName}</span>
-                    </div>
-                {/if}
                 <div class="gb-grade-item-flags">
                     <!-- TODO popover -->
                     {if released}

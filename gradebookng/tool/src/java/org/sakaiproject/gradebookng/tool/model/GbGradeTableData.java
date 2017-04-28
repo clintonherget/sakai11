@@ -1,6 +1,8 @@
 package org.sakaiproject.gradebookng.tool.model;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.sakaiproject.gradebookng.business.GbRole;
 import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
@@ -19,6 +21,8 @@ public class GbGradeTableData {
     private GradebookInformation gradebookInformation;
     private GradebookUiSettings uiSettings;
     private GbRole role;
+    private Map<String, String> toolNameToIconCSS;
+    private String defaultIconCSS;
 
     public GbGradeTableData(GradebookNgBusinessService businessService,
                             GradebookUiSettings settings) {
@@ -53,6 +57,10 @@ public class GbGradeTableData {
 
         gradebookInformation = businessService.getGradebookSettings();
         stopwatch.time("getGradebookSettings", stopwatch.getTime());
+
+        toolNameToIconCSS = businessService.getIconClassMap();
+        defaultIconCSS = businessService.getDefaultIconClass();
+        stopwatch.time("toolNameToIconCSS", stopwatch.getTime());
     }
 
     public List<Assignment> getAssignments() {
@@ -77,5 +85,13 @@ public class GbGradeTableData {
 
     public GbRole getRole() {
         return role;
+    }
+
+    public Map<String, String> getToolNameToIconCSS() {
+        return toolNameToIconCSS;
+    }
+
+    public String getDefaultIconCSS() {
+        return defaultIconCSS;
     }
 }

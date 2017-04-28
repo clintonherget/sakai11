@@ -499,8 +499,11 @@ GbGradeTable.renderTable = function (elementId, tableData) {
 
       $th.
         attr("role", "columnheader").
-        attr("scope", "col").
-        addClass("gb-categorized"); /* TODO only if enabled */
+        attr("scope", "col");
+
+      if (GbGradeTable.settings.isGroupedByCategory) {
+        $th.addClass("gb-categorized");
+      }
 
       var columnModel = this.view.settings.columns[col]._data_;
 
@@ -519,6 +522,11 @@ GbGradeTable.renderTable = function (elementId, tableData) {
 
         if (columnModel.type == "assignment") {
           $.data(th, "assignmentid", columnModel.assignmentId);
+
+          if (columnModel.externallyMaintained) {
+            var flag = th.getElementsByClassName('gb-external-app')[0];
+            flag.title = flag.title.replace('{0}', columnModel.externalAppName);
+          }
         }
 
         if (GbGradeTable.settings.isCategoriesEnabled) {

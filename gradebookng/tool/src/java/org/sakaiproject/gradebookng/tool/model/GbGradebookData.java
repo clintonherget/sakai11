@@ -67,6 +67,7 @@ public class GbGradebookData {
         private boolean isExternallyMaintained;
         private String externalId;
         private String externalAppName;
+        private String externalAppIconCSS;
 
         private String categoryId;
         private String categoryName;
@@ -169,6 +170,8 @@ public class GbGradebookData {
     private GradebookInformation settings;
     private GradebookUiSettings uiSettings;
     private GbRole role;
+    private Map<String, String> toolNameIconCSSMap;
+    private String defaultIconCSS;
 
     private Component parent;
 
@@ -178,6 +181,8 @@ public class GbGradebookData {
                            GradebookInformation settings,
                            GradebookUiSettings uiSettings,
                            GbRole role,
+                           Map<String, String> toolNameIconCSSMap,
+                           String defaultIconCSS,
                            Component parentComponent) {
         this.parent = parentComponent;
         this.categories = categories;
@@ -186,6 +191,9 @@ public class GbGradebookData {
         this.role = role;
 
         this.studentGradeInfoList = studentGradeInfoList;
+
+        this.toolNameIconCSSMap = toolNameIconCSSMap;
+        this.defaultIconCSS = defaultIconCSS;
 
         this.columns = loadColumns(assignments);
         this.students = loadStudents(studentGradeInfoList);
@@ -428,6 +436,7 @@ public class GbGradebookData {
                                                 a1.isExternallyMaintained(),
                                                 a1.getExternalId(),
                                                 a1.getExternalAppName(),
+                                                getIconCSSForExternalAppName(a1.getExternalAppName()),
 
                                                 nullable(a1.getCategoryId()),
                                                 a1.getCategoryName(),
@@ -550,5 +559,13 @@ public class GbGradebookData {
         public boolean canEdit() {
             return false;
         }
+    }
+
+    private String getIconCSSForExternalAppName(String externalAppName) {
+        if (toolNameIconCSSMap.containsKey(externalAppName)) {
+            return toolNameIconCSSMap.get(externalAppName);
+        }
+
+        return defaultIconCSS;
     }
 }

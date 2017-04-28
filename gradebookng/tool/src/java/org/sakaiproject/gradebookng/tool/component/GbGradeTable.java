@@ -110,6 +110,8 @@ public class GbGradeTable extends Panel implements IHeaderContributor {
 				gbGradeTableData.getGradebookInformation(),
 				gbGradeTableData.getUiSettings(),
 				gbGradeTableData.getRole(),
+				gbGradeTableData.getToolNameToIconCSS(),
+				gbGradeTableData.getDefaultIconCSS(),
 				this);
 
 		response.render(OnDomReadyHeaderItem.forScript(String.format("var tableData = %s", gradebookData.toScript())));

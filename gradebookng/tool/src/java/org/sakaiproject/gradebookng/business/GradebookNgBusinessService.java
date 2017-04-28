@@ -60,6 +60,7 @@ import org.sakaiproject.service.gradebook.shared.SortType;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SiteService;
+import org.sakaiproject.tool.api.Tool;
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.tool.gradebook.Gradebook;
 import org.sakaiproject.tool.gradebook.GradingEvent;
@@ -1959,15 +1960,54 @@ public class GradebookNgBusinessService {
 	 */
 	public String getIconClass(final Assignment assignment) {
 		final String externalAppName = assignment.getExternalAppName();
-		String iconClass = ICON_SAKAI + "default-tool";
+		String iconClass = getDefaultIconClass();
 		if (StringUtils.equals(externalAppName, "Assignments")) {
-			iconClass = ICON_SAKAI + "sakai-assignment-grades";
+			iconClass = getAssignmentsIconClass();
 		} else if (StringUtils.equals(externalAppName, "Tests & Quizzes")) {
-			iconClass = ICON_SAKAI + "sakai-samigo";
+			iconClass = getSamigoIconClass();
 		} else if (StringUtils.equals(externalAppName, "Lesson Builder")) {
-			iconClass = ICON_SAKAI + "sakai-lessonbuildertool";
+			iconClass = getLessonBuilderIconClass();
 		}
 		return iconClass;
 	}
 
+
+	/**
+	 * Helper to determine the icon class for possible external app names
+	 * @return
+	 */
+	public Map<String, String> getIconClassMap() {
+		Map<String, String> mapping = new HashMap<>();
+
+		Tool assignment = toolManager.getTool("sakai.assignment.grades");
+		if (assignment != null) {
+			mapping.put(assignment.getTitle(), getAssignmentsIconClass());
+		}
+
+		Tool samigo = toolManager.getTool("sakai.samigo");
+		if (samigo != null) {
+			mapping.put(samigo.getTitle(), getSamigoIconClass());
+		}
+
+		mapping.put("Lesson Builder", getLessonBuilderIconClass());
+
+		return mapping;
+	}
+
+
+	public String getDefaultIconClass() {
+		return ICON_SAKAI + "default-tool";
+	}
+
+	private String getAssignmentsIconClass() {
+		return ICON_SAKAI + "sakai-assignment-grades";
+	}
+
+	private String getSamigoIconClass() {
+		return ICON_SAKAI + "sakai-samigo";
+	}
+
+	private String getLessonBuilderIconClass() {
+		return ICON_SAKAI + "sakai-lessonbuildertool";
+	}
 }
