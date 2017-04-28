@@ -1867,6 +1867,8 @@ GbGradeTable.setupDragAndDrop = function () {
     if (currentlyDragging) {
       clearSelection();
 
+      $('.column-marker').remove();
+
       var margin = 10;
       floatyFloat.css('left', e.clientX + margin + 'px');
 
@@ -1885,8 +1887,6 @@ GbGradeTable.setupDragAndDrop = function () {
       var leftX = $(dropTarget).offset().left;
       var candidateXMidpoint = leftX + ($(dropTarget).width() / 2.0);
 
-      $('.column-marker').remove();
-
       var marker = $('<div class="column-marker" />')
         .css('display', 'inline-block')
         .css('position', 'absolute')
@@ -1900,6 +1900,15 @@ GbGradeTable.setupDragAndDrop = function () {
       } else {
         dropTargetSide = RIGHT_POSITION;
         marker.css('right', '0')
+      }
+
+      if (candidateTarget.is(dragTarget) ||
+          (candidateTarget.is(dragTarget.prev()) && dropTargetSide == RIGHT_POSITION) ||
+          (candidateTarget.is(dragTarget.next()) && dropTargetSide == LEFT_POSITION)) {
+
+            /* If our drop target would put us right back where we started,
+               don't show the drop indicator. */
+            return true;
       }
 
       marker.prependTo($('.relative', dropTarget));
