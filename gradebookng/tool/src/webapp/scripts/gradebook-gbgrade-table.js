@@ -1160,7 +1160,7 @@ GbGradeTable.applyStudentFilter = function(data) {
 };
 
 GbGradeTable.getColumnWidths = function() {
-  var studentColumnWidth = 240;
+  var studentColumnWidth = 180;
   var courseGradeColumnWidth = 140;
 
   // if showing course grade letter, percentage and points
@@ -1172,7 +1172,7 @@ GbGradeTable.getColumnWidths = function() {
   }
 
   return [studentColumnWidth, courseGradeColumnWidth].
-            concat(GbGradeTable.columns.map(function () { return 230 }));
+            concat(GbGradeTable.columns.map(function () { return studentColumnWidth }));
 };
 
 GbGradeTable.setupToggleGradeItems = function() {
