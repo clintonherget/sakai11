@@ -33,9 +33,11 @@
   border-left: 1px solid #EEE;
   height: 28px;
   line-height: 28px;
+  padding: 0 14px;
 }
 #gradeTable .handsontableInput {
   line-height: 30px;
+  text-align: center;
 }
 
 #gradeTable .handsontable tr > *:nth-child(1){
