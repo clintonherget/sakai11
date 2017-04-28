@@ -523,7 +523,9 @@ GbGradeTable.renderTable = function (elementId, tableData) {
 
         if (GbGradeTable.settings.isCategoriesEnabled) {
           var color = columnModel.color || columnModel.categoryColor;
-          $th.css("borderTopColor", color);
+          if (GbGradeTable.settings.isGroupedByCategory) {
+            $th.css("borderTopColor", color);
+          }
           $th.find(".swatch").css("backgroundColor", color);
         }
       }

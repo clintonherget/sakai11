@@ -155,7 +155,7 @@
 #gradeTable .handsontable tr > .currentRow:nth-child(2) {
   background-color: #EEE;
 }
-#gradeTable th.gb-categorized {
+#gradebookSpreadsheet.gb-grouped-by-category #gradeTable th.gb-categorized {
   border-top: 10px solid #F0F0F0;
 }
 #gradeTable .swatch {
