@@ -283,14 +283,12 @@
   position: absolute;
   width: 300px;
   padding: 10px;
-  background-color: #EAEAEA;
   font-size: 0.8em;
-  background: #000;
-  background: rgba(0,0,0,0.9);
-  color: #fff;
+  background: #FAFAFA;
+  color: #212121;
   z-index: 1000;
   border-radius: 5px;
-  box-shadow: 1px 1px 3px #333;  
+  box-shadow: 1px 1px 5px 1px #999;
 }
 .gb-metadata p,
 .gb-metadata dl,
@@ -322,13 +320,13 @@
 }
 .gb-metadata:after {
   border-color: transparent;
-  border-bottom-color: rgba(0,0,0,0.9);
+  border-bottom-color: #FAFAFA;
   border-width: 10px;
   margin-left: -10px;
 }
 .gb-metadata:before {
   border-color: transparent;
-  border-bottom-color: rgba(0,0,0,0.9);
+  border-bottom-color: #DDD;
   border-width: 10px;
   margin-left: -10px;
 }
@@ -382,21 +380,17 @@
   position: fixed;
   width: 80%;
   height: 60%;
-  background: #000;
-  background: rgba(0,0,0,0.9);
-  color: #fff;
+  background: #FAFAFA;
+  color: #212121;
   z-index: 1000;
   top: 20%;
   left: 150px;
   padding: 10px;
   margin: 0;
   border-radius: 5px;
-  box-shadow: 1px 1px 3px #333;
+  box-shadow: 1px 1px 20px 5px #999;
   overflow: auto;
   clip: auto;
-}
-#gradeTable table caption dt {
-  color: #FE8;
 }
 .handsontable th {
   overflow: visible; /* to allow visual cue to be rendered nicely */
