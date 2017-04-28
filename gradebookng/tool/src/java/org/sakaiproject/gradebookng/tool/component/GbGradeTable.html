@@ -187,26 +187,18 @@
             <div class="relative">
                 <div class="gb-value">
                     <div class="rowHeader">
-                        {if settings.isStudentOrderedByLastName}
-                            <span class="gb-last-name">${lastName}</span>,
-                            <span class="gb-first-name">${firstName}</span>
-                            (<span class="gb-eid">${eid}</span>)
-                        {else}
-                            <span class="gb-first-name">${firstName}</span>
-                            <span class="gb-last-name">${lastName}</span>
-                            (<span class="gb-eid">${eid}</span>)
-                        {/if}
+                        <a href="javascript:void(0);" class="gb-view-grade-summary">
+                            {if settings.isStudentOrderedByLastName}
+                                <span class="gb-last-name">${lastName}</span>,
+                                <span class="gb-first-name">${firstName}</span>
+                                (<span class="gb-eid">${eid}</span>)
+                            {else}
+                                <span class="gb-first-name">${firstName}</span>
+                                <span class="gb-last-name">${lastName}</span>
+                                (<span class="gb-eid">${eid}</span>)
+                            {/if}
+                        </a>
                     </div>
-                </div>
-                <div class="btn-group">
-                    <a class="btn btn-sm btn-default dropdown-toggle"
-                       data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
-                       tabindex="-1">
-                        <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                        <li><a href="javascript:void(0);" class="gb-view-grade-summary" role="menuitem"><wicket:message key="label.studentsummary.instructorviewtab" /></a></li>
-                    </ul>
                 </div>
             </div>
         </script>

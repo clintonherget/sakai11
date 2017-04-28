@@ -750,9 +750,8 @@ GbGradeTable.renderTable = function (elementId, tableData) {
     });
   }).
   // View Grade Summary
-  on("click", ".gb-dropdown-menu .gb-view-grade-summary", function() {
-    var $dropdown = $(this).closest(".gb-dropdown-menu");
-    var $cell = $dropdown.data("cell");
+  on("click", ".gb-view-grade-summary", function() {
+    var $cell = $(this).closest('td');
 
     GbGradeTable.viewGradeSummary($.data($cell[0], "studentid"));
   }).
@@ -2018,6 +2017,14 @@ GbGradeTable.setupKeyboardNavigation = function() {
           GbGradeTable.instance.deselectCell();
           GbGradeTable.instance.rootElement.focus();
         }
+      }
+
+      // return on student cell should invoke student summary
+      if (!editing && event.keyCode == 13) {
+          if ($current.find('.gb-view-grade-summary').length > 0) {
+              iGotThis();
+              $current.find('.gb-view-grade-summary').trigger('click');
+          }
       }
     }
   });
