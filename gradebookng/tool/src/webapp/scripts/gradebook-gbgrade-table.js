@@ -101,7 +101,9 @@ $(document).ready(function() {
     gradeItemSummary: TrimPath.parseTemplate(
         $("#gradeItemSummaryTemplate").html().trim().toString()),
     caption: TrimPath.parseTemplate(
-        $("#captionTemplate").html().trim().toString())
+        $("#captionTemplate").html().trim().toString()),
+    tooltip: TrimPath.parseTemplate(
+        $("#tooltipTemplate").html().trim().toString())
 
   };
 
@@ -2259,12 +2261,55 @@ GbGradeTable.setupCellMetaDataSummary = function() {
     }
   });
 
+  $(GbGradeTable.instance.rootElement).on("click", "th .gb-external-app, th .gb-grade-item-flags > *", function(event){
+    console.log(event);
+    event.preventDefault();
+    var data = {
+      tooltip: $(this).attr('title') 
+    };
+    GbGradeTable.showTooltip($(this), data);
+  });
+
   GbGradeTable.instance.addHook("afterScrollHorizontally", function() {
     GbGradeTable.hideMetadata();
   });
 
   GbGradeTable.instance.addHook("afterScrollVertically", function() {
     GbGradeTable.hideMetadata();
+  });
+};
+
+
+GbGradeTable.hideTooltip = function() {
+  $("#gbTooltip").remove();
+};
+
+
+GbGradeTable.showTooltip = function(target, data) {
+  GbGradeTable.hideTooltip();
+  var selected = GbGradeTable.instance.getSelected();
+  var $tooltip = GbGradeTable.templates.tooltip.process(data);
+
+  $(GbGradeTable.instance.rootElement).after($tooltip);
+
+  $tooltip = $("#gbTooltip");
+
+  var targetOffset = target.offset();
+  var wrapperOffset = $("#gradeTableWrapper").offset();
+  var targetHeight = target.height();
+  var targetWidth = target.width();
+
+  var topOffset = Math.abs(wrapperOffset.top - targetOffset.top) + targetHeight + 10;
+  var leftOffset = Math.abs(wrapperOffset.left - targetOffset.left) + parseInt(targetWidth/2) - parseInt($tooltip.width() / 2) - 8;
+
+  $tooltip.css({
+    top: topOffset,
+    left: leftOffset
+  });
+
+  $tooltip.on('click', '.gb-metadata-close', function(event) {
+    GbGradeTable.hideTooltip();
+    GbGradeTable.instance.selectCell(selected[0], selected[1]);
   });
 };
 

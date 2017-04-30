@@ -288,6 +288,17 @@
                 </div>
             </div>
         </script>
+        <script id="tooltipTemplate" type="text/template">
+            <div id="gbTooltip" class="gb-metadata">
+                <a href="javascript:void(0);" class="gb-metadata-close"></a>
+                <p>
+                    {if defined('icon')}
+                        <span class="${icon}"></span>
+                    {/if}
+                    ${tooltip}
+                </p>
+            </div>
+        </script>
         <script id="studentSummaryTemplate" type="text/template">
             <wicket:message key="label.toolbar.studentsummary"/>
         </script>
