@@ -2132,6 +2132,12 @@ GbGradeTable.setupCellMetaDataSummary = function() {
           GbGradeTable.templates.metadata.process(metadata)
         );
 
+        if (metadata.assignment && metadata.assignment.externalAppName) {
+          var externalFlag = $("#"+cellKey).find('.gb-external-app-wrapper');
+          externalFlag.find('.gb-flag-external').addClass(metadata.assignment.externalAppIconCSS);
+          externalFlag.html(externalFlag.html().replace('{0}', metadata.assignment.externalAppName));
+        }
+
         $("#"+cellKey).hide().on("click", ".gb-metadata-close", function() {
           GbGradeTable.hideMetadata();
           GbGradeTable.instance.selectCell(row, col);
@@ -2262,7 +2268,6 @@ GbGradeTable.setupCellMetaDataSummary = function() {
   });
 
   $(GbGradeTable.instance.rootElement).on("click", "th .gb-external-app, th .gb-grade-item-flags > *", function(event){
-    console.log(event);
     event.preventDefault();
     var data = {
       tooltip: $(this).attr('title') 

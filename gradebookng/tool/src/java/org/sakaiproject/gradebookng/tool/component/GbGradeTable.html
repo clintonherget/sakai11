@@ -262,10 +262,7 @@
                                         <pre>${JSON.stringify(notification.conflict)}</pre>
                                     </li>
                                 {elseif notification.type == 'external'}
-                                    <li>
-                                        <span class="gb-flag-read-only"></span> <wicket:message key="grade.notifications.readonly"/>
-                                    </li>
-                                    <li>
+                                    <li class="gb-external-app-wrapper">
                                         <span class="gb-flag-external"></span> <wicket:message key="grade.notifications.isexternal"/>
                                     </li>
                                 {elseif notification.type == 'readonly'}
