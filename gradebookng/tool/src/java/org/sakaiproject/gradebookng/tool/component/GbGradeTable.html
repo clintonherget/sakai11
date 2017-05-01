@@ -37,6 +37,7 @@
                 <div class="btn-group">
                     <a class="btn btn-sm btn-default dropdown-toggle"
                        data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+                       wicket:message="title:coursegrade.header.menulabel"
                        tabindex="-1">
                         <span class="caret"></span>
                     </a>
@@ -150,6 +151,7 @@
                     <div class="btn-group">
                         <a class="btn btn-sm btn-default dropdown-toggle"
                            data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+                           wicket:message="title:students.menulabel"
                            tabindex="-1">
                             <span class="caret"></span>
                         </a>
@@ -191,6 +193,7 @@
                 <div class="btn-group">
                     <a class="btn btn-sm btn-default dropdown-toggle"
                        data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+                       wicket:message="title:coursegrade.cell.menulabel"
                        tabindex="-1">
                         <span class="caret"></span>
                     </a>
@@ -329,6 +332,9 @@
         </script>
         <script id="gradeMenuTooltip" type="text/template">
             <wicket:message key="grade.menulabel"/>
+        </script>
+        <script id="gradeHeaderMenuTooltip" type="text/template">
+            <wicket:message key="assignment.menulabel"/>
         </script>
         <script id="captionTemplate" type="text/template">
             <caption id="gradeTableCaption">

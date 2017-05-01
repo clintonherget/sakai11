@@ -106,7 +106,8 @@ $(document).ready(function() {
         $("#tooltipTemplate").html().trim().toString()),
     gradeMenuTooltip: TrimPath.parseTemplate(
        $("#gradeMenuTooltip").html().trim().toString()),
-
+    gradeHeaderMenuTooltip: TrimPath.parseTemplate(
+       $("#gradeHeaderMenuTooltip").html().trim().toString()),
   };
 
 });
@@ -546,6 +547,15 @@ GbGradeTable.renderTable = function (elementId, tableData) {
             var flag = th.getElementsByClassName('gb-external-app')[0];
             flag.title = flag.title.replace('{0}', columnModel.externalAppName);
           }
+
+          var dropdownToggle = $th.find('.dropdown-toggle');
+          if (dropdownToggle.length > 0) {
+            dropdownToggle.show().attr('aria-hidden', 'false');
+            var dropdownToggleTooltip = GbGradeTable.templates.gradeHeaderMenuTooltip.process();
+            dropdownToggleTooltip = dropdownToggleTooltip.replace('{0}', columnModel.title);
+            dropdownToggle.attr('title', dropdownToggleTooltip);
+          }
+          gradeHeaderMenuTooltip
         }
 
         if (GbGradeTable.settings.isCategoriesEnabled) {
