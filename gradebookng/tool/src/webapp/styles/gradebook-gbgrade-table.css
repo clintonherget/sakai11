@@ -451,13 +451,11 @@
 /* For Webkit browsers, force the scrollbars to be visible
    (due to hidden scroll bars in OS X)
 */
-.ht_clone_left.handsontable,
-.ht_clone_left.handsontable .wtHolder {
-  height: calc(100% - 5px) !important;
+.ht_clone_left.handsontable {
+  height: calc(100% - 10px) !important;
 }
-.ht_clone_top.handsontable,
-.ht_clone_top.handsontable .wtHolder {
-  width: calc(100% - 5px) !important;
+.ht_clone_top.handsontable {
+  width: calc(100% - 10px) !important;
 }
 .wtHolder::-webkit-scrollbar {
   width: 10px;
