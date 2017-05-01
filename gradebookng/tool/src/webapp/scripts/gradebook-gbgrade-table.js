@@ -476,6 +476,14 @@ GbGradeTable.renderTable = function (elementId, tableData) {
 
   GbGradeTable.columnDOMNodeCache = {};
 
+  GbGradeTable.calculateIdealHeight = function() {
+    return $(window).height() * 0.6;
+  };
+
+  GbGradeTable.calculateIdealWidth = function() {
+    return MorpheusViewportHelper.isPhone() ? $("#pageBody").width() - 40 : $("#pageBody").width() - $("#toolMenuWrap").width() - 40;
+  };
+
   GbGradeTable.instance = new Handsontable(document.getElementById(elementId), {
     data: GbGradeTable.getFilteredData(),
 //    rowHeaderWidth: 220,
@@ -486,8 +494,8 @@ GbGradeTable.renderTable = function (elementId, tableData) {
     colWidths: GbGradeTable.getColumnWidths(),
     autoRowSize: false,
     autoColSize: false,
-    height: $(window).height() * 0.5,
-    width: $("#gradebookSpreadsheet").width(),
+    height: GbGradeTable.calculateIdealHeight(),
+    width: GbGradeTable.calculateIdealWidth(),
     fillHandle: false,
     afterGetRowHeader: function(row,th) {
       $(th).
@@ -670,10 +678,14 @@ GbGradeTable.renderTable = function (elementId, tableData) {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(function() {
       GbGradeTable.instance.updateSettings({
-        height: $(window).height() * 0.5,
-        width: $("#gradebookSpreadsheet").width()
+        height: GbGradeTable.calculateIdealHeight(),
+        width: GbGradeTable.calculateIdealWidth(),
       });
     }, 200);
+  });
+
+  $(".js-toggle-nav").on("click", function() {
+    $(window).trigger('resize');
   });
 
 
