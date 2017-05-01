@@ -15,6 +15,25 @@
                 <a class="gb-title">
                     <wicket:message key="column.header.coursegrade"/>
                 </a>
+                <div class="gb-grade-item-flags">
+                    {if settings.isCourseGradeReleased}
+                    <span class="gb-flag-released" wicket:message="title:label.coursegrade.released">
+                        <span aria-hidden="true" style="display:none;" class="gb-tooltip-extras">
+                            <div>
+                                <button class="gb-gradebook-settings button"><wicket:message key="label.coursegrade.editsettings"/></button>
+                            </div>
+                        </span>
+                    </span>
+                    {else}
+                    <span class="gb-flag-not-released" wicket:message="title:label.coursegrade.notreleased">
+                        <span aria-hidden="true" style="display:none;" class="gb-tooltip-extras">
+                            <div>
+                                <button class="gb-gradebook-settings button"><wicket:message key="label.coursegrade.editsettings"/></button>
+                            </div>
+                        </span>
+                    </span>
+                    {/if}
+                </div>
                 <div class="btn-group">
                     <a class="btn btn-sm btn-default dropdown-toggle"
                        data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
@@ -240,6 +259,9 @@
                                     <li class="gb-metadata-comment-notification">
                                         <span class="gb-flag-comment"></span> <wicket:message key="grade.notifications.hascomment"/>
                                         <blockquote><wicket:message key="grade.notifications.commentloading"/></blockquote>
+                                        <div>
+                                            <button class="gb-edit-comments button"><wicket:message key="grade.notifications.editcomment"/></button>
+                                        </div>
                                     </li>
                                 {elseif notification.type == 'extra-credit'}
                                     <li>
@@ -251,6 +273,9 @@
                                     </li>
                                     <li>
                                         <span class="gb-flag-save-invalid"></span> <wicket:message key="grade.notifications.invalid"/>
+                                    </li>
+                                    <li>
+                                        <button class="gb-revert-score button"><wicket:message key="grade.notifications.revert"/></button>
                                     </li>
                                 {elseif notification.type == 'save-invalid'}
                                     <li>

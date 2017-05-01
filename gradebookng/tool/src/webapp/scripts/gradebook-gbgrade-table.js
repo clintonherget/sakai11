@@ -755,11 +755,7 @@ GbGradeTable.renderTable = function (elementId, tableData) {
     var $dropdown = $(this).closest(".gb-dropdown-menu");
     var $cell = $dropdown.data("cell");
 
-    GbGradeTable.ajax({
-      action: 'editComment',
-      assignmentId: $.data($cell[0], "assignmentid"),
-      studentId: $.data($cell[0], "studentid")
-    });
+    GbGradeTable.editComment($.data($cell[0], "studentid"), $.data($cell[0], "assignmentid"));
   }).
   // View Grade Summary
   on("click", ".gb-view-grade-summary", function() {
@@ -958,7 +954,23 @@ GbGradeTable.updateHasComment = function(student, assignmentId, comment) {
   var assignmentIndex = $.inArray(GbGradeTable.colModelForAssignment(assignmentId), GbGradeTable.columns);
 
   student.hasComments = hasComments.substr(0, assignmentIndex) + flag + hasComments.substr(assignmentIndex+1);
-}
+};
+
+
+GbGradeTable.editComment = function(studentId, assignmentId) {
+  GbGradeTable.ajax({
+    action: 'editComment',
+    studentId: studentId,
+    assignmentId: assignmentId
+  });
+};
+
+
+GbGradeTable.editSettings = function() {
+  GbGradeTable.ajax({
+      action: 'editSettings',
+  });
+};
 
 
 GbGradeTable.hasConcurrentEdit = function(student, assignmentId) {
@@ -2142,6 +2154,35 @@ GbGradeTable.setupCellMetaDataSummary = function() {
           GbGradeTable.hideMetadata();
           GbGradeTable.instance.selectCell(row, col);
         });
+
+        $("#"+cellKey).hide().on("click", ".gb-revert-score", function(event) {
+          event.preventDefault();
+
+          var studentId = metadata.student.userId;
+          var assignmentId = metadata.assignment.assignmentId;
+          if (GbGradeTable.lastValidGrades[studentId] && GbGradeTable.lastValidGrades[studentId][assignmentId]) {
+            var validScore = GbGradeTable.lastValidGrades[studentId][assignmentId];
+            GbGradeTable.syncScore(studentId, [assignmentId], validScore);
+            GbGradeTable.setScoreState('reverted', studentId, assignmentId);
+            GbGradeTable.redrawTable(true);
+            GbGradeTable.hideMetadata();
+            GbGradeTable.instance.selectCell(row, col);
+          } else {
+            // we need to reload the entire page
+            location.reload();
+          }
+        });
+
+        $("#"+cellKey).hide().on("click", ".gb-edit-comments", function(event) {
+          event.preventDefault();
+
+          var studentId = metadata.student.userId;
+          var assignmentId = metadata.assignment.assignmentId;
+
+          GbGradeTable.hideMetadata();
+
+          GbGradeTable.editComment(studentId, assignmentId);
+        });
       }
     }
   }
@@ -2299,6 +2340,11 @@ GbGradeTable.showTooltip = function(target, data) {
 
   $tooltip = $("#gbTooltip");
 
+  var extraBits = $(target).find('.gb-tooltip-extras');
+  if (extraBits.length > 0) {
+    $tooltip.append(extraBits.html());
+  }
+
   var targetOffset = target.offset();
   var wrapperOffset = $("#gradeTableWrapper").offset();
   var targetHeight = target.height();
@@ -2315,6 +2361,12 @@ GbGradeTable.showTooltip = function(target, data) {
   $tooltip.on('click', '.gb-metadata-close', function(event) {
     GbGradeTable.hideTooltip();
     GbGradeTable.instance.selectCell(selected[0], selected[1]);
+  });
+
+  $tooltip.on('click', '.gb-gradebook-settings', function(event) {
+    event.preventDefault();
+    GbGradeTable.hideTooltip();
+    GbGradeTable.editSettings();
   });
 };
 
