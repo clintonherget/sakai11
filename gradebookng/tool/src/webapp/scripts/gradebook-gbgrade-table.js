@@ -103,7 +103,9 @@ $(document).ready(function() {
     caption: TrimPath.parseTemplate(
         $("#captionTemplate").html().trim().toString()),
     tooltip: TrimPath.parseTemplate(
-        $("#tooltipTemplate").html().trim().toString())
+        $("#tooltipTemplate").html().trim().toString()),
+    gradeMenuTooltip: TrimPath.parseTemplate(
+       $("#gradeMenuTooltip").html().trim().toString()),
 
   };
 
@@ -218,10 +220,25 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
     if (GbGradeTable.settings.isPercentageGradeEntry && value != null && value != "") {
       GbGradeTable.replaceContents(valueCell, document.createTextNode('' + value + '%'));
     }
+
+    // rewrite the dropdown tooltip
+    var dropdownToggle = $td.find('.dropdown-toggle');
+    if (dropdownToggle.length > 0) {
+      dropdownToggle.show().attr('aria-hidden', 'false');
+      var dropdownToggleTooltip = GbGradeTable.templates.gradeMenuTooltip.process();
+      dropdownToggleTooltip = dropdownToggleTooltip.replace('{0}', student.firstName + ' ' + student.lastName);
+      dropdownToggleTooltip = dropdownToggleTooltip.replace('{1}', column.title);
+      dropdownToggle.attr('title', dropdownToggleTooltip);
+    }
   } else if (column.type === "category") {
     $.data(td, "categoryId", column.categoryId);
     $.removeData(td, "assignmentid");
     GbGradeTable.replaceContents(valueCell, document.createTextNode(GbGradeTable.formatCategoryAverage(value)));
+
+    var dropdownToggle = $td.find('.dropdown-toggle');
+    if (dropdownToggle.length > 0) {
+      dropdownToggle.hide().attr('aria-hidden', 'true');
+    }
   } else {
     throw "column.type not supported: " + column.type;
   }
