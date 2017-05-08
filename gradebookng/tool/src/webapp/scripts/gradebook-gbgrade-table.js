@@ -2383,11 +2383,14 @@ GbGradeTable.setupCellMetaDataSummary = function() {
     }
   });
 
-  $(GbGradeTable.instance.rootElement).on("click", "th .gb-external-app, th .gb-grade-item-flags > *", function(event){
+  $(GbGradeTable.instance.rootElement).on("click", "th .gb-external-app, th .gb-grade-item-flags > *, th .gb-flag-extra-credit", function(event){
     event.preventDefault();
+    event.stopImmediatePropagation();
+
     var data = {
       tooltip: $(this).attr('title') 
     };
+
     GbGradeTable.showTooltip($(this), data);
   });
 

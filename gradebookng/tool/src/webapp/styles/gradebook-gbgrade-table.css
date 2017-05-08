@@ -248,6 +248,13 @@
   vertical-align: baseline;
   display: inline-block;
 }
+#gradeTable th .relative > .gb-flag-extra-credit,
+#gradeTable th .relative > .gb-external-app {
+  float: left;
+  vertical-align: top;
+  line-height: inherit;
+  margin-right: 4px;
+}
 #gradeTable th .gb-flag-extra-credit:before {
   color: #999;
 }

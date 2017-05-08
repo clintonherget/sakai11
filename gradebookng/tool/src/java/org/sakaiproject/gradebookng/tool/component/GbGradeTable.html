@@ -138,11 +138,11 @@
         <script id="categoryScoreHeaderTemplate" type="text/template">
             <span class="colHeader hide">${col}</span>
             <div class="relative">
+                {if extraCredit}
+                    <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracredit"></span>
+                {/if}
                 <a class="gb-title">
                     <span class="gb-category">
-                        {if extraCredit}
-                            <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracredit"></span>
-                        {/if}
                         <span class="swatch" style="background-color: #${color}"></span>
                         ${title}
                         {if settings.isCategoryTypeWeighted}
