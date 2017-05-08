@@ -61,7 +61,9 @@
 #gradeTable .handsontable td > .relative {
   padding: 2px 4px 0;
 }
-
+#gradeTable .handsontable th > .relative > * {
+  white-space: normal;
+}
 #gradeTable .handsontable th {
   background-color: #F6f6f6;
   height: 102px;
@@ -88,6 +90,7 @@
   line-height: 1.2em;
   display: inline-block;
   cursor: pointer;
+  width: calc(100% - 16px);
 }
 #gradeTable .gb-title:hover:after {
   font-family: 'gradebook-icons';
