@@ -377,6 +377,7 @@
   background-color: #FAFAFA;
   border-top: 1px solid #F6f6f6;
   color: #555;
+  clear: both;
 }
 #gradeTableSummary .gb-item-summary-counts.warn-items-hidden,
 #gradeTableSummary .gb-student-summary-counts.warn-students-hidden {

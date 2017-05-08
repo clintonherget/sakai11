@@ -34,6 +34,8 @@ import org.sakaiproject.gradebookng.tool.actions.EditAssignmentAction;
 import org.sakaiproject.gradebookng.tool.actions.EditCommentAction;
 import org.sakaiproject.gradebookng.tool.actions.EditSettingsAction;
 import org.sakaiproject.gradebookng.tool.actions.GradeUpdateAction;
+import org.sakaiproject.gradebookng.tool.actions.MoveAssignmentLeftAction;
+import org.sakaiproject.gradebookng.tool.actions.MoveAssignmentRightAction;
 import org.sakaiproject.gradebookng.tool.actions.OverrideCourseGradeAction;
 import org.sakaiproject.gradebookng.tool.actions.SetScoreForUngradedAction;
 import org.sakaiproject.gradebookng.tool.actions.SetStudentNameOrderAction;
@@ -255,6 +257,8 @@ public class GradebookPage extends BasePage {
 		gradeTable.addEventListener("setStudentNameOrder", new SetStudentNameOrderAction());
 		gradeTable.addEventListener("toggleCourseGradePoints", new ToggleCourseGradePoints());
 		gradeTable.addEventListener("editSettings", new EditSettingsAction(this.businessService));
+		gradeTable.addEventListener("moveAssignmentLeft", new MoveAssignmentLeftAction(this.businessService));
+		gradeTable.addEventListener("moveAssignmentRight", new MoveAssignmentRightAction(this.businessService));
 
 		this.form.add(gradeTable);
 

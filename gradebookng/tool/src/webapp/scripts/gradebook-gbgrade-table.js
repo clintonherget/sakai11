@@ -858,6 +858,30 @@ GbGradeTable.renderTable = function (elementId, tableData) {
     GbGradeTable.ajax({
       action: 'toggleCourseGradePoints'
     });
+  }).
+  // Move Left (Assignment column)
+  on("click", ".gb-dropdown-menu .gb-move-left", function(event) {
+    event.preventDefault();
+
+    var $dropdown = $(this).closest(".gb-dropdown-menu");
+    var $cell = $dropdown.data("cell");
+
+    GbGradeTable.ajax({
+      action: 'moveAssignmentLeft',
+      assignmentId: $.data($cell[0], "assignmentid")
+    });
+  }).
+  // Move Right (Assignment column)
+  on("click", ".gb-dropdown-menu .gb-move-right", function(event) {
+    event.preventDefault();
+
+    var $dropdown = $(this).closest(".gb-dropdown-menu");
+    var $cell = $dropdown.data("cell");
+
+    GbGradeTable.ajax({
+      action: 'moveAssignmentRight',
+      assignmentId: $.data($cell[0], "assignmentid")
+    });
   });
 
   GbGradeTable.setupToggleGradeItems();
@@ -1231,7 +1255,7 @@ GbGradeTable.getColumnWidths = function() {
   var studentColumnWidth = 180;
   var courseGradeColumnWidth = 140;
 
-  // if showing course grade points
+  // if showing points
   // make column a touch wider
   if (GbGradeTable.settings.showPoints) {
     courseGradeColumnWidth = 220;

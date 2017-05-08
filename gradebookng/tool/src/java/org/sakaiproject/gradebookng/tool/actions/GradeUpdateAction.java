@@ -57,21 +57,6 @@ public class GradeUpdateAction implements Action, Serializable {
         }
     }
 
-    private class ArgumentErrorResponse implements ActionResponse {
-        private String msg;
-        public ArgumentErrorResponse(final String msg) {
-            this.msg = msg;
-        }
-
-        public String getStatus() {
-            return "error";
-        }
-
-        public String toJson() {
-            return String.format("{\"msg\": \"%s\"}", msg);
-        }
-    }
-
     private class SaveGradeErrorResponse implements ActionResponse {
         private GradeSaveResponse serverResponse;
         public SaveGradeErrorResponse(GradeSaveResponse serverResponse) {
