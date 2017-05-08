@@ -151,8 +151,10 @@
   font-weight: inherit;
 }
 #gradeTable .currentCol,
-#gradeTable .currentRow {
-  background-color: #FAFAFA;
+#gradeTable .currentRow,
+#gradeTable .currentCol .relative,
+#gradeTable .currentRow .relative {
+  background-color: #F6F6F6 !important;
 }
 #gradeTable th.currentCol,
 #gradeTable th.currentRow,
@@ -446,6 +448,13 @@
   font-family: 'gradebook-icons';
   content: '\f0da';
   float: right;
+}
+.gb-category-average {
+    background-color: #FAFAFA;
+}
+.gb-category-average .gb-value {
+    font-weight: bold;
+    color: #666;
 }
 
 /* For Webkit browsers, force the scrollbars to be visible

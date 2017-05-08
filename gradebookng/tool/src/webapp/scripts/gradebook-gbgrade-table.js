@@ -325,6 +325,12 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
     $cellDiv.removeClass("gb-extra-credit");
   }
 
+  if (column.type == 'category') {
+    $cellDiv.addClass('gb-category-average');
+  } else {
+    $cellDiv.removeClass('gb-category-average');
+  }
+
   // create notification tooltip
   if (column.type == 'assignment') {
     $.data(td, "metadata", {

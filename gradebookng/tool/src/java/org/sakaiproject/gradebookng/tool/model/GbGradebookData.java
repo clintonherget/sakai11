@@ -6,6 +6,7 @@ import lombok.Value;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.util.StringUtil;
+import org.apache.wicket.model.StringResourceModel;
 import org.sakaiproject.gradebookng.business.GbCategoryType;
 import org.sakaiproject.gradebookng.business.GbRole;
 import org.sakaiproject.gradebookng.business.model.GbCourseGrade;
@@ -105,6 +106,7 @@ public class GbGradebookData {
     @Value
     private class CategoryAverageDefinition implements ColumnDefinition {
         private Long categoryId;
+        private String categoryName;
         private String title;
         private String weight;
         private boolean isExtraCredit; 
@@ -455,6 +457,7 @@ public class GbGradebookData {
                 (a2 == null || !a1.getCategoryId().equals(a2.getCategoryId()))) {
                 result.add(new CategoryAverageDefinition(a1.getCategoryId(),
                                                          a1.getCategoryName(),
+                                                        (new StringResourceModel("label.gradeitem.categoryaverage", null, new Object[] { a1.getCategoryName() })).getString(),
                                                          nullable(categoryWeight),
                                                          a1.isCategoryExtraCredit(),
                                                          userSettings.getCategoryColor(a1.getCategoryName()),
@@ -474,6 +477,7 @@ public class GbGradebookData {
                     result.add(new CategoryAverageDefinition(
                         category.getId(),
                         category.getName(),
+                        (new StringResourceModel("label.gradeitem.categoryaverage", null, new Object[] { category.getName() })).getString(),
                         nullable(categoryWeight),
                         category.isExtraCredit(),
                         userSettings.getCategoryColor(category.getName()),
