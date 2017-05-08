@@ -1596,7 +1596,7 @@ GbGradeTable.setupToggleGradeItems = function() {
         if (column.type == "assignment") {
           $panel.find(".gb-item-filter :input[value='"+column.assignmentId+"']").trigger("click", [SUPPRESS_TABLE_REDRAW]);
         } else {
-          $panel.find(".gb-item-category-score-filter :input[value='"+column.title+"']").trigger("click", [SUPPRESS_TABLE_REDRAW]);
+          $panel.find(".gb-item-category-score-filter :input[value='"+column.categoryName+"']").trigger("click", [SUPPRESS_TABLE_REDRAW]);
         }
       } else {
         done = true;
