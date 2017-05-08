@@ -1675,6 +1675,14 @@ GbGradeTable.setScoreState = function(state, studentId, assignmentId) {
   student.scoreStatus[assignmentId] = state;
 };
 
+GbGradeTable.clearScoreState = function(studentId, assignmentId) {
+  var student = GbGradeTable.modelForStudent(studentId);
+
+  if (student.hasOwnProperty('scoreStatus')) {
+    delete student.scoreStatus[assignmentId];
+  }
+};
+
 GbGradeTable.getScoreState = function(studentId, assignmentId) {
   var student = GbGradeTable.modelForStudent(studentId);
 
@@ -2599,7 +2607,7 @@ GbGradeTable.setScore = function(studentId, assignmentId, oldScore, newScore) {
           GbGradeTable.lastValidGrades[studentId][assignmentId] = oldScore;
         }
       } else if (status == "nochange") {
-        // nothing to do!
+        GbGradeTable.clearScoreState(studentId, assignmentId);
       } else {
         console.log("Unhandled saveValue response: " + status);
       }
