@@ -1231,11 +1231,9 @@ GbGradeTable.getColumnWidths = function() {
   var studentColumnWidth = 180;
   var courseGradeColumnWidth = 140;
 
-  // if showing course grade letter, percentage and points
+  // if showing course grade points
   // make column a touch wider
-  if (GbGradeTable.settings.isCourseLetterGradeDisplayed
-        && GbGradeTable.settings.isCoursePointsDisplayed
-        && GbGradeTable.settings.isCourseAverageDisplayed) {
+  if (GbGradeTable.settings.showPoints) {
     courseGradeColumnWidth = 220;
   }
 

@@ -341,6 +341,7 @@ public class GbGradebookData {
         result.put("isStudentOrderedByFirstName", uiSettings.getNameSortOrder() == GbStudentNameSortOrder.FIRST_NAME);
         result.put("isGroupedByCategory", uiSettings.isGroupedByCategory());
         result.put("isCourseGradeReleased", settings.isCourseGradeDisplayed());
+        result.put("showPoints", uiSettings.getShowPoints());
 
         return result;
     };
