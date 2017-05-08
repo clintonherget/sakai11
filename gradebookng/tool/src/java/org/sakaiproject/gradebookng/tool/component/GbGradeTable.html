@@ -20,7 +20,7 @@
                     <span class="gb-flag-released" wicket:message="title:label.coursegrade.released">
                         <span aria-hidden="true" style="display:none;" class="gb-tooltip-extras">
                             <div>
-                                <button class="gb-gradebook-settings button"><wicket:message key="label.coursegrade.editsettings"/></button>
+                                <a href="javascript:void(0);" class="gb-gradebook-settings"><wicket:message key="label.coursegrade.editsettings"/></a>
                             </div>
                         </span>
                     </span>
@@ -28,7 +28,7 @@
                     <span class="gb-flag-not-released" wicket:message="title:label.coursegrade.notreleased">
                         <span aria-hidden="true" style="display:none;" class="gb-tooltip-extras">
                             <div>
-                                <button class="gb-gradebook-settings button"><wicket:message key="label.coursegrade.editsettings"/></button>
+                                <a href="javascript:void(0);" class="gb-gradebook-settings"><wicket:message key="label.coursegrade.editsettings"/></a>
                             </div>
                         </span>
                     </span>
@@ -263,7 +263,7 @@
                                         <span class="gb-flag-comment"></span> <wicket:message key="grade.notifications.hascomment"/>
                                         <blockquote><wicket:message key="grade.notifications.commentloading"/></blockquote>
                                         <div>
-                                            <button class="gb-edit-comments button"><wicket:message key="grade.notifications.editcomment"/></button>
+                                            <a href="javascript:void(0);" class="gb-edit-comments"><wicket:message key="grade.notifications.editcomment"/></a>
                                         </div>
                                     </li>
                                 {elseif notification.type == 'extra-credit'}
@@ -278,7 +278,7 @@
                                         <span class="gb-flag-save-invalid"></span> <wicket:message key="grade.notifications.invalid"/>
                                     </li>
                                     <li>
-                                        <button class="gb-revert-score button"><wicket:message key="grade.notifications.revert"/></button>
+                                        <a href="javascript:void(0);" class="gb-revert-score"><wicket:message key="grade.notifications.revert"/></a>
                                     </li>
                                 {elseif notification.type == 'save-invalid'}
                                     <li>
