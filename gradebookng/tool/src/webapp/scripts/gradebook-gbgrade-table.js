@@ -1086,7 +1086,7 @@ GbGradeTable.colModelForCategoryScore = function(categoryName) {
   for (var i=0; i<GbGradeTable.columns.length; i++) {
     var column = GbGradeTable.columns[i];
     if (column.type == "category") {
-      if (column.title === categoryName) {
+      if (column.categoryName === categoryName) {
         return column;
       }
     }
