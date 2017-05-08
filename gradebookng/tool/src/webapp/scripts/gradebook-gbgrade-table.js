@@ -225,7 +225,8 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
     // rewrite the dropdown tooltip
     var dropdownToggle = $td.find('.dropdown-toggle');
     if (dropdownToggle.length > 0) {
-      dropdownToggle.show().attr('aria-hidden', 'false');
+      dropdownToggle[0].style.display = 'block';
+      dropdownToggle.attr('aria-hidden', 'false');
       var dropdownToggleTooltip = GbGradeTable.templates.gradeMenuTooltip.process();
       dropdownToggleTooltip = dropdownToggleTooltip.replace('{0}', student.firstName + ' ' + student.lastName);
       dropdownToggleTooltip = dropdownToggleTooltip.replace('{1}', column.title);
@@ -238,7 +239,8 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
 
     var dropdownToggle = $td.find('.dropdown-toggle');
     if (dropdownToggle.length > 0) {
-      dropdownToggle.hide().attr('aria-hidden', 'true');
+      dropdownToggle[0].style.display = 'none';
+      dropdownToggle.attr('aria-hidden', 'true');
     }
   } else {
     throw "column.type not supported: " + column.type;
@@ -536,7 +538,7 @@ GbGradeTable.renderTable = function (elementId, tableData) {
         attr("scope", "col");
 
       if (GbGradeTable.settings.isGroupedByCategory) {
-        $th.addClass("gb-categorized");
+        th.classList.add('gb-categorized');
       }
 
       var columnModel = this.view.settings.columns[col]._data_;
@@ -564,12 +566,12 @@ GbGradeTable.renderTable = function (elementId, tableData) {
 
           var dropdownToggle = $th.find('.dropdown-toggle');
           if (dropdownToggle.length > 0) {
-            dropdownToggle.show().attr('aria-hidden', 'false');
+            dropdownToggle[0].style.display = 'block';
+            dropdownToggle.attr('aria-hidden', 'false');
             var dropdownToggleTooltip = GbGradeTable.templates.gradeHeaderMenuTooltip.process();
             dropdownToggleTooltip = dropdownToggleTooltip.replace('{0}', columnModel.title);
             dropdownToggle.attr('title', dropdownToggleTooltip);
           }
-          gradeHeaderMenuTooltip
         }
 
         if (GbGradeTable.settings.isCategoriesEnabled) {
