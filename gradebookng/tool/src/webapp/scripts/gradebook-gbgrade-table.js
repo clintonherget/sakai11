@@ -607,14 +607,25 @@ GbGradeTable.renderTable = function (elementId, tableData) {
       $(".gb-hidden-column-visual-cue").remove();
     },
     beforeOnCellMouseDown: function(event, coords, td) {
-      if (coords.row < 0 && coords.col >= 0) {
-        $(document).trigger('dragstarted', event);
+      var self = this;
 
-        event.stopImmediatePropagation();
-        this.selectCell(0, coords.col);
+      if (coords.row < 0 && coords.col >= 0) {
+        var dragging = false;
+        var timeout = setTimeout(function() {
+          dragging = true;
+          $(document).trigger('dragstarted', event);
+        }, 200);
+
+        $(event.target).one('mouseup', function() {
+          if (!dragging) {
+            clearTimeout(timeout);
+            event.stopImmediatePropagation();
+            self.selectCell(0, coords.col);
+          }
+        });
       } else if (coords.col < 0) {
         event.stopImmediatePropagation();
-        this.selectCell(coords.row, GbGradeTable.STUDENT_COLUMN_INDEX);
+        self.selectCell(coords.row, GbGradeTable.STUDENT_COLUMN_INDEX);
       }
     },
     afterChange: function(changes, source) {
