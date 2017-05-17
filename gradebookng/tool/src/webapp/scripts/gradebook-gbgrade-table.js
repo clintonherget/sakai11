@@ -664,7 +664,8 @@ GbGradeTable.renderTable = function (elementId, tableData) {
     },
     currentRowClassName: 'currentRow',
     currentColClassName: 'currentCol',
-    multiSelect: false
+    multiSelect: false,
+    copyPaste: false
   });
 
   GbGradeTable.instance.updateSettings({
