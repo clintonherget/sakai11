@@ -8,7 +8,6 @@ import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -21,14 +20,10 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.util.string.StringValue;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.gradebookng.business.GbRole;
 import org.sakaiproject.gradebookng.business.model.GbGroup;
 import org.sakaiproject.gradebookng.business.util.GbStopWatch;
-import org.sakaiproject.gradebookng.business.util.MessageHelper;
 import org.sakaiproject.gradebookng.tool.actions.DeleteAssignmentAction;
 import org.sakaiproject.gradebookng.tool.actions.EditAssignmentAction;
 import org.sakaiproject.gradebookng.tool.actions.EditCommentAction;
@@ -61,12 +56,7 @@ import org.sakaiproject.service.gradebook.shared.PermissionDefinition;
 import org.sakaiproject.service.gradebook.shared.SortType;
 import org.sakaiproject.tool.gradebook.Gradebook;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Grades page. Instructors and TAs see this one. Students see the {@link StudentPage}.
@@ -407,28 +397,7 @@ public class GradebookPage extends BasePage {
 		// hide/show components
 		//
 
-		// no assignments, hide table, show message
-//		if (assignments.isEmpty()) {
-//			toggleGradeItemsToolbarItem.setVisible(false);
-//			noAssignments.setVisible(true);
-//		}
-
-		// no visible students, show table, show message
-		// don't want two messages though, hence the else
-		// FIXME show message when no students
-//		else if (grades.size() == 0) {
-//			noStudents.setVisible(true);
-//		}
-
 		toolbar.setVisible(this.hasAssignmentsAndGrades);
-
-		//#3755 if group selected but it is empty, bring the groupfilter back into view so they can choose something else
-		//FIXME make sure this works after tree refactor
-		//if (settings.getGroupFilter() != null && grades.size() == 0) {
-		//	toolbar.setVisible(true);
-		//	groupFilter.setVisible(true);
-		//}
-
 		toolbar.add(groupFilter);
 
 		stopwatch.time("Gradebook page done", stopwatch.getTime());
@@ -479,7 +448,6 @@ public class GradebookPage extends BasePage {
 	/**
 	 * Getter for the GradebookUiSettings. Used to store a few UI related settings for the current session only.
 	 *
-	 * TODO move this to a helper
 	 */
 	public GradebookUiSettings getUiSettings() {
 
@@ -524,15 +492,13 @@ public class GradebookPage extends BasePage {
 
 		// GradebookNG Grade specific styles and behaviour
 		response.render(CssHeaderItem
-				.forUrl(String.format("/gradebookng-tool/styles/gradebook-grades.css?version=%s", version)));
+			.forUrl(String.format("/gradebookng-tool/styles/gradebook-grades.css?version=%s", version)));
 		response.render(CssHeaderItem
 				.forUrl(String.format("/gradebookng-tool/styles/gradebook-gbgrade-table.css?version=%s", version)));
 		response.render(CssHeaderItem
 				.forUrl(String.format("/gradebookng-tool/styles/gradebook-sorter.css?version=%s", version)));
 		response.render(CssHeaderItem
 				.forUrl(String.format("/gradebookng-tool/styles/gradebook-print.css?version=%s", version), "print"));
-//		response.render(JavaScriptHeaderItem
-//				.forUrl(String.format("/gradebookng-tool/scripts/gradebook-grades.js?version=%s", version)));
 		response.render(JavaScriptHeaderItem
 				.forUrl(String.format("/gradebookng-tool/scripts/gradebook-grade-summary.js?version=%s", version)));
 		response.render(JavaScriptHeaderItem
@@ -541,85 +507,6 @@ public class GradebookPage extends BasePage {
 				.forUrl(String.format("/gradebookng-tool/scripts/gradebook-sorter.js?version=%s", version)));
 		response.render(JavaScriptHeaderItem
 			.forUrl(String.format("/gradebookng-tool/scripts/gradebook-connection-poll.js?version=%s", version)));
-
-	}
-
-	/**
-	 * Build a table row summary for the table
-	 */
-	private Label constructTableSummaryLabel(final String componentId, final DataTable table) {
-		return constructTableLabel(componentId, table, false);
-	}
-
-	/**
-	 * Build a table pagination summary for the table
-	 */
-	private Label constructTablePaginationLabel(final String componentId, final DataTable table) {
-		return constructTableLabel(componentId, table, true);
-	}
-
-	/**
-	 * Build a table summary for the table along the lines of if verbose: "Showing 1{from} to 100{to} of 153{of} students" else:
-	 * "Showing 100{to} students"
-	 */
-	private Label constructTableLabel(final String componentId, final DataTable table, final boolean verbose) {
-		final long of = table.getItemCount();
-		final long from = (of == 0 ? 0 : table.getCurrentPage() * table.getItemsPerPage() + 1);
-		final long to = (of == 0 ? 0 : Math.min(of, from + table.getItemsPerPage() - 1));
-
-		StringResourceModel labelText;
-
-		if (verbose) {
-			labelText = new StringResourceModel("label.toolbar.studentsummarypaginated", null, from, to, of);
-		} else {
-			labelText = new StringResourceModel("label.toolbar.studentsummary", null, to);
-		}
-
-		final Label label = new Label(componentId, labelText);
-		label.setEscapeModelStrings(false); // to allow embedded HTML
-
-		return label;
-	}
-
-	/**
-	 * Comparator class for sorting Assignments in their categorised ordering
-	 */
-	class CategorizedAssignmentComparator implements Comparator<Assignment> {
-		@Override
-		public int compare(final Assignment a1, final Assignment a2) {
-			// if in the same category, sort by their categorized sort order
-			if (a1.getCategoryId() == a2.getCategoryId()) {
-				// handles null orders by putting them at the end of the list
-				if (a1.getCategorizedSortOrder() == null) {
-					return 1;
-				} else if (a2.getCategorizedSortOrder() == null) {
-					return -1;
-				}
-				return Integer.compare(a1.getCategorizedSortOrder(), a2.getCategorizedSortOrder());
-
-				// otherwise, sort by their category order
-			} else {
-				if (a1.getCategoryOrder() == null && a2.getCategoryOrder() == null) {
-					// both orders are null.. so order by A-Z
-					if (a1.getCategoryName() == null && a2.getCategoryName() == null) {
-						// both names are null so order by id
-						return a1.getCategoryId().compareTo(a2.getCategoryId());
-					} else if (a1.getCategoryName() == null) {
-						return 1;
-					} else if (a2.getCategoryName() == null) {
-						return -1;
-					} else {
-						return a1.getCategoryName().compareTo(a2.getCategoryName());
-					}
-				} else if (a1.getCategoryOrder() == null) {
-					return 1;
-				} else if (a2.getCategoryOrder() == null) {
-					return -1;
-				} else {
-					return a1.getCategoryOrder().compareTo(a2.getCategoryOrder());
-				}
-			}
-		}
 	}
 
 	@Override
