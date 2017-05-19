@@ -494,8 +494,6 @@ GbGradeTable.renderTable = function (elementId, tableData) {
 
   GbGradeTable.instance = new Handsontable(document.getElementById(elementId), {
     data: GbGradeTable.getFilteredData(),
-//    rowHeaderWidth: 220,
-//    rowHeaders: GbGradeTable.studentCellRenderer,
     fixedColumnsLeft: 2,
     colHeaders: true,
     columns: GbGradeTable.getFilteredColumns(),
@@ -1859,13 +1857,22 @@ GbGradeTable.setupDragAndDrop = function () {
     }
 
     floatyFloat = dragTarget.clone();
-    floatyFloat.css('opacity', 0.8)
+
+    if (window.getComputedStyle) {
+        var styles = window.getComputedStyle(dragTarget[0], null);
+        floatyFloat[0].style.cssText = styles.cssText;
+    }
+
+    floatyFloat.css('opacity', 0.9)
                .css('position', 'fixed')
                .css('width', dragTarget.width())
                .css('height', dragTarget.height())
                .css('background-color', 'white')
+               .css('box-shadow', '1px 1px 3px #999')
                .css('z-index', 5000)
-               .css('top', $('#gradeTable').offset().top + 'px');
+               .css('top', $('#gradeTable').offset().top - window.scrollY + 'px');
+
+
 
     /* Knock out input elements */
     $('.btn-group', floatyFloat).remove();

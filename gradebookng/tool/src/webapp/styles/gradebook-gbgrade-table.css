@@ -11,20 +11,20 @@
   overflow: visible;
 }
 
-#gradeTable {
+#gradeTableWrapper {
   font-size: 0.9em;
 }
-#gradeTable td {
+#gradeTableWrapper td {
   text-align: center;
 }
-#gradeTable tbody th {
+#gradeTableWrapper tbody th {
   text-align: left;
 }
-#gradeTable .handsontableInputHolder {
+#gradeTableWrapper .handsontableInputHolder {
   text-align: center;
 }
 
-#gradeTable .handsontableInputHolder .out-of {
+#gradeTableWrapper .handsontableInputHolder .out-of {
   position: absolute;
   right: 2px;
   background-color: #FAFAFA;
@@ -35,55 +35,55 @@
   line-height: 28px;
   padding: 0 14px;
 }
-#gradeTable .handsontableInput {
+#gradeTableWrapper .handsontableInput {
   line-height: 30px;
   text-align: center;
 }
 
-#gradeTable .handsontable tr > *:nth-child(1){
+#gradeTableWrapper .handsontable tr > *:nth-child(1){
   background-color: #F6f6f6;
   text-align: left;
 }
-#gradeTable .handsontable tr > *:nth-child(2){
+#gradeTableWrapper .handsontable tr > *:nth-child(2){
   border-right: 1px solid #BBB;
   background-color: #F6f6f6;
 }
-#gradeTable .handsontable thead th {
+#gradeTableWrapper .handsontable thead th {
   border-bottom: 1px solid #BBB;
 }
 
-#gradeTable .handsontable th,
-#gradeTable .handsontable td {
+#gradeTableWrapper .handsontable th,
+#gradeTableWrapper .handsontable td {
   border-color: #EAEAEA;
   padding: 0;
 }
-#gradeTable .handsontable th > .relative,
-#gradeTable .handsontable td > .relative {
+#gradeTableWrapper .handsontable th > .relative,
+#gradeTableWrapper .handsontable td > .relative {
   padding: 2px 4px 0;
 }
-#gradeTable .handsontable th > .relative > * {
+#gradeTableWrapper .handsontable th > .relative > * {
   white-space: normal;
 }
-#gradeTable .handsontable th {
+#gradeTableWrapper .handsontable th {
   background-color: #F6f6f6;
   height: 102px;
 }
 
-#gradeTable thead th {
+#gradeTableWrapper thead th {
   text-align: left;
 }
-#gradeTable thead th .relative {
+#gradeTableWrapper thead th .relative {
   height: 100%;
 }
-#gradeTable tbody td .relative {
+#gradeTableWrapper tbody td .relative {
   height: 100%;
   min-height: 30px;
   height: 30px;
 }
-#gradeTable .handsontable td {
+#gradeTableWrapper .handsontable td {
   white-space: nowrap;
 }
-#gradeTable .gb-title {
+#gradeTableWrapper .gb-title {
   font-weight: bold;
   white-space: normal;
   text-align: left;
@@ -92,119 +92,119 @@
   cursor: pointer;
   width: calc(100% - 16px);
 }
-#gradeTable .gb-title:hover:after {
+#gradeTableWrapper .gb-title:hover:after {
   font-family: 'gradebook-icons';
   content: '\f0dc';
   position: absolute;
   right: 5px;
   top: 5px;
 }
-#gradeTable .gb-title.gb-sorted-asc:after {
+#gradeTableWrapper .gb-title.gb-sorted-asc:after {
   font-family: 'gradebook-icons';
   content: '\f0de';
   position: absolute;
   right: 5px;
   top: 5px;
 }
-#gradeTable .gb-title.gb-sorted-desc:after {
+#gradeTableWrapper .gb-title.gb-sorted-desc:after {
   font-family: 'gradebook-icons';
   content: '\f0dd';
   position: absolute;
   right: 5px;
   top: 5px;
 }
-#gradeTable .gb-title .gb-category {
+#gradeTableWrapper .gb-title .gb-category {
   font-style: italic;
 }
-#gradeTable .gb-title .gb-category .gb-category-weight {
+#gradeTableWrapper .gb-title .gb-category .gb-category-weight {
   font-style: normal;
 }
-#gradeTable .gb-grade-section,
-#gradeTable .gb-due-date,
-#gradeTable .gb-category {
+#gradeTableWrapper .gb-grade-section,
+#gradeTableWrapper .gb-due-date,
+#gradeTableWrapper .gb-category {
   text-align: left;
   font-size: 0.9em;
   line-height: 1.3em;
 }
-#gradeTable .gb-grade-item-flags {
+#gradeTableWrapper .gb-grade-item-flags {
   position: absolute;
   bottom: 0;
   left: 5px;
 }
-#gradeTable th .btn-group,
-#gradeTable td .btn-group {
+#gradeTableWrapper th .btn-group,
+#gradeTableWrapper td .btn-group {
   position: absolute;
   bottom: 5px;
   right: 5px;
 }
-#gradeTable .btn-group > a {
+#gradeTableWrapper .btn-group > a {
   line-height: 10px;
   padding: 0 10px;
   opacity: 0.2;
   border-color: #EEE;
 }
-#gradeTable th:hover .btn-group > a,
-#gradeTable td:hover .btn-group > a,
-#gradeTable .highlight .btn-group > a {
+#gradeTableWrapper th:hover .btn-group > a,
+#gradeTableWrapper td:hover .btn-group > a,
+#gradeTableWrapper .highlight .btn-group > a {
   opacity: 1;
 }
 
-#gradeTable .highlight {
+#gradeTableWrapper .highlight {
   color: inherit;
   font-weight: inherit;
 }
-#gradeTable .currentCol,
-#gradeTable .currentRow,
-#gradeTable .currentCol .relative,
-#gradeTable .currentRow .relative {
+#gradeTableWrapper .currentCol,
+#gradeTableWrapper .currentRow,
+#gradeTableWrapper .currentCol .relative,
+#gradeTableWrapper .currentRow .relative {
   background-color: #F6F6F6 !important;
 }
-#gradeTable th.currentCol,
-#gradeTable th.currentRow,
-#gradeTable .handsontable tr > .currentRow:nth-child(1),
-#gradeTable .handsontable tr > .currentRow:nth-child(2) {
+#gradeTableWrapper th.currentCol,
+#gradeTableWrapper th.currentRow,
+#gradeTableWrapper .handsontable tr > .currentRow:nth-child(1),
+#gradeTableWrapper .handsontable tr > .currentRow:nth-child(2) {
   background-color: #EEE;
 }
-#gradebookSpreadsheet.gb-grouped-by-category #gradeTable th.gb-categorized {
+#gradebookSpreadsheet.gb-grouped-by-category #gradeTableWrapper th.gb-categorized {
   border-top: 10px solid #F0F0F0;
 }
-#gradeTable .swatch {
+#gradeTableWrapper .swatch {
   width: 1em;
   height: 1em;
   display: inline-block;
   margin-right: 4px;
   box-shadow: 1px 1px 2px #CCC;
 }
-#gradeTable .gb-category-weight {
+#gradeTableWrapper .gb-category-weight {
   color: #999;
   font-weight: normal;
 }
-#gradeTable .gb-uncategorized {
+#gradeTableWrapper .gb-uncategorized {
   text-align: left;
   color: #999;
 }
-#gradeTable tbody td .gb-value {
+#gradeTableWrapper tbody td .gb-value {
   line-height: 30px;
 }
-#gradeTable tbody td .btn-group {
+#gradeTableWrapper tbody td .btn-group {
   position: absolute;
   right: 0;
   bottom: 2px;
 }
-#gradeTable .gb-comment-notification {
+#gradeTableWrapper .gb-comment-notification {
   position: absolute;
   top: 2px;
   right: 8px;
   line-height: 1em;
   color: #AAA;
 }
-#gradeTable .gb-comment-notification:before,
+#gradeTableWrapper .gb-comment-notification:before,
 .gb-flag-comment:before {
   font-family: "gradebook-icons";
   content: '\f075';
 }
 
-#gradeTable .gb-notification {
+#gradeTableWrapper .gb-notification {
   position: absolute;
   left: 10px;
   top: 5px;
@@ -232,7 +232,7 @@
 .gb-flag-released {
   display: none;
 }
-#gradeTable .gb-extra-credit {
+#gradeTableWrapper .gb-extra-credit {
   background-color: #FCF8E3;
 }
 .gb-flag-extra-credit:before {
@@ -245,57 +245,57 @@
 .gb-flag-read-only:before {
   content: '\f023';
 }
-#gradeTable th .gb-flag-extra-credit,
-#gradeTable th .gb-external-app {
+#gradeTableWrapper th .gb-flag-extra-credit,
+#gradeTableWrapper th .gb-external-app {
   font-size: 1.1em;
   vertical-align: baseline;
   display: inline-block;
 }
-#gradeTable th .relative > .gb-flag-extra-credit,
-#gradeTable th .relative > .gb-external-app {
+#gradeTableWrapper th .relative > .gb-flag-extra-credit,
+#gradeTableWrapper th .relative > .gb-external-app {
   float: left;
   vertical-align: top;
   line-height: inherit;
   margin-right: 4px;
 }
-#gradeTable th .gb-flag-extra-credit:before {
+#gradeTableWrapper th .gb-flag-extra-credit:before {
   color: #999;
 }
-#gradeTable .gb-save-success {
+#gradeTableWrapper .gb-save-success {
   background-color: #DFF0D8 !important;
 }
-#gradeTable .gb-save-success .gb-notification:before {
+#gradeTableWrapper .gb-save-success .gb-notification:before {
   font-family: "gradebook-icons";
   content: "\f05d" !important;
   color: green;
 }
-#gradeTable .gb-save-error {
+#gradeTableWrapper .gb-save-error {
 	background-color: #FFBBBB !important;
 }
-#gradeTable .gb-save-error .gb-notification:before,
+#gradeTableWrapper .gb-save-error .gb-notification:before,
 .gb-flag-save-error:before {
   font-family: "gradebook-icons";
   content: "\f06a" !important;
   color: rgb(204,0,0) !important;
 }
-#gradeTable .gb-save-invalid {
+#gradeTableWrapper .gb-save-invalid {
   background-color: #FCF8E3 !important;
 }
-#gradeTable .gb-save-invalid .gb-notification:before,
+#gradeTableWrapper .gb-save-invalid .gb-notification:before,
 .gb-flag-save-invalid:before {
   font-family: "gradebook-icons";
   content: "\f071" !important;
   color: rgb(200,144,0) !important;
 }
-#gradeTable .gb-read-only {
+#gradeTableWrapper .gb-read-only {
   color: #777;
 }
-#gradeTable .gb-read-only .gb-notification:before {
+#gradeTableWrapper .gb-read-only .gb-notification:before {
   font-family: "gradebook-icons";
   content: '\f023';
   color: #DDD;
 }
-#gradeTable .gb-read-only .gb-notification.gb-flag-extra-credit:after {
+#gradeTableWrapper .gb-read-only .gb-notification.gb-flag-extra-credit:after {
   font-family: "gradebook-icons";
   content: '\f0fe';
   color: rgb(200,144,0);
@@ -304,7 +304,7 @@
   right: -5px;
   bottom: -5px;
 }
-#gradeTable .gb-concurrent-edit .gb-notification:before,
+#gradeTableWrapper .gb-concurrent-edit .gb-notification:before,
 .gb-flag-concurrent-edit:before {
   font-family: "gradebook-icons";
   content: '\f040';
@@ -399,7 +399,7 @@
   font-family: 'gradebook-icons';
   content: '\f11c';
 }
-#gradeTable table caption {
+#gradeTableWrapper table caption {
   /* hide the caption from users, but retain for screen readers */
   position: absolute;
   width: 1px;
@@ -410,7 +410,7 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
-#gradeTable table caption.maximized {
+#gradeTableWrapper table caption.maximized {
   position: fixed;
   width: 80%;
   height: 60%;
