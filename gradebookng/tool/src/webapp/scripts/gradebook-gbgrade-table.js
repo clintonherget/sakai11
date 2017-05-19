@@ -225,12 +225,17 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
     // rewrite the dropdown tooltip
     var dropdownToggle = $td.find('.dropdown-toggle');
     if (dropdownToggle.length > 0) {
-      dropdownToggle[0].style.display = 'block';
-      dropdownToggle.attr('aria-hidden', 'false');
-      var dropdownToggleTooltip = GbGradeTable.templates.gradeMenuTooltip.process();
-      dropdownToggleTooltip = dropdownToggleTooltip.replace('{0}', student.firstName + ' ' + student.lastName);
-      dropdownToggleTooltip = dropdownToggleTooltip.replace('{1}', column.title);
-      dropdownToggle.attr('title', dropdownToggleTooltip);
+      if (isReadOnly) {
+          dropdownToggle[0].style.display = 'none';
+          dropdownToggle.attr('aria-hidden', 'true');
+      } else {
+          dropdownToggle[0].style.display = 'block';
+          dropdownToggle.attr('aria-hidden', 'false');
+          var dropdownToggleTooltip = GbGradeTable.templates.gradeMenuTooltip.process();
+          dropdownToggleTooltip = dropdownToggleTooltip.replace('{0}', student.firstName + ' ' + student.lastName);
+          dropdownToggleTooltip = dropdownToggleTooltip.replace('{1}', column.title);
+          dropdownToggle.attr('title', dropdownToggleTooltip);
+      }
     }
   } else if (column.type === "category") {
     $.data(td, "categoryId", column.categoryId);
@@ -256,8 +261,7 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
       commentNotification.style.display = 'block';
       notifications.push({
         type: 'comment',
-        // TODO This add real comment
-        comment: "TODO comment goes here"
+        comment: "..."
       });
     } else {
       commentNotification.style.display = 'none';
@@ -340,7 +344,8 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
       student: student,
       value: value,
       assignment: column,
-      notifications: notifications
+      notifications: notifications,
+      readonly: isReadOnly
     });
   } else if (column.type == 'category') {
     $.data(td, "metadata", {

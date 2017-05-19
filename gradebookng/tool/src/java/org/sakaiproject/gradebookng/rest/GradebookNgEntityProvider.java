@@ -164,7 +164,7 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 		}
 
 		checkValidSite(siteId);
-		checkInstructor(siteId);
+		checkInstructorOrTA(siteId);
 
 		return this.businessService.getAssignmentGradeComment(siteId, assignmentId, studentUuid);
 	}

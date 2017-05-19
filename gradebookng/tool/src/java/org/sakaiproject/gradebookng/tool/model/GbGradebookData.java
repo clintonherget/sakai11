@@ -342,6 +342,7 @@ public class GbGradebookData {
         result.put("isGroupedByCategory", uiSettings.isGroupedByCategory());
         result.put("isCourseGradeReleased", settings.isCourseGradeDisplayed());
         result.put("showPoints", uiSettings.getShowPoints());
+        result.put("instructor", isInstructor());
 
         return result;
     };
