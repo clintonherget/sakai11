@@ -299,7 +299,8 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
     $cellDiv.addClass("gb-concurrent-edit");
     notifications.push({
       type: 'concurrent-edit',
-      conflict: $.data(td, "concurrent-edit")
+      conflict: $.data(td, "concurrent-edit"),
+      showSaveError: (scoreState == 'error')
     });
   } else if (scoreState == "error") {
     $cellDiv.addClass("gb-save-error");
@@ -1770,9 +1771,6 @@ GbGradeTable.setupConcurrencyCheck = function() {
 
   function showConcurrencyNotification(data) {
     $.each(data, function(i, conflict) {
-      console.log("CONFLICT!");
-      console.log(conflict);
-
       GbGradeTable.setHasConcurrentEdit(conflict)
     });
   };
@@ -1803,14 +1801,6 @@ GbGradeTable.setupConcurrencyCheck = function() {
   // (note: there's a 10 second cache)
   performConcurrencyCheck();
   var concurrencyCheckInterval = setInterval(performConcurrencyCheck, 10 * 1000);
-
-
-  $("#gradeItemsConcurrentUserWarning").on("click", ".gb-message-close", function() {
-    // dismiss the message
-    $("#gradeItemsConcurrentUserWarning").addClass("hide");
-    // and stop checking (they know!)
-    clearInterval(concurrencyCheckInterval);
-  });
 };
 
 
