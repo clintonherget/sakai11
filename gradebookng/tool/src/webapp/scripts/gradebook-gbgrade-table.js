@@ -1661,11 +1661,11 @@ GbGradeTable.setupColumnSorting = function() {
 GbGradeTable.sort = function(colIndex, direction) {
   if (direction == null) {
     // reset the table data to default order
-    GbGradeTable.instance.loadData(GbGradeTable.grades);
+    GbGradeTable.instance.loadData(GbGradeTable.getFilteredData());
     return;
   }
 
-  var clone = GbGradeTable.grades.slice(0);
+  var clone = GbGradeTable.getFilteredData().slice(0);
 
   clone.sort(function(row_a, row_b) {
     var a = row_a[colIndex];
