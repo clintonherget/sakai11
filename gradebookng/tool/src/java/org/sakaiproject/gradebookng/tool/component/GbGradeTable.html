@@ -315,7 +315,7 @@
                                         {if notification.conflict}
                                             <dl class="dl-horizontal">
                                                 <dt><wicket:message key="grade.notifications.concurrentedituser"/></dt>
-                                                <dd>${notification.conflict.lastUpdatedBy}</dd>
+                                                <dd>${x}</dd>
                                                 <dt><wicket:message key="grade.notifications.concurrentedittime"/></dt>
                                                 <dd>${new Date(notification.conflict.lastUpdated).toLocaleTimeString()}</dd>
                                             </dl>
