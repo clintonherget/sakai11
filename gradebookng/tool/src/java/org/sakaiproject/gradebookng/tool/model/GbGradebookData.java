@@ -313,8 +313,7 @@ public class GbGradebookData {
 
                 sb.appendCodePoint(((int)grade >> 8) | 0b11000000);
                 sb.appendCodePoint((int)grade & 0xFF);
-                sb.appendCodePoint(decimalToInteger((grade - (int)grade),
-                        2));
+                sb.appendCodePoint((int)((grade * 100) - ((int)grade * 100)));
             } else {
                 throw new RuntimeException("Grade too large: " + grade);
             }
@@ -346,10 +345,6 @@ public class GbGradebookData {
 
         return result;
     };
-
-    private int decimalToInteger(double decimal, int places) {
-        return (int)Math.floor(decimal * Math.pow(10, places));
-    }
 
     private List<String[]> courseGrades() {
         List<String[]> result = new ArrayList<String[]>();
