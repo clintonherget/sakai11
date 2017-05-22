@@ -430,7 +430,7 @@
 }
 .gb-hidden-column-visual-cue {
   position: absolute;
-  top: -10px;
+  top: 0;
   right: -10px;
   cursor: pointer;
   width: 19px;
@@ -439,6 +439,9 @@
   line-height: 14px;
   padding: 0 1px;
   border-radius: 2px;
+}
+.gb-grouped-by-category .gb-hidden-column-visual-cue {
+  top: -10px;
 }
 .gb-hidden-column-visual-cue:hover,
 .gb-hidden-column-visual-cue:active,
