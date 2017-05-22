@@ -14,6 +14,7 @@ import org.sakaiproject.gradebookng.business.GbRole;
 import org.sakaiproject.gradebookng.business.GradeSaveResponse;
 import org.sakaiproject.gradebookng.business.util.CourseGradeFormatter;
 import org.sakaiproject.gradebookng.business.util.FormatHelper;
+import org.sakaiproject.gradebookng.tool.model.GradebookUiSettings;
 import org.sakaiproject.gradebookng.tool.pages.GradebookPage;
 import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.service.gradebook.shared.CourseGrade;
@@ -131,13 +132,13 @@ public class GradeUpdateAction implements Action, Serializable {
         String points = "0";
 
         if (studentCourseGrade != null) {
-            final GradebookInformation settings = businessService.getGradebookSettings();
+            final GradebookUiSettings uiSettings = page.getUiSettings();
             final Gradebook gradebook = businessService.getGradebook();
             final CourseGradeFormatter courseGradeFormatter = new CourseGradeFormatter(
                 gradebook,
                 GbRole.INSTRUCTOR,
                 true,
-                gradebook.isCoursePointsDisplayed(),
+                uiSettings.getShowPoints(),
                 true);
 
             grade = courseGradeFormatter.format(studentCourseGrade);

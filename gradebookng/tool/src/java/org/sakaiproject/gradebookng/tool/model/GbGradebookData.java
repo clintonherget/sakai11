@@ -174,6 +174,7 @@ public class GbGradebookData {
     private GbRole role;
     private Map<String, String> toolNameIconCSSMap;
     private String defaultIconCSS;
+    private Map<String, Double> courseGradeMap;
 
     private Component parent;
 
@@ -185,12 +186,15 @@ public class GbGradebookData {
                            GbRole role,
                            Map<String, String> toolNameIconCSSMap,
                            String defaultIconCSS,
+                           Map<String, Double> courseGradeMap,
                            Component parentComponent) {
         this.parent = parentComponent;
         this.categories = categories;
         this.settings = settings;
         this.uiSettings = uiSettings;
         this.role = role;
+
+        this.courseGradeMap = courseGradeMap;
 
         this.studentGradeInfoList = studentGradeInfoList;
 
@@ -359,10 +363,22 @@ public class GbGradebookData {
 
             gradeData[0] = gbCourseGrade.getDisplayString();
 
-            if (courseGrade.getPointsEarned() == null) {
-                gradeData[1] = "";
+            if (settings.getCategoryType() == GbCategoryType.WEIGHTED_CATEGORY.getValue()) {
+                if (StringUtils.isNotBlank(courseGrade.getEnteredGrade())) {
+                    Double mappedGrade = courseGradeMap.get(courseGrade.getEnteredGrade());
+                    if(mappedGrade == null) {
+                        mappedGrade = new Double(0);
+                    }
+                    gradeData[1] = FormatHelper.formatDoubleToDecimal(mappedGrade);
+                } else {
+                    gradeData[1] = courseGrade.getCalculatedGrade();
+                }
             } else {
-                gradeData[1] = FormatHelper.formatDoubleToDecimal(courseGrade.getPointsEarned());
+                if (courseGrade.getPointsEarned() == null) {
+                    gradeData[1] = "";
+                } else {
+                    gradeData[1] = FormatHelper.formatDoubleToDecimal(courseGrade.getPointsEarned());
+                }
             }
 
             result.add(gradeData);

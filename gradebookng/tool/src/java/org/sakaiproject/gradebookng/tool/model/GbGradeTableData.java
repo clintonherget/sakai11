@@ -13,6 +13,7 @@ import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.service.gradebook.shared.CategoryDefinition;
 import org.sakaiproject.service.gradebook.shared.GradebookInformation;
 import org.sakaiproject.service.gradebook.shared.SortType;
+import org.sakaiproject.tool.gradebook.Gradebook;
 
 public class GbGradeTableData {
     private List<Assignment> assignments;
@@ -23,6 +24,7 @@ public class GbGradeTableData {
     private GbRole role;
     private Map<String, String> toolNameToIconCSS;
     private String defaultIconCSS;
+    private Map<String, Double> courseGradeMap;
 
     public GbGradeTableData(GradebookNgBusinessService businessService,
                             GradebookUiSettings settings) {
@@ -61,6 +63,9 @@ public class GbGradeTableData {
         toolNameToIconCSS = businessService.getIconClassMap();
         defaultIconCSS = businessService.getDefaultIconClass();
         stopwatch.time("toolNameToIconCSS", stopwatch.getTime());
+
+        Gradebook gradebook = businessService.getGradebook();
+        courseGradeMap = gradebook.getSelectedGradeMapping().getGradeMap();
     }
 
     public List<Assignment> getAssignments() {
@@ -93,5 +98,9 @@ public class GbGradeTableData {
 
     public String getDefaultIconCSS() {
         return defaultIconCSS;
+    }
+
+    public Map<String, Double> getCourseGradeMap() {
+        return courseGradeMap;
     }
 }
