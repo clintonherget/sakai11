@@ -87,8 +87,8 @@ public class GradeUpdateAction implements Action, Serializable {
     public ActionResponse handleEvent(final JsonNode params, final AjaxRequestTarget target) {
         final GradebookPage page = (GradebookPage) target.getPage();
 
-        final String oldGrade = params.get("oldScore").asText();
-        final String rawNewGrade = params.get("newScore").asText();
+        final String rawOldGrade = params.get("oldScore").textValue();
+        final String rawNewGrade = params.get("newScore").textValue();
 
         // perform validation here so we can bypass the backend
         final DoubleValidator validator = new DoubleValidator();
@@ -99,11 +99,12 @@ public class GradeUpdateAction implements Action, Serializable {
             return new ArgumentErrorResponse("Grade not valid");
         }
 
+        final String oldGrade = FormatHelper.formatGrade(rawOldGrade);
+        final String newGrade = FormatHelper.formatGrade(rawNewGrade);
+
         final String assignmentId = params.get("assignmentId").asText();
         final String studentUuid = params.get("studentId").asText();
         final String categoryId = params.has("categoryId") ? params.get("categoryId").asText() : null;
-
-        final String newGrade = FormatHelper.formatGrade(rawNewGrade);
 
         // We don't pass the comment from the use interface,
         // but the service needs it otherwise it will assume 'null'
@@ -111,8 +112,11 @@ public class GradeUpdateAction implements Action, Serializable {
         final String comment = businessService.getAssignmentGradeComment(Long.valueOf(assignmentId), studentUuid);
 
         // for concurrency, get the original grade we have in the UI and pass it into the service as a check
-        final GradeSaveResponse result = businessService.saveGrade(Long.valueOf(assignmentId), studentUuid,
-                oldGrade, newGrade, comment);
+        final GradeSaveResponse result = businessService.saveGrade(Long.valueOf(assignmentId),
+                                                                   studentUuid,
+                                                                   oldGrade,
+                                                                   newGrade,
+                                                                   comment);
 
         if (result.equals(GradeSaveResponse.NO_CHANGE)) {
             target.add(page.updateLiveGradingMessage(page.getString("feedback.saved")));
