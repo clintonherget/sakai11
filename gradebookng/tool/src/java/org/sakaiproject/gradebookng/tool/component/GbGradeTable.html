@@ -106,7 +106,6 @@
                     <span>${dueDate}</span>
                 </div>
                 <div class="gb-grade-item-flags">
-                    <!-- TODO popover -->
                     {if released}
                         <span class="gb-flag-released" wicket:message="title:label.gradeitem.released"></span>
                     {else}
@@ -145,7 +144,7 @@
             <span class="colHeader hide">${col}</span>
             <div class="relative">
                 {if extraCredit}
-                    <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracredit"></span>
+                    <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracreditcategory"></span>
                 {/if}
                 <a class="gb-title">
                     <span class="gb-category">
