@@ -7,8 +7,6 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.sakaiproject.authz.api.SecurityService;
-import org.sakaiproject.entity.api.ResourceProperties;
-import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entitybroker.EntityReference;
 import org.sakaiproject.entitybroker.EntityView;
 import org.sakaiproject.entitybroker.entityprovider.annotations.EntityCustomAction;
@@ -22,13 +20,12 @@ import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.gradebookng.business.GbRole;
 import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
+import org.sakaiproject.gradebookng.business.exception.GbAccessDeniedException;
 import org.sakaiproject.gradebookng.business.model.GbGradeCell;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.tool.api.SessionManager;
 
 import lombok.Setter;
-import org.sakaiproject.user.api.User;
-import org.sakaiproject.user.api.UserEdit;
 
 /**
  * This entity provider is to support some of the Javascript front end pieces. It never was built to support third party access, and never
@@ -152,15 +149,36 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 		return "pong";
 	}
 
+
+	@EntityCustomAction(action = "comments", viewKey = EntityView.VIEW_LIST)
+	public String getComments(final EntityView view, final Map<String, Object> params) {
+		// get params
+		final String siteId = (String) params.get("siteId");
+		final long assignmentId = NumberUtils.toLong((String) params.get("assignmentId"));
+		final String studentUuid = (String) params.get("studentUuid");
+
+		// check params supplied are valid
+		if (StringUtils.isBlank(siteId) || assignmentId == 0 || StringUtils.isBlank(studentUuid)) {
+			throw new IllegalArgumentException(
+				"Request data was missing / invalid");
+		}
+
+		checkValidSite(siteId);
+		checkInstructorOrTA(siteId);
+
+		return this.businessService.getAssignmentGradeComment(siteId, assignmentId, studentUuid);
+	}
+
+
 	/**
 	 * Helper to check if the user is an instructor. Throws IllegalArgumentException if not. We don't currently need the value that this
 	 * produces so we don't return it.
 	 *
 	 * @param siteId
 	 * @return
-	 * @throws IdUnusedException
+	 * @throws SecurityException if error in auth/role
 	 */
-	private void checkInstructor(final String siteId) {
+	private void checkInstructor(final String siteId)  {
 
 		final String currentUserId = getCurrentUserId();
 
@@ -168,7 +186,9 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 			throw new SecurityException("You must be logged in to access GBNG data");
 		}
 
-		if (this.businessService.getUserRole(siteId) != GbRole.INSTRUCTOR) {
+		final GbRole role = getUserRole(siteId);
+
+		if (role != GbRole.INSTRUCTOR) {
 			throw new SecurityException("You do not have instructor-type permissions in this site.");
 		}
 	}
@@ -189,7 +209,7 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 			throw new SecurityException("You must be logged in to access GBNG data");
 		}
 
-		final GbRole role = this.businessService.getUserRole(siteId);
+		final GbRole role = getUserRole(siteId);
 
 		if (role != GbRole.INSTRUCTOR && role != GbRole.TA) {
 			throw new SecurityException("You do not have instructor or TA-type permissions in this site.");
@@ -219,6 +239,21 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 		}
 	}
 
+	/**
+	 * Get role for current user in given site
+	 * @param siteId
+	 * @return
+	 */
+	private GbRole getUserRole(final String siteId) {
+		GbRole role;
+		try {
+			role = this.businessService.getUserRole(siteId);
+		} catch (final GbAccessDeniedException e) {
+			throw new SecurityException("Your role could not be checked properly. This may be a role configuration issue in this site.");
+		}
+		return role;
+	}
+
 	@Setter
 	private SiteService siteService;
 
@@ -231,57 +266,4 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 	@Setter
 	private GradebookNgBusinessService businessService;
 
-
-	// CLASSES-2716 endpoints to support a instructional popover
-	@EntityCustomAction(action = "show-help-popup", viewKey = EntityView.VIEW_LIST)
-	public String shouldShowHelpPopup(final EntityView view, final Map<String, Object> params) {
-		final String siteId = (String) params.get("siteId");
-
-		if (StringUtils.isBlank(siteId)) {
-			throw new IllegalArgumentException("Site ID must be set");
-		}
-
-		checkValidSite(siteId);
-		checkInstructorOrTA(siteId);
-
-		User user = this.businessService.getCurrentUser();
-
-		// nothing for the admin user please
-		if ("admin".equals(user.getId())) {
-			return "false";
-		}
-
-		ResourceProperties properties = user.getProperties();
-		String dismissed = (String) properties.get("gradebookng-help-popup-dismissed");
-		if ("true".equals(dismissed)) {
-			return "false";
-		} else {
-			return "true";
-		}
-	}
-
-	@EntityCustomAction(action = "dismiss-help-popup", viewKey = EntityView.VIEW_NEW)
-	public void dismissHelpPopup(final EntityReference ref, final Map<String, Object> params) {
-		final String siteId = (String) params.get("siteId");
-
-		if (StringUtils.isBlank(siteId)) {
-			throw new IllegalArgumentException("Site ID must be set");
-		}
-
-		checkValidSite(siteId);
-		checkInstructorOrTA(siteId);
-
-		try {
-			UserEdit user = this.businessService.editCurrentUser();
-
-			// we don't do this for the admin user
-			if (!"admin".equals(user.getId())) {
-				ResourcePropertiesEdit properties = user.getPropertiesEdit();
-				properties.addProperty("gradebookng-help-popup-dismissed", "true");
-				this.businessService.saveUser(user);
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("Unable to set popup dismissal for user");
-		}
-	}
 }

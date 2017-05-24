@@ -33,16 +33,14 @@ import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.convert.ConversionException;
 import org.apache.wicket.util.convert.IConverter;
 import org.sakaiproject.gradebookng.business.GbCategoryType;
-import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.business.util.FormatHelper;
 import org.sakaiproject.gradebookng.tool.component.GbAjaxButton;
 import org.sakaiproject.gradebookng.tool.model.GbSettings;
@@ -51,12 +49,9 @@ import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.service.gradebook.shared.CategoryDefinition;
 import org.sakaiproject.service.gradebook.shared.GradebookInformation;
 
-public class SettingsCategoryPanel extends Panel {
+public class SettingsCategoryPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
-
-	@SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
-	protected GradebookNgBusinessService businessService;
 
 	IModel<GbSettings> model;
 
@@ -150,6 +145,9 @@ public class SettingsCategoryPanel extends Panel {
 		this.categoriesAndWeighting = new Radio<>("categoriesAndWeighting",
 				new Model<>(GbCategoryType.WEIGHTED_CATEGORY.getValue()));
 
+		//on load, if course grade displayed and points selected, disable categories and weighting
+		updateCategoriesAndWeightingRadioState();
+
 		categoryType.add(none);
 		categoryType.add(categoriesOnly);
 		categoryType.add(this.categoriesAndWeighting);
@@ -163,10 +161,9 @@ public class SettingsCategoryPanel extends Panel {
 
 			@Override
 			public boolean isVisible() {
-				// don't show if 'no categories' OR if course points is set
+				// don't show if 'no categories'
 				final GradebookInformation settings = SettingsCategoryPanel.this.model.getObject().getGradebookInformation();
-				return (GbCategoryType.valueOf(settings.getCategoryType()) != GbCategoryType.NO_CATEGORY
-						|| settings.isCoursePointsDisplayed());
+				return (GbCategoryType.valueOf(settings.getCategoryType()) != GbCategoryType.NO_CATEGORY);
 			}
 
 		};
@@ -276,11 +273,7 @@ public class SettingsCategoryPanel extends Panel {
 
 				// if categories and weighting, disable course grade points
 				final AjaxCheckBox points = settingsPage.getSettingsGradeReleasePanel().getPointsCheckBox();
-				if (type == GbCategoryType.WEIGHTED_CATEGORY) {
-					points.setEnabled(false);
-				} else {
-					points.setEnabled(true);
-				}
+				settingsPage.getSettingsGradeReleasePanel().updatePointsCheckboxState();
 				target.add(points);
 
 				// reinitialize any custom behaviour
@@ -420,20 +413,28 @@ public class SettingsCategoryPanel extends Panel {
 						if(value == null) {
 							value = 0;
 							categoryDropHighest.setModelValue(new String[]{"0"});
-							target.add(categoryDropHighest);
 						}
+
+						//remove tooltips and recalc
+						removeDropKeepDisabledToolTip(categoryDropHighest);
+						removeDropKeepDisabledToolTip(categoryDropLowest);
+						removeDropKeepDisabledToolTip(categoryKeepHighest);
 
 						categoryKeepHighest.setEnabled(true);
 						if(value.intValue() > 0) {
 							categoryKeepHighest.setModelValue(new String[]{"0"});
 							categoryKeepHighest.setEnabled(false);
+							addDropKeepDisabledToolTip(categoryKeepHighest);
 						}
-
+						target.add(categoryDropHighest);
+						target.add(categoryDropLowest);
 						target.add(categoryKeepHighest);
 					}
 				});
 				categoryDropHighest.setEnabled(dropKeepEnabled && categoryDropHighestEnabled);
-
+				if(!categoryDropHighest.isEnabled()) {
+					addDropKeepDisabledToolTip(categoryDropHighest);
+				}
 				item.add(categoryDropHighest);
 
 				// drop lowest config
@@ -451,23 +452,32 @@ public class SettingsCategoryPanel extends Panel {
 						if(value1 == null) {
 							value1 = 0;
 							categoryDropLowest.setModelValue(new String[]{"0"});
-							target.add(categoryDropLowest);
 						}
 						if(value2 == null) {
 							value2 = 0;
 							categoryDropHighest.setModelValue(new String[]{"0"});
-							target.add(categoryDropHighest);
 						}
+
+						//remove tooltips and recalc
+						removeDropKeepDisabledToolTip(categoryDropHighest);
+						removeDropKeepDisabledToolTip(categoryDropLowest);
+						removeDropKeepDisabledToolTip(categoryKeepHighest);
 
 						categoryKeepHighest.setEnabled(true);
 						if(value1.intValue() > 0 || value2.intValue() > 0) {
 							categoryKeepHighest.setModelValue(new String[]{"0"});
 							categoryKeepHighest.setEnabled(false);
+							addDropKeepDisabledToolTip(categoryKeepHighest);
 						}
+						target.add(categoryDropHighest);
+						target.add(categoryDropLowest);
 						target.add(categoryKeepHighest);
 					}
 				});
 				categoryDropLowest.setEnabled(dropKeepEnabled && categoryDropLowestEnabled);
+				if(!categoryDropLowest.isEnabled()) {
+					addDropKeepDisabledToolTip(categoryDropLowest);
+				}
 				item.add(categoryDropLowest);
 
 				// keep highest config
@@ -483,22 +493,34 @@ public class SettingsCategoryPanel extends Panel {
 						if(value == null) {
 							value = 0;
 							categoryKeepHighest.setModelValue(new String[]{"0"});
-							target.add(categoryKeepHighest);
 						}
+
+						//remove tooltips and recalc
+						removeDropKeepDisabledToolTip(categoryDropHighest);
+						removeDropKeepDisabledToolTip(categoryDropLowest);
+						removeDropKeepDisabledToolTip(categoryKeepHighest);
 
 						categoryDropHighest.setEnabled(true);
 						categoryDropLowest.setEnabled(true);
 						if(value.intValue() > 0) {
+
 							categoryDropHighest.setModelValue(new String[]{"0"});
 							categoryDropHighest.setEnabled(false);
+							addDropKeepDisabledToolTip(categoryDropHighest);
+
 							categoryDropLowest.setModelValue(new String[]{"0"});
 							categoryDropLowest.setEnabled(false);
+							addDropKeepDisabledToolTip(categoryDropLowest);
 						}
 						target.add(categoryDropHighest);
 						target.add(categoryDropLowest);
+						target.add(categoryKeepHighest);
 					}
 				});
 				categoryKeepHighest.setEnabled(dropKeepEnabled && categoryKeepHighestEnabled);
+				if(!categoryKeepHighest.isEnabled()) {
+					addDropKeepDisabledToolTip(categoryKeepHighest);
+				}
 				item.add(categoryKeepHighest);
 
 				// remove button
@@ -739,5 +761,45 @@ public class SettingsCategoryPanel extends Panel {
 	// to enable inter panel comms
 	Radio<Integer> getCategoriesAndWeightingRadio() {
 		return this.categoriesAndWeighting;
+	}
+
+	
+	// helper to apply the rules for whether the categories and weighting radio should be enabled
+	// runs via data from the model
+	protected void updateCategoriesAndWeightingRadioState() {
+		final GradebookInformation settings = this.model.getObject().getGradebookInformation();
+
+		// if course grade is NOT being displayed, enable categories and weighting
+		if (!settings.isCourseGradeDisplayed()) {
+			this.categoriesAndWeighting.setEnabled(true);
+		} else {
+			this.categoriesAndWeighting.setEnabled(false);
+		}
+
+		// if points selected, disable categories and weighting
+		if (settings.isCourseGradeDisplayed() && settings.isCoursePointsDisplayed()) {
+			this.categoriesAndWeighting.setEnabled(false);
+		} else {
+			this.categoriesAndWeighting.setEnabled(true);
+		}
+
+	}
+	
+	/**
+	 * Helper to add the tooltip when drop/keep settings cause a field to be disabled.
+	 * @param textfield
+	 */
+	private void addDropKeepDisabledToolTip(final Component textfield) {
+		textfield.add(AttributeModifier.replace("title", new ResourceModel("settingspage.categories.hover.dropkeepusage")));
+		textfield.add(AttributeModifier.replace("aria-label", new ResourceModel("settingspage.categories.hover.dropkeepusage")));
+	}
+
+	/**
+	 * Helper to remove the tooltip from above
+	 * @param textfield
+	 */
+	private void removeDropKeepDisabledToolTip(final Component textfield) {
+		textfield.add(AttributeModifier.remove("title"));
+		textfield.add(AttributeModifier.remove("aria-label"));
 	}
 }

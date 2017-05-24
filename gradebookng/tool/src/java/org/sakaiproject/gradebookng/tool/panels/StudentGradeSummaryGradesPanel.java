@@ -10,30 +10,24 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.sakaiproject.gradebookng.business.GbCategoryType;
-import org.sakaiproject.gradebookng.business.GbGradingType;
 import org.sakaiproject.gradebookng.business.GbRole;
-import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.business.model.GbGradeInfo;
 import org.sakaiproject.gradebookng.business.util.CourseGradeFormatter;
 import org.sakaiproject.gradebookng.tool.pages.GradebookPage;
 import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.service.gradebook.shared.CourseGrade;
+import org.sakaiproject.service.gradebook.shared.GradingType;
 import org.sakaiproject.tool.gradebook.Gradebook;
 
 /**
  * The panel that is rendered for students for both their own grades view, and also when viewing it from the instructor review tab
  */
-public class StudentGradeSummaryGradesPanel extends Panel {
+public class StudentGradeSummaryGradesPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
-
-	@SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
-	protected GradebookNgBusinessService businessService;
 
 	GbCategoryType configuredCategoryType;
 
@@ -70,9 +64,9 @@ public class StudentGradeSummaryGradesPanel extends Panel {
 
 		// unpack model
 		final Map<String, Object> modelData = (Map<String, Object>) getDefaultModelObject();
-		final String userId = (String) modelData.get("userId");
+		final String userId = (String) modelData.get("studentUuid");
 
-		final Gradebook gradebook = this.businessService.getGradebook();
+		final Gradebook gradebook = getGradebook();
 		final CourseGradeFormatter courseGradeFormatter = new CourseGradeFormatter(
 				gradebook,
 				GbRole.STUDENT,
@@ -127,7 +121,7 @@ public class StudentGradeSummaryGradesPanel extends Panel {
 		tableModel.put("isCategoryWeightEnabled", isCategoryWeightEnabled());
 		tableModel.put("isGroupedByCategory", this.isGroupedByCategory);
 		tableModel.put("showingStudentView", true);
-		tableModel.put("gradingType", GbGradingType.valueOf(gradebook.getGrade_type()));
+		tableModel.put("gradingType", GradingType.valueOf(gradebook.getGrade_type()));
 
 		addOrReplace(new GradeSummaryTablePanel("gradeSummaryTable", new LoadableDetachableModel<Map<String, Object>>() {
 			@Override

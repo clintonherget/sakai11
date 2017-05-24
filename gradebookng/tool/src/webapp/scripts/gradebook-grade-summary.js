@@ -39,7 +39,6 @@ GradebookGradeSummary.prototype.setupWicketModal = function() {
     this.setupTabs();
     this.setupStudentNavigation();
     this.setupFixedFooter();
-    this.hideWeightColumn();
     this.setupTableSorting();
     this.setupMask();
     this.setupModalPrint();
@@ -109,20 +108,27 @@ GradebookGradeSummary.prototype.setupStudentNavigation = function() {
   var $showNext = this.$content.find(".gb-summary-next-student");
   var $done = this.$content.find(".gb-summary-close");
 
-  var $previous = sakai.gradebookng.spreadsheet.findVisibleStudentBefore(this.studentId);
-  var $next = sakai.gradebookng.spreadsheet.findVisibleStudentAfter(this.studentId);
+  var currentStudentIndex = GbGradeTable.rowForStudent(this.studentId);
 
-  if ($previous) {
+  var previousStudentId, nextStudentId;
+  if (currentStudentIndex > 0) {
+    previousStudentId = GbGradeTable.students[currentStudentIndex - 1].userId;
+  }
+  if (currentStudentIndex < GbGradeTable.students.length - 1) {
+    nextStudentId = GbGradeTable.students[currentStudentIndex + 1].userId;
+  } 
+
+  if (previousStudentId) {
     $showPrevious.click(function() {
-      $previous.find("a.gb-student-label").trigger("click");
+      GbGradeTable.viewGradeSummary(previousStudentId);
     });
   } else {
     $showPrevious.hide();
   }
 
-  if ($next) {
+  if (nextStudentId) {
     $showNext.click(function() {
-      $next.find("a.gb-student-label").trigger("click");
+      GbGradeTable.viewGradeSummary(nextStudentId);
     });    
   } else {
     $showNext.hide();
@@ -235,7 +241,6 @@ GradebookGradeSummary.prototype.setupModalPrint = function() {
 
 GradebookGradeSummary.prototype.setupStudentView = function() {
   var self = this;
-  self.hideWeightColumn();
   self.setupTableSorting();
 
   var $button = $("body").find(".portletBody .gb-summary-print");
@@ -324,14 +329,6 @@ GradebookGradeSummary.prototype.setupTableSorting = function() {
     },
     cssInfoBlock: "gb-summary-category-tbody"
   });
-};
-
-
-GradebookGradeSummary.prototype.hideWeightColumn = function() {
-  // only hide the weight column if there are no categories being displayed
-  if (this.$content.find(".gb-summary-category-row").length == 0) {
-    this.$content.find(".weight-col").hide();
-  }
 };
 
 

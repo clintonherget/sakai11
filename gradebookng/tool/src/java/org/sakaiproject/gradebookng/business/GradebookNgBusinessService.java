@@ -1,8 +1,5 @@
 package org.sakaiproject.gradebookng.business;
 
-import java.math.RoundingMode;
-import java.text.Format;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,17 +18,15 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang.math.NumberUtils;
 import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.authz.api.SecurityService;
-import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
-import org.sakaiproject.gradebookng.business.dto.AssignmentOrder;
+import org.sakaiproject.gradebookng.business.exception.GbAccessDeniedException;
 import org.sakaiproject.gradebookng.business.exception.GbException;
 import org.sakaiproject.gradebookng.business.model.GbCourseGrade;
 import org.sakaiproject.gradebookng.business.model.GbGradeCell;
@@ -58,25 +53,24 @@ import org.sakaiproject.service.gradebook.shared.GradebookNotFoundException;
 import org.sakaiproject.service.gradebook.shared.GradebookPermissionService;
 import org.sakaiproject.service.gradebook.shared.GradebookService;
 import org.sakaiproject.service.gradebook.shared.GraderPermission;
+import org.sakaiproject.service.gradebook.shared.GradingType;
 import org.sakaiproject.service.gradebook.shared.InvalidGradeException;
 import org.sakaiproject.service.gradebook.shared.PermissionDefinition;
 import org.sakaiproject.service.gradebook.shared.SortType;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SiteService;
+import org.sakaiproject.tool.api.Tool;
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.tool.gradebook.Gradebook;
 import org.sakaiproject.tool.gradebook.GradingEvent;
 import org.sakaiproject.user.api.User;
-import org.sakaiproject.user.api.UserAlreadyDefinedException;
 import org.sakaiproject.user.api.UserDirectoryService;
-import org.sakaiproject.user.api.UserEdit;
-import org.sakaiproject.user.api.UserLockedException;
 import org.sakaiproject.user.api.UserNotDefinedException;
-import org.sakaiproject.user.api.UserPermissionException;
 import org.sakaiproject.util.ResourceLoader;
 
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Business service for GradebookNG
@@ -122,7 +116,11 @@ public class GradebookNgBusinessService {
 	@Setter
 	private SecurityService securityService;
 
+	@Setter
+	private ServerConfigurationService serverConfigurationService;
+
 	public static final String ASSIGNMENT_ORDER_PROP = "gbng_assignment_order";
+	public static final String ICON_SAKAI = "icon-sakai--";
 
 	/**
 	 * Get a list of all users in the current site that can have grades
@@ -175,9 +173,11 @@ public class GradebookNgBusinessService {
 				userUuids.retainAll(groupMembers);
 			}
 
+			final GbRole role = this.getUserRole(siteId);
+
 			// if TA, pass it through the gradebook permissions (only if there
 			// are permissions)
-			if (this.getUserRole(siteId) == GbRole.TA) {
+			if (role == GbRole.TA) {
 				final User user = getCurrentUser();
 
 				// if there are permissions, pass it through them
@@ -208,7 +208,10 @@ public class GradebookNgBusinessService {
 			return new ArrayList<>(userUuids);
 
 		} catch (final IdUnusedException e) {
-			e.printStackTrace();
+			log.warn("IdUnusedException trying to getGradeableUsers", e);
+			return null;
+		} catch (final GbAccessDeniedException e) {
+			log.warn("GbAccessDeniedException trying to getGradeableUsers", e);
 			return null;
 		}
 	}
@@ -255,15 +258,10 @@ public class GradebookNgBusinessService {
 		}
 	}
 
-	public int getRemainingGradableItems() {
-		int maxItems = ServerConfigurationService.getInt("gradebookng.max-gradable-items", 50);
-		return Math.max((maxItems - getGradebookAssignments().size()), 0);
-	}
-
 	/**
 	 * Get a list of assignments in the gradebook in the current site that the current user is allowed to access
 	 *
-	 * @return a list of assignments or null if no gradebook
+	 * @return a list of assignments or empty list if none/no gradebook
 	 */
 	public List<Assignment> getGradebookAssignments() {
 		return getGradebookAssignments(getCurrentSiteId(), SortType.SORT_BY_SORTING);
@@ -272,7 +270,7 @@ public class GradebookNgBusinessService {
 	/**
 	 * Get a list of assignments in the gradebook in the current site that the current user is allowed to access
 	 *
-	 * @return a list of assignments or null if no gradebook
+	 * @return a list of assignments or empty list if none/no gradebook
 	 */
 	public List<Assignment> getGradebookAssignments(final String siteId) {
 		return getGradebookAssignments(siteId, SortType.SORT_BY_SORTING);
@@ -282,7 +280,7 @@ public class GradebookNgBusinessService {
 	 * Get a list of assignments in the gradebook in the current site that the current user is allowed to access sorted by the provided
 	 * SortType
 	 *
-	 * @return a list of assignments or null if no gradebook
+	 * @return a list of assignments or empty list if none/no gradebook
 	 */
 	public List<Assignment> getGradebookAssignments(final SortType sortBy) {
 		return getGradebookAssignments(getCurrentSiteId(), sortBy);
@@ -295,7 +293,7 @@ public class GradebookNgBusinessService {
 	 * This should only be called if you are wanting to view the assignments that a student would see (ie if you ARE a student, or if you
 	 * are an instructor using the student review mode)
 	 *
-	 * @return a list of assignments or null if no gradebook
+	 * @return a list of assignments or empty list if none/no gradebook
 	 */
 	public List<Assignment> getGradebookAssignmentsForStudent(final String studentUuid) {
 
@@ -359,12 +357,24 @@ public class GradebookNgBusinessService {
 
 		List<CategoryDefinition> rval = new ArrayList<>();
 
-		if (gradebook != null && categoriesAreEnabled()) {
+		if(gradebook == null) {
+			return rval;
+		}
+
+		if (categoriesAreEnabled()) {
 			rval = this.gradebookService.getCategoryDefinitions(gradebook.getUid());
 		}
 
+		GbRole role;
+		try {
+			role = this.getUserRole(siteId);
+		} catch (final GbAccessDeniedException e) {
+			log.warn("GbAccessDeniedException trying to getGradebookCategories", e);
+			return rval;
+		}
+
 		// filter for TAs
-		if (this.getUserRole(siteId) == GbRole.TA) {
+		if (role == GbRole.TA) {
 			final User user = getCurrentUser();
 
 			// build a list of categoryIds
@@ -410,7 +420,7 @@ public class GradebookNgBusinessService {
 
 		final Gradebook gradebook = this.getGradebook();
 		if (gradebook != null) {
-			rval = this.gradebookService.getCourseGradeForStudents(gradebook.getUid(), this.getGradeableUsers());
+			rval = this.gradebookService.getCourseGradeForStudents(gradebook.getUid(), studentUuids);
 		}
 		return rval;
 	}
@@ -491,14 +501,19 @@ public class GradebookNgBusinessService {
 		final Double maxPoints = assignment.getPoints();
 
 		// check what grading mode we are in
-		final GbGradingType gradingType = GbGradingType.valueOf(gradebook.getGrade_type());
+		final GradingType gradingType = GradingType.valueOf(gradebook.getGrade_type());
 
 		// if percentage entry type, reformat the grades, otherwise use points as is
 		String newGradeAdjusted = newGrade;
 		String oldGradeAdjusted = oldGrade;
 		String storedGradeAdjusted = storedGrade;
+		if(StringUtils.isNotBlank(storedGradeAdjusted)){
+			//Fix a problem when the grades comes from the old Gradebook API with locale separator, always compare the values using the same separator
+			oldGradeAdjusted = oldGradeAdjusted.replace(newGradeAdjusted.contains(",") ? "." : ",", newGradeAdjusted.contains(",") ? "," : ".");
+			storedGradeAdjusted = storedGradeAdjusted.replace(newGradeAdjusted.contains(",") ? "." : ",", newGradeAdjusted.contains(",") ? "," : ".");
+		}
 
-		if (gradingType == GbGradingType.PERCENTAGE) {
+		if (gradingType == GradingType.PERCENTAGE) {
 			// the passed in grades represents a percentage so the number needs to be adjusted back to points
 			final Double newGradePercentage = NumberUtils.toDouble(newGrade);
 			final Double newGradePointsFromPercentage = (newGradePercentage / 100) * maxPoints;
@@ -658,26 +673,30 @@ public class GradebookNgBusinessService {
 		final String currentUserUuid = getCurrentUser().getId();
 
 		// get role for current user
-		final GbRole role = this.getUserRole();
+		GbRole role;
+		try {
+			role = this.getUserRole();
+		} catch (final GbAccessDeniedException e) {
+			throw new GbException("Error getting role for current user", e);
+		}
 
 		// get uuids as list of Users.
 		// this gives us our base list and will be sorted as per our desired
 		// sort method
 		final List<User> students = getUsers(studentUuids);
-		if (settings.getStudentSortOrder() != null || settings.getNameSortOrder() != null) {
+		stopwatch.timeWithContext("buildGradeMatrix", "getUsers", stopwatch.getTime());
+		if (settings.getStudentSortOrder() != null) {
 
-			if (settings.getNameSortOrder() == GbStudentNameSortOrder.FIRST_NAME) {
-				Collections.sort(students, new FirstNameComparator());
-			} else {
-				Collections.sort(students, new LastNameComparator());
+			Comparator<User> comp = GbStudentNameSortOrder.FIRST_NAME == settings.getNameSortOrder() ?
+					new FirstNameComparator() : new LastNameComparator();
+
+			if (SortDirection.DESCENDING == settings.getStudentSortOrder()) {
+
+				comp = Collections.reverseOrder(comp);
 			}
-
-			if (settings.getStudentSortOrder() != null &&
-					settings.getStudentSortOrder().equals(SortDirection.DESCENDING)) {
-
-				Collections.reverse(students);
-			}
+			Collections.sort(students, comp);
 		}
+		stopwatch.timeWithContext("buildGradeMatrix", "sortUsers", stopwatch.getTime());
 
 		// get course grades
 		final Map<String, CourseGrade> courseGrades = getCourseGrades(studentUuids);
@@ -927,10 +946,8 @@ public class GradebookNgBusinessService {
 							log.debug("permissionCategoryId: " + permissionCategoryId);
 							log.debug("permissionGroupReference: " + permissionGroupReference);
 
-							// if permissions category is null (can grade all
-							// categories) or they match (can grade this
-							// category)
-							if (permissionCategoryId == null || permissionCategoryId.equals(gradeCategoryId)) {
+							// if permissions category is null (can grade all categories) or they match (can grade this category)
+							if (!categoriesEnabled || (permissionCategoryId == null || permissionCategoryId.equals(gradeCategoryId))) {
 								categoryOk = true;
 								log.debug("Category check passed");
 							}
@@ -971,46 +988,42 @@ public class GradebookNgBusinessService {
 
 		// sort the matrix based on the supplied assignment sort order (if any)
 		if (settings.getAssignmentSortOrder() != null) {
-			final AssignmentGradeComparator comparator = new AssignmentGradeComparator();
-			comparator.setAssignmentId(settings.getAssignmentSortOrder().getAssignmentId());
+			Comparator<GbStudentGradeInfo> comparator = new AssignmentGradeComparator(settings.getAssignmentSortOrder().getAssignmentId());
 
 			final SortDirection direction = settings.getAssignmentSortOrder().getDirection();
-
-			// sort
-			Collections.sort(items, comparator);
-
 			// reverse if required
 			if (direction == SortDirection.DESCENDING) {
-				Collections.reverse(items);
+				comparator = Collections.reverseOrder(comparator);
 			}
+			// sort
+			Collections.sort(items, comparator);
 		}
 		stopwatch.timeWithContext("buildGradeMatrix", "matrix sorted by assignment", stopwatch.getTime());
 
 		// sort the matrix based on the supplied category sort order (if any)
 		if (settings.getCategorySortOrder() != null) {
-			final CategorySubtotalComparator comparator = new CategorySubtotalComparator();
-			comparator.setCategoryId(settings.getCategorySortOrder().getCategoryId());
+			Comparator comparator = new CategorySubtotalComparator(settings.getCategorySortOrder().getCategoryId());
 
 			final SortDirection direction = settings.getCategorySortOrder().getDirection();
-
+			// reverse if required
+			if (direction == SortDirection.DESCENDING) {
+				comparator = Collections.reverseOrder(comparator);
+			}
 			// sort
 			Collections.sort(items, comparator);
 
-			// reverse if required
-			if (direction == SortDirection.DESCENDING) {
-				Collections.reverse(items);
-			}
 		}
 		stopwatch.timeWithContext("buildGradeMatrix", "matrix sorted by category", stopwatch.getTime());
 
 		if (settings.getCourseGradeSortOrder() != null) {
-			// sort
-			Collections.sort(items, new CourseGradeComparator(getGradebookSettings()));
 
+			Comparator<GbStudentGradeInfo> comp = new CourseGradeComparator(getGradebookSettings());
 			// reverse if required
 			if (settings.getCourseGradeSortOrder() == SortDirection.DESCENDING) {
-				Collections.reverse(items);
+				comp = Collections.reverseOrder(comp);
 			}
+			// sort
+			Collections.sort(items, comp);
 		}
 		stopwatch.timeWithContext("buildGradeMatrix", "matrix sorted by course grade", stopwatch.getTime());
 
@@ -1041,9 +1054,17 @@ public class GradebookNgBusinessService {
 			log.error("Error retrieving groups", e);
 		}
 
+		GbRole role;
+		try {
+			role = this.getUserRole(siteId);
+		} catch (final GbAccessDeniedException e) {
+			log.warn("GbAccessDeniedException trying to getGradebookCategories", e);
+			return rval;
+		}
+
 		// if user is a TA, get the groups they can see and filter the GbGroup
 		// list to keep just those
-		if (this.getUserRole(siteId) == GbRole.TA) {
+		if (role == GbRole.TA) {
 			final Gradebook gradebook = this.getGradebook(siteId);
 			final User user = getCurrentUser();
 
@@ -1166,12 +1187,11 @@ public class GradebookNgBusinessService {
 	 *
 	 * @param assignmentId the assignment we are reordering
 	 * @param order the new order
-	 * @throws JAXBException
 	 * @throws IdUnusedException
 	 * @throws PermissionException
 	 */
 	public void updateAssignmentCategorizedOrder(final long assignmentId, final int order)
-			throws JAXBException, IdUnusedException, PermissionException {
+			throws IdUnusedException, PermissionException {
 		final String siteId = getCurrentSiteId();
 		updateAssignmentCategorizedOrder(siteId, assignmentId, order);
 	}
@@ -1192,8 +1212,7 @@ public class GradebookNgBusinessService {
 		try {
 			this.siteService.getSite(siteId);
 		} catch (final IdUnusedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("IdUnusedException trying to updateAssignmentCategorizedOrder", e);
 			return;
 		}
 
@@ -1228,30 +1247,6 @@ public class GradebookNgBusinessService {
 			final Long assignmentId, final int order) {
 		this.gradebookService.updateAssignmentCategorizedOrder(gradebookId, categoryId, assignmentId,
 				new Integer(order));
-	}
-
-	/**
-	 * Comparator class for sorting a list of users by last name Secondary sort is on first name to maintain consistent order for those with
-	 * the same last name
-	 */
-	class LastNameComparator implements Comparator<User> {
-		@Override
-		public int compare(final User u1, final User u2) {
-			return new CompareToBuilder().append(u1.getLastName(), u2.getLastName())
-					.append(u1.getFirstName(), u2.getFirstName()).toComparison();
-		}
-	}
-
-	/**
-	 * Comparator class for sorting a list of users by first name Secondary sort is on last name to maintain consistent order for those with
-	 * the same first name
-	 */
-	class FirstNameComparator implements Comparator<User> {
-		@Override
-		public int compare(final User u1, final User u2) {
-			return new CompareToBuilder().append(u1.getFirstName(), u2.getFirstName())
-					.append(u1.getLastName(), u2.getLastName()).toComparison();
-		}
 	}
 
 	/**
@@ -1376,7 +1371,7 @@ public class GradebookNgBusinessService {
 
 			for (int i = 0; i < assignments.size(); i++) {
 				final Assignment a = assignments.get(i);
-				if (assignmentId == a.getId()) {
+				if (assignmentId == a.getId() && a.getSortOrder() != null) {
 					return a.getSortOrder();
 				}
 			}
@@ -1521,8 +1516,19 @@ public class GradebookNgBusinessService {
 	 * @return the comment or null if none
 	 */
 	public String getAssignmentGradeComment(final long assignmentId, final String studentUuid) {
+		return getAssignmentGradeComment(getCurrentSiteId(), assignmentId, studentUuid);
+	}
 
-		final String siteId = getCurrentSiteId();
+
+	/**
+	 * Get the comment for a given student assignment grade
+	 *
+	 * @param siteId site id
+	 * @param assignmentId id of assignment
+	 * @param studentUuid uuid of student
+	 * @return the comment or null if none
+	 */
+	public String getAssignmentGradeComment(final String siteId, final long assignmentId, final String studentUuid) {
 		final Gradebook gradebook = getGradebook(siteId);
 
 		try {
@@ -1536,6 +1542,7 @@ public class GradebookNgBusinessService {
 		}
 		return null;
 	}
+
 
 	/**
 	 * Update (or set) the comment for a student's assignment
@@ -1566,9 +1573,10 @@ public class GradebookNgBusinessService {
 	/**
 	 * Get the role of the current user in the current site
 	 *
-	 * @return Role
+	 * @return GbRole
+	 * @throws GbAccessDeniedException if something goes wrong checking the site or user permissions
 	 */
-	public GbRole getUserRole() {
+	public GbRole getUserRole() throws GbAccessDeniedException {
 		final String siteId = getCurrentSiteId();
 		return this.getUserRole(siteId);
 	}
@@ -1577,9 +1585,10 @@ public class GradebookNgBusinessService {
 	 * Get the role of the current user in the given site
 	 *
 	 * @param siteId the siteId to check
-	 * @return Role
+	 * @return GbRole for the current user
+	 * @throws GbAccessDeniedException if something goes wrong checking the site or user permissions
 	 */
-	public GbRole getUserRole(final String siteId) {
+	public GbRole getUserRole(final String siteId) throws GbAccessDeniedException {
 
 		final String userId = getCurrentUser().getId();
 
@@ -1587,8 +1596,7 @@ public class GradebookNgBusinessService {
 		try {
 			siteRef = this.siteService.getSite(siteId).getReference();
 		} catch (final IdUnusedException e) {
-			e.printStackTrace();
-			return null;
+			throw new GbAccessDeniedException(e);
 		}
 
 		GbRole rval;
@@ -1600,7 +1608,7 @@ public class GradebookNgBusinessService {
 		} else if (this.securityService.unlock(userId, GbRole.STUDENT.getValue(), siteRef)) {
 			rval = GbRole.STUDENT;
 		} else {
-			throw new SecurityException("Current user does not have a valid section.role.x permission");
+			throw new GbAccessDeniedException("Current user does not have a valid section.role.x permission");
 		}
 
 		return rval;
@@ -1627,7 +1635,13 @@ public class GradebookNgBusinessService {
 		// if instructor or TA, skip this check
 		// permission checks are still applied at the assignment level in the
 		// GradebookService
-		final GbRole role = this.getUserRole(siteId);
+		GbRole role;
+		try {
+			role = this.getUserRole(siteId);
+		} catch (final GbAccessDeniedException e) {
+			log.warn("GbAccessDeniedException trying to getGradesForStudent", e);
+			return rval;
+		}
 
 		if (role == GbRole.STUDENT) {
 			final boolean released = gradebook.isAssignmentsDisplayed();
@@ -1716,7 +1730,7 @@ public class GradebookNgBusinessService {
 				rval.add(getUser(userUuid));
 			}
 		} catch (final IdUnusedException e) {
-			e.printStackTrace();
+			log.warn("IdUnusedException trying to getTeachingAssistants", e);
 		}
 
 		return rval;
@@ -1768,7 +1782,13 @@ public class GradebookNgBusinessService {
 
 		final String siteId = getCurrentSiteId();
 
-		final GbRole role = this.getUserRole(siteId);
+		GbRole role;
+		try {
+			role = this.getUserRole(siteId);
+		} catch (final GbAccessDeniedException e) {
+			log.warn("GbAccessDeniedException trying to check isCourseGradeVisible", e);
+			return false;
+		}
 
 		// if instructor, allowed
 		if (role == GbRole.INSTRUCTOR) {
@@ -1804,6 +1824,7 @@ public class GradebookNgBusinessService {
 		}
 
 		// other roles not yet catered for, catch all.
+		log.warn("User: " + userUuid + " does not have a valid Gradebook related role in site: " + siteId);
 		return false;
 	}
 
@@ -1933,135 +1954,60 @@ public class GradebookNgBusinessService {
 	}
 
 	/**
-	 * Comparator class for sorting a list of AssignmentOrders
+	 * Helper to determine the icon class to use depending on the assignment external source
+	 * @param assignment
+	 * @return
 	 */
-	class AssignmentOrderComparator implements Comparator<AssignmentOrder> {
-		@Override
-		public int compare(final AssignmentOrder ao1, final AssignmentOrder ao2) {
-			// Deal with uncategorized assignments (nulls!)
-			if (ao1.getCategory() == null && ao2.getCategory() == null) {
-				return ((Integer) ao1.getOrder()).compareTo(ao2.getOrder());
-			} else if (ao1.getCategory() == null) {
-				return 1;
-			} else if (ao2.getCategory() == null) {
-				return -1;
-			}
-			// Deal with friendly categorized assignments
-			if (ao1.getCategory().equals(ao2.getCategory())) {
-				return ((Integer) ao1.getOrder()).compareTo(ao2.getOrder());
-			} else {
-				return ao1.getCategory().compareTo(ao2.getCategory());
-			}
+	public String getIconClass(final Assignment assignment) {
+		final String externalAppName = assignment.getExternalAppName();
+		String iconClass = getDefaultIconClass();
+		if (StringUtils.equals(externalAppName, "Assignments")) {
+			iconClass = getAssignmentsIconClass();
+		} else if (StringUtils.equals(externalAppName, "Tests & Quizzes")) {
+			iconClass = getSamigoIconClass();
+		} else if (StringUtils.equals(externalAppName, "Lesson Builder")) {
+			iconClass = getLessonBuilderIconClass();
 		}
+		return iconClass;
 	}
+
 
 	/**
-	 * Comparator class for sorting an assignment by the grades.
-	 *
-	 * Note that this must have the assignmentId set into it so we can extract the appropriate grade entry from the map that each student
-	 * has.
-	 *
+	 * Helper to determine the icon class for possible external app names
+	 * @return
 	 */
-	class AssignmentGradeComparator implements Comparator<GbStudentGradeInfo> {
+	public Map<String, String> getIconClassMap() {
+		Map<String, String> mapping = new HashMap<>();
 
-		@Setter
-		private long assignmentId;
-
-		@Override
-		public int compare(final GbStudentGradeInfo g1, final GbStudentGradeInfo g2) {
-
-			final GbGradeInfo info1 = g1.getGrades().get(this.assignmentId);
-			final GbGradeInfo info2 = g2.getGrades().get(this.assignmentId);
-
-			// for proper number ordering, these have to be numerical
-			final Double grade1 = (info1 != null) ? NumberUtils.toDouble(info1.getGrade()) : null;
-			final Double grade2 = (info2 != null) ? NumberUtils.toDouble(info2.getGrade()) : null;
-
-			return new CompareToBuilder().append(grade1, grade2).toComparison();
-
-		}
-	}
-
-	/**
-	 * Comparator class for sorting a category by the subtotals
-	 *
-	 * Note that this must have the categoryId set into it so we can extract the appropriate grade entry from the map that each student has.
-	 *
-	 */
-	class CategorySubtotalComparator implements Comparator<GbStudentGradeInfo> {
-
-		@Setter
-		private long categoryId;
-
-		@Override
-		public int compare(final GbStudentGradeInfo g1, final GbStudentGradeInfo g2) {
-
-			final Double subtotal1 = g1.getCategoryAverages().get(this.categoryId);
-			final Double subtotal2 = g2.getCategoryAverages().get(this.categoryId);
-
-			return new CompareToBuilder().append(subtotal1, subtotal2).toComparison();
-
-		}
-	}
-
-	/**
-	 * Comparator class for sorting by course grade, first by the letter grade's index in the gradebook's grading scale and then by the
-	 * number of points the student has earned.
-	 *
-	 */
-	class CourseGradeComparator implements Comparator<GbStudentGradeInfo> {
-
-		private List<String> ascendingGrades;
-
-		public CourseGradeComparator(final GradebookInformation gradebookInformation) {
-			final Map<String, Double> gradeMap = gradebookInformation.getSelectedGradingScaleBottomPercents();
-			this.ascendingGrades = new ArrayList<>(gradeMap.keySet());
-			this.ascendingGrades.sort(new Comparator<String>() {
-				@Override
-				public int compare(final String a, final String b) {
-					return new CompareToBuilder()
-							.append(gradeMap.get(a), gradeMap.get(b))
-							.toComparison();
-				}
-			});
+		Tool assignment = toolManager.getTool("sakai.assignment.grades");
+		if (assignment != null) {
+			mapping.put(assignment.getTitle(), getAssignmentsIconClass());
 		}
 
-		@Override
-		public int compare(final GbStudentGradeInfo g1, final GbStudentGradeInfo g2) {
-			final CourseGrade cg1 = g1.getCourseGrade().getCourseGrade();
-			final CourseGrade cg2 = g2.getCourseGrade().getCourseGrade();
-
-			String letterGrade1 = cg1.getMappedGrade();
-			if (cg1.getEnteredGrade() != null) {
-				letterGrade1 = cg1.getEnteredGrade();
-			}
-			String letterGrade2 = cg2.getMappedGrade();
-			if (cg2.getEnteredGrade() != null) {
-				letterGrade2 = cg2.getEnteredGrade();
-			}
-
-			final int gradeIndex1 = this.ascendingGrades.indexOf(letterGrade1);
-			final int gradeIndex2 = this.ascendingGrades.indexOf(letterGrade2);
-
-			final Double calculatedGrade1 = cg1.getCalculatedGrade() == null ? null : Double.valueOf(cg1.getCalculatedGrade());
-			final Double calculatedGrade2 = cg2.getCalculatedGrade() == null ? null : Double.valueOf(cg2.getCalculatedGrade());
-
-			return new CompareToBuilder()
-					.append(gradeIndex1, gradeIndex2)
-					.append(calculatedGrade1, calculatedGrade2)
-					.toComparison();
+		Tool samigo = toolManager.getTool("sakai.samigo");
+		if (samigo != null) {
+			mapping.put(samigo.getTitle(), getSamigoIconClass());
 		}
+
+		mapping.put("Lesson Builder", getLessonBuilderIconClass());
+
+		return mapping;
 	}
 
 
-	// NYU Methods
-	public UserEdit editCurrentUser() throws UserNotDefinedException, UserPermissionException, UserLockedException {
-		return this.userDirectoryService.editUser(getCurrentUser().getId());
+	public String getDefaultIconClass() {
+		return ICON_SAKAI + "default-tool";
 	}
 
-	public void saveUser(UserEdit user) throws UserAlreadyDefinedException {
-		if (user.getId().equals(getCurrentUser().getId())) {
-			this.userDirectoryService.commitEdit(user);
-		}
+	private String getAssignmentsIconClass() {
+		return ICON_SAKAI + "sakai-assignment-grades";
+	}
+
+	private String getSamigoIconClass() {
+		return ICON_SAKAI + "sakai-samigo";
+	}
+
+	private String getLessonBuilderIconClass() {
+		return ICON_SAKAI + "sakai-lessonbuildertool";
 	}
 }
