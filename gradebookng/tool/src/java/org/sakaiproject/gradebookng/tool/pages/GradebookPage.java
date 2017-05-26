@@ -20,6 +20,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.util.string.StringValue;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.gradebookng.business.GbRole;
 import org.sakaiproject.gradebookng.business.model.GbGroup;
@@ -67,7 +68,7 @@ import java.util.*;
 public class GradebookPage extends BasePage {
 	private static final long serialVersionUID = 1L;
 
-	public static final String CREATED_ASSIGNMENT_ID_PARAM = "createdAssignmentId";
+	public static final String FOCUS_ASSIGNMENT_ID_PARAM = "focusAssignmentId";
 
 	// flag to indicate a category is uncategorised
 	// doubles as a translation key
@@ -515,6 +516,14 @@ public class GradebookPage extends BasePage {
 		response.render(JavaScriptHeaderItem
 			.forUrl(String.format("/gradebookng-tool/scripts/gradebook-help-popup.js?version=%s", version)));
 
+		final StringValue focusAssignmentId = getPageParameters().get(FOCUS_ASSIGNMENT_ID_PARAM);
+		if (!focusAssignmentId.isNull()) {
+			getPageParameters().remove(FOCUS_ASSIGNMENT_ID_PARAM);
+			response.render(JavaScriptHeaderItem
+				.forScript(
+					String.format("GbGradeTable.focusColumnForAssignmentId(%s)", focusAssignmentId.toString()),
+					null));
+		}
 	}
 
 
