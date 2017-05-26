@@ -27,9 +27,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,6 +39,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.IdUnusedException;
@@ -405,18 +408,29 @@ public class MoreSiteViewImpl extends AbstractSiteViewImpl
 			}
 		}
 
+		// CLASSES-2733 Explicitly add our "special" categories to make sure they always land in the right order
+		tabsMoreSortedTermList.add(rb.getString("moresite_unknown_term"));
+		tabsMoreSortedTermList.add(rb.getString("moresite_other"));
+		tabsMoreSortedTermList.add(rb.getString("moresite_projects"));
+
+		// Anything remaining should be our custom terms (like Sandboxes)
+		List<String> remainingTerms = new ArrayList<>();
+
 		Iterator i = tabsMoreTerms.keySet().iterator();
 		while (i.hasNext())
 		{
 			String term = (String) i.next();
 			if (!tabsMoreSortedTermList.contains(term))
 			{
-				tabsMoreSortedTermList.add(term);
-
+				remainingTerms.add(term);
 			}
 		}
 
+		Collections.sort(remainingTerms);
+		tabsMoreSortedTermList.addAll(remainingTerms);
+
 		SitePanesArrangement sitesByPane = arrangeSitesIntoPanes(tabsMoreTerms);
+
 		renderContextMap.put("tabsMoreTermsLeftPane", sitesByPane.sitesInLeftPane);
 		renderContextMap.put("tabsMoreTermsRightPane", sitesByPane.sitesInRightPane);
 
@@ -436,8 +450,11 @@ public class MoreSiteViewImpl extends AbstractSiteViewImpl
 			result.sitesInLeftPane.put(term, new ArrayList());
 			result.sitesInRightPane.put(term, new ArrayList());
 
+			String unknown_term_type = rb.getString("moresite_unknown_term");
+			Set<String> customTerms = getCustomTermTitles();
+
 			for (Map site : (List<Map>)tabsMoreTerms.get(term)) {
-				if (isCourseType((String)site.get("siteType"))) {
+				if (isCourseType((String)site.get("siteType")) && !customTerms.contains(term)) {
 					result.sitesInLeftPane.get(term).add(site);
 				} else {
 					result.sitesInRightPane.get(term).add(site);
@@ -448,6 +465,19 @@ public class MoreSiteViewImpl extends AbstractSiteViewImpl
 		return result;
 	}
 
+	private Set<String> getCustomTermTitles() {
+		Set<String> result = new HashSet<>();
+
+		String termString = HotReloadConfigurationService.getString("nyu.custom-term-titles", null);
+
+		if (termString != null) {
+		    for (String term : termString.split(", ?")) {
+			result.add(term);
+		    }
+		}
+
+		return result;
+	}
 
 	/*
 	 * (non-Javadoc)

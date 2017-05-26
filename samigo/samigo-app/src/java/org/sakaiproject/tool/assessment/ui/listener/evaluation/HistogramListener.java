@@ -3107,6 +3107,7 @@ private void getCalculatedQuestionScores(List<ItemGradingData> scores, Histogram
     int aChar = 65;
     for (char colHeader=65; colHeader < 65+bean.getMaxNumberOfAnswers(); colHeader++) {
         headerList.add(String.valueOf(colHeader));
+        headerList.add("Descr-" + String.valueOf(colHeader));
     }
     spreadsheetRows.add(headerList);
 
@@ -3194,6 +3195,8 @@ private void getCalculatedQuestionScores(List<ItemGradingData> scores, Histogram
    					dVal = Double.parseDouble("" + questionBean.getHistogramBars()[i].getNumStudents() );
    					statsLine.add(dVal);
    				}
+
+                                statsLine.add(questionBean.getHistogramBars()[i].getLabel());
    			}
    			catch (NullPointerException npe) {
    				log.warn("questionBean.getHistogramBars()[" + i + "] is null. " + npe);
