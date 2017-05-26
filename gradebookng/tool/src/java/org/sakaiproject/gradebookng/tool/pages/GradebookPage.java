@@ -379,10 +379,11 @@ public class GradebookPage extends BasePage {
 		groupFilter.setNullValid(false);
 
 		// if only one item, hide the dropdown
-		if (groups.size() == 1) {
+		if (groups.size() == 1 || !this.hasAssignmentsAndGrades) {
 			groupFilter.setVisible(false);
 		}
 
+		this.form.add(groupFilter);
 
 		final Map<String, Object> togglePanelModel = new HashMap<>();
 		togglePanelModel.put("assignments", this.businessService.getGradebookAssignments(sortBy));
@@ -394,13 +395,14 @@ public class GradebookPage extends BasePage {
 		//gradeItemsTogglePanel.setVisible(false);
 		add(gradeItemsTogglePanel);
 
+		this.form.add(new WebMarkupContainer("captionToggle").setVisible(this.hasAssignmentsAndGrades));
+
 		//
 		// hide/show components
 		//
 
 		toolbar.setVisible(this.hasAssignmentsAndGrades);
 		gradeTable.setVisible(this.hasAssignmentsAndGrades);
-		toolbar.add(groupFilter);
 
 		stopwatch.time("Gradebook page done", stopwatch.getTime());
 	}
