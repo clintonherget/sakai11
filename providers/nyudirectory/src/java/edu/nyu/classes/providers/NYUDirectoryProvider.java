@@ -1,5 +1,7 @@
 package edu.nyu.classes.providers;
 
+import com.unboundid.ldap.sdk.migrate.ldapjdk.LDAPException;
+import org.sakaiproject.unboundid.LdapUserData;
 import org.sakaiproject.unboundid.UnboundidDirectoryProvider;
 
 import java.sql.Connection;
@@ -51,11 +53,6 @@ public class NYUDirectoryProvider extends UnboundidDirectoryProvider
     }
 
 
-    // NOTE: There's a very similar piece of logic to this in
-    // JLDAPDirectoryProvider#findUsersByEmail that was too much hassle to move
-    // into this subclass (without bringing along half of LDAP with it, or
-    // refactoring the parent class).
-    //
     @Override
     public boolean findUserByEmail(UserEdit edit, String email)
     {
@@ -67,6 +64,24 @@ public class NYUDirectoryProvider extends UnboundidDirectoryProvider
         }
 
         return super.findUserByEmail(edit, email);
+    }
+
+
+    @Override
+    public Collection findUsersByEmail(String email, UserFactory factory)
+    {
+        String netID = NYULdapAttributeMapper.getNetIdForEmail(email);
+
+        if (netID != null) {
+            UserEdit edit = factory.newUser(StringUtils.trimToNull(netID.toLowerCase()));
+            if (getUser(edit)) {
+                List<User> users = new ArrayList<User>();
+                users.add(edit);
+                return users;
+            }
+        }
+
+        return super.findUsersByEmail(email, factory);
     }
 
 
