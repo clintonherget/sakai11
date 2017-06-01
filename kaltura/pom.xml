@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                      http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.sakaiproject</groupId>
+    <artifactId>master</artifactId>
+    <version>11.2</version>
+    <relativePath>../master/pom.xml</relativePath>
+  </parent>
+
+  <name>Kaltura LTI Tool</name>
+  <groupId>org.sakaiproject.kaltura</groupId>
+  <artifactId>kaltura</artifactId>
+  <packaging>pom</packaging>
+
+  <properties>
+    <gson.version>2.2.4</gson.version>
+  </properties>
+
+  <modules>
+    <module>services</module>
+    <module>utils</module>
+    <module>api</module>
+    <module>impl</module>
+    <module>pack</module>
+    <module>admin-tool</module>
+    <module>my-media-tool</module>
+    <module>media-gallery-tool</module>
+  </modules>
+  
+  <developers>
+    <developer>
+      <id>rlong@unicon.net</id>
+      <name>Robert E. Long</name>
+      <email>rlong@unicon.net</email>
+      <url>http://www.linkedin.com/in/relong</url>
+      <roles>
+        <role>Engineer</role>
+      </roles>
+      <timezone>-7</timezone>
+    </developer>
+    <developer>
+        <name>Yegeneswari Nagappan</name>
+        <email>ynagappan@unicon.net</email>
+        <organization>Unicon, Inc.</organization>
+        <timezone>8</timezone>
+    </developer>
+  </developers>
+
+  <dependencyManagement>
+    <!-- Kaltura libs -->
+    <dependencies>
+      <dependency>
+        <groupId>org.sakaiproject.kaltura</groupId>
+        <artifactId>kaltura-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sakaiproject.kaltura</groupId>
+        <artifactId>kaltura-impl</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sakaiproject.kaltura</groupId>
+        <artifactId>kaltura-services</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sakaiproject.kaltura</groupId>
+        <artifactId>kaltura-utils</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <!-- Sakai libs -->
+      <dependency>
+        <groupId>org.sakaiproject.basiclti</groupId>
+        <artifactId>basiclti-common</artifactId>
+        <version>${sakai.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
