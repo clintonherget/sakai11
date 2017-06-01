@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>kaltura</artifactId>
+    <groupId>org.sakaiproject.kaltura</groupId>
+    <version>11.2</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <name>Kaltura API</name>
+  <artifactId>kaltura-api</artifactId>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.sakaiproject.kaltura</groupId>
+      <artifactId>kaltura-utils</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.kernel</groupId>
+      <artifactId>sakai-kernel-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.genericdao</groupId>
+      <artifactId>generic-dao</artifactId>
+      <version>${sakai.genericdao.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${sakai.hibernate.groupId}</groupId>
+      <artifactId>${sakai.hibernate.artifactId}</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>src/main/java</sourceDirectory>
+  </build>
+
+</project>
