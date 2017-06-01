@@ -125,4 +125,11 @@
     }
   }
 
+  .icon-kaltura-admin,
+  .icon-kaltura-media,
+  .icon-kaltura-my-media {
+    @extend .fa-lg;
+    @extend .fa;
+    @extend .fa-film;
+  }
 }
