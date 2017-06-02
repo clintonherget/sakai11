@@ -159,7 +159,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             // Note that it uses spellchecker.net, displays ads and sends content to remote servers without additional setup.
             //['Cut','Copy','Paste','PasteText','PasteFromWord','-','Print', 'SpellChecker', 'Scayt'],
             ['Cut','Copy','Paste','PasteText','PasteFromWord','-','RemoveFormat'],
-            [imageType,'AudioRecorder','Audio','magicembed','kalturaflash','Youtube','kaltura','-','fmath_formula','ckeditor_wiris_formulaEditor','ckeditor_wiris_CAS','-','NYUPreview'],
+            [imageType,'AudioRecorder','Audio','magicembed','kalturaflash','Youtube','-','fmath_formula','ckeditor_wiris_formulaEditor','ckeditor_wiris_CAS','-','NYUPreview'],
             extraToolbarButtons,
             ['Maximize'],
             '/',
@@ -230,8 +230,6 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             CKEDITOR.plugins.addExternal('encodedimage', basePath + 'encodedimage/', 'plugin.js');
             CKEDITOR.plugins.addExternal('nyuhelp', basePath + 'nyuhelp/', 'plugin.js');
 
-            CKEDITOR.plugins.addExternal('kaltura',basePath+'kaltura/','plugin.js');
-
             /*
                To enable after the deadline uncomment these two lines and add atd-ckeditor to toolbar
                and to extraPlugins. This also needs extra stylesheets.
@@ -265,7 +263,6 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             ckconfig.extraPlugins+=",nyupreview";
             ckconfig.extraPlugins+=",encodedimage";
             ckconfig.extraPlugins+=",nyuhelp";
-            ckconfig.extraPlugins+=",kaltura";
 
             if (sakai.editor.enableMathJax) {
               ckconfig.mathJaxLib = sakai.editor.mathJaxPath;
