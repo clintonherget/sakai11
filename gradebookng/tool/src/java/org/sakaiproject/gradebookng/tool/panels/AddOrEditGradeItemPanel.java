@@ -1,22 +1,19 @@
 package org.sakaiproject.gradebookng.tool.panels;
 
 import java.text.MessageFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.tool.component.GbAjaxButton;
 import org.sakaiproject.gradebookng.tool.component.GbFeedbackPanel;
 import org.sakaiproject.gradebookng.tool.pages.GradebookPage;
@@ -27,6 +24,7 @@ import org.sakaiproject.service.gradebook.shared.ConflictingAssignmentNameExcept
 import org.sakaiproject.service.gradebook.shared.ConflictingExternalIdException;
 import org.sakaiproject.service.gradebook.shared.GradebookService;
 import org.sakaiproject.tool.gradebook.Gradebook;
+import org.sakaiproject.util.DateFormatterUtil;
 
 /**
  * The panel for the add and edit grade item window
@@ -34,12 +32,12 @@ import org.sakaiproject.tool.gradebook.Gradebook;
  * @author Steve Swinsburg (steve.swinsburg@gmail.com)
  *
  */
-public class AddOrEditGradeItemPanel extends Panel {
+public class AddOrEditGradeItemPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
+	private static String HIDDEN_DUEDATE_ISO8601 = "duedate_iso8601";
 
-	@SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
-	protected GradebookNgBusinessService businessService;
+	private Date dueDate;
 
 	IModel<Long> model;
 
@@ -96,6 +94,11 @@ public class AddOrEditGradeItemPanel extends Panel {
 			public void onSubmit(final AjaxRequestTarget target, final Form<?> form) {
 				final Assignment assignment = (Assignment) form.getModelObject();
 
+				setISODates();
+				if (dueDate != null) {
+					assignment.setDueDate(dueDate);
+				}
+
 				boolean validated = true;
 
 				// PRE VALIDATION
@@ -105,9 +108,8 @@ public class AddOrEditGradeItemPanel extends Panel {
 					final List<CategoryDefinition> categories = AddOrEditGradeItemPanel.this.businessService.getGradebookCategories();
 					final CategoryDefinition category = categories
 							.stream()
-							.filter(c -> (c.getId() == assignment.getCategoryId())
+							.filter(c -> (c.getId().equals(assignment.getCategoryId()))
 									&& (c.getDropHighest() > 0 || c.getKeepHighest() > 0 || c.getDrop_lowest() > 0))
-							.filter(c -> (c.getDropHighest() > 0 || c.getKeepHighest() > 0 || c.getDrop_lowest() > 0))
 							.findFirst()
 							.orElse(null);
 
@@ -125,8 +127,8 @@ public class AddOrEditGradeItemPanel extends Panel {
 					}
 				}
 
-				// 2. names cannot start with * or #
-				if(validated && StringUtils.startsWithAny(assignment.getName(), new String[]{"*", "#"})) {
+				// 2. names cannot contain these special chars
+				if(validated && StringUtils.containsAny(assignment.getName(), GradebookService.INVALID_CHARS_IN_GB_ITEM_NAME)) {
 					validated = false;
 					error(getString("error.addeditgradeitem.titlecharacters"));
 					target.addChildren(form, FeedbackPanel.class);
@@ -140,7 +142,8 @@ public class AddOrEditGradeItemPanel extends Panel {
 
 						if (success) {
 							getSession().success(MessageFormat.format(getString("message.edititem.success"), assignment.getName()));
-							setResponsePage(getPage().getPageClass());
+							setResponsePage(getPage().getPageClass(),
+								new PageParameters().add(GradebookPage.FOCUS_ASSIGNMENT_ID_PARAM, assignment.getId()));
 						} else {
 							error(new ResourceModel("message.edititem.error").getObject());
 							target.addChildren(form, FeedbackPanel.class);
@@ -170,7 +173,7 @@ public class AddOrEditGradeItemPanel extends Panel {
 							getSession()
 									.success(MessageFormat.format(getString("notification.addgradeitem.success"), assignment.getName()));
 							setResponsePage(getPage().getPageClass(),
-									new PageParameters().add(GradebookPage.CREATED_ASSIGNMENT_ID_PARAM, assignmentId));
+									new PageParameters().add(GradebookPage.FOCUS_ASSIGNMENT_ID_PARAM, assignmentId));
 						} else {
 							target.addChildren(form, FeedbackPanel.class);
 						}
@@ -193,15 +196,6 @@ public class AddOrEditGradeItemPanel extends Panel {
 
 		// feedback panel
 		form.add(new GbFeedbackPanel("addGradeFeedback"));
-
-		if (this.mode == Mode.ADD) {
-			int remainingGradableItems = AddOrEditGradeItemPanel.this.businessService.getRemainingGradableItems();
-			String itemsLabel = remainingGradableItems == 1 ? "item" : "items";
-
-			form.add(new Label("remainingGradableItems", remainingGradableItems + " gradable " + itemsLabel).setVisible(true));
-		} else {
-			form.add(new Label("remainingGradableItems", "").setVisible(false));
-		}
 
 		// cancel button
 		final GbAjaxButton cancel = new GbAjaxButton("cancel") {
@@ -228,6 +222,13 @@ public class AddOrEditGradeItemPanel extends Panel {
 			return new ResourceModel("button.savechanges");
 		} else {
 			return new ResourceModel("button.create");
+		}
+	}
+
+	private void setISODates(){
+		String dueDateString = getRequest().getRequestParameters().getParameterValue(HIDDEN_DUEDATE_ISO8601).toString("");
+		if(DateFormatterUtil.isValidISODate(dueDateString)){
+			dueDate = DateFormatterUtil.parseISODate(dueDateString);
 		}
 	}
 }

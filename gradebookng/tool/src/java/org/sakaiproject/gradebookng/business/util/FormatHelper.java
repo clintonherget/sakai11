@@ -4,14 +4,21 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.validator.routines.DoubleValidator;
+import org.sakaiproject.util.ResourceLoader;
 
 @Slf4j
 public class FormatHelper {
+
+	private static ResourceLoader rl = new ResourceLoader();
 
 	/**
 	 * The value is a double (ie 12.34542) that needs to be formatted as a percentage with two decimal places precision. And drop off any .0
@@ -33,13 +40,23 @@ public class FormatHelper {
 	 * @return double to n decimal places
 	 */
 	private static String formatDoubleToDecimal(final Double score, final int n) {
-		final NumberFormat df = NumberFormat.getInstance();
-		df.setMinimumFractionDigits(0);
-		df.setMaximumFractionDigits(n);
-		df.setGroupingUsed(false);
-		df.setRoundingMode(RoundingMode.HALF_DOWN);
+		// Rounding is problematic due to the use of Doubles in
+		// Gradebook.  A number like 89.065 (which can be produced by
+		// weighted categories, for example) is stored as the double
+		// 89.06499999999999772626324556767940521240234375.  If you
+		// naively round this to two decimal places, you get 89.06 when
+		// you wanted 89.07
+		//
+		// Payten devised a clever trick of rounding to some larger
+		// decimal places first, which rounds these numbers up to
+		// something more manageable.  For example, if you round the
+		// above to 10 places, you get 89.0650000000, which rounds
+		// correctly when rounded up to 2 places.
 
-		return formatGrade(df.format(score));
+		return formatGrade(new BigDecimal(score)
+				.setScale(10, RoundingMode.HALF_UP)
+				.setScale(n, RoundingMode.HALF_UP)
+				.toString());
 	}
 
 	/**
@@ -82,7 +99,7 @@ public class FormatHelper {
 			return null;
 		}
 
-		final BigDecimal decimal = new BigDecimal(string).setScale(2, RoundingMode.HALF_DOWN);
+		final BigDecimal decimal = new BigDecimal(string).setScale(2, RoundingMode.HALF_UP);
 
 		return formatDoubleAsPercentage(decimal.doubleValue());
 	}
@@ -100,14 +117,17 @@ public class FormatHelper {
 
 		String s = null;
 		try {
-			final Double d = Double.parseDouble(grade);
+			final DecimalFormat df = (DecimalFormat) NumberFormat.getInstance(rl.getLocale());
+			final Double d = df.parse(grade).doubleValue();
 
-			final DecimalFormat df = new DecimalFormat();
 			df.setMinimumFractionDigits(0);
 			df.setGroupingUsed(false);
 
 			s = df.format(d);
 		} catch (final NumberFormatException e) {
+			log.debug("Bad format, returning original string: " + grade);
+			s = grade;
+		} catch (final ParseException e) {
 			log.debug("Bad format, returning original string: " + grade);
 			s = grade;
 		}
@@ -164,5 +184,27 @@ public class FormatHelper {
 	 */
 	public static String abbreviateMiddle(final String s) {
 		return StringUtils.abbreviateMiddle(s, "...", 45);
+	}
+
+	/**
+	 * Validate if a string is a valid Double using the specified Locale.
+	 *
+	 * @param value - The value validation is being performed on.
+	 * @return true if the value is valid
+	 */
+	public static boolean isValidDouble(String value) {
+		DoubleValidator dv = new DoubleValidator();
+		return dv.isValid(value, rl.getLocale());
+	}
+
+	/**
+	 * Validate/convert a Double using the user's Locale.
+	 *
+	 * @param value - The value validation is being performed on.
+	 * @return The parsed Double if valid or null if invalid.
+	 */
+	public static Double validateDouble(String value) {
+		DoubleValidator dv = new DoubleValidator();
+		return dv.validate(value, rl.getLocale());
 	}
 }

@@ -11,16 +11,12 @@ import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Bytes;
-import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.business.exception.GbImportCommentMissingItemException;
 import org.sakaiproject.gradebookng.business.exception.GbImportExportDuplicateColumnException;
 import org.sakaiproject.gradebookng.business.exception.GbImportExportInvalidColumnException;
 import org.sakaiproject.gradebookng.business.exception.GbImportExportInvalidFileTypeException;
-import org.sakaiproject.gradebookng.business.exception.GbImportExportUnknownStudentException;
 import org.sakaiproject.gradebookng.business.model.GbStudentGradeInfo;
 import org.sakaiproject.gradebookng.business.model.ImportedSpreadsheetWrapper;
 import org.sakaiproject.gradebookng.business.model.ProcessedGradeItem;
@@ -28,23 +24,21 @@ import org.sakaiproject.gradebookng.business.util.ImportGradesHelper;
 import org.sakaiproject.gradebookng.tool.model.ImportWizardModel;
 import org.sakaiproject.gradebookng.tool.pages.GradebookPage;
 import org.sakaiproject.gradebookng.tool.pages.ImportExportPage;
+import org.sakaiproject.gradebookng.tool.panels.BasePanel;
 import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.user.api.User;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Upload/Download page
  */
 @Slf4j
-public class GradeImportUploadStep extends Panel {
+public class GradeImportUploadStep extends BasePanel {
+
 	private static final long serialVersionUID = 1L;
 
 	private final String panelId;
-
-	@SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
-	protected GradebookNgBusinessService businessService;
 
 	public GradeImportUploadStep(final String id) {
 		super(id);
@@ -57,6 +51,7 @@ public class GradeImportUploadStep extends Panel {
 
 		add(new ExportPanel("export"));
 		add(new UploadForm("form"));
+
 	}
 
 	/*
@@ -102,20 +97,21 @@ public class GradeImportUploadStep extends Panel {
 				// TODO would be nice to capture the values from these exceptions
 				ImportedSpreadsheetWrapper spreadsheetWrapper = null;
 				try {
-					spreadsheetWrapper = ImportGradesHelper.parseImportedGradeFile(upload.getInputStream(), upload.getContentType(), userMap);
+					spreadsheetWrapper = ImportGradesHelper.parseImportedGradeFile(upload.getInputStream(), upload.getContentType(), upload.getClientFileName(), userMap);
 				} catch (final GbImportExportInvalidColumnException e) {
+					log.debug("GBNG import error", e);
 					error(getString("importExport.error.incorrectformat"));
 					return;
 				} catch (final GbImportExportInvalidFileTypeException | InvalidFormatException e) {
+					log.debug("GBNG import error", e);
 					error(getString("importExport.error.incorrecttype"));
 					return;
-				} catch (final GbImportExportUnknownStudentException e) {
-					error(getString("importExport.error.unknownstudent"));
-					return;
 				} catch (final GbImportExportDuplicateColumnException e) {
+					log.debug("GBNG import error", e);
 					error(getString("importExport.error.duplicatecolumn"));
 					return;
 				} catch (final IOException e) {
+					log.debug("GBNG import error", e);
 					error(getString("importExport.error.unknown"));
 					return;
 				}

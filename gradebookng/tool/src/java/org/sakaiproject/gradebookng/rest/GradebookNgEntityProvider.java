@@ -19,16 +19,21 @@ import org.sakaiproject.entitybroker.entityprovider.capabilities.Outputable;
 import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.entitybroker.util.AbstractEntityProvider;
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.gradebookng.business.GbRole;
 import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
+import org.sakaiproject.gradebookng.business.exception.GbAccessDeniedException;
 import org.sakaiproject.gradebookng.business.model.GbGradeCell;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.tool.api.SessionManager;
 
 import lombok.Setter;
+import org.sakaiproject.user.api.Preferences;
+import org.sakaiproject.user.api.PreferencesEdit;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserEdit;
+import org.sakaiproject.user.cover.PreferencesService;
 
 /**
  * This entity provider is to support some of the Javascript front end pieces. It never was built to support third party access, and never
@@ -42,6 +47,10 @@ import org.sakaiproject.user.api.UserEdit;
 public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 		AutoRegisterEntityProvider, ActionsExecutable,
 		Outputable, Describeable {
+
+	private static final String PREF_GRADEBOOK_PROPERTY = "sakai:gradebookng";
+	private static final String PREF_GRADEBOOK_WELCOME_DISMISSED_PROPERTY = "gradebookng-help-popup-dismissed";
+	private static final String PREF_GRADEBOOK_WELCOME_DISMISSED_VALUE = "true";
 
 	@Override
 	public String[] getHandledOutputFormats() {
@@ -152,15 +161,36 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 		return "pong";
 	}
 
+
+	@EntityCustomAction(action = "comments", viewKey = EntityView.VIEW_LIST)
+	public String getComments(final EntityView view, final Map<String, Object> params) {
+		// get params
+		final String siteId = (String) params.get("siteId");
+		final long assignmentId = NumberUtils.toLong((String) params.get("assignmentId"));
+		final String studentUuid = (String) params.get("studentUuid");
+
+		// check params supplied are valid
+		if (StringUtils.isBlank(siteId) || assignmentId == 0 || StringUtils.isBlank(studentUuid)) {
+			throw new IllegalArgumentException(
+				"Request data was missing / invalid");
+		}
+
+		checkValidSite(siteId);
+		checkInstructorOrTA(siteId);
+
+		return this.businessService.getAssignmentGradeComment(siteId, assignmentId, studentUuid);
+	}
+
+
 	/**
 	 * Helper to check if the user is an instructor. Throws IllegalArgumentException if not. We don't currently need the value that this
 	 * produces so we don't return it.
 	 *
 	 * @param siteId
 	 * @return
-	 * @throws IdUnusedException
+	 * @throws SecurityException if error in auth/role
 	 */
-	private void checkInstructor(final String siteId) {
+	private void checkInstructor(final String siteId)  {
 
 		final String currentUserId = getCurrentUserId();
 
@@ -168,7 +198,9 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 			throw new SecurityException("You must be logged in to access GBNG data");
 		}
 
-		if (this.businessService.getUserRole(siteId) != GbRole.INSTRUCTOR) {
+		final GbRole role = getUserRole(siteId);
+
+		if (role != GbRole.INSTRUCTOR) {
 			throw new SecurityException("You do not have instructor-type permissions in this site.");
 		}
 	}
@@ -189,7 +221,7 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 			throw new SecurityException("You must be logged in to access GBNG data");
 		}
 
-		final GbRole role = this.businessService.getUserRole(siteId);
+		final GbRole role = getUserRole(siteId);
 
 		if (role != GbRole.INSTRUCTOR && role != GbRole.TA) {
 			throw new SecurityException("You do not have instructor or TA-type permissions in this site.");
@@ -217,6 +249,21 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 		} catch (final IdUnusedException e) {
 			throw new IllegalArgumentException("Invalid site id");
 		}
+	}
+
+	/**
+	 * Get role for current user in given site
+	 * @param siteId
+	 * @return
+	 */
+	private GbRole getUserRole(final String siteId) {
+		GbRole role;
+		try {
+			role = this.businessService.getUserRole(siteId);
+		} catch (final GbAccessDeniedException e) {
+			throw new SecurityException("Your role could not be checked properly. This may be a role configuration issue in this site.");
+		}
+		return role;
 	}
 
 	@Setter
@@ -251,9 +298,11 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 			return "false";
 		}
 
-		ResourceProperties properties = user.getProperties();
-		String dismissed = (String) properties.get("gradebookng-help-popup-dismissed");
-		if ("true".equals(dismissed)) {
+		Preferences prefs = PreferencesService.getPreferences(user.getId());
+		ResourceProperties properties = prefs.getProperties(PREF_GRADEBOOK_PROPERTY);
+
+		String dismissed = (String) properties.get(PREF_GRADEBOOK_WELCOME_DISMISSED_PROPERTY);
+		if (PREF_GRADEBOOK_WELCOME_DISMISSED_VALUE.equals(dismissed)) {
 			return "false";
 		} else {
 			return "true";
@@ -272,16 +321,30 @@ public class GradebookNgEntityProvider extends AbstractEntityProvider implements
 		checkInstructorOrTA(siteId);
 
 		try {
-			UserEdit user = this.businessService.editCurrentUser();
+			User user = this.businessService.getCurrentUser();
 
 			// we don't do this for the admin user
 			if (!"admin".equals(user.getId())) {
-				ResourcePropertiesEdit properties = user.getPropertiesEdit();
-				properties.addProperty("gradebookng-help-popup-dismissed", "true");
-				this.businessService.saveUser(user);
+				PreferencesEdit edit = getOrCreatePreferences(user.getId());
+				ResourcePropertiesEdit properties = edit.getPropertiesEdit(PREF_GRADEBOOK_PROPERTY);
+				properties.addProperty(PREF_GRADEBOOK_WELCOME_DISMISSED_PROPERTY, PREF_GRADEBOOK_WELCOME_DISMISSED_VALUE);
+				PreferencesService.commit(edit);
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException("Unable to set popup dismissal for user");
+		}
+	}
+
+	private static PreferencesEdit getOrCreatePreferences(String userId) throws PermissionException, InUseException {
+		try {
+			return PreferencesService.edit(userId);
+		} catch (IdUnusedException e) {
+			try {
+				return PreferencesService.add(userId);
+			} catch (Exception e2) {
+				throw new RuntimeException("Unable to get preferences for user: " + userId);
+			}
 		}
 	}
 }

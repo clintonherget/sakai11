@@ -116,6 +116,7 @@ public class CourseGradeFormatter {
 		}
 
 		// percentage
+		// not shown in final grade mode
 		final String calculatedGrade;
 		if (this.showOverride && StringUtils.isNotBlank(courseGrade.getEnteredGrade())) {
 

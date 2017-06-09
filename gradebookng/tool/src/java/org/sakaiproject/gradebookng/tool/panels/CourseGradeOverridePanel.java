@@ -10,15 +10,12 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.sakaiproject.gradebookng.business.GbCategoryType;
 import org.sakaiproject.gradebookng.business.GbRole;
-import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.business.model.GbUser;
 import org.sakaiproject.gradebookng.business.util.CourseGradeFormatter;
 import org.sakaiproject.gradebookng.tool.component.GbAjaxButton;
@@ -30,16 +27,15 @@ import org.sakaiproject.tool.gradebook.Gradebook;
 /**
  * Panel for the course grade override window
  *
+ * Note that validation is disabled when final grade mode is activated.
+ *
  * @author Steve Swinsburg (steve.swinsburg@gmail.com)
  */
-public class CourseGradeOverridePanel extends Panel {
+public class CourseGradeOverridePanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
 
 	private final ModalWindow window;
-
-	@SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
-	protected GradebookNgBusinessService businessService;
 
 	public CourseGradeOverridePanel(final String id, final IModel<String> model, final ModalWindow window) {
 		super(id, model);
@@ -56,9 +52,9 @@ public class CourseGradeOverridePanel extends Panel {
 		// get the rest of the data we need
 		// TODO this could all be passed in through the model if it was changed to a map, as per CourseGradeItemCellPanel...
 		final GbUser studentUser = this.businessService.getUser(studentUuid);
-		final String currentUserUuid = this.businessService.getCurrentUser().getId();
-		final GbRole currentUserRole = this.businessService.getUserRole();
-		final Gradebook gradebook = this.businessService.getGradebook();
+		final String currentUserUuid = getCurrentUserId();
+		final GbRole currentUserRole = getUserRole();
+		final Gradebook gradebook = getGradebook();
 		final boolean courseGradeVisible = this.businessService.isCourseGradeVisible(currentUserUuid);
 
 		final CourseGrade courseGrade = this.businessService.getCourseGrade(studentUuid);
@@ -99,9 +95,10 @@ public class CourseGradeOverridePanel extends Panel {
 
 				// validate the grade entered is a valid one for the selected grading schema
 				// though we allow blank grades so the override is removed
-				if (StringUtils.isNotBlank(newGrade)) {
-					final GradebookInformation gbInfo = CourseGradeOverridePanel.this.businessService.getGradebookSettings();
+				// Note: validation is not enforced for final grade mode
+				final GradebookInformation gbInfo = CourseGradeOverridePanel.this.businessService.getGradebookSettings();
 
+				if (StringUtils.isNotBlank(newGrade)) {
 					final Map<String, Double> schema = gbInfo.getSelectedGradingScaleBottomPercents();
 					if (!schema.containsKey(newGrade)) {
 						error(new ResourceModel("message.addcoursegradeoverride.invalid").getObject());
@@ -177,14 +174,14 @@ public class CourseGradeOverridePanel extends Panel {
 	private String formatPoints(final CourseGrade courseGrade, final Gradebook gradebook) {
 
 		String rval;
-		
+
 		// only display points if not weighted category type
 		final GbCategoryType categoryType = GbCategoryType.valueOf(gradebook.getCategory_type());
 		if (categoryType != GbCategoryType.WEIGHTED_CATEGORY) {
 
 			final Double pointsEarned = courseGrade.getPointsEarned();
 			final Double totalPointsPossible = courseGrade.getTotalPointsPossible();
-			
+
 			if(pointsEarned != null && totalPointsPossible != null) {
 				rval = new StringResourceModel("coursegrade.display.points-first", null,
 						new Object[] { pointsEarned, totalPointsPossible }).getString();
@@ -194,7 +191,7 @@ public class CourseGradeOverridePanel extends Panel {
 		} else {
 			rval = getString("coursegrade.display.points-none");
 		}
-		
+
 		return rval;
 
 	}

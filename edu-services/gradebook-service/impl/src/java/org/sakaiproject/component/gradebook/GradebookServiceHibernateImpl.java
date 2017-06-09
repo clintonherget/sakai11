@@ -397,7 +397,7 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 		rval.setCourseLetterGradeDisplayed(gradebook.isCourseLetterGradeDisplayed());
 		rval.setCoursePointsDisplayed(gradebook.isCoursePointsDisplayed());
 		rval.setCourseAverageDisplayed(gradebook.isCourseAverageDisplayed());
-				
+						
 		return rval;
 	}
 	
@@ -786,10 +786,10 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
             throw new ConflictingAssignmentNameException("You cannot save an assignment without a name");
         }
         
-        // name cannot start with * or # as they are reserved for special columns in import/export
-        if(StringUtils.startsWithAny(validatedName, new String[]{"*", "#"})) {
+        // name cannot contain these chars as they are reserved for special columns in import/export
+        if(StringUtils.containsAny(validatedName, GradebookService.INVALID_CHARS_IN_GB_ITEM_NAME)) {
             // TODO InvalidAssignmentNameException plus move all exceptions to their own package
-        	throw new ConflictingAssignmentNameException("Assignment names cannot start with * or # as they are reserved");
+        	throw new ConflictingAssignmentNameException("Assignment names cannot contain *, #, [ or ] as they are reserved");
         }
 
 		final Gradebook gradebook = this.getGradebook(gradebookUid);
@@ -3297,17 +3297,18 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 		Map<String,Double> bottomPercents = gbInfo.getSelectedGradingScaleBottomPercents();
 		
 		//Before we do any work, check if any existing course grade overrides might be left in an unmappable state
+		// this is NOT done when in final grade mode as the course grade field is now arbitrary.
 		List<CourseGradeRecord> courseGradeOverrides = (List<CourseGradeRecord>)getHibernateTemplate().execute(new HibernateCallback() {
-            @Override
+			@Override
 			public Object doInHibernate(Session session) throws HibernateException {
-                return getCourseGradeOverrides(gradebook, session);
-            }
+				return getCourseGradeOverrides(gradebook, session);
+			}
 		});		
 		courseGradeOverrides.forEach(cgr -> {
-			if(!bottomPercents.containsKey(cgr.getEnteredGrade())) {
-				throw new UnmappableCourseGradeOverrideException("The grading schema could not be updated as it would leave some course grade overrides in an unmappable state.");
-			}
-		});
+					if(!bottomPercents.containsKey(cgr.getEnteredGrade())) {
+						throw new UnmappableCourseGradeOverrideException("The grading schema could not be updated as it would leave some course grade overrides in an unmappable state.");
+					}
+				});
 		
 		//iterate all available grademappings for this gradebook and set the one that we have the ID and bottomPercents for
 		Set<GradeMapping> gradeMappings = gradebook.getGradeMappings();
@@ -3334,7 +3335,7 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 		gradebook.setCourseLetterGradeDisplayed(gbInfo.isCourseLetterGradeDisplayed());
 		gradebook.setCoursePointsDisplayed(gbInfo.isCoursePointsDisplayed());
 		gradebook.setCourseAverageDisplayed(gbInfo.isCourseAverageDisplayed());
-		
+				
 		List<CategoryDefinition> newCategoryDefinitions = gbInfo.getCategories();
 		
 		//if we have categories and they are weighted, check the weightings sum up to 100% (or 1 since it's a fraction)

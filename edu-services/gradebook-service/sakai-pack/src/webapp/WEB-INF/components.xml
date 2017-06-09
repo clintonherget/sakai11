@@ -332,6 +332,32 @@
 					</property>
 				</bean>
 				<bean class="org.sakaiproject.service.gradebook.shared.GradingScaleDefinition">
+					<property name="uid" value="dental_honors_pass_notpass"/>
+					<property name="name" value="Dental: Honors / Pass / Not Pass"/>
+					<property name="grades">
+						<list>
+							<value>H</value>
+							<value>P</value>
+							<value>NP</value>
+						</list>
+					</property>
+
+ 					<property name="defaultBottomPercentsAsList">
+						<list>
+							<value>90.0</value>
+							<value>70.0</value>
+							<value>00.0</value>
+						</list>
+                                        </property>
+					<property name="defaultBottomPercents">
+						<map>
+							<entry key="H" value="90.0" />
+							<entry key="P" value="70.0" />
+							<entry key="NP" value="00.0" />
+						</map>
+					</property>
+				</bean>
+				<bean class="org.sakaiproject.service.gradebook.shared.GradingScaleDefinition">
 					<property name="uid" value="LetterGradePlusMinusMapping_stern"/>
 					<property name="name" value="Stern: Letter Grades with +/-"/>
 					<property name="grades">

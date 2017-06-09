@@ -16,23 +16,18 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.convert.ConversionException;
-import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidationError;
-import org.apache.wicket.validation.IValidator;
 import org.sakaiproject.gradebookng.business.GbCategoryType;
-import org.sakaiproject.gradebookng.business.GbGradingType;
-import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.business.util.FormatHelper;
 import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.service.gradebook.shared.CategoryDefinition;
 import org.sakaiproject.service.gradebook.shared.GradebookService;
+import org.sakaiproject.service.gradebook.shared.GradingType;
 import org.sakaiproject.tool.gradebook.Gradebook;
+import org.sakaiproject.util.DateFormatterUtil;
 
 /**
  * The panel for the add grade item window
@@ -40,25 +35,29 @@ import org.sakaiproject.tool.gradebook.Gradebook;
  * @author Steve Swinsburg (steve.swinsburg@gmail.com)
  *
  */
-public class AddOrEditGradeItemPanelContent extends Panel {
+public class AddOrEditGradeItemPanelContent extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
-
-	@SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
-	private GradebookNgBusinessService businessService;
 
 	private AjaxCheckBox counted;
 	private AjaxCheckBox released;
 
 	private boolean categoriesEnabled;
 
+	final static String DATEPICKER_FORMAT = "yyyy-MM-dd";
+
 	public AddOrEditGradeItemPanelContent(final String id, final Model<Assignment> assignmentModel) {
 		super(id, assignmentModel);
 
 		final Gradebook gradebook = this.businessService.getGradebook();
-		final GbGradingType gradingType = GbGradingType.valueOf(gradebook.getGrade_type());
+		final GradingType gradingType = GradingType.valueOf(gradebook.getGrade_type());
 
 		final Assignment assignment = assignmentModel.getObject();
+
+		String dueDateString = "";
+		if (assignment.getDueDate() != null) {
+			dueDateString = DateFormatterUtil.format(assignment.getDueDate(), DATEPICKER_FORMAT, getSession().getLocale());
+		}
 
 		this.categoriesEnabled = true;
 		if (gradebook.getCategory_type() == GbCategoryType.NO_CATEGORY.getValue()) {
@@ -81,7 +80,7 @@ public class AddOrEditGradeItemPanelContent extends Panel {
 			}
 
 			@Override
-			public void error(IValidationError error) {
+			public void error(final IValidationError error) {
 				// Use our fancy error message for all validation errors
 				error(getString("error.addgradeitem.title"));
 			}
@@ -90,7 +89,7 @@ public class AddOrEditGradeItemPanelContent extends Panel {
 
 		// points
 		final Label pointsLabel = new Label("pointsLabel");
-		if (gradingType == GbGradingType.PERCENTAGE) {
+		if (gradingType == GradingType.PERCENTAGE) {
 			pointsLabel.setDefaultModel(new ResourceModel("label.addgradeitem.percentage"));
 		} else {
 			pointsLabel.setDefaultModel(new ResourceModel("label.addgradeitem.points"));
@@ -111,7 +110,7 @@ public class AddOrEditGradeItemPanelContent extends Panel {
 			}
 
 			@Override
-			public void error(IValidationError error) {
+			public void error(final IValidationError error) {
 				// Use our fancy error message for all validation errors
 				error(getString("error.addgradeitem.points"));
 			}
@@ -120,8 +119,7 @@ public class AddOrEditGradeItemPanelContent extends Panel {
 
 		// due date
 		// TODO date format needs to come from i18n
-		final DateTextField dueDate = new DateTextField("duedate", new PropertyModel<Date>(assignmentModel, "dueDate"),
-				getString("format.date")) {
+		final TextField dueDate = new TextField("duedate", Model.of(dueDateString)) {
 			private static final long serialVersionUID = 1L;
 
 			@Override

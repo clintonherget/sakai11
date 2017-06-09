@@ -1,5 +1,5 @@
 function GradebookHelpPopup() {
-    this.siteid = $("#gradebookGradesTable").data('siteid');
+    this.siteid = $("#gradebookSpreadsheet").data('siteid');
     this.checkIfShouldShowPopup();
 }
 
@@ -114,5 +114,5 @@ GradebookHelpPopup.prototype.isSoftlyDismissed = function() {
 
 
 $(document).ready(function() {
-    sakai.gradebookng.popup = new GradebookHelpPopup();
+    new GradebookHelpPopup();
 });

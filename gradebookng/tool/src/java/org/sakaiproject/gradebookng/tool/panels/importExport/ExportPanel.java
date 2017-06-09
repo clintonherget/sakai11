@@ -10,30 +10,26 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.markup.html.link.DownloadLink;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
 import org.sakaiproject.gradebookng.business.GbCategoryType;
-import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.business.model.GbCourseGrade;
 import org.sakaiproject.gradebookng.business.model.GbGradeInfo;
 import org.sakaiproject.gradebookng.business.model.GbStudentGradeInfo;
 import org.sakaiproject.gradebookng.business.util.FormatHelper;
+import org.sakaiproject.gradebookng.tool.panels.BasePanel;
 import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.service.gradebook.shared.CourseGrade;
 
 import au.com.bytecode.opencsv.CSVWriter;
 
-public class ExportPanel extends Panel {
+public class ExportPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
 
-	@SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
-	protected GradebookNgBusinessService businessService;
-
-	private static final String CUSTOM_EXPORT_COLUMN_PREFIX = "# ";
+	private static final String IGNORE_COLUMN_PREFIX = "#";
+	private static final String COMMENTS_COLUMN_PREFIX = "*";
 
 	enum ExportFormat {
 		CSV
@@ -59,15 +55,6 @@ public class ExportPanel extends Panel {
 	public void onInitialize() {
 		super.onInitialize();
 
-		add(new AjaxCheckBox("includeStudentName", Model.of(this.includeStudentName)) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			protected void onUpdate(final AjaxRequestTarget ajaxRequestTarget) {
-				ExportPanel.this.includeStudentName = !ExportPanel.this.includeStudentName;
-				setDefaultModelObject(ExportPanel.this.includeStudentName);
-			}
-		});
 		add(new AjaxCheckBox("includeStudentId", Model.of(this.includeStudentId)) {
 			private static final long serialVersionUID = 1L;
 
@@ -77,6 +64,17 @@ public class ExportPanel extends Panel {
 				setDefaultModelObject(ExportPanel.this.includeStudentId);
 			}
 		});
+
+		add(new AjaxCheckBox("includeStudentName", Model.of(this.includeStudentName)) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			protected void onUpdate(final AjaxRequestTarget ajaxRequestTarget) {
+				ExportPanel.this.includeStudentName = !ExportPanel.this.includeStudentName;
+				setDefaultModelObject(ExportPanel.this.includeStudentName);
+			}
+		});
+
 		add(new AjaxCheckBox("includeGradeItemScores", Model.of(this.includeGradeItemScores)) {
 			private static final long serialVersionUID = 1L;
 
@@ -189,6 +187,22 @@ public class ExportPanel extends Panel {
 			// get list of assignments. this allows us to build the columns and then fetch the grades for each student for each assignment from the map
 			final List<Assignment> assignments = this.businessService.getGradebookAssignments();
 
+			// no assignments, give a template
+			if(assignments.isEmpty()) {
+				//with points
+				header.add(String.join(" ", getString("importExport.export.csv.headers.example.points"), "[100]"));
+
+				// no points
+				header.add(getString("importExport.export.csv.headers.example.nopoints"));
+
+				//points and comments
+				header.add(String.join(" ", COMMENTS_COLUMN_PREFIX, getString("importExport.export.csv.headers.example.pointscomments"), "[50]"));
+
+				//ignore
+				header.add(String.join(" ", IGNORE_COLUMN_PREFIX, getString("importExport.export.csv.headers.example.ignore")));
+			}
+
+
 			//build column header
 			assignments.forEach(assignment -> {
 				final String assignmentPoints = assignment.getPoints().toString();
@@ -196,34 +210,21 @@ public class ExportPanel extends Panel {
 					header.add(assignment.getName() + " [" + StringUtils.removeEnd(assignmentPoints, ".0") + "]");
 				}
 				if (!isCustomExport || this.includeGradeItemComments) {
-					header.add("* " + assignment.getName());
+					header.add(String.join(" ", COMMENTS_COLUMN_PREFIX, assignment.getName()));
 				}
 			});
 
 			if (isCustomExport && this.includePoints) {
-				header.add(String.format("%s%s",
-					CUSTOM_EXPORT_COLUMN_PREFIX,
-					getString("importExport.export.csv.headers.points")));
+				header.add(String.join(" ", IGNORE_COLUMN_PREFIX, getString("importExport.export.csv.headers.points")));
 			}
 			if (isCustomExport && this.includeCalculatedGrade) {
-				header.add(String.format("%s%s",
-					CUSTOM_EXPORT_COLUMN_PREFIX,
-					getString("importExport.export.csv.headers.calculatedGrade")));
+				header.add(String.join(" ", IGNORE_COLUMN_PREFIX, getString("importExport.export.csv.headers.calculatedGrade")));
 			}
 			if (isCustomExport && this.includeCourseGrade) {
-				header.add(String.format("%s%s",
-					CUSTOM_EXPORT_COLUMN_PREFIX,
-					getString("importExport.export.csv.headers.courseGrade")));
-			}
-			if (isCustomExport && this.includeGradeOverride) {
-				header.add(String.format("%s%s",
-					CUSTOM_EXPORT_COLUMN_PREFIX,
-					getString("importExport.export.csv.headers.gradeOverride")));
+				header.add(String.join(" ", IGNORE_COLUMN_PREFIX, getString("importExport.export.csv.headers.courseGrade")));
 			}
 			if (isCustomExport && this.includeLastLogDate) {
-				header.add(String.format("%s%s",
-					CUSTOM_EXPORT_COLUMN_PREFIX,
-					getString("importExport.export.csv.headers.lastLogDate")));
+				header.add(String.join(" ", IGNORE_COLUMN_PREFIX, getString("importExport.export.csv.headers.lastLogDate")));
 			}
 
 			csvWriter.writeNext(header.toArray(new String[] {}));

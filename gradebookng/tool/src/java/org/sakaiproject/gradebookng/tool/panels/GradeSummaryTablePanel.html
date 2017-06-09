@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
+
 <body>
 
 <wicket:panel>
@@ -16,7 +17,7 @@
 				<tr>
 					<th class="col-md-4" scope="col"><wicket:message key="column.header.studentsummary.gradebookitem" /></th>
 					<th class="col-md-2" scope="col"><wicket:message key="column.header.studentsummary.grade" /></th>
-					<th class="col-md-1 weight-col" scope="col"><wicket:message key="column.header.studentsummary.weight" /></th>
+					<th class="col-md-1" scope="col" wicket:id="weightColumnHeader"><wicket:message key="column.header.studentsummary.weight" /></th>
 					<th class="col-md-2" scope="col"><wicket:message key="column.header.studentsummary.duedate" /></th>
 					<th class="col-md-3" scope="col"><wicket:message key="column.header.studentsummary.comments" /></th>
 					<th class="col-md-1 category-col" scope="col" wicket:id="categoryColumnHeader"><wicket:message key="column.header.studentsummary.category" /></th>
@@ -45,15 +46,16 @@
 								<span wicket:id="isExtraCredit" class="gb-flag-extra-credit"></span>
 								<span wicket:id="isNotCounted" class="gb-flag-not-counted"></span>
 								<span wicket:id="isNotReleased" class="gb-flag-not-released"></span>
+								<span wicket:id="isExternal"></span>
 							</span>
 						</th>
 						<td class="gb-summary-grade-score">
 							<span class="gb-summary-grade-score-raw" wicket:id="grade" wicket:message="aria-label:studentsummary.gradebookitem.score"></span>
 							<span class="gb-summary-grade-score-outof" wicket:id="outOf" wicket:message="aria-label:studentsummary.gradebookitem.outof"></span>
 						</td>
-						<td class="weight-col"><!-- empty --></td>
+						<td wicket:id="weight"><!-- empty --></td>
 						<td class="gb-summary-grade-duedate" wicket:id="dueDate"></td>
-						<td class="gb-summary-grade-comments" wicket:id="comments"></td>
+						<td class="gb-summary-grade-comments"><div wicket:id="comments"></div></td>
 						<td class="gb-summary-grade-category" wicket:id="category"></td>
 					</tr>
 				</tbody>
