@@ -1710,6 +1710,11 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 			return false;
 		}
 
+		if (id.indexOf("SCORM-MODULES") >= 0) {
+			// Permit SCORM resources to be accessed by the ScormCloudJobProcessor
+			return false;
+		}
+
 		String siteId = refs[2];
 
 		try {
