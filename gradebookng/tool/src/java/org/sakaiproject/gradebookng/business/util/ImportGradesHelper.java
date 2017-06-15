@@ -56,7 +56,7 @@ public class ImportGradesHelper {
 	final static Pattern ASSIGNMENT_COMMENT_PATTERN = Pattern.compile("(\\* .*)");
 	final static Pattern STANDARD_HEADER_PATTERN = Pattern.compile("([^\\*\\$\\[\\]\\*]+)");
 	final static Pattern POINTS_PATTERN = Pattern.compile("(\\d+)(\\.\\d+)?(?=]$)");
-	final static Pattern IGNORE_PATTERN = Pattern.compile("(\\#.+)");
+	final static Pattern IGNORE_PATTERN = Pattern.compile("^(\\#.+)");
 
 	// list of mimetypes for each category. Must be compatible with the parser
 	private static final String[] XLS_MIME_TYPES = { "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
@@ -564,6 +564,13 @@ public class ImportGradesHelper {
 
 		final ImportedColumn column = new ImportedColumn();
 
+		final Matcher m3 = IGNORE_PATTERN.matcher(headerValue);
+		if (m3.matches()) {
+			log.info("Found header: " + headerValue + " but ignoring it as it is prefixed with a #.");
+			column.setType(ImportedColumn.Type.IGNORE);
+			return column;
+		}
+
 		// assignment with points header
 		final Matcher m1 = ASSIGNMENT_WITH_POINTS_PATTERN.matcher(headerValue);
 		if (m1.matches()) {
@@ -595,13 +602,6 @@ public class ImportGradesHelper {
 			}
 			column.setType(ImportedColumn.Type.COMMENTS);
 
-			return column;
-		}
-
-		final Matcher m3 = IGNORE_PATTERN.matcher(headerValue);
-		if (m3.matches()) {
-			log.info("Found header: " + headerValue + " but ignoring it as it is prefixed with a #.");
-			column.setType(ImportedColumn.Type.IGNORE);
 			return column;
 		}
 
