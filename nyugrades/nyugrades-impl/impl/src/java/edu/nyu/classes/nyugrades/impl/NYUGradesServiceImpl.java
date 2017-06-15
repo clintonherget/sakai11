@@ -23,6 +23,7 @@ import org.sakaiproject.coursemanagement.api.Membership;
 
 import edu.nyu.classes.nyugrades.api.Grade;
 import edu.nyu.classes.nyugrades.api.GradeSet;
+import edu.nyu.classes.nyugrades.api.AuditLogException;
 import edu.nyu.classes.nyugrades.api.SectionNotFoundException;
 import edu.nyu.classes.nyugrades.api.SiteNotFoundForSectionException;
 import edu.nyu.classes.nyugrades.api.MultipleSectionsMatchedException;
@@ -211,7 +212,7 @@ public class NYUGradesServiceImpl implements NYUGradesService
 
 
     public GradeSet getGradesForSection(String sectionEid)
-        throws SiteNotFoundForSectionException, MultipleSitesFoundForSectionException, GradePullDisabledException
+        throws SiteNotFoundForSectionException, MultipleSitesFoundForSectionException, GradePullDisabledException, AuditLogException
     {
         String siteId = getSiteId(sectionEid);
 
@@ -228,7 +229,11 @@ public class NYUGradesServiceImpl implements NYUGradesService
 
         filterSingleSection((Map<String, String>) grades, sectionEid);
 
-        return resolveNetIds((Map<String, String>) grades);
+        GradeSet result = resolveNetIds((Map<String, String>) grades);
+
+        db.writeAuditLog(result);
+
+        return result;
     }
 
 
