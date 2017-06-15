@@ -49,6 +49,7 @@ import org.sakaiproject.service.gradebook.shared.CommentDefinition;
 import org.sakaiproject.service.gradebook.shared.ConflictingAssignmentNameException;
 import org.sakaiproject.service.gradebook.shared.ConflictingCategoryNameException;
 import org.sakaiproject.service.gradebook.shared.GradebookExternalAssessmentService;
+import org.sakaiproject.service.gradebook.shared.GradebookHelper;
 import org.sakaiproject.service.gradebook.shared.GradebookNotFoundException;
 import org.sakaiproject.service.gradebook.shared.GradebookService;
 import org.sakaiproject.service.gradebook.shared.GraderPermission;
@@ -295,10 +296,7 @@ public abstract class BaseHibernateManager extends HibernateDaoSupport {
         }
         
         // name cannot contain these special chars as they are reserved for special columns in import/export
-        if(StringUtils.containsAny(validatedName, GradebookService.INVALID_CHARS_IN_GB_ITEM_NAME)) {
-            // TODO InvalidAssignmentNameException plus move all exceptions to their own package
-        	throw new ConflictingAssignmentNameException("Assignment names cannot contain *, #, [ or ] as they are reserved");
-        }
+        GradebookHelper.validateGradeItemName(validatedName);
         
         Assignment asn = new Assignment();
         asn.setName(validatedName);

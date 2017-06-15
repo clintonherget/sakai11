@@ -21,6 +21,8 @@
  **********************************************************************************/
 package org.sakaiproject.service.gradebook.shared;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Comparator;
@@ -96,7 +98,8 @@ public interface GradebookService {
     /**
      * Array of chars that are not allowed in a gb item title
      */
-    public static final char[] INVALID_CHARS_IN_GB_ITEM_NAME = {'*', '#', '[', ']'};
+    public static final char[] INVALID_CHARS_IN_GB_ITEM_NAME = {'*', '[', ']'};
+    public static final String[] INVALID_CHARS_AT_START_OF_GB_ITEM_NAME = {"#"};
 	
     /**
      * Comparator to ensure correct ordering of letter grades, catering for + and - in the grade
