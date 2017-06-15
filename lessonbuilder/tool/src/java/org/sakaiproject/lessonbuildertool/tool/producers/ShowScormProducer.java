@@ -2,6 +2,7 @@ package org.sakaiproject.lessonbuildertool.tool.producers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Arrays;
 import java.io.BufferedReader;
@@ -26,8 +27,10 @@ import org.sakaiproject.lessonbuildertool.tool.view.FilePickerViewParameters;
 import org.sakaiproject.lessonbuildertool.tool.view.GeneralViewParameters;
 import org.sakaiproject.lessonbuildertool.tool.producers.PermissionsHelperProducer;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.user.api.User;
+import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.lessonbuildertool.service.LessonEntity;
-
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.tool.api.ToolSession;
@@ -172,6 +175,33 @@ public class ShowScormProducer implements ViewComponentProducer, NavigationCaseR
 			.decorate(new UIFreeAttributeDecorator("xml:lang", localeGetter.get().getLanguage()));
 	}
 
+	private boolean isServiceTeamUser() {
+		User user = UserDirectoryService.getCurrentUser();
+
+		String serviceTeamRole = ServerConfigurationService.getString("nyu.serviceteam.role");
+		String adminSite = ServerConfigurationService.getString("nyu.serviceteam.adminSite");
+
+		if (adminSite == null) {
+			return false;
+		}
+
+		if (serviceTeamRole == null) {
+			return false;
+		}
+
+
+		List adminSiteList = new java.util.Vector();
+		adminSiteList.add(adminSite);
+		AuthzGroupService authzGroupService = (AuthzGroupService)ComponentManager.get("org.sakaiproject.authz.api.AuthzGroupService");
+
+		if (authzGroupService == null) {
+			return false;
+		}
+
+		Map<String,String> roles = authzGroupService.getUserRoles(user.getId(), adminSiteList);
+		return (serviceTeamRole.equals(roles.get(adminSite)));
+	}
+
 	private void showStatusPage(UIContainer tofill, ViewParameters viewParams, Long itemId) {
 		ScormCloudService scorm = scormService();
 		String currentSiteId = ToolManager.getCurrentPlacement().getContext();
@@ -193,6 +223,15 @@ public class ShowScormProducer implements ViewComponentProducer, NavigationCaseR
 				log.info("Failure when generating SCORM Report URL for lesson: " + itemId, e);
 			}
 
+			if (isServiceTeamUser()) {
+				try {
+					UILink.make(tofill, "scorm-console-link", messageLocator.getMessage("simplepage.scorm.console"),
+							scorm.getConsoleUrl(currentSiteId, itemId.toString()));
+					UIOutput.make(tofill, "scorm-console-information");
+				} catch (ScormException e) {
+					log.info("Failure when generating SCORM Console URL for lesson: " + itemId, e);
+				}
+			}
 		} else {
 
 		    ScormUploadStatus status = scorm.getUploadStatus(currentSiteId, itemId.toString());

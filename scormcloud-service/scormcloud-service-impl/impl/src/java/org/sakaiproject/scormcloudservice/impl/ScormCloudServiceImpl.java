@@ -201,6 +201,16 @@ class ScormCloudServiceImpl implements ScormCloudService {
     }
 
 
+    public String getConsoleUrl(String siteId, String externalId) throws ScormException {
+        ScormServiceStore store = new ScormServiceStore();
+
+        String baseUrl = ServerConfigurationService.getString("scormcloudservice.console-base-url", "https://cloud.scorm.com/sc/user/Course");
+        String consoleUrl = baseUrl + "?appId=" + ScormCloud.getAppId() + "&courseId=" + store.findCourseId(siteId, externalId);
+
+        return consoleUrl;
+    }
+
+
     public ScormUploadStatus getUploadStatus(String siteId, String externalId) {
         ScormServiceStore store = new ScormServiceStore();
         return store.getUploadStatus(siteId, externalId);

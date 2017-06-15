@@ -7,6 +7,8 @@ public interface ScormCloudService {
 
     public String getReportUrl(String siteId, String externalId) throws ScormException;
 
+    public String getConsoleUrl(String siteId, String externalId) throws ScormException;
+
     public void addCourse(String siteId, String externalId, String resourceId, String title, boolean graded) throws ScormException;
 
     public void updateCourse(String siteId, String externalId, String title, boolean graded) throws ScormException;
