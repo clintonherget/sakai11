@@ -12,6 +12,7 @@
 
 package edu.nyu.classes.nyugrades.ws;
 
+import edu.nyu.classes.nyugrades.api.AuditLogException;
 import edu.nyu.classes.nyugrades.api.Grade;
 import edu.nyu.classes.nyugrades.api.GradePullDisabledException;
 import edu.nyu.classes.nyugrades.api.GradeSet;
@@ -261,7 +262,7 @@ public class NYUGradesWS extends HttpServlet
                                           String term,
                                           String sessionCode,
                                           String classSection)
-            throws RequestFailedException
+            throws RequestFailedException, AuditLogException
         {
             if (!nyuGradesSessions.checkSession(sessionId)) {
                 LOG.warn("Rejected invalid sessionId");

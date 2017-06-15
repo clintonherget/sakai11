@@ -1,6 +1,9 @@
 package edu.nyu.classes.nyugrades.impl;
 
+import edu.nyu.classes.nyugrades.api.AuditLogException;
 import edu.nyu.classes.nyugrades.api.DBService;
+import edu.nyu.classes.nyugrades.api.GradeSet;
+import edu.nyu.classes.nyugrades.api.Grade;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -46,6 +49,55 @@ public class DBServiceImpl implements DBService
     public boolean isOracle()
     {
         return sqlService.getVendor().equals("oracle");
+    }
+
+    private static final String AUDIT_INSERT = "insert into nyu_t_grades_audit (system_timestamp, netid, emplid, gradeletter) values (?, ?, ?, ?)";
+
+    public void writeAuditLog(GradeSet grades) throws AuditLogException
+    {
+        long now = System.currentTimeMillis();
+
+        boolean oldAutoCommit = true;
+        Connection connection = null;
+        PreparedStatement ps = null;
+
+        try {
+            try {
+                connection = sqlService.borrowConnection();
+                oldAutoCommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+
+                ps = connection.prepareStatement(AUDIT_INSERT);
+
+                for (Grade grade : grades) {
+                    loadParameters(ps, new Object[] {
+                                now,
+                                grade.netId,
+                                grade.emplId,
+                                grade.gradeletter
+                            });
+
+                    int insertedCount = ps.executeUpdate();
+
+                    if (insertedCount != 1) {
+                        throw new AuditLogException("Failure writing to audit log");
+                    }
+                }
+
+                connection.commit();
+            } finally {
+                if (ps != null) {
+                    try { ps.close (); } catch (Exception e) {}
+                }
+
+                if (connection != null) {
+                    connection.setAutoCommit(oldAutoCommit);
+                    sqlService.returnConnection (connection);
+                }
+            }
+        } catch (SQLException e) {
+            throw new AuditLogException("SQLException in audit log", e);
+        }
     }
 
 

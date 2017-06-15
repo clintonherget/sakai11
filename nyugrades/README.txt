@@ -23,10 +23,15 @@ SIS system.  The interesting bits:
 Database schema requirements
 ----------------------------
 
-The following table must be created in the Sakai CLE database:
+The following tables and indexes must be created in the Sakai CLE database:
 
   create table nyu_t_grades_ws_session (sessionid varchar(64) primary key, username varchar(99), last_used integer);
 
+  create table nyu_t_grades_audit (system_timestamp number not null, netid varchar(99) not null, emplid varchar(99) not null, gradeletter varchar(10) not null, db_timestamp timestamp default systimestamp);
+
+  create index nyu_t_grades_audit_systime on nyu_t_grades_audit (system_timestamp);
+
+  create index nyu_t_grades_audit_dbtime on nyu_t_grades_audit (db_timestamp);
 
 Data format returned
 --------------------
