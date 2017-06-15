@@ -22,7 +22,7 @@ import org.jdom.xpath.XPath;
 import org.jdom.Document;
 import java.util.Iterator;
 
-
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Based on ClassPathCMSyncJob.java:
@@ -35,8 +35,11 @@ import java.util.Iterator;
  *
  * The only difference is that the xml stream can be anywhere on the filesystem
  */
+
 public class NYUCMSyncJob extends CmSynchronizer implements Job {
 	private static final Log log = LogFactory.getLog(NYUCMSyncJob.class);
+
+	private static final AtomicBoolean running = new AtomicBoolean(false);
 
 	protected AuthzGroupService authzGroupService;
 
@@ -66,18 +69,29 @@ public class NYUCMSyncJob extends CmSynchronizer implements Job {
 	 * {@inheritDoc}
 	 */
 	public void execute(JobExecutionContext arg0) throws JobExecutionException {
-		if(log.isInfoEnabled()) log.info("NYU sync job executing ...");
+		if (running.getAndSet(true)) {
+			// getAndSet returns true if it was already set, which
+			// means someone got in first.
+			if(log.isInfoEnabled()) log.info("NYU sync job SKIPPED - already running");
+			return;
+		}
 
-		if(log.isInfoEnabled()) log.info("NYU sync job: logging in ...");
-		loginToSakai();
+		try {
+			if(log.isInfoEnabled()) log.info("NYU sync job executing ...");
 
-		if(log.isInfoEnabled()) log.info("NYU sync job: syncing ...");
-		syncAllCmObjects();
+			if(log.isInfoEnabled()) log.info("NYU sync job: logging in ...");
+			loginToSakai();
 
-		if(log.isInfoEnabled()) log.info("NYU sync job: logging out ...");
-		logoutFromSakai();
+			if(log.isInfoEnabled()) log.info("NYU sync job: syncing ...");
+			syncAllCmObjects();
 
-		if(log.isInfoEnabled()) log.info("NYU sync job: done!");
+			if(log.isInfoEnabled()) log.info("NYU sync job: logging out ...");
+			logoutFromSakai();
+
+			if(log.isInfoEnabled()) log.info("NYU sync job: done!");
+		} finally {
+			running.set(false);
+		}
 	}
 		
 	public void setAuthzGroupService(AuthzGroupService authzGroupService) {
