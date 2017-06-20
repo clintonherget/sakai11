@@ -167,21 +167,27 @@ public class NYUGradesWS extends HttpServlet
             }
         }
 
-        private void respondWithGrades(GradeSet grades)
-            throws Exception {
+        private void respondWithGrades(GradeSet grades) throws Exception {
             StringBuilder gradeString = new StringBuilder();
 
             for (Grade g : grades) {
                 gradeString.append(fillTemplate("single_grade", new String[] {
                             "NETID", g.netId,
+                            "NETID_TYPE", soapTypeFor(g.netId),
                             "EMPLID", g.emplId,
-                            "GRADELETTER", g.gradeletter
+                            "EMPLID_TYPE", soapTypeFor(g.emplId),
+                            "GRADELETTER", g.gradeletter,
+                            "GRADELETTER_TYPE", soapTypeFor(g.gradeletter)
                         }));
             }
 
             String result = fillTemplate("grades_response", new String[] {});
 
             respondWithString(result.replace("{{LIST_OF_GRADES}}", gradeString.toString()));
+        }
+
+        private String soapTypeFor(String value) {
+            return (value == null ? "xsi:nil=\"true\"" : "xsi:type=\"soapenc:string\"");
         }
 
         private String fillTemplate(String templateName, String[] keysAndValues) throws Exception {
@@ -199,8 +205,10 @@ public class NYUGradesWS extends HttpServlet
             }
 
             for (int i = 0; i < keysAndValues.length; i += 2) {
-                templateContent = templateContent.replace("{{" + keysAndValues[i] + "}}",
-                        StringEscapeUtils.escapeXml(keysAndValues[i + 1]));
+                String key = keysAndValues[i];
+                String value = keysAndValues[i + 1];
+                templateContent = templateContent.replace("{{" + key + "}}",
+                        (value == null) ? "" : StringEscapeUtils.escapeXml(value));
             }
 
             return templateContent;
