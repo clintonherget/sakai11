@@ -70,12 +70,10 @@ public class DBServiceImpl implements DBService
                 ps = connection.prepareStatement(AUDIT_INSERT);
 
                 for (Grade grade : grades) {
-                    loadParameters(ps, new Object[] {
-                                now,
-                                grade.netId,
-                                grade.emplId,
-                                grade.gradeletter
-                            });
+                    ps.setLong(1, now);
+                    ps.setString(2, grade.netId);
+                    ps.setString(3, grade.emplId);
+                    ps.setString(4, grade.gradeletter);
 
                     int insertedCount = ps.executeUpdate();
 
@@ -114,7 +112,7 @@ public class DBServiceImpl implements DBService
             } else if (arg instanceof Long) {
                 ps.setLong(i, ((Long) arg).longValue());
             } else {
-                throw new RuntimeException("Unknown parameter type: " + arg);
+                throw new RuntimeException("Unknown parameter type at position " + i + ": " + arg);
             }
 
             i++;
