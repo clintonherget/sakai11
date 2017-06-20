@@ -179,9 +179,9 @@ public class NYUGradesWS extends HttpServlet
                         }));
             }
 
-            respondWithTemplate("grades_response", new String[] {
-                        "GRADES", gradeString.toString()
-                    });
+            String result = fillTemplate("grades_response", new String[] {});
+
+            respondWithString(result.replace("{{LIST_OF_GRADES}}", gradeString.toString()));
         }
 
         private String fillTemplate(String templateName, String[] keysAndValues) throws Exception {
@@ -209,14 +209,18 @@ public class NYUGradesWS extends HttpServlet
         private void respondWithTemplate(String template, String[] keysAndValues) throws Exception {
             String templateContent = fillTemplate(template, keysAndValues);
 
-            // Some specials
-            templateContent = templateContent.replace("{{BASE_URL}}", serverConfigurationService.getServerUrl() + request.getRequestURI());
-            templateContent = templateContent.replace("{{SERVER_HOST}}", serverConfigurationService.getServerName());
+            respondWithString(templateContent);
+        }
+
+        private void respondWithString(String result) throws Exception {
+            // Some special values
+            result = result.replace("{{BASE_URL}}", serverConfigurationService.getServerUrl() + request.getRequestURI());
+            result = result.replace("{{SERVER_HOST}}", serverConfigurationService.getServerName());
             if (getSoapAction() != null) {
-                templateContent = templateContent.replace("{{SOAP_ACTION}}", getSoapAction());
+                result = result.replace("{{SOAP_ACTION}}", getSoapAction());
             }
 
-            response.getWriter().write(templateContent);
+            response.getWriter().write(result);
         }
 
         private boolean passwordValid(String username, String password)
