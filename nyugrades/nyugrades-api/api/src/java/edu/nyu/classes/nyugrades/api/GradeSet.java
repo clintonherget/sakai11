@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
-public class GradeSet implements Iterable
+public class GradeSet implements Iterable<Grade>
 {
     private Iterable<Grade> grades;
 
