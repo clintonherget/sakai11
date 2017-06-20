@@ -1,0 +1,1 @@
+<grade><netid xsi:type="soapenc:string">{{NETID}}</netid><emplid xsi:type="soapenc:string">{{EMPLID}}</emplid><gradeletter xsi:type="soapenc:string">{{GRADELETTER}}</gradeletter></grade>
