@@ -111,6 +111,8 @@ public class DBServiceImpl implements DBService
                 ps.setString(i, (String)arg);
             } else if (arg instanceof Integer) {
                 ps.setInt(i, ((Integer) arg).intValue());
+            } else if (arg instanceof Long) {
+                ps.setLong(i, ((Long) arg).longValue());
             } else {
                 throw new RuntimeException("Unknown parameter type: " + arg);
             }
