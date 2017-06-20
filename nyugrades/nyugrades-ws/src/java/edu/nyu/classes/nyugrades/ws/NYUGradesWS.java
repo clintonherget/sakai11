@@ -198,7 +198,7 @@ public class NYUGradesWS extends HttpServlet
             }
 
             String templateContent = new String(Files.readAllBytes(Paths.get(templateResource.toURI())),
-                    "UTF-8");
+                    "UTF-8").trim();
 
             if ((keysAndValues.length % 2) != 0) {
                 throw new ServletException("Internal error: keysAndValues should have an even number of elements.");
