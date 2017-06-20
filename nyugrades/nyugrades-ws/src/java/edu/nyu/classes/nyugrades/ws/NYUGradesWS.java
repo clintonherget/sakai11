@@ -125,13 +125,13 @@ public class NYUGradesWS extends HttpServlet
 
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.setHeader("Content-Type", "text/xml");
-                    respondWithTemplate("login_response", new String[] { "SESSION", sessionId });
+                    respondWithTemplate("login_response", new String[] { "SESSION", StringEscapeUtils.escapeXml(sessionId) });
                 } else if (action.startsWith("logout")) {
                     String status = logout(soapRequest.get("sessionId"));
 
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.setHeader("Content-Type", "text/xml");
-                    respondWithTemplate("logout_response", new String[] { "STATUS", status });
+                    respondWithTemplate("logout_response", new String[] { "STATUS", StringEscapeUtils.escapeXml(status) });
                 } else if (action.startsWith("getGradesForSite")) {
                     GradeSet grades = getGradesForSite(soapRequest.get("sessionId"),
                             soapRequest.get("courseId"),
@@ -149,7 +149,7 @@ public class NYUGradesWS extends HttpServlet
 
                 try {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    respondWithTemplate("error_response", new String[] { "ERROR_MESSAGE", e.getMessage() });
+                    respondWithTemplate("error_response", new String[] { "ERROR_MESSAGE", StringEscapeUtils.escapeXml(e.getMessage()) });
                 } catch (Exception e2) {
                     LOG.error("Additionally, failed to write an error response with exception: " + e2);
                     e2.printStackTrace();
@@ -172,11 +172,11 @@ public class NYUGradesWS extends HttpServlet
 
             for (Grade g : grades) {
                 gradeString.append(fillTemplate("single_grade", new String[] {
-                            "NETID", g.netId,
+                            "NETID", StringEscapeUtils.escapeXml(g.netId),
                             "NETID_TYPE", soapTypeFor(g.netId),
-                            "EMPLID", g.emplId,
+                            "EMPLID", StringEscapeUtils.escapeXml(g.emplId),
                             "EMPLID_TYPE", soapTypeFor(g.emplId),
-                            "GRADELETTER", g.gradeletter,
+                            "GRADELETTER", StringEscapeUtils.escapeXml(g.gradeletter),
                             "GRADELETTER_TYPE", soapTypeFor(g.gradeletter)
                         }));
             }
@@ -208,7 +208,7 @@ public class NYUGradesWS extends HttpServlet
                 String key = keysAndValues[i];
                 String value = keysAndValues[i + 1];
                 templateContent = templateContent.replace("{{" + key + "}}",
-                        (value == null) ? "" : StringEscapeUtils.escapeXml(value));
+                        (value == null) ? "" : value);
             }
 
             return templateContent;
