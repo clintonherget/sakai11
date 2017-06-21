@@ -74,6 +74,10 @@ import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
 
+import java.util.Properties;
+import org.sakaiproject.site.api.SitePage;
+import org.sakaiproject.site.api.Site;
+
 /**
  * Entity provider for the Content / Resources tool
  */
@@ -175,6 +179,10 @@ public class ContentEntityProvider extends AbstractEntityProvider implements Ent
 			throw new IllegalArgumentException("siteId a must be set in order to get the resources for a site, via the URL /content/site/siteId");
 		}
 		
+		if (siteHasHiddenResourcesTool(siteId)) {
+		    return new ArrayList<ContentItem>();
+		}
+
 		// return the ListItem list for the site
 		return getSiteListItems(siteId);
 		
@@ -350,6 +358,35 @@ public class ContentEntityProvider extends AbstractEntityProvider implements Ent
 		}
 		return null;
 	}
+
+	private boolean siteHasHiddenResourcesTool(String siteId) {
+		if (securityService.unlock("site.upd", "/site/" + siteId)) {
+			// Instructor... OK
+			return false;
+		}
+
+		try {
+			Site site = siteService.getSite(siteId);
+
+			for (SitePage page : site.getPages()) {
+				for (ToolConfiguration tool : page.getTools()) {
+					if ("sakai.resources".equals(tool.getToolId())) {
+						Properties config = tool.getPlacementConfig();
+						if ("false".equals(config.getProperty("sakai-portal:visible"))) {
+							log.info("Blocking student access to content for site: " + siteId);
+							return true;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.warn(this + " Error in siteHasHiddenResourcesTool for site " + siteId + ": " + e);
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
 	private List<ContentItem> getSiteListItems(String siteId) {
 		List<ContentItem> rv = new ArrayList<ContentItem>();
 		String wsCollectionId = contentHostingService.getSiteCollection(siteId);
