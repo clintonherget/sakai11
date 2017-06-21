@@ -3,7 +3,9 @@
         expand:                     'Expand and show sub pages',
         collapse:                   'Collapse and hide sub pages',
         open_top_level_page:        'Click to open top-level page',
-    }
+    };
+
+    var LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH = 90;
 
     function LessonsSubPageNavigation(data, currentPageId) {
         this.data = data;
@@ -40,6 +42,18 @@
             $submenu_action.href = self.build_sub_page_url_for(sub_page);
             $submenu_action.innerText = sub_page.name;
             $submenu_action.setAttribute('data-sendingPage', sub_page.sendingPage);
+
+            var title_string = sub_page.name;
+            if (title_string.length < LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH - 20) { // only show description if there's room
+                if (sub_page.description) {
+                  if (sub_page.description.length > (LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH - title_string.length)) {
+                    title_string += " - " + sub_page.description.substring(0, LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH) + "...";
+                  } else {
+                    title_string += " - " + sub_page.description;
+                  }
+                }
+            }
+            $submenu_action.title = title_string;
 
             $submenu_item.appendChild($submenu_action);
 
