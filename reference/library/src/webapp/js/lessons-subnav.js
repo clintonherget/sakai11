@@ -101,36 +101,29 @@
                 return false;
             }
 
-
             if ($li.is('.expanded')) {
+                // clicked the magic goto span or title span!
+                if ($(event.target).is('.lessons-goto-top-page') || $(event.target).is('.lessons-top-level-title')) {
+                    location.href = topLevelPageHref;
+                    return false;
+                }
 
-              // clicked the magic goto span or title span!
-              if ($(event.target).is('.lessons-goto-top-page') || $(event.target).is('.lessons-top-level-title')) {
-                  location.href = topLevelPageHref;
-                  return false;
-              }
-
-              // clicked the magic chevron icon!
-              if ($(event.target).is(".lessons-expand-collapse-icon")) {
-                  event.preventDefault();
+                // clicked the magic chevron icon!
+                if ($(event.target).is(".lessons-expand-collapse-icon")) {
+                    event.preventDefault();
   
-                  $li.closest('ul').find('.expanded').each(function() {
-                      var $expanded = $PBJQ(this);
-                      $expanded.addClass('sliding-up');
-                      $expanded.find('.lessons-sub-page-menu').slideUp(500, function() {
-                          $expanded.removeClass('sliding-up');
-                          $expanded.removeClass('expanded');
-                          $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
-                      });
-                  });
+                    $li.closest('ul').find('.expanded').each(function() {
+                        var $expanded = $PBJQ(this);
+                        $expanded.addClass('sliding-up');
+                        $expanded.find('.lessons-sub-page-menu').slideUp(500, function() {
+                            $expanded.removeClass('sliding-up');
+                            $expanded.removeClass('expanded');
+                            $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
+                        });
+                    });
 
-                  return false;
-              }
-            }
-
-            if ($li.is('.expanded')) {
-                //Disable collapse - do nuffin
-                //$li.classList.remove('expanded');
+                    return false;
+                }
             } else {
                 $li.closest('ul').find('.expanded').each(function() {
                     var $expanded = $PBJQ(this);
@@ -139,6 +132,7 @@
                         $expanded.removeClass('sliding-up');
                         $expanded.removeClass('expanded');
                         $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
+                        $expanded.find('.lessons-expand-collapse-icon, .lessons-top-level-title').removeAttr('tabindex');
                     });
                 });
                 $li.addClass('sliding-down');
@@ -150,15 +144,68 @@
                         $li.removeClass('sliding-down');
                         $li.addClass('expanded');
                         $li.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse);
+                        $li.find('.lessons-expand-collapse-icon, .lessons-top-level-title').attr('tabindex', 0);
                     }, 200);
                 });
             }
+        });
+
+        $title.addEventListener('keyup', function(event) {
+            // We have jQuery now... YAY, get on that.
+            var $li = $PBJQ(event.target).closest('li');
+
+            if (event.keyCode == '13') {
+                if ($li.is('.expanded')) {
+
+                  // clicked the magic goto span or title span!
+                  if ($(event.target).is('.lessons-goto-top-page') || $(event.target).is('.lessons-top-level-title')) {
+                      event.preventDefault();
+                      event.stopImmediatePropagation();
+
+                      location.href = topLevelPageHref;
+                      return false;
+                  }
+                }
+            }
+
+            return true;
+        });
+
+        $icon.addEventListener('keyup', function(event) {
+
+            // We have jQuery now... YAY, get on that.
+            var $li = $PBJQ(event.target).closest('li');
+
+            if (event.keyCode == '13') {
+                if ($li.is('.expanded')) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+
+                    $li.closest('ul').find('.expanded').each(function() {
+                        var $expanded = $PBJQ(this);
+                        $expanded.addClass('sliding-up');
+                        $expanded.find('.lessons-sub-page-menu').slideUp(500, function() {
+                            $expanded.removeClass('sliding-up');
+                            $expanded.removeClass('expanded');
+                            $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
+                            $expanded.find('.lessons-expand-collapse-icon, .lessons-top-level-title').removeAttr('tabindex');
+                            $li.find('> a').focus();
+                        });
+                    });
+
+                    return false;
+                }
+            }
+
+            return true;
         });
 
         if ($li.classList.contains('is-current')) {
             $li.classList.add('expanded');
             $li.querySelector('.lessons-sub-page-menu').style.display = 'block';
             $icon.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse;
+            $icon.tabIndex = 0;
+            $title.tabIndex = 0;
         }
 
         var $title = $menu.querySelector('.Mrphs-toolsNav__menuitem--title');
