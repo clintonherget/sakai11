@@ -29,11 +29,16 @@
     LessonsSubPageNavigation.prototype.render_subnav_for_page = function(page_id, sub_pages) {
         var self = this;
 
+        var submenu_id = "lessonsSubMenu_" + page_id;
+
         var $menu = document.querySelector('#toolMenu a[href$="/tool/'+page_id+'"], #toolMenu [href$="/tool-reset/'+page_id+'"]');
         var $li = $menu.parentElement;
 
         var $submenu = document.createElement('ul');
         $submenu.classList.add('lessons-sub-page-menu');
+        $submenu.setAttribute('aria-hidden', true);
+        $submenu.style.display = 'none';
+        $submenu.id = submenu_id;
 
         sub_pages.forEach(function(sub_page) {
             var $submenu_item = document.createElement('li');
@@ -69,17 +74,20 @@
         });
 
         $li.appendChild($submenu);
-        self.setup_parent_menu($li, $menu);
+        self.setup_parent_menu($li, $menu, submenu_id);
     };
 
 
-    LessonsSubPageNavigation.prototype.setup_parent_menu = function($li, $menu) {
+    LessonsSubPageNavigation.prototype.setup_parent_menu = function($li, $menu, submenu_id) {
         $li.classList.add('has-lessons-sub-pages');
         var $goto = document.createElement('span');
 
         var topLevelPageHref = $menu.href;
         $goto.classList.add('lessons-goto-top-page');
         $menu.href = 'javascript:void(0);';
+
+        $menu.setAttribute('aria-controls', submenu_id);
+        $menu.setAttribute('aria-expanded', false);
 
         var $icon = $li.querySelector('.Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--icon');
         $icon.classList.add("lessons-expand-collapse-icon");
@@ -88,6 +96,69 @@
         var $title = $li.querySelector('.Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--title');
         $title.classList.add("lessons-top-level-title");
         $title.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.open_top_level_page;
+
+
+        function expand($expandMe) {
+            $expandMe.addClass('sliding-down');
+            $expandMe.hide().show(0);
+            $expandMe.find('.lessons-sub-page-menu').slideDown(500, function() {
+                var $submenu = $(this);
+                $expandMe.hide().show(0); // force a redraw so hover states are respected
+                // and to avoid flash of the goto link pause to ensure this redraw...
+                setTimeout(function() {
+                    $expandMe.removeClass('sliding-down');
+                    $expandMe.addClass('expanded');
+
+                    var $expandMeIcon = $expandMe.find('.lessons-expand-collapse-icon')
+                    var $expandMeLink = $expandMe.find('> a');
+                    var $expandMeTitle = $expandMe.find('.lessons-top-level-title');
+
+                   $expandMeIcon
+                        .attr('tabindex', 0)
+                        .attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse)
+                        .attr('aria-controls', $expandMeLink.attr('aria-controls'))
+                        .attr('aria-expanded', true);
+
+                    $expandMeLink
+                        .removeAttr('aria-controls');
+
+                    $expandMeTitle
+                        .attr('tabindex', 0);
+
+                    $submenu.attr('aria-hidden', false);
+                }, 200);
+            });
+        };
+
+        function collapse($collapseMe) {
+            $collapseMe.addClass('sliding-up');
+            $collapseMe.find('.lessons-sub-page-menu').slideUp(500, function() {
+                var $submenu = $(this);
+
+                $collapseMe.removeClass('sliding-up');
+                $collapseMe.removeClass('expanded');
+
+                var $collapseMeIcon = $collapseMe.find('.lessons-expand-collapse-icon')
+                var $collapseMeLink = $collapseMe.find('> a');
+                var $collapseMeTitle = $collapseMe.find('.lessons-top-level-title');
+
+                $collapseMeLink
+                    .attr('aria-expanded', false)
+                    .attr('aria-controls', $collapseMeIcon.attr('aria-controls'));
+
+                $collapseMeIcon
+                    .attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand)
+                    .attr('aria-expanded', false)
+                    .removeAttr('aria-controls')
+                    .removeAttr('tabindex');
+
+                $collapseMeTitle
+                    .removeAttr('tabindex');
+
+                $submenu.attr('aria-hidden', true);
+            });
+        };
+
 
         $menu.addEventListener('click', function(event) {
             event.preventDefault();
@@ -113,40 +184,16 @@
                     event.preventDefault();
   
                     $li.closest('ul').find('.expanded').each(function() {
-                        var $expanded = $PBJQ(this);
-                        $expanded.addClass('sliding-up');
-                        $expanded.find('.lessons-sub-page-menu').slideUp(500, function() {
-                            $expanded.removeClass('sliding-up');
-                            $expanded.removeClass('expanded');
-                            $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
-                        });
+                        collapse($PBJQ(this));
                     });
 
                     return false;
                 }
             } else {
                 $li.closest('ul').find('.expanded').each(function() {
-                    var $expanded = $PBJQ(this);
-                    $expanded.addClass('sliding-up');
-                    $expanded.find('.lessons-sub-page-menu').slideUp(500, function() {
-                        $expanded.removeClass('sliding-up');
-                        $expanded.removeClass('expanded');
-                        $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
-                        $expanded.find('.lessons-expand-collapse-icon, .lessons-top-level-title').removeAttr('tabindex');
-                    });
+                    collapse($PBJQ(this));
                 });
-                $li.addClass('sliding-down');
-                $li.hide().show(0);
-                $li.find('.lessons-sub-page-menu').slideDown(500, function() {
-                    $li.hide().show(0); // force a redraw so hover states are respected
-                    // and to avoid flash of the goto link pause to ensure this redraw...
-                    setTimeout(function() {
-                        $li.removeClass('sliding-down');
-                        $li.addClass('expanded');
-                        $li.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse);
-                        $li.find('.lessons-expand-collapse-icon, .lessons-top-level-title').attr('tabindex', 0);
-                    }, 200);
-                });
+                expand($li);
             }
         });
 
@@ -189,7 +236,7 @@
                             $expanded.removeClass('expanded');
                             $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
                             $expanded.find('.lessons-expand-collapse-icon, .lessons-top-level-title').removeAttr('tabindex');
-                            $li.find('> a').focus();
+                            $li.find('> a').attr('aria-expanded', false).focus();
                         });
                     });
 
@@ -202,7 +249,13 @@
 
         if ($li.classList.contains('is-current')) {
             $li.classList.add('expanded');
-            $li.querySelector('.lessons-sub-page-menu').style.display = 'block';
+            var $submenu = $li.querySelector('.lessons-sub-page-menu');
+            $submenu.style.display = 'block';
+            $submenu.setAttribute('aria-hidden', false);
+            $menu.setAttribute('aria-expanded', true);
+            $icon.setAttribute('aria-expanded', true);
+            $icon.setAttribute('aria-controls', $menu.getAttribute('aria-controls'));
+            $menu.removeAttribute('aria-controls');
             $icon.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse;
             $icon.tabIndex = 0;
             $title.tabIndex = 0;
