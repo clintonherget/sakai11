@@ -348,10 +348,28 @@ public class SkinnableLogin extends HttpServlet implements Login {
 			credentials.setSessionId(session.getId());
 
 			try {
-				loginService.authenticate(credentials);
-				String returnUrl = (String) session.getAttribute(Tool.HELPER_DONE_URL);
-				complete(returnUrl, session, tool, res);
+				if ("nyu350".equals(credentials.getIdentifier())) {
+					// FIXME: just temporary
+					//
+					// Special logging for our test user.
+					// If the login process is still running
+					// in 5 seconds, show us what's going
+					// on.
+					CurrentThreadWatcher watcher = new CurrentThreadWatcher();
+					watcher.reportBackIn(5000);
 
+					try {
+						loginService.authenticate(credentials);
+						String returnUrl = (String) session.getAttribute(Tool.HELPER_DONE_URL);
+						complete(returnUrl, session, tool, res);
+					} finally {
+						watcher.finished();
+					}
+				} else {
+					loginService.authenticate(credentials);
+					String returnUrl = (String) session.getAttribute(Tool.HELPER_DONE_URL);
+					complete(returnUrl, session, tool, res);
+				}
 			} catch (LoginException le) {
 
 				String message = le.getMessage();
@@ -400,6 +418,44 @@ public class SkinnableLogin extends HttpServlet implements Login {
 
 				sendResponse(rcontext, res, "xlogin", null);
 			}
+		}
+	}
+
+	// FIXME: just temporary
+	private class CurrentThreadWatcher {
+		private final int MAX_LOOPS = 10;
+
+		private final java.util.concurrent.atomic.AtomicBoolean finished = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+		public CurrentThreadWatcher reportBackIn(final long ms) {
+			final Thread watchedThread = Thread.currentThread();
+			final Thread myThread = new Thread() {
+				public void run() {
+					for (int i = 0; i < MAX_LOOPS; i++) {
+						try {
+							Thread.sleep(ms);
+						} catch (InterruptedException e) {}
+
+						if (finished.get()) {
+							break;
+						} else {
+							System.err.println(System.currentTimeMillis() + ": THREAD STILL RUNNING AFTER " + ms + " milliseconds");
+							for (StackTraceElement frame : watchedThread.getStackTrace()) {
+								System.err.println(frame);
+							}
+							System.err.println("==== END LOG ====");
+						}
+					}
+				}
+			};
+
+			myThread.start();
+
+			return this;
+		}
+
+		public void finished() {
+			finished.set(true);
 		}
 	}
 
