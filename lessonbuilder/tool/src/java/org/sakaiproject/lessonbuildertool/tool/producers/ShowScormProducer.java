@@ -224,7 +224,7 @@ public class ShowScormProducer implements ViewComponentProducer, NavigationCaseR
 				log.info("Failure when generating SCORM Report URL for lesson: " + itemId, e);
 			}
 
-			if (isServiceTeamUser()) {
+			if (isServiceTeamUser() || SecurityService.isSuperUser()) {
 				try {
 					UILink.make(tofill, "scorm-console-link", messageLocator.getMessage("simplepage.scorm.console"),
 							scorm.getConsoleUrl(currentSiteId, itemId.toString()));
