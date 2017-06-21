@@ -1,4 +1,10 @@
 (function() {
+    var LESSONS_SUBPAGE_NAVIGATION_LABELS = {
+        expand:                     'Expand and show sub pages',
+        collapse:                   'Collapse and hide sub pages',
+        open_top_level_page:        'Click to open top-level page',
+    }
+
     function LessonsSubPageNavigation(data, currentPageId) {
         this.data = data;
         this.currentPageId = currentPageId;
@@ -56,40 +62,57 @@
     LessonsSubPageNavigation.prototype.setup_parent_menu = function($li, $menu) {
         $li.classList.add('has-lessons-sub-pages');
         var $goto = document.createElement('span');
-        $goto.title = 'Click the arrow icon to open the top-level page.';
 
         var topLevelPageHref = $menu.href;
         $goto.classList.add('lessons-goto-top-page');
         $menu.href = 'javascript:void(0);';
 
-        function expandMenu($expandMe) {
-            $expandMe.classList.add('expanded');
-            var subpages = $expandMe.querySelectorAll('.lessons-sub-page-menu li').length;
-            $expandMe.querySelector('.lessons-sub-page-menu').style.maxHeight = (subpages * 100) + 'px';
-        };
+        var $icon = $li.querySelector('.Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--icon');
+        $icon.classList.add("lessons-expand-collapse-icon");
+        $icon.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.expand;
 
-        function collapseMenu($collapseMe) {
-            $collapseMe.classList.remove('expanded');
-            $collapseMe.querySelector('.lessons-sub-page-menu').style.maxHeight = 0 + 'px';
-        };
+        var $title = $li.querySelector('.Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--title');
+        $title.classList.add("lessons-top-level-title");
+        $title.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.open_top_level_page;
 
         $menu.addEventListener('click', function(event) {
             event.preventDefault();
 
-            // when collapsed, a click should take you to the top page and not toggle the menu
-            if (document.body.classList.contains('Mrphs-toolMenu-collapsed')) {
-                location.href = topLevelPageHref;
-                return false;
-            }
-
-            // clicked the magic goto span!
-            if (event.target.classList.contains('lessons-goto-top-page')) {
-                location.href = topLevelPageHref;
-                return false;
-            }
-
             // We have jQuery now... YAY, get on that.
             var $li = $PBJQ(event.target).closest('li');
+
+            // when collapsed, a click should take you to the top page and not toggle the menu
+            if ($(document.body).is('.Mrphs-toolMenu-collapsed')) {
+                location.href = topLevelPageHref;
+                return false;
+            }
+
+
+            if ($li.is('.expanded')) {
+
+              // clicked the magic goto span or title span!
+              if ($(event.target).is('.lessons-goto-top-page') || $(event.target).is('.lessons-top-level-title')) {
+                  location.href = topLevelPageHref;
+                  return false;
+              }
+
+              // clicked the magic chevron icon!
+              if ($(event.target).is(".lessons-expand-collapse-icon")) {
+                  event.preventDefault();
+  
+                  $li.closest('ul').find('.expanded').each(function() {
+                      var $expanded = $PBJQ(this);
+                      $expanded.addClass('sliding-up');
+                      $expanded.find('.lessons-sub-page-menu').slideUp(500, function() {
+                          $expanded.removeClass('sliding-up');
+                          $expanded.removeClass('expanded');
+                          $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
+                      });
+                  });
+
+                  return false;
+              }
+            }
 
             if ($li.is('.expanded')) {
                 //Disable collapse - do nuffin
@@ -101,8 +124,9 @@
                     $expanded.find('.lessons-sub-page-menu').slideUp(500, function() {
                         $expanded.removeClass('sliding-up');
                         $expanded.removeClass('expanded');
+                        $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
                     });
-                })
+                });
                 $li.addClass('sliding-down');
                 $li.hide().show(0);
                 $li.find('.lessons-sub-page-menu').slideDown(500, function() {
@@ -111,6 +135,7 @@
                     setTimeout(function() {
                         $li.removeClass('sliding-down');
                         $li.addClass('expanded');
+                        $li.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse);
                     }, 200);
                 });
             }
@@ -119,6 +144,7 @@
         if ($li.classList.contains('is-current')) {
             $li.classList.add('expanded');
             $li.querySelector('.lessons-sub-page-menu').style.display = 'block';
+            $icon.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse;
         }
 
         var $title = $menu.querySelector('.Mrphs-toolsNav__menuitem--title');
