@@ -1436,6 +1436,8 @@ body {
             overflow:hidden;
             border-left: $nyu-tool-nav-item-border-left !important;
             color: $nyu-tool-nav-item-text-color !important;
+            display: flex;
+            align-items: center;
 
             &:hover {
               border-left: $nyu-tool-nav-item-hover-border-left !important;

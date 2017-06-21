@@ -949,6 +949,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					" s.tool_id as sakaiToolId," +
 					" i.id as lessonsItemId," +
 					" i.name as name," +
+					" i.description as description," +
 					" " + toChar(conn, "i.sakaiId") + " as sendingPage" +
 					" FROM lesson_builder_pages p" +
 					" INNER JOIN sakai_site_tool s" +
@@ -984,6 +985,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			result.put("itemId", rs.getString("lessonsItemId"));
 			result.put("sendingPage", rs.getString("sendingPage"));
 			result.put("name", rs.getString("name"));
+			result.put("description", rs.getString("description"));
 
 			return result;
 		}
