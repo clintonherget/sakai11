@@ -181,7 +181,7 @@
     </ul>
     </div>
     <div class="mathJaxToggleArea">
-      <p>Enable MathJax for automatic rendering of LaTeX and AsciiMath in this site. <a href="http://www.nyu.edu/servicelink/KB0015165" target="_blank">Learn More</a>.
+      <p>Enable <strong>MathJax</strong> for automatic rendering of LaTeX and AsciiMath in this site. <a href="http://www.nyu.edu/servicelink/KB0015165" target="_blank">Learn More</a>.</p>
       <div class="onoffswitch">
           <input type="checkbox" name="isMathJaxAllowedInSite" class="onoffswitch-checkbox" id="isMathJaxAllowedInSite" #if($isMathJaxAllowedInSite)checked="checked"#end>
           <label class="onoffswitch-label" for="isMathJaxAllowedInSite">
@@ -190,6 +190,49 @@
           </label>
       </div>
     </div>
+    <div class="lessonsSubNavToggleArea" style='display: none'>
+      <p>Enable <strong>Lessons subpage navigation</strong> in the left tool menu. <a href="javascript:alert('links to a kbase article - pending');">Learn More</a>.</p>
+      <div class="onoffswitch">
+          <input type="checkbox" name="isLessonsSubNavEnabledForSite" class="onoffswitch-checkbox" id="isLessonsSubNavEnabledForSite" #if($isLessonsSubNavEnabledForSite)checked="checked"#end>
+          <label class="onoffswitch-label" for="isLessonsSubNavEnabledForSite">
+              <span class="onoffswitch-inner"></span>
+              <span class="onoffswitch-switch"></span>
+          </label>
+      </div>
+    </div>
+    <script>
+        $(function() {
+            var lessonsSubNavToggleArea = $('.lessonsSubNavToggleArea');
+            var toolSelectionList = $('#toolSelectionList');
+            var toolList = $('#toolHolderW');
+            var isLessonsSubNavEnabledForSiteCheckbox = $('#isLessonsSubNavEnabledForSite');
+
+            function checkForSelectedLessonsTools() {
+              if (toolSelectionList.find('li[id*=sakai_lessonbuildertool]:visible').length > 0) {
+                  lessonsSubNavToggleArea.show();
+              } else {
+                  lessonsSubNavToggleArea.hide();
+              }
+            };
+
+            toolList.find('input[type=checkbox]').on('click', function() {
+                setTimeout(checkForSelectedLessonsTools, 0);
+                return true;
+            });
+
+            toolSelectionList.on('click', '.removeTool', function() {
+                setTimeout(checkForSelectedLessonsTools, 200); // fade out on selected item takes 100ms
+                return true;
+            });
+
+            toolSelectionList.on('click mouseup keyup', '#alertBoxYes', function() {
+                setTimeout(checkForSelectedLessonsTools, 0);
+                return true;
+            });
+
+            checkForSelectedLessonsTools();
+        });
+    </script>
     </div>
   </div> <!-- row -->
 </div> <!-- toolHolderWW -->

@@ -198,6 +198,12 @@
         $tlang.getString("sinfo.mathjax.confirmEnabled")   
     </p>
     #end
+
+    #if($!isLessonsSubNavEnabledForSite)
+    <p class="instruction">
+        You have enabled the Lessons sub navigation this site.
+    </p>
+    #end
 	
 	<form name="addRemoveFeaturnConfirmForm" id="addRemoveFeaturnConfirmForm" action="#toolForm("$action")" method="post">
 		<input type="hidden" name="cancelIndex" value="$continueIndex" />
