@@ -216,12 +216,12 @@
             };
 
             toolList.find('input[type=checkbox]').on('click', function() {
-                setTimeout(checkForSelectedLessonsTools, 0);
+                setTimeout(checkForSelectedLessonsTools, 200); // fade out on selected item takes ~100ms
                 return true;
             });
 
             toolSelectionList.on('click', '.removeTool', function() {
-                setTimeout(checkForSelectedLessonsTools, 200); // fade out on selected item takes 100ms
+                setTimeout(checkForSelectedLessonsTools, 200); // fade out on selected item takes ~100ms
                 return true;
             });
 
