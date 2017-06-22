@@ -82,7 +82,12 @@
         $li.classList.add('has-lessons-sub-pages');
         var $goto = document.createElement('span');
 
+        // stash the top level Lessons page URL
         var topLevelPageHref = $menu.href;
+        // force it to be a tool-reset so the session state/breadcrumb
+        // is cleared when visiting this top level page
+        topLevelPageHref = topLevelPageHref.replace(/\/tool\//, "/tool-reset/");
+
         $goto.classList.add('lessons-goto-top-page');
         $menu.href = 'javascript:void(0);';
 
