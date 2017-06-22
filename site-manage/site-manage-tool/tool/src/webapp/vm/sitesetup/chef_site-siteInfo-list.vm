@@ -432,6 +432,13 @@
             </tr>
             #end			
 
+  #if ($isLessonsSubNavEnabledForSite)
+    <tr class="summary-lessons-subnav-enabled">
+      <th>Lessons subpage navigation</th>
+      <td>Enabled</td>
+    </tr>
+  #end
+
 	    #if ($!allowUpdate)
 		    #if ($!importedFromSites)
 			    <tr>
