@@ -48,15 +48,16 @@
  </head>
 
  <body rsf:id="scr=sakai-body">
- <input type='hidden' rsf:id="lessonsSubnavCurrentPageId" id="lessonsSubnavCurrentPageId"/>
+ <input type='hidden' rsf:id="lessonsSubnavPageId" id="lessonsSubnavPageId"/>
  <script>
      // NYU just in case the lesson's URL doesn't contain the current pageid,
-     // notify the lessons_subnav of this page
+     // notify the lessons_subnav of this page (or the current page's topmost
+     // subpage id)
      if (sakai) {
        if (sakai.lessons_subnav) {
-         var lessonsSubnavCurrentPageInput = document.getElementById('lessonsSubnavCurrentPageId');
-         var lessonsSubnavCurrentPageId = lessonsSubnavCurrentPageInput.value;
-         sakai.lessons_subnav.set_current_page_id(lessonsSubnavCurrentPageId);
+         var lessonsSubnavPageIdInput = document.getElementById('lessonsSubnavPageId');
+         var lessonsSubnavPageId = lessonsSubnavPageIdInput.value;
+         sakai.lessons_subnav.set_current_page_id(lessonsSubnavPageId);
        }
      }
  </script>
