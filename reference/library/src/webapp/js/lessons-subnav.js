@@ -78,7 +78,74 @@
     };
 
 
+    LessonsSubPageNavigation.prototype.expand = function($expandMe) {
+        $expandMe.addClass('sliding-down');
+        $expandMe.hide().show(0);
+        $expandMe.find('.lessons-sub-page-menu').slideDown(500, function() {
+            var $submenu = $(this);
+            $expandMe.hide().show(0); // force a redraw so hover states are respected
+            // and to avoid flash of the goto link pause to ensure this redraw...
+            setTimeout(function() {
+                $expandMe.removeClass('sliding-down');
+                $expandMe.addClass('expanded');
+
+                var $expandMeIcon = $expandMe.find('.lessons-expand-collapse-icon')
+                var $expandMeLink = $expandMe.find('> a');
+                var $expandMeTitle = $expandMe.find('.lessons-top-level-title');
+
+               $expandMeIcon
+                    .attr('tabindex', 0)
+                    .attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse)
+                    .attr('aria-controls', $expandMeLink.attr('aria-controls'))
+                    .attr('aria-expanded', true)
+                    .attr('aria-hidden', false);
+
+                $expandMeLink
+                    .attr('aria-expanded', true)
+                    .removeAttr('aria-controls');
+
+                $expandMeTitle
+                    .attr('tabindex', 0);
+
+                $submenu.attr('aria-hidden', false);
+            }, 200);
+        });
+    };
+
+    LessonsSubPageNavigation.prototype.collapse = function($collapseMe) {
+        $collapseMe.addClass('sliding-up');
+        $collapseMe.find('.lessons-sub-page-menu').slideUp(500, function() {
+            var $submenu = $(this);
+
+            $collapseMe.removeClass('sliding-up');
+            $collapseMe.removeClass('expanded');
+
+            var $collapseMeIcon = $collapseMe.find('.lessons-expand-collapse-icon')
+            var $collapseMeLink = $collapseMe.find('> a');
+            var $collapseMeTitle = $collapseMe.find('.lessons-top-level-title');
+
+            $collapseMeLink
+                .attr('aria-expanded', false)
+                .attr('aria-controls', $collapseMeIcon.attr('aria-controls'));
+
+            $collapseMeIcon
+                .attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand)
+                .attr('aria-expanded', false)
+                .removeAttr('aria-controls')
+                .removeAttr('tabindex')
+                .attr('aria-hidden', true);
+
+            $collapseMeTitle
+                .removeAttr('tabindex');
+
+            $submenu.attr('aria-hidden', true);
+        });
+    };
+
+
     LessonsSubPageNavigation.prototype.setup_parent_menu = function($li, $menu, submenu_id) {
+        var self = this;
+
         $li.classList.add('has-lessons-sub-pages');
         var $goto = document.createElement('span');
 
@@ -96,74 +163,12 @@
 
         var $icon = $li.querySelector('.Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--icon');
         $icon.classList.add("lessons-expand-collapse-icon");
+        $icon.setAttribute('aria-hidden', true);
         $icon.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.expand;
 
         var $title = $li.querySelector('.Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--title');
         $title.classList.add("lessons-top-level-title");
         $title.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.open_top_level_page;
-
-
-        function expand($expandMe) {
-            $expandMe.addClass('sliding-down');
-            $expandMe.hide().show(0);
-            $expandMe.find('.lessons-sub-page-menu').slideDown(500, function() {
-                var $submenu = $(this);
-                $expandMe.hide().show(0); // force a redraw so hover states are respected
-                // and to avoid flash of the goto link pause to ensure this redraw...
-                setTimeout(function() {
-                    $expandMe.removeClass('sliding-down');
-                    $expandMe.addClass('expanded');
-
-                    var $expandMeIcon = $expandMe.find('.lessons-expand-collapse-icon')
-                    var $expandMeLink = $expandMe.find('> a');
-                    var $expandMeTitle = $expandMe.find('.lessons-top-level-title');
-
-                   $expandMeIcon
-                        .attr('tabindex', 0)
-                        .attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse)
-                        .attr('aria-controls', $expandMeLink.attr('aria-controls'))
-                        .attr('aria-expanded', true);
-
-                    $expandMeLink
-                        .removeAttr('aria-controls');
-
-                    $expandMeTitle
-                        .attr('tabindex', 0);
-
-                    $submenu.attr('aria-hidden', false);
-                }, 200);
-            });
-        };
-
-        function collapse($collapseMe) {
-            $collapseMe.addClass('sliding-up');
-            $collapseMe.find('.lessons-sub-page-menu').slideUp(500, function() {
-                var $submenu = $(this);
-
-                $collapseMe.removeClass('sliding-up');
-                $collapseMe.removeClass('expanded');
-
-                var $collapseMeIcon = $collapseMe.find('.lessons-expand-collapse-icon')
-                var $collapseMeLink = $collapseMe.find('> a');
-                var $collapseMeTitle = $collapseMe.find('.lessons-top-level-title');
-
-                $collapseMeLink
-                    .attr('aria-expanded', false)
-                    .attr('aria-controls', $collapseMeIcon.attr('aria-controls'));
-
-                $collapseMeIcon
-                    .attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand)
-                    .attr('aria-expanded', false)
-                    .removeAttr('aria-controls')
-                    .removeAttr('tabindex');
-
-                $collapseMeTitle
-                    .removeAttr('tabindex');
-
-                $submenu.attr('aria-hidden', true);
-            });
-        };
-
 
         $menu.addEventListener('click', function(event) {
             event.preventDefault();
@@ -189,16 +194,16 @@
                     event.preventDefault();
   
                     $li.closest('ul').find('.expanded').each(function() {
-                        collapse($PBJQ(this));
+                        self.collapse($PBJQ(this));
                     });
 
                     return false;
                 }
             } else {
                 $li.closest('ul').find('.expanded').each(function() {
-                    collapse($PBJQ(this));
+                    self.collapse($PBJQ(this));
                 });
-                expand($li);
+                self.expand($li);
             }
         });
 
@@ -235,14 +240,8 @@
 
                     $li.closest('ul').find('.expanded').each(function() {
                         var $expanded = $PBJQ(this);
-                        $expanded.addClass('sliding-up');
-                        $expanded.find('.lessons-sub-page-menu').slideUp(500, function() {
-                            $expanded.removeClass('sliding-up');
-                            $expanded.removeClass('expanded');
-                            $expanded.find('.lessons-expand-collapse-icon').attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
-                            $expanded.find('.lessons-expand-collapse-icon, .lessons-top-level-title').removeAttr('tabindex');
-                            $li.find('> a').attr('aria-expanded', false).focus();
-                        });
+                        self.collapse($expanded);
+                        $expanded.find('> a').focus()
                     });
 
                     return false;
@@ -259,6 +258,7 @@
             $submenu.setAttribute('aria-hidden', false);
             $menu.setAttribute('aria-expanded', true);
             $icon.setAttribute('aria-expanded', true);
+            $icon.setAttribute('aria-hidden', false);
             $icon.setAttribute('aria-controls', $menu.getAttribute('aria-controls'));
             $menu.removeAttribute('aria-controls');
             $icon.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse;

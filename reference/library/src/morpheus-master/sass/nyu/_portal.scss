@@ -1490,9 +1490,18 @@ body {
       }
 
       &.expanded {
-        .#{$namespace}toolsNav__menuitem--link:hover {
-          .lessons-goto-top-page {
-            display: inline-block;
+        .#{$namespace}toolsNav__menuitem--link {
+          &:hover {
+            .lessons-goto-top-page {
+              display: inline-block;
+            }
+          }
+          .lessons-top-level-title {
+            &:focus {
+              .lessons-goto-top-page {
+                display: inline-block;
+              }
+            }
           }
         }
       }
