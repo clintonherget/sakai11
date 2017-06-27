@@ -3182,7 +3182,12 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 
 		gradeRecords.removeIf(gradeRecord -> {
 			Assignment assignment = gradeRecord.getAssignment();
-						
+
+			// remove if assignment doesn't have a category
+			if (assignment.getCategory() == null) {
+				return true;
+			}
+
 			// remove if not for this category (rule 1)
 			if(assignment.getCategory() == null){
 				return true;
