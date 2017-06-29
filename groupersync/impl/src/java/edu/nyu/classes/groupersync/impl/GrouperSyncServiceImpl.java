@@ -97,6 +97,11 @@ public class GrouperSyncServiceImpl implements GrouperSyncService {
                               final Set<UserWithRole> changedRoles)
             throws GrouperSyncException {
         try {
+            if (addedUsers.isEmpty() && droppedUsers.isEmpty() && changedRoles.isEmpty()) {
+                // No change needed.
+                return;
+            }
+
             DB.connection(new DBAction() {
                 public void execute(Connection connection) throws SQLException {
                     PreparedStatement ps = null;
@@ -230,11 +235,14 @@ public class GrouperSyncServiceImpl implements GrouperSyncService {
         try {
             DB.connection(new DBAction() {
                 public void execute(Connection connection) throws SQLException {
-                    PreparedStatement insert = connection.prepareStatement("update grouper_group_definitions set description = ?, mtime = ? where group_id = ?");
+                    PreparedStatement insert = connection.prepareStatement("update grouper_group_definitions set description = ?, mtime = ?, ready_for_sync_time = ? where group_id = ?");
+
+                    long now = System.currentTimeMillis();
 
                     insert.setString(1, description);
-                    insert.setLong(2, System.currentTimeMillis());
-                    insert.setString(3, groupId);
+                    insert.setLong(2, now);
+                    insert.setLong(3, now);
+                    insert.setString(4, groupId);
 
                     insert.executeUpdate();
                     insert.close();
