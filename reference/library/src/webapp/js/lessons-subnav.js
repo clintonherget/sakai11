@@ -158,7 +158,7 @@
 
         // create a link to go to the top level page (only visible when expanded)
         var $expandedGoToTopItem = document.createElement('a');
-        $expandedGoToTopItem.setAttribute('href', $menu.getAttribute('href'));
+        $expandedGoToTopItem.setAttribute('href', topLevelPageHref);
         $expandedGoToTopItem.setAttribute('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.open_top_level_page);
         $expandedGoToTopItem.classList.add("lessons-goto-top-page");
         $expandedGoToTopItem.innerHTML = $menu.querySelector('.Mrphs-toolsNav__menuitem--title').outerHTML;
