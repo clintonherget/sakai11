@@ -1056,8 +1056,8 @@ body.#{$namespace}toolMenu-collapsed #toolMenu ul li .#{$namespace}toolsNav__men
 body.#{$namespace}toolMenu-collapsed ul#subSites ul li .#{$namespace}toolsNav__menuitem--title {
   display: none !important;
 }
-body.#{$namespace}toolMenu-collapsed #toolMenu ul li a,
-body.#{$namespace}toolMenu-collapsed ul#subSites ul li a {
+body.#{$namespace}toolMenu-collapsed #toolMenu ul li .Mrphs-toolsNav__menuitem--link,
+body.#{$namespace}toolMenu-collapsed ul#subSites ul li .Mrphs-toolsNav__menuitem--link {
   text-align: center !important;
 }
 @media #{$nonPhone} {
@@ -1083,8 +1083,9 @@ body.#{$namespace}toolMenu-collapsed ul#subSites ul li a {
         min-height: $nyu-tool-nav-item-height;
         background-color: $nyu-tool-nav-item-background-color;
 
-        a {
+        .Mrphs-toolsNav__menuitem--link {
           width: 100%;
+          min-height: $nyu-tool-nav-item-height !important;
           border-left: $nyu-tool-nav-item-border-left;
           border-bottom: none !important;
           font-size: $nyu-tool-nav-item-text-size !important;
@@ -1146,7 +1147,7 @@ body.#{$namespace}toolMenu-collapsed ul#subSites ul li a {
           position: relative;
           margin-right: -1px;
 
-          a, a.is-invisible {
+          .Mrphs-toolsNav__menuitem--link, .Mrphs-toolsNav__menuitem--link.is-invisible {
             color: $nyu-tool-nav-item-selected-text-color !important;
             border-left: $nyu-tool-nav-item-selected-border-left !important;
             background-color: $nyu-tool-nav-item-selected-background-color !important;
@@ -1190,7 +1191,7 @@ body.#{$namespace}toolMenu-collapsed ul#subSites ul li a {
   }
   .#{$namespace}toolsNav__menuitem--link {
     text-align: left !important;
-    padding: 0.75em 7px !important;
+    padding: 10px 7px !important;
   }
   #content {
     //box-shadow: inset -2px 2px 4px -2px #AAA;
@@ -1243,9 +1244,9 @@ body.#{$namespace}toolMenu-collapsed ul#subSites ul li a {
       display: none !important;
     }
   }
-  #toolMenu ul li a,
-  #subSites ul li a,
-  .floatingToolMenu ul li a {
+  #toolMenu ul li .Mrphs-toolsNav__menuitem--link,
+  #subSites ul li .Mrphs-toolsNav__menuitem--link,
+  .floatingToolMenu ul li .Mrphs-toolsNav__menuitem--link {
     text-align: left !important;
     padding: 10px 20px !important;
     height: auto !important;
@@ -1258,7 +1259,7 @@ body.#{$namespace}toolMenu-collapsed ul#subSites ul li a {
     #toolMenu, ul#subSites {
       ul {
         li {
-          a {
+          .Mrphs-toolsNav__menuitem--link {
             text-align: left !important;
 
             &:hover {
@@ -1291,14 +1292,13 @@ body {
       margin-right: 0;
 
       &.is-parent-of-current.expanded {
-        a {
+        .Mrphs-toolsNav__menuitem--link {
           border-left: $nyu-tool-nav-item-border-left !important;
         }
       }
 
-      > a {
+      > .Mrphs-toolsNav__menuitem--link {
         .#{$namespace}toolsNav__menuitem--icon {
-          //transition: all 0.3s ease-in-out 0s;
           &:before {
             content: '\f0da';
           }
@@ -1306,7 +1306,7 @@ body {
       }
 
       &.has-lessons-sub-pages {
-        > a {
+        > .Mrphs-toolsNav__menuitem--link {
           background-color: $nyu-tool-nav-item-background-color !important;
 
           &.is-current, &.is-parent-of-current {
@@ -1318,14 +1318,58 @@ body {
           &:hover {
             background-color: $nyu-tool-nav-item-hover-background-color !important;
           }
-        };
+        }
+
+        .lessons-top-level-placeholder {
+          .lessons-expand-collapse-icon {
+            position: absolute;
+
+            .Mrphs-toolsNav__menuitem--icon {
+              position: relative;
+            }
+          }
+
+          .lessons-goto-top-page {
+            .Mrphs-toolsNav__menuitem--title {
+              color: $nyu-tool-nav-item-text-color;
+            }
+            &:hover {
+              .Mrphs-toolsNav__menuitem--title {
+                color: $nyu-tool-nav-item-hover-text-color;
+              }
+            }
+          }
+
+          &:hover {
+            .lessons-goto-top-page {
+              .Mrphs-toolsNav__menuitem--title {
+                &:after {
+                  font-family: 'FontAwesome';
+                  content: '\f0a9';
+                  padding-left: 4px;
+                }
+              }
+            }
+          }
+          .lessons-goto-top-page {
+            &:focus {
+              .Mrphs-toolsNav__menuitem--title {
+                &:after {
+                  font-family: 'FontAwesome';
+                  content: '\f0a9';
+                  padding-left: 4px;
+                }
+              }
+            }
+          }
+        }
       }
 
       &.expanded {
         background-color: $nyu-tool-nav-item-selected-background-color;
 
         &.is-parent-of-current {
-          > a {
+          > .Mrphs-toolsNav__menuitem--link {
             .#{$namespace}toolsNav__menuitem--icon {
               color: $nyu-tool-nav-item-icon-color !important;
             }
@@ -1344,7 +1388,7 @@ body {
           }
         }
 
-        > a {
+        > .Mrphs-toolsNav__menuitem--link {
           background-color: $nyu-tool-nav-item-selected-background-color !important;
 
           &:hover {
@@ -1366,7 +1410,7 @@ body {
       &.sliding-down {
           background-color: $nyu-tool-nav-item-selected-background-color !important;
 
-          a {
+          .Mrphs-toolsNav__menuitem--link {
               .#{$namespace}toolsNav__menuitem--icon {
                   -webkit-transition-duration: 0.5s;
                   -moz-transition-duration: 0.5s;
@@ -1391,7 +1435,7 @@ body {
       }
 
       &.sliding-up {
-          a {
+          .Mrphs-toolsNav__menuitem--link {
               .#{$namespace}toolsNav__menuitem--icon {
                   -webkit-transition-duration: 0.5s;
                   -moz-transition-duration: 0.5s;
@@ -1465,62 +1509,29 @@ body {
         }
       }
 
-      position: relative;
-
-      .lessons-goto-top-page {
-        display: none;
-        width: auto;
-        border: none !important;
-        background: none !important;
-        font-size: 1.25em;
-        line-height: 0.75em;
-        padding: 0 8px;
-        color: $nyu-tool-nav-item-text-color !important;
-
-        &:hover {
-          border: none !important;
-          background: none !important;
-          color: $nyu-tool-nav-item-hover-text-color !important;
-        }
-
-        &:before {
-          font-family: 'FontAwesome';
-          content: '\f0a9';
-        }
-      }
-
-      &.expanded {
-        .#{$namespace}toolsNav__menuitem--link {
-          &:hover {
-            .lessons-goto-top-page {
-              display: inline-block;
-            }
-          }
-          .lessons-top-level-title {
-            &:focus {
-              .lessons-goto-top-page {
-                display: inline-block;
-              }
-            }
-          }
-        }
-      }
-
       &.is-current {
         .lessons-goto-top-page {
-           color: $nyu-tool-nav-item-selected-text-color !important;
-           &:hover {
-             color: $nyu-tool-nav-item-selected-hover-text-color !important;
-           }
+          .Mrphs-toolsNav__menuitem--title {
+            color: $nyu-tool-nav-item-selected-text-color !important;
+          }
+          &:hover {
+            .Mrphs-toolsNav__menuitem--title {
+              color: $nyu-tool-nav-item-selected-hover-text-color !important;
+            }
+          }
         }
       }
 
       &.is-current.is-parent-of-current {
         .lessons-goto-top-page {
-           color: $nyu-tool-nav-item-text-color !important;
-           &:hover {
-             color: $nyu-tool-nav-item-hover-text-color !important;
-           }
+          .Mrphs-toolsNav__menuitem--title {
+            color: $nyu-tool-nav-item-text-color !important;
+          }
+          &:hover {
+            .Mrphs-toolsNav__menuitem--title {
+              color: $nyu-tool-nav-item-hover-text-color !important;
+            }
+          }
         }
       }
 
