@@ -78,10 +78,10 @@
     };
 
 
-    LessonsSubPageNavigation.prototype.expand = function($expandMe) {
+    LessonsSubPageNavigation.prototype.expand = function($expandMe, doNotAnimate, callback) {
         $expandMe.addClass('sliding-down');
         $expandMe.hide().show(0);
-        $expandMe.find('.lessons-sub-page-menu').slideDown(500, function() {
+        $expandMe.find('.lessons-sub-page-menu').slideDown((doNotAnimate) ? 0 : 500, function() {
             var $submenu = $(this);
             $expandMe.hide().show(0); // force a redraw so hover states are respected
             // and to avoid flash of the goto link pause to ensure this redraw...
@@ -89,30 +89,22 @@
                 $expandMe.removeClass('sliding-down');
                 $expandMe.addClass('expanded');
 
-                var $expandMeIcon = $expandMe.find('.lessons-expand-collapse-icon')
-                var $expandMeLink = $expandMe.find('> a');
-                var $expandMeTitle = $expandMe.find('.lessons-top-level-title');
+                var $expandMeLink = $expandMe.find('> a.Mrphs-toolsNav__menuitem--link');
+                var $placeholderMenuLink = $expandMe.find('> span.Mrphs-toolsNav__menuitem--link');
 
-               $expandMeIcon
-                    .attr('tabindex', 0)
-                    .attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse)
-                    .attr('aria-controls', $expandMeLink.attr('aria-controls'))
-                    .attr('aria-expanded', true)
-                    .attr('aria-hidden', false);
-
-                $expandMeLink
-                    .attr('aria-expanded', true)
-                    .removeAttr('aria-controls');
-
-                $expandMeTitle
-                    .attr('tabindex', 0);
+                $expandMeLink.hide().attr('aria-hidden', true);
+                $placeholderMenuLink.show().attr('aria-hidden', false);
 
                 $submenu.attr('aria-hidden', false);
+
+                if (callback) {
+                    callback();
+                }
             }, 200);
         });
     };
 
-    LessonsSubPageNavigation.prototype.collapse = function($collapseMe) {
+    LessonsSubPageNavigation.prototype.collapse = function($collapseMe, callback) {
         $collapseMe.addClass('sliding-up');
         $collapseMe.find('.lessons-sub-page-menu').slideUp(500, function() {
             var $submenu = $(this);
@@ -120,25 +112,17 @@
             $collapseMe.removeClass('sliding-up');
             $collapseMe.removeClass('expanded');
 
-            var $collapseMeIcon = $collapseMe.find('.lessons-expand-collapse-icon')
-            var $collapseMeLink = $collapseMe.find('> a');
-            var $collapseMeTitle = $collapseMe.find('.lessons-top-level-title');
+            var $expandMeLink = $collapseMe.find('> a.Mrphs-toolsNav__menuitem--link');
+            var $placeholderMenuLink = $collapseMe.find('> span.Mrphs-toolsNav__menuitem--link');
 
-            $collapseMeLink
-                .attr('aria-expanded', false)
-                .attr('aria-controls', $collapseMeIcon.attr('aria-controls'));
-
-            $collapseMeIcon
-                .attr('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand)
-                .attr('aria-expanded', false)
-                .removeAttr('aria-controls')
-                .removeAttr('tabindex')
-                .attr('aria-hidden', true);
-
-            $collapseMeTitle
-                .removeAttr('tabindex');
+            $expandMeLink.show().attr('aria-hidden', false);
+            $placeholderMenuLink.hide().attr('aria-hidden', true);
 
             $submenu.attr('aria-hidden', true);
+
+            if (callback) {
+                callback();
+            }
         });
     };
 
@@ -146,29 +130,48 @@
     LessonsSubPageNavigation.prototype.setup_parent_menu = function($li, $menu, submenu_id) {
         var self = this;
 
-        $li.classList.add('has-lessons-sub-pages');
-        var $goto = document.createElement('span');
-
         // stash the top level Lessons page URL
         var topLevelPageHref = $menu.href;
         // force it to be a tool-reset so the session state/breadcrumb
         // is cleared when visiting this top level page
         topLevelPageHref = topLevelPageHref.replace(/\/tool\//, "/tool-reset/");
 
-        $goto.classList.add('lessons-goto-top-page');
-        $menu.href = 'javascript:void(0);';
+        // add a wrapper CSS class so we can style things fancy-like
+        $li.classList.add('has-lessons-sub-pages');
 
+        // create a span to replace the original top level icon
+        // it will contain two links, one to collapse the menu and another to visit the lessons page
+        var $expandedMenuPlaceholder = document.createElement('span');
+        $expandedMenuPlaceholder.classList.add('Mrphs-toolsNav__menuitem--link');
+        $expandedMenuPlaceholder.classList.add('lessons-top-level-placeholder');
+        $expandedMenuPlaceholder.style.display = 'none';
+
+        // create a link to close an expanded menu
+        var $collapseToggle = document.createElement('a');
+        $collapseToggle.setAttribute('href', 'javascript:void(0);');
+        $collapseToggle.setAttribute('aria-controls', submenu_id);
+        $collapseToggle.setAttribute('aria-expanded', true);
+        $collapseToggle.setAttribute('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse);
+        $collapseToggle.classList.add("lessons-expand-collapse-icon");
+        $collapseToggle.innerHTML = $menu.querySelector('.Mrphs-toolsNav__menuitem--icon').outerHTML;
+        $expandedMenuPlaceholder.appendChild($collapseToggle);
+
+        // create a link to go to the top level page (only visible when expanded)
+        var $expandedGoToTopItem = document.createElement('a');
+        $expandedGoToTopItem.setAttribute('href', $menu.getAttribute('href'));
+        $expandedGoToTopItem.setAttribute('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.open_top_level_page);
+        $expandedGoToTopItem.classList.add("lessons-goto-top-page");
+        $expandedGoToTopItem.innerHTML = $menu.querySelector('.Mrphs-toolsNav__menuitem--title').outerHTML;
+        $expandedMenuPlaceholder.appendChild($expandedGoToTopItem);
+
+        // insert the placeholder menu item before the $menu link
+        $li.insertBefore($expandedMenuPlaceholder, $menu);
+
+        $menu.href = 'javascript:void(0);';
         $menu.setAttribute('aria-controls', submenu_id);
         $menu.setAttribute('aria-expanded', false);
-
-        var $icon = $li.querySelector('.Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--icon');
-        $icon.classList.add("lessons-expand-collapse-icon");
-        $icon.setAttribute('aria-hidden', true);
-        $icon.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.expand;
-
-        var $title = $li.querySelector('.Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--title');
-        $title.classList.add("lessons-top-level-title");
-        $title.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.open_top_level_page;
+        $menu.setAttribute('aria-hidden', false);
+        $menu.setAttribute('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
 
         $menu.addEventListener('click', function(event) {
             event.preventDefault();
@@ -176,72 +179,33 @@
             // We have jQuery now... YAY, get on that.
             var $li = $PBJQ(event.target).closest('li');
 
-            // when collapsed, a click should take you to the top page and not toggle the menu
+            // when the tool menu is collapsed, a click should take you to the top page
+            // and not toggle the menu
             if ($(document.body).is('.Mrphs-toolMenu-collapsed')) {
                 location.href = topLevelPageHref;
                 return false;
             }
 
-            if ($li.is('.expanded')) {
-                // clicked the magic goto span or title span!
-                if ($(event.target).is('.lessons-goto-top-page') || $(event.target).is('.lessons-top-level-title')) {
-                    location.href = topLevelPageHref;
-                    return false;
-                }
+            // the $menu expands the submenu
+            // but collapse any other menus first
+            $li.closest('ul').find('.expanded').each(function() {
+                self.collapse($PBJQ(this));
+            });
 
-                // clicked the magic chevron icon!
-                if ($(event.target).is(".lessons-expand-collapse-icon")) {
-                    event.preventDefault();
-  
-                    $li.closest('ul').find('.expanded').each(function() {
-                        self.collapse($PBJQ(this));
-                    });
-
-                    return false;
-                }
-            } else {
-                $li.closest('ul').find('.expanded').each(function() {
-                    self.collapse($PBJQ(this));
-                });
-                self.expand($li);
-            }
+            self.expand($li);
         });
 
-        $title.addEventListener('keyup', function(event) {
+        $menu.addEventListener('keyup', function(event) {
             // We have jQuery now... YAY, get on that.
             var $li = $PBJQ(event.target).closest('li');
 
             if (event.keyCode == '13') {
-                if ($li.is('.expanded')) {
-
-                  // clicked the magic goto span or title span!
-                  if ($(event.target).is('.lessons-goto-top-page') || $(event.target).is('.lessons-top-level-title')) {
-                      event.preventDefault();
-                      event.stopImmediatePropagation();
-
-                      location.href = topLevelPageHref;
-                      return false;
-                  }
-                }
-            }
-
-            return true;
-        });
-
-        $icon.addEventListener('keyup', function(event) {
-
-            // We have jQuery now... YAY, get on that.
-            var $li = $PBJQ(event.target).closest('li');
-
-            if (event.keyCode == '13') {
-                if ($li.is('.expanded')) {
+                if (!$li.is('.expanded')) {
                     event.preventDefault();
                     event.stopImmediatePropagation();
 
-                    $li.closest('ul').find('.expanded').each(function() {
-                        var $expanded = $PBJQ(this);
-                        self.collapse($expanded);
-                        $expanded.find('> a').focus()
+                    self.expand($li, true, function() {
+                        $collapseToggle.focus();
                     });
 
                     return false;
@@ -251,23 +215,42 @@
             return true;
         });
 
+        $collapseToggle.addEventListener('click', function(event) {
+            // We have jQuery now... YAY, get on that.
+            var $li = $PBJQ(event.target).closest('li');
+
+            self.collapse($li);
+        });
+
+        $collapseToggle.addEventListener('keyup', function(event) {
+             // We have jQuery now... YAY, get on that.
+             var $li = $PBJQ(event.target).closest('li');
+
+             if (event.keyCode == '13') {
+                 if ($li.is('.expanded')) {
+                     event.preventDefault();
+                     event.stopImmediatePropagation();
+
+                     self.collapse($li, function() {
+                         $menu.focus();
+                     });
+
+                     return false;
+                 }
+             }
+
+             return true;
+         });
+
         if ($li.classList.contains('is-current')) {
+            $expandedMenuPlaceholder.style.display = 'block';
+            $menu.style.display = 'none';
+
             $li.classList.add('expanded');
             var $submenu = $li.querySelector('.lessons-sub-page-menu');
             $submenu.style.display = 'block';
             $submenu.setAttribute('aria-hidden', false);
-            $menu.setAttribute('aria-expanded', true);
-            $icon.setAttribute('aria-expanded', true);
-            $icon.setAttribute('aria-hidden', false);
-            $icon.setAttribute('aria-controls', $menu.getAttribute('aria-controls'));
-            $menu.removeAttribute('aria-controls');
-            $icon.title = LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse;
-            $icon.tabIndex = 0;
-            $title.tabIndex = 0;
         }
-
-        var $title = $menu.querySelector('.Mrphs-toolsNav__menuitem--title');
-        $title.appendChild($goto);
     };
 
 

@@ -42,7 +42,7 @@ body.is-logged-out{
 				}
 				ul{
 					li{
-						a{
+						.Mrphs-toolsNav__menuitem--link{
 							min-height: 1.7em;
 							text-align: center;
 							&:hover{
@@ -261,7 +261,7 @@ nav#subSites{
 					margin: 0 0.25em 0 0;
 				}
 			}
-			a{
+			.Mrphs-toolsNav__menuitem--link{
 				border-bottom: 1px solid darken( $tool-menu-background-color, 20% );
 				color: $tool-menu-color;
 				display: block;
@@ -323,7 +323,7 @@ nav#subSites{
 			}
 			&.is-current{
 				background: $tool-menu-current-background-color;
-				a{
+				.Mrphs-toolsNav__menuitem--link{
 					border-left: 4px solid $tool-menu-current-border-color;
 					border-bottom: 1px solid $tool-menu-current-border-color;
 					color: $tool-menu-current-color;
@@ -344,7 +344,7 @@ nav#subSites{
 				padding: 0 0 0 0;
 				li{
 					border-bottom: 1px solid $tool-sub-menu-border-color;
-					a{
+					.Mrphs-toolsNav__menuitem--link{
 			  			padding: 0.6em 0 0.6em 0em;
 						background: $tool-sub-menu-background-color;
 						&:hover{
@@ -356,7 +356,7 @@ nav#subSites{
 						}
 					}
 					&.is-current{
-						a{
+						.Mrphs-toolsNav__menuitem--link{
 							background: $tool-sub-menu-current-background-color;
 							color: $tool-sub-menu-current-color;
 							.#{$namespace}toolsNav__menuitem--title{
