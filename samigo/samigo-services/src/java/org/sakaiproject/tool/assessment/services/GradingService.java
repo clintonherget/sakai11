@@ -1868,23 +1868,18 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 			  range = true;
 		  }
 
-		  String studentAnswerText = null;
-		  if (data.getAnswerText() != null) {
-			  studentAnswerText = data.getAnswerText().replaceAll("\\s+", "").replace(',','.');    // in Spain, comma is used as a decimal point
-		  }
+		  String studentAnswerText = data.getAnswerText();
+
+          // NYU support old-style answers with spaces for separators
+          if (studentAnswerText != null) {
+              studentAnswerText = studentAnswerText.replaceAll("\\s+", "");
+          }
 
 		  if (range) {
 
 			  String answer1 = st.nextToken().trim();
 			  String answer2 = st.nextToken().trim();
 
-			  if (answer1 != null){ 	 
-		             answer1 = answer1.trim().replaceAll("\\s+", "").replace(',','.');  // in Spain, comma is used as a decimal point 	 
-			  } 	 
-			  if (answer2 != null){ 	 
-		             answer2 = answer2.trim().replaceAll("\\s+", "").replace(',','.');  // in Spain, comma is used as a decimal point 	 
-		      } 	 
-		 
 			  try {
 				  answer1Num = new BigDecimal(answer1);
 				  answer2Num = new BigDecimal(answer2);
@@ -1901,10 +1896,6 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 		  else { // not range
 			  String answer = st.nextToken().trim();
 
-			  if (answer != null){ 	 
-		             answer = answer.replaceAll("\\s+", "").replace(',','.');  // in Spain, comma is used as a decimal point 	 
-			  }	 
-		 
 			  try {
 				  answerNum = new BigDecimal(answer); 
 			  } catch(NumberFormatException ex) {
@@ -2010,7 +2001,13 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 
 	  BigDecimal studentAnswerReal = null;
 	  try {
-		  studentAnswerReal = new BigDecimal(trimmedValue);
+          // NYU use the locale driven formatter to parse and validate the decimal
+          // with or without groupings
+          DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
+          df.setGroupingUsed(true);
+          df.setParseBigDecimal(true);
+
+          studentAnswerReal = (BigDecimal)df.parse(trimmedValue);
 	  } catch (Exception e) {
 		  isRealNumber = false;
 	  }
@@ -2800,7 +2797,7 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 	  
 	  String formattedNumber = formatter.format(x);
 
-	  return formattedNumber.replace(",",".");
+	  return formattedNumber;
   }
   
   /**
