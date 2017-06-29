@@ -1,7 +1,7 @@
 (function() {
     var LESSONS_SUBPAGE_NAVIGATION_LABELS = {
-        expand:                     'Expand and show sub pages',
-        collapse:                   'Collapse and hide sub pages',
+        expand:                     'Expand to show subpages',
+        collapse:                   'Collapse to hide subpages',
         open_top_level_page:        'Click to open top-level page',
     };
 
