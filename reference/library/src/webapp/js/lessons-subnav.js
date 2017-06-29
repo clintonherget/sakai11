@@ -79,28 +79,25 @@
 
 
     LessonsSubPageNavigation.prototype.expand = function($expandMe, doNotAnimate, callback) {
-        $expandMe.addClass('sliding-down');
         $expandMe.hide().show(0);
-        $expandMe.find('.lessons-sub-page-menu').slideDown((doNotAnimate) ? 0 : 500, function() {
+        $expandMe.addClass('sliding-down');
+        $expandMe.find('.lessons-sub-page-menu').slideDown((doNotAnimate == true) ? 0 : 500, function() {
             var $submenu = $(this);
-            $expandMe.hide().show(0); // force a redraw so hover states are respected
-            // and to avoid flash of the goto link pause to ensure this redraw...
-            setTimeout(function() {
-                $expandMe.removeClass('sliding-down');
-                $expandMe.addClass('expanded');
 
-                var $expandMeLink = $expandMe.find('> a.Mrphs-toolsNav__menuitem--link');
-                var $placeholderMenuLink = $expandMe.find('> span.Mrphs-toolsNav__menuitem--link');
+            $expandMe.removeClass('sliding-down');
+            $expandMe.addClass('expanded');
 
-                $expandMeLink.hide().attr('aria-hidden', true);
-                $placeholderMenuLink.show().attr('aria-hidden', false);
+            var $expandMeLink = $expandMe.find('> a.Mrphs-toolsNav__menuitem--link');
+            var $placeholderMenuLink = $expandMe.find('> span.Mrphs-toolsNav__menuitem--link');
 
-                $submenu.attr('aria-hidden', false);
+            $expandMeLink.hide().attr('aria-hidden', true);
+            $placeholderMenuLink.show().attr('aria-hidden', false);
 
-                if (callback) {
-                    callback();
-                }
-            }, 200);
+            $submenu.attr('aria-hidden', false);
+
+            if (callback) {
+                callback();
+            }
         });
     };
 
