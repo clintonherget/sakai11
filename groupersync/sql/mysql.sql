@@ -35,3 +35,7 @@ create table grouper_sync_status (group_id varchar(255) PRIMARY KEY,
 alter table grouper_sync_status add (update_mtime TIMESTAMP);
 
 create index grouper_sync_status_grpid on grouper_sync_status (grouper_group_id);
+
+-- CLASSES-2675 add new ready_for_sync_time
+ALTER TABLE grouper_group_definitions add column (ready_for_sync_time bigint(20) default 0);
+CREATE INDEX grouper_group_ready_sync on grouper_group_definitions (ready_for_sync_time);

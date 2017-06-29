@@ -126,6 +126,13 @@ public class GrouperSyncServiceImpl implements GrouperSyncService {
                     ps.executeBatch();
                     ps.close();
 
+                    // Update the "ready for sync" mtime so groupsync will pick up our changes
+                    ps = connection.prepareStatement("update grouper_group_definitions set ready_for_sync_time = ? WHERE group_id = ?");
+                    ps.setLong(1, System.currentTimeMillis());
+                    ps.setString(2, groupId);
+                    ps.executeUpdate();
+                    ps.close();
+
                     connection.commit();
                 }
             });
@@ -273,10 +280,17 @@ public class GrouperSyncServiceImpl implements GrouperSyncService {
         try {
             DB.connection(new DBAction() {
                 public void execute(Connection connection) throws SQLException {
+                    long now = System.currentTimeMillis();
+
                     // Mark as deleted
-                    PreparedStatement insert = connection.prepareStatement("update grouper_group_definitions set deleted = 1, mtime = ? where group_id = ?");
-                    insert.setLong(1, System.currentTimeMillis());
-                    insert.setString(2, groupId);
+                    //
+                    // Note: force ready_for_sync_time here because we can't
+                    // rely on the Quartz job to touch this once it's marked as
+                    // deleted.
+                    PreparedStatement insert = connection.prepareStatement("update grouper_group_definitions set deleted = 1, mtime = ?, ready_for_sync_time = ? where group_id = ?");
+                    insert.setLong(1, now);
+                    insert.setLong(2, now);
+                    insert.setString(3, groupId);
                     insert.executeUpdate();
                     insert.close();
 
@@ -326,9 +340,12 @@ public class GrouperSyncServiceImpl implements GrouperSyncService {
                     clearStatus.close();
 
                     // Mark as deleted
-                    PreparedStatement insert = connection.prepareStatement("update grouper_group_definitions set deleted = 1, mtime = ? " +
+                    long now = System.currentTimeMillis();
+
+                    PreparedStatement insert = connection.prepareStatement("update grouper_group_definitions set deleted = 1, mtime = ?, ready_for_sync_time = ?" +
                             " where group_id in (" + detachedGroupSql + ")");
-                    insert.setLong(1, System.currentTimeMillis());
+                    insert.setLong(1, now);
+                    insert.setLong(2, now);
                     insert.executeUpdate();
                     insert.close();
 
