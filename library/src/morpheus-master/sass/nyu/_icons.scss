@@ -116,4 +116,12 @@
   .icon-nyu-webex {
     @extend .fa-globe;
   }
+
+  .icon-nyu-follett-discover {
+    font-family: 'nyu-classes-icons' !important;
+    &:before {
+      content: '\f1c8' !important;
+    }
+  }
+
 }
