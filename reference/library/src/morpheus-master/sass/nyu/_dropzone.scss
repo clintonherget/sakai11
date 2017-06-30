@@ -60,12 +60,19 @@ body {
 
       &.dz-image-preview {
         .dz-filename {
-          opacity: 0;
+          opacity: 1;
         }
-        &:hover {
-          .dz-filename {
-            opacity: 1;
-          }
+      }
+
+      .dz-image {
+        img {
+          -webkit-transform: none !important;
+          -moz-transform: none !important;
+          -ms-transform: none !important;
+          -o-transform: none !important;
+          transform: none !important;
+          -webkit-filter: none !important;
+          filter: none !important;
         }
       }
     }
