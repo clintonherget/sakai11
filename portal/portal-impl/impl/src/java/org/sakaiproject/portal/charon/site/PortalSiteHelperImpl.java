@@ -926,7 +926,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					rs = ps.executeQuery();
 
 					while (rs.next()) {
-						if (!isInstructor && hiddenToStudents(rs)) {
+						if (!isInstructor && hiddenFromStudents(rs)) {
 							continue;
 						}
 
@@ -1006,14 +1006,14 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 				Timestamp releaseDate = rs.getTimestamp("releaseDate");
 				if (releaseDate.getTime() > System.currentTimeMillis()) {
 					result.put("hidden", "true");
-					result.put("releaseDate", new SimpleDateFormat("MMM d, yyyy hh:mm a").format(releaseDate));
+					result.put("releaseDate", new SimpleDateFormat("MMM d, yyyy h:mm a").format(releaseDate));
 				}
 			}
 
 			return result;
 		}
 
-		private boolean hiddenToStudents(ResultSet rs) throws SQLException {
+		private boolean hiddenFromStudents(ResultSet rs) throws SQLException {
 			if (rs.getInt("hidden") == 1) {
 				return true;
 			} else if (rs.getTimestamp("releaseDate") != null) {
