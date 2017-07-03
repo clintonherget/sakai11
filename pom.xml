@@ -98,6 +98,7 @@
                 <module>nyuroster-feed</module>
                 <module>nyuclasses-monitoring</module>
                 <module>nyuclasses-job-test</module>
+                <module>nyuclasses-misc-jobs</module>
                 <module>podcasts</module>
                 <module>polls</module>
                 <module>portal</module>
