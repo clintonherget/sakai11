@@ -917,7 +917,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			try {
 				try {
 					connection = SqlService.borrowConnection();
-					ps = connection.prepareStatement(buildSQL(connection, pageIds, isInstructor));
+					ps = connection.prepareStatement(buildSQL(connection, pageIds));
 
 					for (int i = 0; i < pageIds.size(); i++) {
 						ps.setString(i + 1, pageIds.get(i));
@@ -926,6 +926,10 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					rs = ps.executeQuery();
 
 					while (rs.next()) {
+						if (!isInstructor && hiddenToStudents(rs)) {
+							continue;
+						}
+
 						if (!result.containsKey(rs.getString("sakaiToolId"))) {
 							result.put(rs.getString("sakaiToolId"), new ArrayList<Map<String, String>>());
 						}
@@ -949,7 +953,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			return result;
 		}
 
-		private String buildSQL(Connection conn, List<String> pageIds, boolean isInstructor) {
+		private String buildSQL(Connection conn, List<String> pageIds) {
 			return ("SELECT p.toolId as sakaiPageId," +
 					" p.pageId as lessonsPageId," +
 					" s.site_id as sakaiSiteId," +
@@ -969,7 +973,6 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					"   on (p2.pageId = i.sakaiId)" +
 					" WHERE p.parent IS NULL" +
 					"   AND p.toolId in (" + placeholdersFor(pageIds) + ")" +
-					(isInstructor ? "" : " AND p2.hidden != 1 AND (p2.releaseDate IS NULL OR p2.releaseDate <= SYSDATE())") +
 					" ORDER BY i.sequence");
 		}
 
@@ -1008,6 +1011,18 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			}
 
 			return result;
+		}
+
+		private boolean hiddenToStudents(ResultSet rs) throws SQLException {
+			if (rs.getInt("hidden") == 1) {
+				return true;
+			} else if (rs.getTimestamp("releaseDate") != null) {
+				if (rs.getTimestamp("releaseDate").getTime() > System.currentTimeMillis()) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private <E> String placeholdersFor(List<E> list) {
