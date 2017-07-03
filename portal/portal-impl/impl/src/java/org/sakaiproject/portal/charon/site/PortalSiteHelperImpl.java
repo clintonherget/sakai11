@@ -23,6 +23,7 @@ package org.sakaiproject.portal.charon.site;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.Properties;
 
@@ -41,6 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.sakaiproject.entitybroker.util.PageTitleHelper;
+import org.sakaiproject.time.cover.TimeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sakaiproject.alias.api.Alias;
@@ -1006,7 +1009,10 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 				Timestamp releaseDate = rs.getTimestamp("releaseDate");
 				if (releaseDate.getTime() > System.currentTimeMillis()) {
 					result.put("hidden", "true");
-					result.put("releaseDate", new SimpleDateFormat("MMM d, yyyy h:mm a").format(releaseDate));
+					DateFormat df = new SimpleDateFormat("MMM d, yyyy h:mm a");
+					TimeZone tz = TimeService.getLocalTimeZone();
+					df.setTimeZone(tz);
+					result.put("releaseDate", df.format(releaseDate));
 				}
 			}
 
