@@ -141,43 +141,53 @@ public class NYUClassesEmailChangeNotifier {
 
                     Long now = System.currentTimeMillis();
 
-                    PreparedStatement update = connection.prepareStatement("update grouper_group_definitions set ready_for_sync_time = ?" +
-                            " where group_id in (" +
-                            "  select distinct group_id from grouper_group_users" +
-                            "    where netid in (" + placeholders.toString() + ")" +
-                            " )");
+                    PreparedStatement update = null;
+                    PreparedStatement insert = null;
+                    PreparedStatement delete = null;
 
-                    update.setLong(1, now);
-                    int param = 2;
-                    for (NetIDEmail e : slice) {
-                        update.setString(param, e.netId);
-                        param++;
+                    try {
+                        update = connection.prepareStatement("update grouper_group_definitions set ready_for_sync_time = ?" +
+                                " where group_id in (" +
+                                "  select distinct group_id from grouper_group_users" +
+                                "    where netid in (" + placeholders.toString() + ")" +
+                                " )");
+
+                        update.setLong(1, now);
+                        int param = 2;
+                        for (NetIDEmail e : slice) {
+                            update.setString(param, e.netId);
+                            param++;
+                        }
+
+                        update.executeUpdate();
+
+                        // Delete old address entries (if they exist)
+                        delete = connection.prepareStatement("delete from nyu_t_email_change_notifier" +
+                                " where netid in (" + placeholders.toString() + ")");
+
+                        param = 1;
+                        for (NetIDEmail e : slice) {
+                            delete.setString(param, e.netId);
+                            param++;
+                        }
+
+                        delete.executeUpdate();
+
+                        // Insert the new versions
+                        insert = connection.prepareStatement("insert into nyu_t_email_change_notifier (netid, email) values (?, ?)");
+
+                        for (NetIDEmail e : slice) {
+                            insert.setString(1, e.netId);
+                            insert.setString(2, e.email);
+                            insert.addBatch();
+                        }
+
+                        insert.executeBatch();
+                    } finally {
+                        if (update != null) { update.close(); }
+                        if (delete != null) { delete.close(); }
+                        if (insert != null) { insert.close(); }
                     }
-
-                    update.executeUpdate();
-
-                    // Delete old address entries (if they exist)
-                    PreparedStatement delete = connection.prepareStatement("delete from nyu_t_email_change_notifier" +
-                            " where netid in (" + placeholders.toString() + ")");
-
-                    param = 1;
-                    for (NetIDEmail e : slice) {
-                        delete.setString(param, e.netId);
-                        param++;
-                    }
-
-                    delete.executeUpdate();
-
-                    // Insert the new versions
-                    PreparedStatement insert = connection.prepareStatement("insert into nyu_t_email_change_notifier (netid, email) values (?, ?)");
-
-                    for (NetIDEmail e : slice) {
-                        insert.setString(1, e.netId);
-                        insert.setString(2, e.email);
-                        insert.addBatch();
-                    }
-
-                    insert.executeBatch();
                 }
 
                 connection.commit();
