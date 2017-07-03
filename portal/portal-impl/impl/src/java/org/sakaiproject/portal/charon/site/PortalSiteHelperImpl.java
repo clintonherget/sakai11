@@ -960,8 +960,12 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					"   on p.toolId = s.page_id" +
 					" INNER JOIN lesson_builder_items i" +
 					"   on (i.pageId = p.pageId AND type = 2)" +
+					" INNER JOIN lesson_builder_pages p2" +
+					"   on (p2.pageId = i.sakaiId)" +
 					" WHERE p.parent IS NULL" +
 					"   AND p.toolId in (" + placeholdersFor(pageIds) + ")" +
+					"   AND p2.hidden != 1" +
+					"   AND (p2.releaseDate IS NULL OR p2.releaseDate <= SYSDATE())" +
 					" ORDER BY i.sequence");
 		}
 
