@@ -1489,6 +1489,34 @@ body {
               background-color: $nyu-tool-nav-item-hover-background-color !important;
               color: $nyu-tool-nav-item-hover-text-color !important;
             }
+
+            &.is-invisible {
+              color: $nyu-tool-nav-item-hidden-text-color !important;
+              font-style: italic;
+              position: relative;
+
+              .#{$namespace}toolsNav__menuitem--icon {
+                font-style: normal !important;
+                color: $nyu-tool-nav-item-hidden-icon-color !important;
+              }
+
+              &:hover {
+                color: $nyu-tool-nav-item-hidden-hover-color !important;
+
+                .#{$namespace}toolsNav__menuitem--icon {
+                  color: $nyu-tool-nav-item-hidden-hover-icon-color !important;
+                }
+              }
+
+              &:after {
+                @extend .fa-lg;
+                @extend .fa;
+                content: '\f070';
+                position: absolute;
+                top: 8px;
+                right: 4px;
+              }
+            }
           }
 
           &.is-current {

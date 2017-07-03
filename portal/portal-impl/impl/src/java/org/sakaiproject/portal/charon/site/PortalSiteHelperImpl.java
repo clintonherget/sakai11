@@ -23,6 +23,7 @@ package org.sakaiproject.portal.charon.site;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -88,6 +89,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import org.json.simple.JSONObject;
 
 
@@ -602,6 +604,8 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 		String htmlInclude = site.getProperties().getProperty(PROP_HTML_INCLUDE);
 		if (htmlInclude != null) theMap.put("siteHTMLInclude", htmlInclude);
 
+		boolean siteUpdate = SecurityService.unlock("site.upd", site.getReference());
+
 		// theMap.put("pageNavSitToolsHead",
 		// Web.escapeHtml(rb.getString("sit_toolshead")));
 
@@ -677,7 +681,6 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					}
 				}
 
-				boolean siteUpdate = SecurityService.unlock("site.upd", site.getReference());
 				if ( ! siteUpdate ) addMoreToolsUrl = null;
 
 				if ( ! ServerConfigurationService.getBoolean("portal.experimental.addmoretools", false) ) addMoreToolsUrl = null;
@@ -826,7 +829,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 
 
 		if ("true".equals(site.getProperties().getProperty("lessons_submenu"))) {
-			theMap.put("additionalLessonsPages", lessonsTreeView.lessonsPagesJSON(l));
+			theMap.put("additionalLessonsPages", lessonsTreeView.lessonsPagesJSON(l, siteUpdate));
 		}
 
 		theMap.put("pageMaxIfSingle", ServerConfigurationService.getBoolean(
@@ -891,7 +894,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 
 	private class LessonsTreeView {
 
-		public String lessonsPagesJSON(List pages) {
+		public String lessonsPagesJSON(List pages, boolean isInstructor) {
 			List<Map<String,String>> typedPages = (List<Map<String,String>>) pages;
 
 			List<String> pageIds = new ArrayList<>(typedPages.size());
@@ -900,11 +903,11 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 				pageIds.add(page.get("pageId"));
 			}
 
-			return JSONObject.toJSONString(getAdditionalLessonsPages(pageIds));
+			return JSONObject.toJSONString(getAdditionalLessonsPages(pageIds, isInstructor));
 		}
 
 		// Return a mapping of PageID -> list of additional items to show
-		private Map<String, List<Map<String, String>>> getAdditionalLessonsPages(List<String> pageIds) {
+		private Map<String, List<Map<String, String>>> getAdditionalLessonsPages(List<String> pageIds, boolean isInstructor) {
 			Connection connection = null;
 			PreparedStatement ps = null;
 			ResultSet rs = null;
@@ -914,7 +917,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			try {
 				try {
 					connection = SqlService.borrowConnection();
-					ps = connection.prepareStatement(buildSQL(connection, pageIds));
+					ps = connection.prepareStatement(buildSQL(connection, pageIds, isInstructor));
 
 					for (int i = 0; i < pageIds.size(); i++) {
 						ps.setString(i + 1, pageIds.get(i));
@@ -946,7 +949,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			return result;
 		}
 
-		private String buildSQL(Connection conn, List<String> pageIds) {
+		private String buildSQL(Connection conn, List<String> pageIds, boolean isInstructor) {
 			return ("SELECT p.toolId as sakaiPageId," +
 					" p.pageId as lessonsPageId," +
 					" s.site_id as sakaiSiteId," +
@@ -954,7 +957,9 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					" i.id as lessonsItemId," +
 					" i.name as name," +
 					" i.description as description," +
-					" " + toChar(conn, "i.sakaiId") + " as sendingPage" +
+					" " + toChar(conn, "i.sakaiId") + " as sendingPage," +
+					" p2.hidden as hidden," +
+					" p2.releaseDate as releaseDate" +
 					" FROM lesson_builder_pages p" +
 					" INNER JOIN sakai_site_tool s" +
 					"   on p.toolId = s.page_id" +
@@ -964,8 +969,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					"   on (p2.pageId = i.sakaiId)" +
 					" WHERE p.parent IS NULL" +
 					"   AND p.toolId in (" + placeholdersFor(pageIds) + ")" +
-					"   AND p2.hidden != 1" +
-					"   AND (p2.releaseDate IS NULL OR p2.releaseDate <= SYSDATE())" +
+					(isInstructor ? "" : " AND p2.hidden != 1 AND (p2.releaseDate IS NULL OR p2.releaseDate <= SYSDATE())") +
 					" ORDER BY i.sequence");
 		}
 
@@ -994,6 +998,14 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			result.put("sendingPage", rs.getString("sendingPage"));
 			result.put("name", rs.getString("name"));
 			result.put("description", rs.getString("description"));
+			result.put("hidden", rs.getInt("hidden") == 1 ? "true" : "false");
+			if (rs.getTimestamp("releaseDate") != null) {
+				Timestamp releaseDate = rs.getTimestamp("releaseDate");
+				if (releaseDate.getTime() > System.currentTimeMillis()) {
+					result.put("hidden", "true");
+					result.put("releaseDate", new SimpleDateFormat("MM/dd/yyyy HH:mm").format(releaseDate));
+				}
+			}
 
 			return result;
 		}

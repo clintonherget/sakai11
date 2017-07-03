@@ -3,6 +3,8 @@
         expand:                     'Expand to show subpages',
         collapse:                   'Collapse to hide subpages',
         open_top_level_page:        'Click to open top-level page',
+        hidden:                     ' [Hidden]',
+        hidden_with_release_date:   ' [Not released until {releaseDate}]'
     };
 
     var LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH = 90;
@@ -58,6 +60,16 @@
                   }
                 }
             }
+
+            if (sub_page.hidden == 'true') {
+                $submenu_action.classList.add('is-invisible');
+                if (sub_page.releaseDate) {
+                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.hidden_with_release_date.replace(/\{releaseDate\}/, sub_page.releaseDate);
+                } else {
+                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.hidden;
+                }
+            }
+
             $submenu_action.title = title_string;
 
             $submenu_item.appendChild($submenu_action);
