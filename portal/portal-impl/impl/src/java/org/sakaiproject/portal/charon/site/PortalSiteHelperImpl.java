@@ -1003,7 +1003,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 				Timestamp releaseDate = rs.getTimestamp("releaseDate");
 				if (releaseDate.getTime() > System.currentTimeMillis()) {
 					result.put("hidden", "true");
-					result.put("releaseDate", new SimpleDateFormat("MM/dd/yyyy HH:mm").format(releaseDate));
+					result.put("releaseDate", new SimpleDateFormat("MMM d, yyyy hh:mm a").format(releaseDate));
 				}
 			}
 
