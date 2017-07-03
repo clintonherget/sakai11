@@ -39,3 +39,18 @@ create index grouper_sync_status_grpid on grouper_sync_status (grouper_group_id)
 -- CLASSES-2675 add new ready_for_sync_time
 ALTER TABLE grouper_group_definitions add column (ready_for_sync_time bigint(20) default 0);
 CREATE INDEX grouper_group_ready_sync on grouper_group_definitions (ready_for_sync_time);
+
+-- CLASSES-2675 provide email addresses too
+-- NOTE: Google domain is hard-coded below.  Adjust as appropriate for
+-- the envionment you're targeting (@nyu.edu for production)
+--
+create or replace view grouper_groupsync_users as
+select gu.group_id, gu.role, coalesce(ntu.email, concat(gu.netid, '@gqa.nyu.edu')) email
+from grouper_group_users gu
+left outer join nyu_t_users ntu on ntu.netid = gu.netid
+where gu.role = 'viewer'
+union
+select gu.group_id, gu.role, concat(gu.netid, '@gqa.nyu.edu') email
+from grouper_group_users gu
+left outer join nyu_t_users ntu on ntu.netid = gu.netid
+where gu.role = 'manager';
