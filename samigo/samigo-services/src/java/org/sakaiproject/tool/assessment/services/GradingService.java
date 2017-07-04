@@ -1881,8 +1881,11 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 			  String answer2 = st.nextToken().trim();
 
 			  try {
-				  answer1Num = new BigDecimal(answer1);
-				  answer2Num = new BigDecimal(answer2);
+				  DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
+				  df.setGroupingUsed(true);
+				  df.setParseBigDecimal(true);
+				  answer1Num = (BigDecimal)df.parse(answer1.replaceAll("\\s+", ""));
+				  answer2Num = (BigDecimal)df.parse(answer2.replaceAll("\\s+", ""));
 			  } catch (Exception e) {
 				  log.debug("Number is not BigDecimal: " + answer1 + " or " + answer2);
 			  }
@@ -1897,8 +1900,11 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 			  String answer = st.nextToken().trim();
 
 			  try {
-				  answerNum = new BigDecimal(answer); 
-			  } catch(NumberFormatException ex) {
+				  DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
+				  df.setGroupingUsed(true);
+				  df.setParseBigDecimal(true);
+				  answerNum = (BigDecimal)df.parse(answer.replaceAll("\\s+", ""));
+			  } catch(ParseException ex) {
 				  log.debug("Number is not BigDecimal: " + answer);
 			  }
 
