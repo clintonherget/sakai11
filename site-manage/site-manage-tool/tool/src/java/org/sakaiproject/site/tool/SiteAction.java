@@ -245,6 +245,8 @@ public class SiteAction extends PagedResourceActionII {
 	
 	private static final String TERM_OPTION_ALL = "-1";
 
+	private static final String TAKE_SITE_DESCRIPTION_FROM_TEMPLATE = "overwrite_site_info_from_template";
+
 	protected final static String[] TEMPLATE = {
 			"-list",// 0
 			"-type",
@@ -16455,15 +16457,6 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 
 			M_log.debug("sectionEid to retrieve data for this site:" + sectionEid);
 
-			//set the required site attributes
-			String description = nyuDbHelper.getSiteDescription(sectionEid);
-			siteInfo.description = description;
-			M_log.debug("Description: " + description);
-
-			String short_description = nyuDbHelper.getSiteShortDescription(sectionEid);
-			siteInfo.short_description = short_description;
-			M_log.debug("Short description: " + short_description);
-
 			//other properties set as site properties
 			prop_school = nyuDbHelper.getSiteSchool(sectionEid);
 			if(StringUtils.isNotBlank(prop_school)) {
@@ -16513,6 +16506,28 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			templateSiteId = nyuDbHelper.getSiteTemplateForSchoolCode(prop_school, term.getEid());
 		}
 
+		// CLASSES-2906 If the `overwrite_site_info_from_template`
+		// property is set on the template, allow the site description
+		// to be pulled from the template.  Otherwise, take what's in
+		// the section.
+
+		if (isDescriptionFromTemplate(templateSiteId)) {
+			// Do nothing
+			M_log.info("Site description will be taken from template: " + templateSiteId);
+		} else {
+			M_log.info("Site description will be taken from section: " + sectionEid);
+
+			//set the required site attributes
+			String description = nyuDbHelper.getSiteDescription(sectionEid);
+			siteInfo.description = description;
+			M_log.debug("Description: " + description);
+
+			String short_description = nyuDbHelper.getSiteShortDescription(sectionEid);
+			siteInfo.short_description = short_description;
+			M_log.debug("Short description: " + short_description);
+
+		}
+
 		//check siteid supplied is an actual site
 		if(SiteService.siteExists(templateSiteId)) {
 			M_log.debug("Using template site: " + templateSiteId);
@@ -16535,6 +16550,20 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		}
 
 
+	}
+
+	private boolean isDescriptionFromTemplate(String templateSiteId) {
+		if (templateSiteId == null) {
+			return false;
+		}
+
+		try {
+			Site site = SiteService.getSite(templateSiteId);
+
+			return "true".equals(site.getProperties().getProperty(TAKE_SITE_DESCRIPTION_FROM_TEMPLATE));
+		} catch (IdUnusedException e) {
+			return false;
+		}
 	}
 
 	/**
