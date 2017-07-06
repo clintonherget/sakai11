@@ -426,6 +426,9 @@ public class SakaiBLTIUtil {
 			}
 			if ( releaseemail == 1 ) {
 				setProperty(ltiProps,BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY,user.getEmail());
+				if (!user.getEid().equals("admin")) {
+					setProperty(ltiProps, BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_NETID, user.getEid() + "@nyu.edu");
+				}
 				setProperty(lti2subst,LTI2Vars.PERSON_EMAIL_PRIMARY,user.getEmail());
 				// Only send the display ID if it's different to the EID.
 				// the anonymous user has a null EID.
@@ -584,6 +587,9 @@ public class SakaiBLTIUtil {
 			}
 			if ( "on".equals(releaseemail) ) {
 				setProperty(props,BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY,user.getEmail());
+				if (!user.getEid().equals("admin")) {
+					setProperty(props, BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_NETID, user.getEid() + "@nyu.edu");
+				}
 				setProperty(props,BasicLTIConstants.LIS_PERSON_SOURCEDID,user.getEid());
 				setProperty(props,"ext_sakai_eid",user.getEid());
 			}
