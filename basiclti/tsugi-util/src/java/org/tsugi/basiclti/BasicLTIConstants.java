@@ -544,4 +544,11 @@ public class BasicLTIConstants {
 	 */
 	public static final String NEW_SITE_TYPE = "lti";
 
+	/**
+	 * lis_person_contact_email_netid=netid@nyu.edu
+	 * <p>
+	 * CLASSES-2728 This is a custom NYU LTI property for sending the netid based email to vendors
+	 */
+	public static final String LIS_PERSON_CONTACT_EMAIL_NETID = "lis_person_contact_email_netid";
+
 }
