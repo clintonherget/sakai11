@@ -15949,8 +15949,15 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		// the section.
 
 		if (isDescriptionFromTemplate(templateSiteId)) {
-			// Do nothing
 			log.info("Site description will be taken from template: " + templateSiteId);
+			try {
+				Site templateSite = SiteService.getSite(templateSiteId);
+
+				siteInfo.short_description = templateSite.getShortDescription();
+				siteInfo.description = templateSite.getDescription();
+			} catch (IdUnusedException e) {
+				log.error("Site lookup failed" + e);
+			}
 		} else {
 			log.info("Site description will be taken from section: " + sectionEid);
 
