@@ -166,10 +166,12 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 			final String title, final double points, final Date dueDate, final String externalServiceDescription)
             throws ConflictingAssignmentNameException, ConflictingExternalIdException, GradebookNotFoundException {
 
+        final String cleanedTitle = GradebookHelper.sanitizeGradeItemName(title);
+
         // Ensure that the required strings are not empty
         if(StringUtils.trimToNull(externalServiceDescription) == null ||
                 StringUtils.trimToNull(externalId) == null ||
-                StringUtils.trimToNull(title) == null) {
+                StringUtils.trimToNull(cleanedTitle) == null) {
             throw new RuntimeException("External service description, externalId, and title must not be empty");
         }
 
@@ -179,12 +181,12 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
         }
 
         // Ensure that the assessment name is unique within this gradebook
-		if (isAssignmentDefined(gradebookUid, title)) {
+		if (isAssignmentDefined(gradebookUid, cleanedTitle)) {
             throw new ConflictingAssignmentNameException("An assignment with that name already exists in gradebook uid=" + gradebookUid);
         }
 		
 		// name cannot contain these chars as they are reserved for special columns in import/export
-		GradebookHelper.validateGradeItemName(title);
+		GradebookHelper.validateGradeItemName(cleanedTitle);
 
 		getHibernateTemplate().execute(new HibernateCallback() {
 			public Object doInHibernate(Session session) throws HibernateException {
@@ -202,7 +204,7 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 				Gradebook gradebook = getGradebook(gradebookUid);
 
 				// Create the external assignment
-				Assignment asn = new Assignment(gradebook, title, Double.valueOf(points), dueDate);
+				Assignment asn = new Assignment(gradebook, cleanedTitle, Double.valueOf(points), dueDate);
 				asn.setExternallyMaintained(true);
 				asn.setExternalId(externalId);
 				asn.setExternalInstructorLink(externalUrl);
@@ -235,20 +237,22 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
             throw new AssignmentHasIllegalPointsException("Points must be > 0");
         }
 
+        final String cleanedTitle = GradebookHelper.sanitizeGradeItemName(title);
+
         // Ensure that the required strings are not empty
         if( StringUtils.trimToNull(externalId) == null ||
-                StringUtils.trimToNull(title) == null) {
+                StringUtils.trimToNull(cleanedTitle) == null) {
             throw new RuntimeException("ExternalId, and title must not be empty");
         }
         
         // name cannot contain these chars as they are reserved for special columns in import/export
-        GradebookHelper.validateGradeItemName(title);
+        GradebookHelper.validateGradeItemName(cleanedTitle);
 
         HibernateCallback hc = new HibernateCallback() {
             public Object doInHibernate(Session session) throws HibernateException {
                 asn.setExternalInstructorLink(externalUrl);
                 asn.setExternalStudentLink(externalUrl);
-                asn.setName(title);
+                asn.setName(cleanedTitle);
                 asn.setDueDate(dueDate);
                 //support selective release
                 asn.setReleased(true);
@@ -736,10 +740,12 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 		final Date dueDate, final String externalServiceDescription, final Boolean ungraded, final Long categoryId) 
 		throws GradebookNotFoundException, ConflictingAssignmentNameException, ConflictingExternalIdException, AssignmentHasIllegalPointsException
 	{
+                final String cleanedTitle = GradebookHelper.sanitizeGradeItemName(title);
+
 		// Ensure that the required strings are not empty
 		if(StringUtils.trimToNull(externalServiceDescription) == null ||
 				StringUtils.trimToNull(externalId) == null ||
-				StringUtils.trimToNull(title) == null) {
+				StringUtils.trimToNull(cleanedTitle) == null) {
 			throw new RuntimeException("External service description, externalId, and title must not be empty");
 		}
 
@@ -750,12 +756,12 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 		}
 
 		// Ensure that the assessment name is unique within this gradebook
-		if (isAssignmentDefined(gradebookUid, title)) {
+		if (isAssignmentDefined(gradebookUid, cleanedTitle)) {
 			throw new ConflictingAssignmentNameException("An assignment with that name already exists in gradebook uid=" + gradebookUid);
 		}
 		
 		// name cannot contain these chars as they are reserved for special columns in import/export
-		GradebookHelper.validateGradeItemName(title);
+		GradebookHelper.validateGradeItemName(cleanedTitle);
 
 		getHibernateTemplate().execute(new HibernateCallback() {
 			public Object doInHibernate(Session session) throws HibernateException {
@@ -784,7 +790,7 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 				}
 
 				// Create the external assignment
-				Assignment asn = new Assignment(gradebook, title, points, dueDate);
+				Assignment asn = new Assignment(gradebook, cleanedTitle, points, dueDate);
 				asn.setExternallyMaintained(true);
 				asn.setExternalId(externalId);
 				asn.setExternalInstructorLink(externalUrl);
@@ -816,6 +822,8 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
         throw new AssessmentNotFoundException("There is no assessment id=" + externalId + " in gradebook uid=" + gradebookUid);
     }
 
+    final String cleanedTitle = GradebookHelper.sanitizeGradeItemName(title);
+
     // Ensure that points is > zero
 		if((ungraded != null && !ungraded.booleanValue() && (points == null ||  points.doubleValue() <= 0))
 				|| (ungraded == null && (points == null ||  points.doubleValue() <= 0))) {
@@ -824,18 +832,18 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 
     // Ensure that the required strings are not empty
     if( StringUtils.trimToNull(externalId) == null ||
-            StringUtils.trimToNull(title) == null) {
+            StringUtils.trimToNull(cleanedTitle) == null) {
         throw new RuntimeException("ExternalId, and title must not be empty");
     }
     
     // name cannot contain these chars as they are reserved for special columns in import/export
-    GradebookHelper.validateGradeItemName(title);
+    GradebookHelper.validateGradeItemName(cleanedTitle);
 
     HibernateCallback hc = new HibernateCallback() {
         public Object doInHibernate(Session session) throws HibernateException {
             asn.setExternalInstructorLink(externalUrl);
             asn.setExternalStudentLink(externalUrl);
-            asn.setName(title);
+            asn.setName(cleanedTitle);
             asn.setDueDate(dueDate);
             //support selective release
             asn.setReleased(true);
