@@ -107,8 +107,16 @@
 
             $submenu.attr('aria-hidden', false);
 
+            // To better provide screenreader continuity, focus the collapse button
+            // as the expand button is hidden from the user and can no longer be clicked
+            // Also, blur it soon after so mouse users don't get a facefull of focus-outline
+            $placeholderMenuLink.find('.lessons-expand-collapse-icon').focus();
+            setTimeout(function() {
+                $placeholderMenuLink.find('.lessons-expand-collapse-icon').blur();
+            });
+
             if (callback) {
-                callback();
+                setTimeout(callback);
             }
         });
     };
@@ -129,8 +137,16 @@
 
             $submenu.attr('aria-hidden', true);
 
+            // To better provide screenreader continuity, focus the expand button
+            // as the collapse button is hidden from the user and can no longer be clicked
+            // Also, blur it soon after so mouse users don't get a facefull of focus-outline
+            $expandMeLink.focus();
+            setTimeout(function() {
+                $expandMeLink.blur();
+            });
+
             if (callback) {
-                callback();
+                setTimeout(callback);
             }
         });
     };
