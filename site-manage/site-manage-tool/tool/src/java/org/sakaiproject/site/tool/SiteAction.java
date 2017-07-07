@@ -11965,6 +11965,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 
 					// We don't want the new site to automatically be a template
 					site.getPropertiesEdit().removeProperty("template");
+					site.getPropertiesEdit().removeProperty(TAKE_SITE_DESCRIPTION_FROM_TEMPLATE);
 				} else {
 					site = SiteService.addSite(id, siteInfo.site_type);
 				}
