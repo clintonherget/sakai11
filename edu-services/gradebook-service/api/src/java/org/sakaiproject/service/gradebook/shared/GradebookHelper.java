@@ -30,4 +30,30 @@ public class GradebookHelper {
             throw new InvalidGradeItemNameException("Grade Item name is invalid: " + title);
         }
     }
+
+    private static String REPLACEMENT_CHARACTER = "-";
+
+    public static String sanitizeGradeItemName(String title) {
+        if (title == null) {
+            return null;
+        }
+
+        StringBuilder result = new StringBuilder();
+
+        boolean atStart = true;
+
+        for (int i = 0; i < title.length(); i++) {
+            String ch = String.valueOf(title.charAt(i));
+
+            if (atStart &&
+                    StringUtils.indexOfAny(ch, GradebookService.INVALID_CHARS_AT_START_OF_GB_ITEM_NAME) >= 0) {
+                result.append(REPLACEMENT_CHARACTER);
+            } else {
+                atStart = false;
+                result.append(ch);
+            }
+        }
+
+        return result.toString();
+    }
 }
