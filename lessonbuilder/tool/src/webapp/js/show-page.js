@@ -1723,6 +1723,11 @@ $(document).ready(function() {
 	                    $("#pagestuff").show();
 
 				var sbpgreleasedate = row.find(".subpagereleasedate").text();
+				// Clear the date fields and reset the date picker plugin
+				// so values from previous edit are discarded
+				$("#releaseDate2ISO8601").val("");
+				$("#release_date2").val("");
+				$.removeData($("#release_date2")[0], 'plugin_sakaiDateTimePicker');
 				if(sbpgreleasedate === '') {
 					$("#page-releasedate2").prop('checked', false);
 					localDatePicker({
