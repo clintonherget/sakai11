@@ -1274,6 +1274,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 				UIBranchContainer tableRow = UIBranchContainer.make(tableContainer, "item:");
 
+				// NYU we want a consistent way to get the item id for both students and instructors
+				tableRow.decorate(new UIFreeAttributeDecorator("data-itemid", String.valueOf(i.getId())));
+
 				// set class name showing what the type is, so people can do funky CSS
 
 				String itemClassName = "item ";
@@ -3586,6 +3589,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		UIOutput.make(tofill, "lessonsSubnavItemId")
 			.decorate(new UIFreeAttributeDecorator("value", String.valueOf(pageItem.getId())));
 
+		// NYU set lessonsCurrentPageId
 		UIOutput.make(tofill, "lessonsCurrentPageId")
 			.decorate(new UIFreeAttributeDecorator("value", String.valueOf(simplePageBean.getCurrentPage().getPageId())));
 	}
