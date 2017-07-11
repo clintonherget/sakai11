@@ -3751,3 +3751,111 @@ $(document).ready(function() {
     }
   });
 });
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~ NYU's Awesome Retain-User-Context feature ~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function Aw3som3Cont3xtR3tain3r($container) {
+    this.$container = $container;
+
+    if (this.unableToBeAwesome()) {
+        return;
+    }
+
+    this.hookIntoForms();
+    this.retainFocus();
+};
+
+Aw3som3Cont3xtR3tain3r.prototype.unableToBeAwesome = function() {
+    var self = this;
+
+    if (self.$container.length == 0) {
+        // why are we even here!
+        return true;
+    }
+
+    if (typeof localStorage == 'undefined') {
+        // sorry, browser is too pants for this kind of aw3som3
+        return true;
+    }
+
+
+    self.currentPageId = self.$container.find('#lessonsCurrentPageId').val();
+
+    if (typeof self.currentPageId == 'undefined') {
+        // we need to know what page we're on
+        return true;
+    }
+
+    return false;
+};
+
+
+Aw3som3Cont3xtR3tain3r.prototype.formSelector = function() {
+    return [
+        '.multiplechoiceDiv form',
+        '.shortanswerDiv form'
+    ].join(', ');
+};
+
+
+Aw3som3Cont3xtR3tain3r.prototype.hookIntoForms = function() {
+    var self = this;
+
+    self.$container.find(self.formSelector()).on('submit', function(event) {
+        var $li = $(this).closest('li.question');
+        var itemId = $li.data('itemid');
+        self.storeCurrentItemId(itemId + "");
+
+        return true;
+    });
+};
+
+
+Aw3som3Cont3xtR3tain3r.prototype.storeCurrentItemId = function(itemId) {
+    var self = this;
+
+    localStorage.setItem(self.generateStorageKey(), itemId);
+};
+
+
+Aw3som3Cont3xtR3tain3r.prototype.getStoredItemId = function() {
+    var self = this;
+
+    var storageKey = self.generateStorageKey();
+    var itemId = localStorage.getItem(storageKey);
+
+    if (itemId) {
+        // you only get one chance to prove yourself... and that was it.
+        localStorage.removeItem(self.generateStorageKey())
+    }
+
+    return itemId
+};
+
+
+Aw3som3Cont3xtR3tain3r.prototype.retainFocus = function() {
+    var self = this;
+
+    var itemId = self.getStoredItemId();
+
+    if (itemId) {
+        // It's time to BE AWESOME
+        var $li = self.$container.find('ul.mainList li').filter(function() { return $(this).data('itemid') === parseInt(itemId); });
+
+        $li.attr('tabindex', 1).focus().removeAttr('tabindex');
+    }
+};
+
+
+Aw3som3Cont3xtR3tain3r.prototype.generateStorageKey = function() {
+    var self = this;
+
+    return 'CLASSES_LESSONS_ITEM_ID_FOR_PAGE_' + self.currentPageId;
+};
+
+
+$(document).ready(function() {
+    new Aw3som3Cont3xtR3tain3r($('.Mrphs-container.Mrphs-sakai-lessonbuildertool'));
+});
