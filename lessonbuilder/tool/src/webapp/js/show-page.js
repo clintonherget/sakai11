@@ -3611,7 +3611,8 @@ Aw3som3Cont3xtR3tain3r.prototype.unableToBeAwesome = function() {
 Aw3som3Cont3xtR3tain3r.prototype.formSelector = function() {
     return [
         '.multiplechoiceDiv form',
-        '.shortanswerDiv form'
+        '.shortanswerDiv form',
+        '.commentsDiv form'
     ].join(', ');
 };
 
@@ -3620,7 +3621,7 @@ Aw3som3Cont3xtR3tain3r.prototype.hookIntoForms = function() {
     var self = this;
 
     self.$container.find(self.formSelector()).on('submit', function(event) {
-        var $li = $(this).closest('li.question');
+        var $li = $(this).closest('li[data-itemid]');
         var itemId = $li.data('itemid');
         self.storeCurrentItemId(itemId + "");
 
