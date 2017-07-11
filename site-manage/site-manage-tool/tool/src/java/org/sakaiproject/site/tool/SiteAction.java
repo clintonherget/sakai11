@@ -16129,6 +16129,9 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			// save the template site in state
 			state.setAttribute(STATE_TEMPLATE_SITE, templateSite);
 
+			// CLASSES-2929 Copy content from the template
+			state.setAttribute(STATE_TEMPLATE_SITE_COPY_CONTENT, Boolean.TRUE);
+
 			// the new site type is hardcoded to course.
 			// this is read by a mod to addNewSite and used prefernetially
 			// normally the site type comes from the template but that may be propject and we probably dont want that.
