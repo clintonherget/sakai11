@@ -818,7 +818,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			theMap.put("pageNavCanAddMoreTools", false);
 		}
 
-		LessonsTreeView lessonsTreeView = new LessonsTreeView();
+		LessonsTreeView lessonsTreeView = new LessonsTreeView(UserDirectoryService.getCurrentUser().getId(), siteUpdate);
 		if (page.getTools().size() == 1 && "sakai.lessonbuildertool".equals(page.getTools().get(0).getToolId())) {
 			if (req.getParameter("sendingPage") == null) {
 				theMap.put("currentLessonsPage", "null");
@@ -832,7 +832,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 
 
 		if ("true".equals(site.getProperties().getProperty("lessons_submenu"))) {
-			theMap.put("additionalLessonsPages", lessonsTreeView.lessonsPagesJSON(l, siteUpdate));
+			theMap.put("additionalLessonsPages", lessonsTreeView.lessonsPagesJSON(l));
 		}
 
 		theMap.put("pageMaxIfSingle", ServerConfigurationService.getBoolean(
@@ -897,7 +897,15 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 
 	private class LessonsTreeView {
 
-		public String lessonsPagesJSON(List pages, boolean isInstructor) {
+		private String userId;
+		private boolean isInstructor;
+
+		public LessonsTreeView(String userId, boolean isInstructor) {
+			this.isInstructor = isInstructor;
+			this.userId = userId;
+		}
+
+		public String lessonsPagesJSON(List pages) {
 			List<Map<String,String>> typedPages = (List<Map<String,String>>) pages;
 
 			List<String> pageIds = new ArrayList<>(typedPages.size());
@@ -906,11 +914,15 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 				pageIds.add(page.get("pageId"));
 			}
 
-			return JSONObject.toJSONString(getAdditionalLessonsPages(pageIds, isInstructor));
+			Map<String, List<Map<String, String>>> data = getAdditionalLessonsPages(pageIds);
+
+			applyPrerequisites(data);
+
+			return JSONObject.toJSONString(data);
 		}
 
 		// Return a mapping of PageID -> list of additional items to show
-		private Map<String, List<Map<String, String>>> getAdditionalLessonsPages(List<String> pageIds, boolean isInstructor) {
+		private Map<String, List<Map<String, String>>> getAdditionalLessonsPages(List<String> pageIds) {
 			Connection connection = null;
 			PreparedStatement ps = null;
 			ResultSet rs = null;
@@ -920,16 +932,19 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			try {
 				try {
 					connection = SqlService.borrowConnection();
+
 					ps = connection.prepareStatement(buildSQL(connection, pageIds));
 
+					ps.setString(1, this.userId);
+
 					for (int i = 0; i < pageIds.size(); i++) {
-						ps.setString(i + 1, pageIds.get(i));
+						ps.setString(i + 2, pageIds.get(i));
 					}
 
 					rs = ps.executeQuery();
 
 					while (rs.next()) {
-						if (!isInstructor && hiddenFromStudents(rs)) {
+						if (!this.isInstructor && hiddenFromStudents(rs)) {
 							continue;
 						}
 
@@ -939,7 +954,6 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 
 						result.get(rs.getString("sakaiToolId")).add(makeMap(rs));
 					}
-
 				} finally {
 					if (ps != null) { ps.close(); }
 					if (rs != null) { rs.close(); }
@@ -966,7 +980,10 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					" i.description as description," +
 					" " + toChar(conn, "i.sakaiId") + " as sendingPage," +
 					" p2.hidden as hidden," +
-					" p2.releaseDate as releaseDate" +
+					" p2.releaseDate as releaseDate," +
+					" log.complete as completed," +
+					" i.required," +
+					" i.prerequisite" +
 					" FROM lesson_builder_pages p" +
 					" INNER JOIN sakai_site_tool s" +
 					"   on p.toolId = s.page_id" +
@@ -974,6 +991,8 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 					"   on (i.pageId = p.pageId AND type = 2)" +
 					" INNER JOIN lesson_builder_pages p2" +
 					"   on (p2.pageId = i.sakaiId)" +
+					" LEFT OUTER JOIN lesson_builder_log log" +
+					"   on (log.itemId = i.id AND log.userId = ?)" +
 					" WHERE p.parent IS NULL" +
 					"   AND p.toolId in (" + placeholdersFor(pageIds) + ")" +
 					" ORDER BY i.sequence");
@@ -1005,6 +1024,11 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			result.put("name", rs.getString("name"));
 			result.put("description", rs.getString("description"));
 			result.put("hidden", rs.getInt("hidden") == 1 ? "true" : "false");
+
+			result.put("required", rs.getInt("required") == 1 ? "true" : "false");
+			result.put("completed", rs.getInt("completed") == 1 ? "true" : "false");
+			result.put("prerequisite", rs.getInt("prerequisite") == 1 ? "true" : "false");
+
 			if (rs.getTimestamp("releaseDate") != null) {
 				Timestamp releaseDate = rs.getTimestamp("releaseDate");
 				if (releaseDate.getTime() > System.currentTimeMillis()) {
@@ -1044,6 +1068,28 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			return placeholders.toString();
 		}
 
+		private void applyPrerequisites(Map<String, List<Map<String, String>>> data) {
+			for (String pageId : data.keySet()) {
+				boolean prerequisiteApplies = false;
+				List<Map<String, String>> pages = data.get(pageId);
+				for (Map<String, String> pageData : pages) {
+					// If a sibling item with a smaller sequence is required
+					// we want to disable the current item for students
+					if (pageData.get("prerequisite").equals("true") && prerequisiteApplies) {
+						pageData.put("disabledDueToPrerequisite", "true");
+						pageData.put("disabled", String.valueOf(!this.isInstructor));
+					}
+
+					// Only disable items that have prerequisites below the current item
+					// when the current item is required and the user is yet to complete it
+					if (pageData.get("required").equals("true")) {
+						if (pageData.get("completed").equals("false")) {
+							prerequisiteApplies = true;
+						}
+					}
+				}
+			}
+		}
 	}
 
 

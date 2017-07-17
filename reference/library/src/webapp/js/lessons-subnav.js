@@ -4,7 +4,9 @@
         collapse:                   'Collapse to hide subpages',
         open_top_level_page:        'Click to open top-level page',
         hidden:                     ' [Hidden]',
-        hidden_with_release_date:   ' [Not released until {releaseDate}]'
+        hidden_with_release_date:   ' [Not released until {releaseDate}]',
+        prerequisite:               ' [Has prerequisites]',
+        prerequisite_and_disabled:  ' [You must complete all prerequisites before viewing this item]'
     };
 
     var LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH = 90;
@@ -70,7 +72,25 @@
                 }
             }
 
-            $submenu_action.title = title_string;
+            if (sub_page.disabledDueToPrerequisite == 'true') {
+                $submenu_action.classList.add('has-prerequisite');
+                if (sub_page.disabled == 'true') {
+                    $submenu_action.classList.add('disabled');
+                    $submenu_action.setAttribute('href', 'javascript:void(0);')
+                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.prerequisite_and_disabled;
+                } else {
+                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.prerequisite;
+                }
+
+            } else if(sub_page.required == 'true') {
+                if (sub_page.completed == 'false') {
+                    $submenu_action.classList.add('is-required');
+                } else {
+                    $submenu_action.classList.add('is-complete');
+                }
+            }
+
+            $submenu_action.setAttribute('title', title_string);
 
             $submenu_item.appendChild($submenu_action);
 
