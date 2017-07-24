@@ -1995,7 +1995,7 @@ public class GradebookNgBusinessService {
 
 
 	public String getDefaultIconClass() {
-		return ICON_SAKAI + "default-tool";
+		return ICON_SAKAI + "default-tool fa fa-globe";
 	}
 
 	private String getAssignmentsIconClass() {
