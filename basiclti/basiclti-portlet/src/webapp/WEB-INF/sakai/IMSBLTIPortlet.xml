@@ -1387,7 +1387,7 @@
           <configuration name="imsti.releaseemail" value="on"/>
           <configuration name="imsti.custom" />
           <configuration name="imsti.allowsettings" value="off"/>
-          <configuration name="imsti.allowroster" value="off"/>
+          <configuration name="imsti.allowroster" value="on"/>
           <configuration name="imsti.allowoutcomes" value="on"/>
           <configuration name="imsti.allowlori" value="off"/>
           <configuration name="imsti.contentlink" />
