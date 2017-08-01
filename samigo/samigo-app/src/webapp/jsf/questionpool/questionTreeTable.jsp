@@ -107,6 +107,15 @@
        </h:outputText>
     </h:column>    
 
+    <h:column>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:outputText value="#{questionPoolMessages.q_points}" />
+        </h:panelGroup>
+      </f:facet>
+       <h:outputText value="#{question.score}"/>
+    </h:column>
+
     <h:column id="colimport" rendered="#{questionpool.importToAuthoring == 'true'}" >
       <f:facet name="header">
         <h:panelGroup>
