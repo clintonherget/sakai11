@@ -81,12 +81,16 @@
                 } else {
                     title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.prerequisite;
                 }
-
-            } else if(sub_page.required == 'true') {
-                if (sub_page.completed == 'false') {
-                    $submenu_action.classList.add('is-required');
-                } else {
-                    $submenu_action.classList.add('is-complete');
+            } else {
+                if(sub_page.required == 'true') {
+                    if (sub_page.completed == 'false') {
+                        $submenu_action.classList.add('is-required');
+                    } else {
+                        $submenu_action.classList.add('is-complete');
+                    }
+                }
+                if (sub_page.prerequisite == 'true' && sub_page.instructor == 'true') {
+                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.prerequisite;
                 }
             }
 

@@ -1029,6 +1029,8 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			result.put("completed", rs.getInt("completed") == 1 ? "true" : "false");
 			result.put("prerequisite", rs.getInt("prerequisite") == 1 ? "true" : "false");
 
+			result.put("instructor", this.isInstructor ? "true" : "false");
+
 			if (rs.getTimestamp("releaseDate") != null) {
 				Timestamp releaseDate = rs.getTimestamp("releaseDate");
 				if (releaseDate.getTime() > System.currentTimeMillis()) {
