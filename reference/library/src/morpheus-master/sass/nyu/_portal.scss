@@ -1527,15 +1527,6 @@ body {
 
               &:hover {
                 color: $nyu-tool-nav-item-hidden-hover-color !important;
-
-                &:after {
-                  @extend .fa-lg;
-                  @extend .fa;
-                  content: '\f05e';
-                  position: absolute;
-                  top: 8px;
-                  right: 4px;
-                }
               }
             }
           }
