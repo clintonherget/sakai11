@@ -2551,7 +2551,7 @@ public class SimplePageBean {
 			// add an entry for the parent page
 			SimplePage parentPage;
 			// page has a fooey parent (broken via import, create from template)
-			if (currentPage.getParent() == 0) {
+			if (currentPage.getParent() == null || currentPage.getParent() == 0) {
 				// we need to jump through some hoops to figure things out
 				List<SimplePageItem> items = simplePageToolDao.findItemsBySakaiId(String.valueOf(currentPage.getPageId()));
 				SimplePageItem item = items.get(items.size() - 1);
