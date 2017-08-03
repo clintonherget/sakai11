@@ -111,7 +111,7 @@ public class CourseGradeFormatter {
 		}
 
 		if (StringUtils.isNotBlank(letterGrade)
-				&& (this.gradebook.isCourseLetterGradeDisplayed() || this.currentUserRole == GbRole.INSTRUCTOR)) {
+				&& (this.gradebook.isCourseLetterGradeDisplayed() || shouldDisplayFullCourseGrade())) {
 			parts.add(letterGrade);
 		}
 
@@ -133,7 +133,7 @@ public class CourseGradeFormatter {
 		}
 
 		if (StringUtils.isNotBlank(calculatedGrade)
-				&& (this.gradebook.isCourseAverageDisplayed() || this.currentUserRole == GbRole.INSTRUCTOR)) {
+				&& (this.gradebook.isCourseAverageDisplayed() || shouldDisplayFullCourseGrade())) {
 			if (parts.isEmpty()) {
 				parts.add(new StringResourceModel("coursegrade.display.percentage-first", null,
 						new Object[] { calculatedGrade }).getString());
@@ -161,7 +161,7 @@ public class CourseGradeFormatter {
 
 				// if instructor, show the points if requested
 				// otherwise check the settings
-				if (this.currentUserRole == GbRole.INSTRUCTOR || this.gradebook.isCoursePointsDisplayed()) {
+				if (shouldDisplayFullCourseGrade() || this.gradebook.isCoursePointsDisplayed()) {
 					if(pointsEarned != null && totalPointsPossible != null) {
 						if (parts.isEmpty()) {
 							parts.add(MessageHelper.getString("coursegrade.display.points-first", pointsEarned, totalPointsPossible));
@@ -181,4 +181,7 @@ public class CourseGradeFormatter {
 		return String.join(" ", parts);
 	}
 
+	private boolean shouldDisplayFullCourseGrade() {
+		return GbRole.INSTRUCTOR.equals(this.currentUserRole) || GbRole.TA.equals(this.currentUserRole);
+	}
 }
