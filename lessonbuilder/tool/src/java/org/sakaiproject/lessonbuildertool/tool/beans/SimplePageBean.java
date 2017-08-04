@@ -2425,23 +2425,30 @@ public class SimplePageBean {
 		if (op.equals("clear_and_push")) {
 			// clear path for top level subpage
 			path = new ArrayList<PathEntry>();
+
 			// add an entry for the parent page
-			SimplePage parentPage;
-			// page has a fooey parent (broken via import, create from template)
-			if (currentPage.getParent() == null || currentPage.getParent() == 0) {
-				// we need to jump through some hoops to figure things out
-				List<SimplePageItem> items = simplePageToolDao.findItemsBySakaiId(String.valueOf(currentPage.getPageId()));
-				SimplePageItem item = items.get(items.size() - 1);
-				parentPage = getPage(item.getPageId());
-			} else {
-				// page knows its parent.. hurray!
+			SimplePage parentPage = null;
+
+			// the current page may have a parent
+			if (currentPage.getParent() != null && currentPage.getParent() != 0) {
 				parentPage = getPage(currentPage.getParent());
+
+			// try and get it from the current item
+			} else if (currentPageItemId != null) {
+				SimplePageItem item = getCurrentPageItem(currentPageItemId);
+				parentPage = getPage(item.getPageId());
 			}
 
 			PathEntry parentEntry = new PathEntry();
-			parentEntry.pageId = parentPage.getPageId();
 			parentEntry.pageItemId = -1L;
-			parentEntry.title = parentPage.getTitle();
+			if (parentPage == null) {
+				// we tried our best, default these values so things don't break
+				parentEntry.pageId = -1L;
+				parentEntry.title = "";
+			} else {
+				parentEntry.pageId = parentPage.getPageId();
+				parentEntry.title = parentPage.getTitle();
+			}
 			path.add(parentEntry);
 
 			// add the subpage

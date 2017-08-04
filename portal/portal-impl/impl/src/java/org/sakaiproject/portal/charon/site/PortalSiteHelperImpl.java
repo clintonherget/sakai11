@@ -818,20 +818,10 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			theMap.put("pageNavCanAddMoreTools", false);
 		}
 
-		LessonsTreeView lessonsTreeView = new LessonsTreeView(UserDirectoryService.getCurrentUser().getId(), siteUpdate);
-		if (page.getTools().size() == 1 && "sakai.lessonbuildertool".equals(page.getTools().get(0).getToolId())) {
-			if (req.getParameter("sendingPage") == null) {
-				theMap.put("currentLessonsPage", "null");
-			} else {
-				theMap.put("currentLessonsPage", req.getParameter("sendingPage"));
-			}
-		} else {
-			theMap.put("currentLessonsPage", "null");
-		}
 		theMap.put("pageNavTools", l);
 
-
 		if ("true".equals(site.getProperties().getProperty("lessons_submenu"))) {
+			LessonsTreeView lessonsTreeView = new LessonsTreeView(UserDirectoryService.getCurrentUser().getId(), siteUpdate);
 			theMap.put("additionalLessonsPages", lessonsTreeView.lessonsPagesJSON(l));
 		}
 

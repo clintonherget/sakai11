@@ -11,11 +11,9 @@
 
     var LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH = 90;
 
-    function LessonsSubPageNavigation(data, currentPageId) {
+    function LessonsSubPageNavigation(data) {
         this.data = data;
-        this.currentPageId = currentPageId;
         this.has_current = false;
-        this.page_id_to_submenu_item = {};
         this.setup();
     };
 
@@ -100,13 +98,7 @@
 
             $submenu.appendChild($submenu_item);
 
-            if (sub_page.sendingPage === self.currentPageId) {
-                $li.classList.add('is-parent-of-current');
-                $submenu_item.classList.add('is-current');
-                self.has_current = true;
-            }
-
-            self.page_id_to_submenu_item[sub_page.sendingPage] = $submenu_item;
+            sub_page['submenu_item'] = $submenu_item;
         });
 
         $li.appendChild($submenu);
@@ -314,20 +306,81 @@
         return url;
     };
 
-    LessonsSubPageNavigation.prototype.set_current_page_id = function(pageId) {
-        if (this.has_current || pageId == this.currentPageId) {
-            // if we already have a current set, then there's nothing to do
-            return;
+    LessonsSubPageNavigation.prototype.set_current_for_page_id = function(page_id, context_id) {
+        var self = this;
+
+        if (self.data.hasOwnProperty(context_id)) {
+            self.data[context_id].forEach(function(sub_page) {
+                if (sub_page.sendingPage == page_id) {
+                    var li = sub_page.submenu_item;
+                    var parent = li.parentElement.parentElement;
+                    parent.classList.add('is-parent-of-current');
+                    li.classList.add('is-current');
+                }
+            });
         }
+    };
 
-        if (this.page_id_to_submenu_item[pageId]) {
-            var li = this.page_id_to_submenu_item[pageId];
-            // remove is-current from parent item
-            var parent = li.parentElement.parentElement;
-            parent.classList.add('is-parent-of-current');
+    LessonsSubPageNavigation.prototype.set_current_for_item_and_page_id = function(item_id, page_id, context_id) {
+        var self = this;
 
-            // add is-current to the submenu item
-            li.classList.add('is-current');
+        if (self.data.hasOwnProperty(context_id)) {
+            self.data[context_id].forEach(function(sub_page) {
+                if (sub_page.sendingPage == page_id) {
+                    if (sub_page.itemId == item_id) {
+                        var li = sub_page.submenu_item;
+                        var parent = li.parentElement.parentElement;
+                        parent.classList.add('is-parent-of-current');
+                        li.classList.add('is-current');
+                    }
+                }
+            });
+        }
+    };
+
+
+    LessonsSubPageNavigation.prototype.set_current_for_item_id = function(item_id, context_id) {
+        var self = this;
+
+        if (self.data.hasOwnProperty(context_id)) {
+            self.data[context_id].forEach(function(sub_page) {
+                if (sub_page.itemId == item_id) {
+                    var li = sub_page.submenu_item;
+                    var parent = li.parentElement.parentElement;
+                    parent.classList.add('is-parent-of-current');
+                    li.classList.add('is-current');
+                }
+            });
+        }
+    };
+
+
+    LessonsSubPageNavigation.prototype.set_current_lessons_page = function() {
+        // We're on a lessons page, so try to set the respective subnav menu item
+        // as being 'current'
+        var lessonsSubnavToolIdInput = document.getElementById('lessonsSubnavToolId');
+        var lessonsSubnavTopLevelPageIdInput = document.getElementById('lessonsSubnavTopLevelPageId');
+        var lessonsSubnavPageIdInput = document.getElementById('lessonsSubnavPageId');
+        var lessonsSubnavItemIdInput = document.getElementById('lessonsSubnavItemId');
+
+        if (lessonsSubnavToolIdInput) {
+            var lessonsSubnavToolId = lessonsSubnavToolIdInput.value;
+
+            if (lessonsSubnavTopLevelPageIdInput) {
+                var lessonsSubnavTopLevelPageId = lessonsSubnavTopLevelPageIdInput.value;
+                sakai.lessons_subnav.set_current_for_page_id(lessonsSubnavTopLevelPageId, lessonsSubnavToolId);
+            } else if (lessonsSubnavItemIdInput && lessonsSubnavPageIdInput) {
+                var lessonsSubnavItemId = lessonsSubnavItemIdInput.value;
+                var lessonsSubnavPageId = lessonsSubnavPageIdInput.value;
+                sakai.lessons_subnav.set_current_for_item_and_page_id(lessonsSubnavItemId, lessonsSubnavPageId, lessonsSubnavToolId);
+            } else if (lessonsSubnavPageIdInput) {
+                var lessonsSubnavPageId = lessonsSubnavPageIdInput.value;
+                sakai.lessons_subnav.set_current_for_page_id(lessonsSubnavPageId, lessonsSubnavToolId);
+            } else if (lessonsSubnavItemIdInput) {
+                // This is a last resort as we when items are reused we cannot be sure of their parent page
+                var lessonsSubnavItemId = lessonsSubnavItemIdInput.value;
+                sakai.lessons_subnav.set_current_for_item_id(lessonsSubnavItemId, lessonsSubnavToolId);
+            }
         }
     };
 
