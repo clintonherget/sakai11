@@ -48,17 +48,16 @@
  </head>
 
  <body rsf:id="scr=sakai-body">
+ <input type='hidden' rsf:id="lessonsSubnavToolId" id="lessonsSubnavToolId"/>
+ <input type='hidden' rsf:id="lessonsSubnavTopLevelPageId" id="lessonsSubnavTopLevelPageId"/>
  <input type='hidden' rsf:id="lessonsSubnavPageId" id="lessonsSubnavPageId"/>
+ <input type='hidden' rsf:id="lessonsSubnavItemId" id="lessonsSubnavItemId"/>
  <input type='hidden' rsf:id="lessonsCurrentPageId" id="lessonsCurrentPageId"/>
  <script>
-     // NYU just in case the lesson's URL doesn't contain the current pageid,
-     // notify the lessons_subnav of this page (or the current page's topmost
-     // subpage id)
+     // NYU Notify the lessons_subnav of this page (or the current page's topmost subpage id)
      if (sakai) {
        if (sakai.lessons_subnav) {
-         var lessonsSubnavPageIdInput = document.getElementById('lessonsSubnavPageId');
-         var lessonsSubnavPageId = lessonsSubnavPageIdInput.value;
-         sakai.lessons_subnav.set_current_page_id(lessonsSubnavPageId);
+         sakai.lessons_subnav.set_current_lessons_page();
        }
      }
  </script>
