@@ -3385,23 +3385,6 @@ function mm_test_reset() {
    $('#mm-file-replace-group').hide();
 }
 
-resizeFrame = function (updown) {
-      var frame = parent.document.getElementById( window.name );
-      if( frame ) {
-        if(updown==='shrink')
-        {
-        var clientH = document.body.clientHeight + 30;
-      }
-      else
-      {
-      var clientH = document.body.clientHeight + 30;
-      }
-        $( frame ).height( clientH );
-      } else {
-        throw( "resizeFrame did not get the frame (using name=" + window.name + ")" );
-      }
-    };
-
 function toggleShortUrlOutput(defaultUrl, checkbox, textbox) {
     if($(checkbox).is(':checked')) {
 	$.ajax({
