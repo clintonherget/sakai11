@@ -201,13 +201,14 @@ public class GrouperSyncServiceImpl implements GrouperSyncService {
         try {
             DB.connection(new DBAction() {
                 public void execute(Connection connection) throws SQLException {
-                    PreparedStatement insert = connection.prepareStatement("insert into grouper_group_definitions (group_id, grouper_group_id, sakai_group_id, description, mtime) values (?, ?, ?, ?, ?)");
+                    PreparedStatement insert = connection.prepareStatement("insert into grouper_group_definitions (group_id, grouper_group_id, sakai_group_id, description, mtime, ready_for_sync_time) values (?, ?, ?, ?, ?, ?)");
 
                     insert.setString(1, groupId);
                     insert.setString(2, grouperGroupId);
                     insert.setString(3, sakaiGroupId);
                     insert.setString(4, description);
                     insert.setLong(5, System.currentTimeMillis());
+                    insert.setLong(6, System.currentTimeMillis());
 
                     insert.executeUpdate();
                     insert.close();
