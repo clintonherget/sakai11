@@ -820,7 +820,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 
 		theMap.put("pageNavTools", l);
 
-		if ("true".equals(site.getProperties().getProperty("lessons_submenu"))) {
+		if ("true".equals(site.getProperties().getProperty("lessons_submenu")) && !l.isEmpty()) {
 			LessonsTreeView lessonsTreeView = new LessonsTreeView(UserDirectoryService.getCurrentUser().getId(), siteUpdate);
 			theMap.put("additionalLessonsPages", lessonsTreeView.lessonsPagesJSON(l));
 		}
