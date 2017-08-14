@@ -102,6 +102,11 @@ public class FormattedTextImpl implements FormattedText
     private final String RESOURCECLASS = "resource.class.content";
     protected final String RESOURCEBUNDLE = "resource.bundle.content";
 
+    // CLASSES-2898 Track the policy file locations so we can reload on demand
+    private File nyuLowPolicyFile = null;
+    private File nyuHighPolicyFile = null;
+
+
     public void init() {
         boolean useLegacy = false;
         if (serverConfigurationService != null) { // this keeps the tests from dying
@@ -168,14 +173,17 @@ public class FormattedTextImpl implements FormattedText
             String sakaiHomePath = getSakaiHomeDir();
             File lowFile = new File(sakaiHomePath, "antisamy"+File.separator+"low-security-policy.xml");
             if (lowFile.canRead()) {
+                nyuLowPolicyFile = lowFile;
                 lowPolicyURL = lowFile.toURI().toURL();
                 M_log.info("AntiSamy found override for low policy file at: "+lowPolicyURL);
             }
             File highFile = new File(sakaiHomePath, "antisamy"+File.separator+"high-security-policy.xml");
             if (highFile.canRead()) {
+                nyuHighPolicyFile = highFile;
                 highPolicyURL = highFile.toURI().toURL();
                 M_log.info("AntiSamy found override for high policy file at: "+highPolicyURL);
             }
+
             Policy policyHigh = Policy.getInstance(highPolicyURL);
             antiSamyHigh = new AntiSamy(policyHigh);
             Policy policyLow = Policy.getInstance(lowPolicyURL);
@@ -349,6 +357,40 @@ public class FormattedTextImpl implements FormattedText
         return processFormattedText(strFromBrowser, errorMessages, null, checkForEvilTags, replaceWhitespaceTags, false);
     }
 
+    // CLASSES-2898 Get an Antisamy instance, reloading as necessary if the configuration has changed.
+    private long lastLowLoadTime = 0;
+    private long lastHighLoadTime = 0;
+
+    private synchronized AntiSamy getAntiSamy(Level level) {
+        long now = System.currentTimeMillis();
+
+        if (Level.LOW.equals(level)) {
+            try {
+                if (nyuLowPolicyFile != null && nyuLowPolicyFile.lastModified() >= lastLowLoadTime) {
+                    M_log.info("Reloading updated AntiSamy LOW security policy from " + nyuLowPolicyFile);
+                    lastLowLoadTime = now;
+                    antiSamyLow = new AntiSamy(Policy.getInstance(nyuLowPolicyFile.toURI().toURL()));
+                }
+            } catch (Exception e) {
+                M_log.error("Unexpected error loading LOW security policy: " + e, e);
+            }
+
+            return antiSamyLow;
+        } else {
+            try {
+                if (nyuHighPolicyFile != null && nyuHighPolicyFile.lastModified() >= lastHighLoadTime) {
+                    M_log.info("Reloading updated AntiSamy HIGH security policy from " + nyuHighPolicyFile);
+                    lastHighLoadTime = now;
+                    antiSamyHigh = new AntiSamy(Policy.getInstance(nyuHighPolicyFile.toURI().toURL()));
+                }
+            } catch (Exception e) {
+                M_log.error("Unexpected error loading HIGH security policy: " + e, e);
+            }
+
+            return antiSamyHigh;
+        }
+    }
+
     /* (non-Javadoc)
      * @see org.sakaiproject.util.api.FormattedText#processFormattedText(java.lang.String, java.lang.StringBuilder, org.sakaiproject.util.api.FormattedText.Level, boolean, boolean, boolean)
      */
@@ -386,10 +428,8 @@ public class FormattedTextImpl implements FormattedText
 
             if (checkForEvilTags) {
                 // use the owasp antisamy processor
-                AntiSamy as = antiSamyHigh;
-                if (Level.LOW.equals(level)) {
-                    as = antiSamyLow;
-                }
+                AntiSamy as = getAntiSamy(level);
+
                 try {
                     CleanResults cr = as.scan(val);
                     if (cr.getNumberOfErrors() > 0) {
