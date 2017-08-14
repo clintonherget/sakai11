@@ -1457,8 +1457,8 @@
           <configuration name="final.releaseemail" value="true"/>
           <configuration name="final.custom" value="true"/>
           <configuration name="final.allowsettings" value="true"/>
-          <configuration name="final.allowroster" value="true"/>
-          <configuration name="final.allowoutcomes" value="true"/>
+          <configuration name="final.allowroster" />
+          <configuration name="final.allowoutcomes" value="false"/>
           <configuration name="final.allowlori" value="true"/>
           <configuration name="final.contentlink" value="true"/>
         </tool>
