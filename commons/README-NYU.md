@@ -1,1 +1,0 @@
-This is a copy of the contrib commons tool from https://github.com/sakaicontrib/commons at commit 116acd7c26437ac45191f0fa3ee905a9ccd859ea.
