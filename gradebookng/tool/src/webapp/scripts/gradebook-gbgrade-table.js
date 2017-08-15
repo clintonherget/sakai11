@@ -1351,10 +1351,12 @@ GbGradeTable.redrawTable = function(force) {
     GbGradeTable.currentSortColumn = 0;
     GbGradeTable.currentSortDirection = 'desc';
 
-    GbGradeTable.instance.loadData(GbGradeTable.getFilteredData());
     GbGradeTable.instance.updateSettings({
       columns: GbGradeTable.getFilteredColumns()
     });
+
+    GbGradeTable.instance.loadData(GbGradeTable.getFilteredData());
+
     GbGradeTable.refreshSummaryLabels();
     GbGradeTable.forceRedraw = false;
   }, 100);
