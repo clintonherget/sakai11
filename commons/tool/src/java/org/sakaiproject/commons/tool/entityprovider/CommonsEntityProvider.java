@@ -383,6 +383,9 @@ public class CommonsEntityProvider extends AbstractEntityProvider implements Req
 
     @EntityCustomAction(action = "getUrlMarkup", viewKey = EntityView.VIEW_LIST)
     public ActionReturn getUrlMarkup(OutputStream outputStream, EntityView view, Map<String, Object> params) {
+        if (1 == 1) {
+            throw new EntityException("Not available", "", HttpServletResponse.SC_BAD_REQUEST);
+        }
 
         String userId = getCheckedUser();
 
