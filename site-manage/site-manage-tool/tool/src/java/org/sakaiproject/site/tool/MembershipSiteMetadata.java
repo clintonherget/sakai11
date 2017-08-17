@@ -27,6 +27,10 @@ public class MembershipSiteMetadata {
 	private List<String> groupSectionEids; //needs to be processed in the vm
 
 	public String getCreatedDate() {
+		if (createdDate == null) {
+			return "";
+		}
+
 		ResourceLoader rb = new ResourceLoader("membership");
 
 		final DateFormat df = DateFormat.getDateInstance(DateFormat.DEFAULT, rb.getLocale());
