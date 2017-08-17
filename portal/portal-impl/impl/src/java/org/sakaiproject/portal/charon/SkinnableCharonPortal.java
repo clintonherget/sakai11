@@ -613,7 +613,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			ToolConfiguration memberships = userSite.getToolForCommonId("sakai.membership");
 			return String.format("/portal/site/~%s/tool/%s", userid, memberships.getId());
 		} catch (Exception e) {
-			M_log.warn("Couldn't find a memberships tool for user {}", userid, e);
+			M_log.warn("Couldn't find a memberships tool for user {}", userid);
 
 			return "javascript:void(0);";
 		}
