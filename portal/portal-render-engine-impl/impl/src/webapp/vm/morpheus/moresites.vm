@@ -59,6 +59,8 @@
                     <p style="display: none" class="favorites-help-text autofavorite-enabled">${rloader.sit_star_sites_with_autofav_description}</p>
                     <p style="display: none" class="favorites-help-text autofavorite-disabled">${rloader.sit_star_sites_description}</p>
 
+                    <p><b>Students:</b> If you do not see your course listed below, it may be unpublished. Check the <a href="${membershipsToolUrl}">My Memberships</a> tool to view all site enrollments.</p>
+
                     <hr />
 
                     <div id="otherSiteSearch">
