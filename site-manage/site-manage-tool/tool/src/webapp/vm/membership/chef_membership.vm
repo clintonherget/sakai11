@@ -165,6 +165,17 @@
 										<span class="itemAction"><a class="getSiteDesc" id="$site.Id" href="#">$tlang.getString("list.desc.more")</a></span>
 									#end
 								</td>
+								<td headers="term">
+									$meta.term
+								</td>
+
+								<td headers="status">
+									#if($site.Published)
+										$meta.siteStatus
+									#else
+										<i>$meta.siteStatus</i>
+									#end
+								</td>
 							</tr>
 						#end
 					</tbody>
