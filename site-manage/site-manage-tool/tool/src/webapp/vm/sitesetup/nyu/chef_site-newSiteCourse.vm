@@ -130,7 +130,7 @@ function redirectBasedOnSelection(){
 </script>
 <script type="text/javascript" src="/sakai-site-manage-tool/js/site-manage.js"></script>
 <script type="text/javascript" src="/sakai-site-manage-tool/js/site-manage.nyu.js"></script>
-<link type="text/css" href="/sakai-site-manage-tool/css/site-manage.nyu.css" rel="stylesheet" media="screen" />
+<link type="text/css" href="/sakai-site-manage-tool/css/site-manage.nyu.css?version=1502944368" rel="stylesheet" media="screen" />
 
 <div class="portletBody">
 	#if (!$!site)
