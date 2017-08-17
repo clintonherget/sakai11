@@ -1164,6 +1164,8 @@ public class SiteAction extends PagedResourceActionII {
 	 * state
 	 */
 	private void cleanState(SessionState state) {
+		M_log.debug("Clearing session user session: " + SessionManager.getCurrentSession());
+
 		state.removeAttribute(STATE_SITE_INSTANCE_ID);
 		state.removeAttribute(STATE_SITE_INFO);
 		state.removeAttribute(STATE_SITE_TYPE);
@@ -6817,6 +6819,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			// change term
 			String termId = params.getString("selectTerm");
 			AcademicSession t = cms.getAcademicSession(termId);
+			M_log.debug("Setting selected term to: " + termId + " user session: " + SessionManager.getCurrentSession());
 			state.setAttribute(STATE_TERM_SELECTED, t);
 			isFutureTermSelected(state);
 		} else if (option.equalsIgnoreCase("cancel_edit")) {
@@ -7753,6 +7756,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			removeEditToolState(state);
 		} else if ("37".equals(currentIndex) || "44".equals(currentIndex) || "53".equals(currentIndex) || "36".equals(currentIndex)) {
 			// cancel back to edit class view
+			M_log.debug("Removing selected term from user session: " + SessionManager.getCurrentSession());
 			state.removeAttribute(STATE_TERM_SELECTED);
 			removeAddClassContext(state);
 			state.setAttribute(STATE_TEMPLATE_INDEX, "43");
@@ -8187,6 +8191,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		
 		if (termEid != null)
 		{
+			M_log.debug("Setting selected term to academic session: " + cms.getAcademicSession(termEid) + " user session: " + SessionManager.getCurrentSession());
 			state.setAttribute(STATE_TERM_SELECTED, cms.getAcademicSession(termEid));
 			
 			try
@@ -8207,6 +8212,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			if (currentTerms != null && !currentTerms.isEmpty())
 			{
 				// if the term information is missing for the site, assign it to the first current term in list
+				M_log.debug("Setting selected term to first term in list: " + currentTerms.get(0) + " user session:" + SessionManager.getCurrentSession());
 				state.setAttribute(STATE_TERM_SELECTED, currentTerms.get(0));
 			}
 		}
@@ -15816,6 +15822,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		if (academicSessionEid != null)
 		{
 			AcademicSession t = cms.getAcademicSession(academicSessionEid);
+			M_log.debug("Setting selected term by academicSessionEid: " + t + " user session: " + SessionManager.getCurrentSession());
 			state.setAttribute(STATE_TERM_SELECTED, t);
 			if (t != null) {
 				List sections = prepareCourseAndSectionListing(userId, t
