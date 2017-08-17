@@ -27,6 +27,8 @@
                     <p style="display: none" class="favorites-help-text autofavorite-enabled">Star sites below to add them to your favorites bar. New sites will be automatically added to your favorites.</p>
                     <p style="display: none" class="favorites-help-text autofavorite-disabled">Star sites below to add them to your favorites bar.</p>
 
+                    <p><b>Students:</b> If you do not see your course listed below, it may be unpublished. Check the <a href="${membershipsToolUrl}">My Memberships</a> tool to view all site enrollments.</p>
+
                     <hr />
 
                     <div id="otherSiteSearch">
