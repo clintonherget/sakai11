@@ -133,4 +133,8 @@
     @extend .fa;
     @extend .fa-film;
   }
+
+  .icon-sakai-commons {
+    @extend .fa-commenting;
+  }
 }
