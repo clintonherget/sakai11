@@ -1315,8 +1315,8 @@
 
         <tool
             id="nyu.follett.discover"
-            title="Follett Discover"
-            description="Follett Discover">
+            title="NYU Bookstore"
+            description="NYU Bookstore">
           <configuration name="sakai:portlet-pre-render" value="true" />
           <category name="course" />
           <category name="project" />
@@ -1327,8 +1327,8 @@
           <configuration name="imsti.xml" />
           <configuration name="imsti.secret" />
           <configuration name="imsti.key" />
-          <configuration name="imsti.pagetitle" value="Follett Discover"/>
-          <configuration name="imsti.tooltitle" value="Follett Discover"/>
+          <configuration name="imsti.pagetitle" value="NYU Bookstore"/>
+          <configuration name="imsti.tooltitle" value="NYU Bookstore"/>
           <configuration name="imsti.newpage" value="on" />
           <configuration name="imsti.maximize" value="on" />
           <configuration name="imsti.frameheight" value="1024" />
