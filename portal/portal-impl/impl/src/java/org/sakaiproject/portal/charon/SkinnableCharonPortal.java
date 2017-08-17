@@ -600,6 +600,21 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		return includeTool(res, req, placement, toolInline);
 	}
 
+	private String getUserMembershipsToolUrl() {
+		User thisUser = UserDirectoryService.getCurrentUser();
+		String userid = thisUser.getId();
+
+		try {
+			Site userSite = SiteService.getSite("~" + userid);
+			ToolConfiguration memberships = userSite.getToolForCommonId("sakai.membership");
+			return String.format("/portal/site/~%s/tool/%s", userid, memberships.getId());
+		} catch (Exception e) {
+			M_log.warn("Couldn't find a memberships tool for user {}", userid, e);
+
+			return "javascript:void(0);";
+		}
+	}
+
 	// This will be called twice in the buffered scenario since we need to set
 	// the session for neo tools with the sessio reset, helpurl and reseturl
 	@Override
@@ -1180,6 +1195,8 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		rcontext.put("portal_use_global_alert_message",Boolean.valueOf( enableGAM ) ) ;
 		// how many tools to show in portal pull downs
 		rcontext.put("maxToolsInt", Integer.valueOf(ServerConfigurationService.getInt("portal.tool.menu.max", 10)));
+
+		rcontext.put("membershipsToolUrl", getUserMembershipsToolUrl());
 
 		rcontext.put("toolDirectUrlEnabled", ServerConfigurationService.getBoolean("portal.tool.direct.url.enabled", true));
 		rcontext.put("toolShortUrlEnabled", ServerConfigurationService.getBoolean("shortenedurl.portal.tool.enabled", true));
