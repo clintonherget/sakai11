@@ -191,7 +191,11 @@
 								</td>
 
 								<td headers="status">
-									$meta.siteStatus
+									#if($site.Published)
+										$meta.siteStatus
+									#else
+										<i>$meta.siteStatus</i>
+									#end
 								</td>
 							</tr>
 						#end
