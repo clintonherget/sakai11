@@ -77,6 +77,7 @@ commons.switchState = function (state, arg) {
 					    loadThumbnail = false;
 						wrapped = text;
 					}
+                    editor.focus();
                     if (!document.execCommand('insertHtml', false, wrapped)) {
                         var sel = commons.getSelection();
                         var range = sel.getRangeAt(0);
