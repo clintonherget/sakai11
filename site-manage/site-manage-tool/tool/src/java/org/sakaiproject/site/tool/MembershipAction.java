@@ -146,14 +146,16 @@ public class MembershipAction extends PagedResourceActionII
 		PagingPosition page = new PagingPosition(first, last);
 		
 		// check the sort order
-		boolean sortAsc = true;
+		// NYU: Descending by default!
+		boolean sortAsc = false;
+
 		if (state.getAttribute(SORT_ASC) != null)
 		{
 			sortAsc =((Boolean) state.getAttribute(SORT_ASC)).booleanValue();
 		}
 		else
 		{
-			state.setAttribute(SORT_ASC, Boolean.TRUE);
+			state.setAttribute(SORT_ASC, Boolean.FALSE);
 		}
 		
 		if (defaultMode)
@@ -161,12 +163,12 @@ public class MembershipAction extends PagedResourceActionII
 			if (sortAsc)
 			{
 				rv = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.ACCESS_ALL, null, search,
-						null, org.sakaiproject.site.api.SiteService.SortType.TITLE_ASC, page);
+						null, org.sakaiproject.site.api.SiteService.SortType.CREATED_ON_ASC, page);
 			}
 			else
 			{
 				rv = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.ACCESS_ALL, null, search,
-						null, org.sakaiproject.site.api.SiteService.SortType.TITLE_DESC, page);
+						null, org.sakaiproject.site.api.SiteService.SortType.CREATED_ON_DESC, page);
 			}
 		}
 		else
@@ -215,7 +217,7 @@ public class MembershipAction extends PagedResourceActionII
 		// read the group ids to join
 		if (state.getAttribute(SORT_ASC) == null)
 		{
-			state.setAttribute(SORT_ASC, Boolean.TRUE);
+			state.setAttribute(SORT_ASC, Boolean.FALSE);
 		}
 		Boolean sortAsc = (Boolean) state.getAttribute(SORT_ASC);
 		context.put("currentSortAsc", sortAsc);
@@ -309,6 +311,8 @@ public class MembershipAction extends PagedResourceActionII
 				//siteId
 				meta.setSiteId(site.getId());
 				
+				meta.setCreatedDate(site.getCreatedDate());
+
 				//term
 				String term = site.getProperties().getProperty(Site.PROP_SITE_TERM);
 				if(StringUtils.isBlank(term)){

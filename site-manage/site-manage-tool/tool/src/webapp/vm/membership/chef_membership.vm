@@ -137,14 +137,18 @@
 							</a>
 						</th>
 
-						## SAK-29138
-						<th id="sections">$tlang.getString("mb.sections")</th>
-
 						<th id="instructor">$tlang.getString("gen.instructor")</th>
 
 						<th id="description">$tlang.getString("gen.description")</th>
 
 						<th id="term">$tlang.getString("gen.term")</th>
+
+						<th headers="created_date">
+							$tlang.getString("gen.createddate")
+							<img src = "#imageLink("sakai/sortdescending.gif")" border="0" title ="$tlang.getString('list.stdesc')" alt ="$tlang.getString('list.stdesc')" /> 
+						</th>
+
+
 						<th id="status">$tlang.getString("gen.status")</th>
 					</tr>
 					<tbody>
@@ -172,10 +176,6 @@
 									#end
 								</td>
 
-								<td headers="sections">
-									$siteGroupsMap.get( $site.getId() )
-								</td>
-
 								<td headers="instructor">
 									$meta.instructorEids
 								</td>
@@ -189,6 +189,10 @@
 
 								<td headers="term">
 									$meta.term
+								</td>
+
+								<td headers="created_date">
+									$meta.createdDate
 								</td>
 
 								<td headers="status">
