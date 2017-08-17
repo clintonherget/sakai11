@@ -129,3 +129,14 @@
 .site-setup-messages {
   font-size: 1.1em
 }
+
+table#membership td[headers="worksite"] {
+  width: 25%;
+}
+
+table#membership td[headers="sections"],
+table#membership td[headers="instructor"],
+table#membership td[headers="term"],
+table#membership td[headers="status"] {
+  width: 10%;
+}
