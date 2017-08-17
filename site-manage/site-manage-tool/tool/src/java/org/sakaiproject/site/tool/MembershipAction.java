@@ -311,7 +311,9 @@ public class MembershipAction extends PagedResourceActionII
 				//siteId
 				meta.setSiteId(site.getId());
 				
-				meta.setCreatedDate(site.getCreatedDate());
+				if (site.getCreatedTime() != null) {
+					meta.setCreatedDate(site.getCreatedDate());
+				}
 
 				//term
 				String term = site.getProperties().getProperty(Site.PROP_SITE_TERM);
