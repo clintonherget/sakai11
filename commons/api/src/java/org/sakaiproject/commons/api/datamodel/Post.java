@@ -55,9 +55,9 @@ public class Post implements Entity {
         this.setCommonsId(rs.getString("COMMONS_ID"));
         this.setSiteId(rs.getString("SITE_ID"));
         this.setContent(rs.getString("CONTENT"));
-        this.setCreatedDate(rs.getTimestamp("CREATED_DATE").getTime());
-        this.setModifiedDate(rs.getTimestamp("MODIFIED_DATE").getTime());
-        this.setReleaseDate(rs.getTimestamp("RELEASE_DATE").getTime());
+        this.setCreatedDate(rs.getTimestamp("CREATED_DATE", Calendar.getInstance(TimeZone.getTimeZone("UTC"))).getTime());
+        this.setModifiedDate(rs.getTimestamp("MODIFIED_DATE", Calendar.getInstance(TimeZone.getTimeZone("UTC"))).getTime());
+        this.setReleaseDate(rs.getTimestamp("RELEASE_DATE", Calendar.getInstance(TimeZone.getTimeZone("UTC"))).getTime());
         this.setCreatorId(rs.getString("CREATOR_ID"));
     }
 
