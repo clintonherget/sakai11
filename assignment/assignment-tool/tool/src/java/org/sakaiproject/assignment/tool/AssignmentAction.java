@@ -5162,6 +5162,14 @@ public class AssignmentAction extends PagedResourceActionII
 					    	addAlert(state, rb.getFormattedMessage("cannotfin_assignment", new Object[]{assignmentRef}));
 					    	M_log.warn(this + ":integrateGradebook " + rb.getFormattedMessage("cannotfin_assignment", new Object[]{assignmentRef}));
 				        }
+					// If assignment exists, associate it with this assignment
+					} else if (isAssignmentDefined) {
+						try {
+							gExternal.associateExistingToExternal(gradebookUid, associateGradebookAssignment, assignmentToolTitle, assignmentRef, null, newAssignment_maxPoints/(double)a.getContent().getFactor(), new Date(newAssignment_dueTime.getTime()));
+						} catch(Exception e) {
+							addAlert(state, rb.getFormattedMessage("cannotfin_assignment", new Object[]{assignmentRef}));
+							M_log.warn(this + ":integrateGradebook " + rb.getFormattedMessage("cannotfin_assignment", new Object[]{assignmentRef}));
+						}
 					}
 				}	// addUpdateRemove != null
 				else if ("remove".equals(addUpdateRemoveAssignment))

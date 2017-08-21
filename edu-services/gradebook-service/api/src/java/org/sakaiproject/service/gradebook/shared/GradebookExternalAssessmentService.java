@@ -341,4 +341,6 @@ public interface GradebookExternalAssessmentService {
 	 * @return
 	 */
 	public Long getExternalAssessmentCategoryId(String gradebookUId, String externalId);
+
+	public void associateExistingToExternal(String gradebookUid, String existingAssignmentName, String externalServiceDescription, String externalId, String externalUrl, double points, Date dueDate);
 }

@@ -1004,4 +1004,47 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 		return categoryId;
 	}
 
+
+	public void associateExistingToExternal(final String gradebookUid, final String existingAssignmentName, final String externalServiceDescription, final String externalId, final String externalUrl,
+										    final double points, final Date dueDate) throws GradebookNotFoundException, AssessmentNotFoundException,AssignmentHasIllegalPointsException {
+
+		final Assignment asn = (Assignment)getHibernateTemplate().execute(new HibernateCallback() {
+			public Object doInHibernate(Session session) throws HibernateException {
+				return getAssignmentWithoutStats(gradebookUid, existingAssignmentName, session);
+			}
+		});
+
+		if(asn == null) {
+			throw new AssessmentNotFoundException("There is no assessment name=" + existingAssignmentName);
+		}
+
+		// Ensure that points is > zero
+		if(points <= 0) {
+			throw new AssignmentHasIllegalPointsException("Points must be > 0");
+		}
+
+		// Ensure that the required strings are not empty
+		if( StringUtils.trimToNull(externalId) == null ||
+			StringUtils.trimToNull(externalServiceDescription) == null) {
+			throw new RuntimeException("ExternalId or externalServiceDescription must not be empty");
+		}
+
+		HibernateCallback hc = new HibernateCallback() {
+			public Object doInHibernate(Session session) throws HibernateException {
+				asn.setExternallyMaintained(true);
+				asn.setExternalAppName(externalServiceDescription);
+				asn.setExternalId(externalId);
+				asn.setExternalInstructorLink(externalUrl);
+				asn.setExternalStudentLink(externalUrl);
+				asn.setDueDate(dueDate);
+				//support selective release
+				asn.setReleased(true);
+				asn.setPointsPossible(Double.valueOf(points));
+				session.update(asn);
+				if (log.isInfoEnabled()) log.info("External assessment assignment.name=" + existingAssignmentName + " updated in gradebookUid=" + gradebookUid + ", externalId=" + externalId + " by userUid=" + getUserUid());
+				return null;
+			}
+		};
+		getHibernateTemplate().execute(hc);
+	}
 }
