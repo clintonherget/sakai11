@@ -239,6 +239,9 @@ public class AddOrEditGradeItemPanelContent extends BasePanel {
 
 		if (this.businessService.categoriesAreEnabled()) {
 			this.counted.setEnabled(assignment.getCategoryId() != null);
+			if (assignment.getCategoryId() == null) {
+				this.counted.setModelObject(false);
+			}
 		}
 
 		add(this.counted);
