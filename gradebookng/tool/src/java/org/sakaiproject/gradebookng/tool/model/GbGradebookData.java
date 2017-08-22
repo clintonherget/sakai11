@@ -459,12 +459,6 @@ public class GbGradebookData {
                 categoryWeight = FormatHelper.formatDoubleAsPercentage(a1.getWeight() * 100);
             }
 
-            boolean counted = a1.isCounted();
-            // An assignment is not counted if uncategorised and the categories are enabled
-            if ((GbCategoryType.valueOf(settings.getCategoryType()) != GbCategoryType.NO_CATEGORY) &&
-                a1.getCategoryId() == null) {
-                counted = false;
-            }
             result.add(new AssignmentDefinition(a1.getId(),
                                                 a1.getName(),
                                                 FormatHelper.abbreviateMiddle(a1.getName()),
@@ -472,7 +466,7 @@ public class GbGradebookData {
                                                 FormatHelper.formatDate(a1.getDueDate(), getString("label.studentsummary.noduedate")),
 
                                                 a1.isReleased(),
-                                                counted,
+                                                a1.isCounted(),
                                                 a1.isExtraCredit(),
                                                 a1.isExternallyMaintained(),
                                                 a1.getExternalId(),
