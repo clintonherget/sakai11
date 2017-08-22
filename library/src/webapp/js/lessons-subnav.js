@@ -14,8 +14,12 @@
 
         this.data = data.pages;
         this.i18n = data.i18n;
+        this.siteId = data.siteId;
+        this.isInstructor = data.isInstructor;
+
         this.has_current = false;
         this.setup();
+        this.setupPrerequisiteCallback();
     };
 
     LessonsSubPageNavigation.prototype.setup = function() {
@@ -71,17 +75,7 @@
                 }
             }
 
-            if (sub_page.disabledDueToPrerequisite == 'true') {
-                $submenu_action.classList.add('has-prerequisite');
-                if (sub_page.disabled == 'true') {
-                    $submenu_action.classList.add('disabled');
-                    $submenu_action.setAttribute('href', 'javascript:void(0);')
-                    title_string += ' ' + self.i18n.prerequisite_and_disabled;
-                } else {
-                    title_string += ' ' + self.i18n.prerequisite;
-                }
-
-            } else if(sub_page.required == 'true') {
+            if(sub_page.required == 'true') {
                 if (sub_page.completed == 'false') {
                     $submenu_action.classList.add('is-required');
                 } else {
@@ -382,6 +376,49 @@
         }
     };
 
+
+    LessonsSubPageNavigation.prototype.setupPrerequisiteCallback = function() {
+        var self = this;
+
+        document.addEventListener("DOMContentLoaded", function(event) {
+            $PBJQ.ajax({
+                url: '/direct/lessons/subnav-prerequisites/' + self.siteId + '.json',
+                cache: false,
+                dataType: 'json',
+                success: function(json) {
+                    self.applyPrerequisites(json);
+                }
+            });
+        });
+    };
+
+
+    LessonsSubPageNavigation.prototype.applyPrerequisites = function(prereqData) {
+        var self = this;
+
+        for (var page_id in self.data) {
+            if (self.data.hasOwnProperty(page_id)) {
+                var sub_pages = self.data[page_id];
+                sub_pages.forEach(function(sub_page) {
+                    if (prereqData.hasOwnProperty(sub_page.sakaiPageId)) {
+                        if (sub_page.prerequisite == 'true' && $.inArray(sub_page.itemId, prereqData[sub_page.sakaiPageId]) >= 0) {
+                            var $link = $(sub_page.submenu_item).find('> a');
+                            $link.addClass('has-prerequisite');
+                            var title_string = $link.attr('title');
+                            if (self.isInstructor) {
+                                title_string += ' ' + self.i18n.prerequisite;
+                            } else {
+                                $link.addClass('disabled');
+                                $link.attr('href', 'javascript:void(0);')
+                                title_string += ' ' + self.i18n.prerequisite_and_disabled;
+                            }
+                            $link.attr('title', title_string);
+                        }
+                    }
+                });
+            }
+        }
+    };
 
     window.LessonsSubPageNavigation = LessonsSubPageNavigation;
 })();
