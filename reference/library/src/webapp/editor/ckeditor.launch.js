@@ -117,6 +117,20 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
       extraToolbarButtons.push('ResourceSearch');
     } 
 
+    // CLASSES-2093 do we have any plugins defined in the site properies?
+    // CLASSES-2977 check before we load the toolbar so we can swap out kaltura plugins
+    var PLUGINS_FROM_SITE_PROPERTIES = [];
+    if (sakai.editor.siteId && sakai.editor.plugins && sakai.editor.plugins.length > 0) {
+        PLUGINS_FROM_SITE_PROPERTIES = sakai.editor.plugins.split(",");
+    }
+    var kalturaPluginToUse = 'kalturaflash';
+
+    for (var i=0; i<PLUGINS_FROM_SITE_PROPERTIES.length; i++) {
+        if (PLUGINS_FROM_SITE_PROPERTIES[i] === 'kaltura') {
+            kalturaPluginToUse = 'kaltura';
+        }
+    }
+
     var ckconfig = {
 	//Some defaults for audio recorder
         audiorecorder : {
@@ -159,7 +173,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             // Note that it uses spellchecker.net, displays ads and sends content to remote servers without additional setup.
             //['Cut','Copy','Paste','PasteText','PasteFromWord','-','Print', 'SpellChecker', 'Scayt'],
             ['Cut','Copy','Paste','PasteText','PasteFromWord','-','RemoveFormat'],
-            [imageType,'AudioRecorder','Audio','magicembed','kalturaflash','Youtube','-','fmath_formula','ckeditor_wiris_formulaEditor','ckeditor_wiris_CAS','-','NYUPreview'],
+            [imageType,'AudioRecorder','Audio','magicembed',kalturaPluginToUse,'Youtube','-','fmath_formula','ckeditor_wiris_formulaEditor','ckeditor_wiris_CAS','-','NYUPreview'],
             extraToolbarButtons,
             ['Maximize'],
             '/',
@@ -311,15 +325,22 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             }
 
             // CLASSES-2093
-            if (sakai.editor.siteId && sakai.editor.plugins && sakai.editor.plugins.length > 0) {
-                ckconfig.extraPlugins += "," + sakai.editor.plugins;
+            if (PLUGINS_FROM_SITE_PROPERTIES.length > 0) {
+                ckconfig.extraPlugins += "," + PLUGINS_FROM_SITE_PROPERTIES.join(',');
 
-                var pluginsArray = sakai.editor.plugins.split(",");
-                ckconfig.toolbar_Full = ckconfig.toolbar_Full.concat([pluginsArray]);
+                var toolbarGroup = [];
 
-                pluginsArray.map(function(plugin) {
-                    CKEDITOR.plugins.addExternal(plugin, basePath + plugin + '/', 'plugin.js'); 
+                PLUGINS_FROM_SITE_PROPERTIES.map(function(plugin) {
+                    CKEDITOR.plugins.addExternal(plugin, basePath + plugin + '/', 'plugin.js');
+                    // we include kaltura in toolbar already, so only add other plugins to toolbar
+                    if (plugin != kalturaPluginToUse) {
+                        toolbarGroup.push(plugin);
+                    }
                 });
+
+                if (toolbarGroup.length > 0) {
+                    ckconfig.toolbar_Full = ckconfig.toolbar_Full.concat([toolbarGroup]);
+                }
             }
 
             // CLASSES-1943
