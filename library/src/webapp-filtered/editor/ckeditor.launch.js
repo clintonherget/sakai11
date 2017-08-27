@@ -113,6 +113,20 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
       extraToolbarButtons.push('ResourceSearch');
     } 
 
+    // CLASSES-2093 do we have any plugins defined in the site properies?
+    // CLASSES-2977 check before we load the toolbar so we can swap out kaltura plugins
+    var PLUGINS_FROM_SITE_PROPERTIES = [];
+    if (sakai.editor.siteId && sakai.editor.plugins && sakai.editor.plugins.length > 0) {
+        PLUGINS_FROM_SITE_PROPERTIES = sakai.editor.plugins.split(",");
+    }
+    var kalturaPluginToUse = 'kalturaflash';
+
+    for (var i=0; i<PLUGINS_FROM_SITE_PROPERTIES.length; i++) {
+        if (PLUGINS_FROM_SITE_PROPERTIES[i] === 'kaltura') {
+            kalturaPluginToUse = 'kaltura';
+        }
+    }
+
     var ckconfig = {
 	//Some defaults for audio recorder
         audiorecorder : {
@@ -173,7 +187,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
 
 
             ['Cut','Copy','Paste','PasteText','PasteFromWord','-','RemoveFormat'],
-            [imageType,'AudioRecorder','Audio','magicembed','kalturaflash','Youtube','-','fmath_formula','ckeditor_wiris_formulaEditor','ckeditor_wiris_CAS','-','NYUPreview'],
+            [imageType,'AudioRecorder','Audio','magicembed',kalturaPluginToUse,'Youtube','-','fmath_formula','ckeditor_wiris_formulaEditor','ckeditor_wiris_CAS','-','NYUPreview'],
             extraToolbarButtons,
             ['Maximize'],
 
@@ -348,15 +362,22 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         //Add greek special characters to set
         ckconfig.specialChars = CKEDITOR.config.specialChars.concat([ ["&alpha;","alpha"],["&beta;","beta"],["&gamma;","gamma"],["&delta;","delta"],["&epsilon;","epsilon"],["&zeta;","zeta"],["&eta;","eta"],["&theta;","theta"], ["&iota;","iota"],["&kappa;","kappa"],["&lambda;","lambda"],["&mu;","mu"],["&nu;","nu"],["&xi;","xi"],["&omicron;","omnicron"],["&pi;","pi"],["&rho;","rho"],["&sigma;","sigma"],["&tau;","tau"],["&upsilon;","upsilon"], ["&phi;","phi"],["&chi;","chi"],["&psi;","psi"],["&omega;","omega"],["&Alpha;","Alpha"],["&Beta;","Beta"],["&Gamma;","Gamma"],["&Delta;","Delta"],["&Epsilon;","Epsilon"],["&Zeta;","Zeta"],["&Eta;","Eta"],["&Theta;","Theta"], ["&Iota;","Iota"],["&Kappa;","Kappa"],["&Lambda;","Lambda"],["&Mu;","Mu"],["&Nu;","Nu"],["&Xi;","Xi"],["&Omicron;","Omnicron"],["&Pi;","Pi"],["&Rho;","Rho"],["&Sigma;","Sigma"],["&Tau;","Tau"],["&Upsilon;","Upsilon"], ["&Phi;","Phi"],["&Chi;","Chi"],["&Psi;","Psi"],["&Omega;","Omega"] ]);
 
-        if (sakai.editor.siteId && sakai.editor.plugins && sakai.editor.plugins.length > 0) {
-            ckconfig.extraPlugins += "," + sakai.editor.plugins;
+        if (PLUGINS_FROM_SITE_PROPERTIES.length > 0) {
+            ckconfig.extraPlugins += "," + PLUGINS_FROM_SITE_PROPERTIES.join(',');
 
-            var pluginsArray = sakai.editor.plugins.split(",");
-            ckconfig.toolbar_Full = ckconfig.toolbar_Full.concat([pluginsArray]);
+            var toolbarGroup = [];
 
-            pluginsArray.map(function(plugin) {
+            PLUGINS_FROM_SITE_PROPERTIES.map(function(plugin) {
                 CKEDITOR.plugins.addExternal(plugin, basePath + plugin + '/', 'plugin.js');
+                // we include kaltura in toolbar already, so only add other plugins to toolbar
+                if (plugin != kalturaPluginToUse) {
+                    toolbarGroup.push(plugin);
+                }
             });
+
+            if (toolbarGroup.length > 0) {
+                ckconfig.toolbar_Full = ckconfig.toolbar_Full.concat([toolbarGroup]);
+            }
         }
 
         // CLASSES-1943
