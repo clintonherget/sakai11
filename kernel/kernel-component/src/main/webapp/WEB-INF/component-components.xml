@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
 	<bean id="org.sakaiproject.component.api.ServerConfigurationService"
-			class="org.sakaiproject.component.impl.BasicConfigurationService"
+			class="org.sakaiproject.component.impl.NYUConfigurationService"
 			init-method="init"
 			destroy-method="destroy">
 
