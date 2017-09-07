@@ -114,11 +114,17 @@ public class NYUClassesEmailChangeNotifier {
                 connection.setAutoCommit(false);
 
                 // Find the new and changed email addresses (there might be lots on the first run)
-                query = connection.prepareStatement("select u.netid, u.email" +
+                //
+                // Deal with duplicate entries for the same netid by grouping
+                // and arbitrarily taking whichever email address we get.  It
+                // shouldn't happen in production anyway, but in the dev
+                // environments (where test data is managed manually) it might.
+                query = connection.prepareStatement("select u.netid, max(u.email) email" +
                         " from nyu_t_users u" +
                         " left outer join nyu_t_email_change_notifier t" +
                         " on u.netid = t.netid AND u.email = t.email" +
-                        " where t.netid is null");
+                        " where t.netid is null" +
+                        " group by u.netid");
 
                 rs = query.executeQuery();
 
