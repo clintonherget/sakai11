@@ -25,6 +25,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2096,26 +2098,31 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 	}
 
 
-    // CLASSES-2757 add this method for general way to figure out if a string is actually
-    // a "read" decimal.  This needs to throw an exception when invalid numbers are entered
-    // and also when complex numbers are provided e.g. "1+9i" should also throw an exception
-    private BigDecimal parseDecimal(final String value) throws NumberFormatException, ParseException {
-        // Strip and collapse any whitespace
-        final String trimmedValue = value.trim().replaceAll("\\s+", "");
+	// CLASSES-2757 add this method for general way to figure out if a string is actually
+	// a "real" decimal.  This needs to throw an exception when invalid numbers are entered
+	// and also when complex numbers are provided e.g. "1+9i" should also throw an exception
+	private BigDecimal parseDecimal(final String value) throws NumberFormatException, ParseException {
+		// Strip and collapse any whitespace
+		final String trimmedValue = value.replaceAll("\\s+", "");
 
-        final DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
-        df.setGroupingUsed(true);
-        df.setParseBigDecimal(true);
+		if ("".equals(trimmedValue)) {
+			throw new ParseException("parseDecimal given an empty string", 0);
+		}
 
-        final char decimalSeparator = df.getDecimalFormatSymbols().getGroupingSeparator();
+		final DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
+		df.setGroupingUsed(true);
+		df.setParseBigDecimal(true);
 
-        // First let's check that the value minus any separators can be
-        // parsed as a decimal (throw NumberFormatException if it fails)
-        new BigDecimal(trimmedValue.replaceAll(decimalSeparator + "",""));
+		final ParsePosition position = new ParsePosition(0);
+		final Number parsed = df.parse(trimmedValue, position);
 
-        // Turn it into a BigDecimal please
-        return (BigDecimal)df.parse(trimmedValue);
-    }
+		if (position.getIndex() == trimmedValue.length()) {
+			// We consumed the full string.  Parse successful!
+			return (BigDecimal)parsed;
+		}
+
+		throw new NumberFormatException("Cannot parse as decimal: " + trimmedValue);
+	}
 
 
   /**
