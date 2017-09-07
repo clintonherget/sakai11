@@ -17,11 +17,14 @@
 package org.sakaiproject.attendance.tool.pages;
 
 
+import org.apache.wicket.datetime.StyleDateConverter;
+import org.apache.wicket.datetime.markup.html.basic.DateLabel;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.sakaiproject.attendance.model.AttendanceRecord;
 import org.sakaiproject.attendance.tool.dataproviders.AttendanceRecordProvider;
@@ -29,6 +32,9 @@ import org.sakaiproject.attendance.tool.panels.AttendanceGradePanel;
 import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormDataPanel;
 import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormHeaderPanel;
 import org.sakaiproject.attendance.tool.panels.StatisticsPanel;
+import org.sakaiproject.time.cover.TimeService;
+
+import java.util.TimeZone;
 
 /**
  * StudentView is the view of a single user (a student)'s AttendanceRecords
@@ -214,7 +220,13 @@ public class StudentView extends BasePage {
                     disableLink(eventLink);
                 }
                 item.add(eventLink);
-                item.add(new Label("event-date", item.getModelObject().getAttendanceEvent().getStartDateTime()));
+                item.add(new DateLabel("event-date", Model.of(item.getModelObject().getAttendanceEvent().getStartDateTime()), new StyleDateConverter("MM", true) {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    protected TimeZone getClientTimeZone() {
+                        return TimeService.getLocalTimeZone();
+                    }
+                }));
                 item.add(new AttendanceRecordFormDataPanel("record", item.getModel(), returnPage, feedbackPanel));
             }
         };
