@@ -1933,11 +1933,8 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 			  String answer2 = st.nextToken().trim();
 
 			  try {
-				  DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
-				  df.setGroupingUsed(true);
-				  df.setParseBigDecimal(true);
-				  answer1Num = (BigDecimal)df.parse(answer1.replaceAll("\\s+", ""));
-				  answer2Num = (BigDecimal)df.parse(answer2.replaceAll("\\s+", ""));
+				  answer1Num = parseDecimal(answer1);
+				  answer2Num = parseDecimal(answer2);
 			  } catch (Exception e) {
 				  log.debug("Number is not BigDecimal: " + answer1 + " or " + answer2);
 			  }
@@ -1952,11 +1949,8 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 			  String answer = st.nextToken().trim();
 
 			  try {
-				  DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
-				  df.setGroupingUsed(true);
-				  df.setParseBigDecimal(true);
-				  answerNum = (BigDecimal)df.parse(answer.replaceAll("\\s+", ""));
-			  } catch(ParseException ex) {
+				  answerNum = parseDecimal(answer);
+			  } catch(Exception ex) {
 				  log.debug("Number is not BigDecimal: " + answer);
 			  }
 
@@ -2059,13 +2053,9 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 
 	  BigDecimal studentAnswerReal = null;
 	  try {
-          // NYU use the locale driven formatter to parse and validate the decimal
-          // with or without groupings
-          DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
-          df.setGroupingUsed(true);
-          df.setParseBigDecimal(true);
-
-          studentAnswerReal = (BigDecimal)df.parse(trimmedValue);
+		  // NYU use the locale driven formatter to parse and validate the decimal
+		  // with or without groupings
+		  studentAnswerReal = parseDecimal(trimmedValue);
 	  } catch (Exception e) {
 		  isRealNumber = false;
 	  }
@@ -2104,6 +2094,29 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 
 	  return map;
 	}
+
+
+    // CLASSES-2757 add this method for general way to figure out if a string is actually
+    // a "read" decimal.  This needs to throw an exception when invalid numbers are entered
+    // and also when complex numbers are provided e.g. "1+9i" should also throw an exception
+    private BigDecimal parseDecimal(final String value) throws NumberFormatException, ParseException {
+        // Strip and collapse any whitespace
+        final String trimmedValue = value.trim().replaceAll("\\s+", "");
+
+        final DecimalFormat df = (DecimalFormat)NumberFormat.getNumberInstance(Locale.US);
+        df.setGroupingUsed(true);
+        df.setParseBigDecimal(true);
+
+        final char decimalSeparator = df.getDecimalFormatSymbols().getGroupingSeparator();
+
+        // First let's check that the value minus any separators can be
+        // parsed as a decimal (throw NumberFormatException if it fails)
+        new BigDecimal(trimmedValue.replaceAll(decimalSeparator + "",""));
+
+        // Turn it into a BigDecimal please
+        return (BigDecimal)df.parse(trimmedValue);
+    }
+
 
   /**
    * EMI score processing
