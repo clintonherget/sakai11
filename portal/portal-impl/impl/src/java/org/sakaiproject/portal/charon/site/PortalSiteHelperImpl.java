@@ -824,7 +824,8 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 		if (ServerConfigurationService.getBoolean("lessons_submenu.globally-enabled", false) ||
 			"true".equals(site.getProperties().getProperty("lessons_submenu"))) {
 			if (!l.isEmpty()) {
-				theMap.put("additionalLessonsPages", getSimplePageToolDao().getLessonSubPageJSON(UserDirectoryService.getCurrentUser().getId(), siteUpdate, l));
+				theMap.put("additionalLessonsPages",
+						getSimplePageToolDao().getLessonSubPageJSON(UserDirectoryService.getCurrentUser().getId(), siteUpdate, site.getId(), l));
 			}
 		}
 
