@@ -81,6 +81,9 @@
                     <include>**/*.sql</include>
                 </includes>
             </resource>
+            <resource>
+                <directory>${basedir}/src/resources</directory>
+            </resource>
         </resources>
 	<!-- adds src areas for optional stuff -->
 	<!-- the directories are set up in profiles below -->

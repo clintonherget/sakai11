@@ -86,14 +86,7 @@ import org.sakaiproject.util.Web;
 import org.sakaiproject.portal.util.ToolUtils;
 import org.sakaiproject.portal.charon.PortalStringUtil;
 import org.sakaiproject.util.FormattedText;
-
-import org.sakaiproject.db.cover.SqlService;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import org.json.simple.JSONObject;
+import org.sakaiproject.lessonbuildertool.model.SimplePageToolDao;
 
 
 /**
@@ -137,6 +130,14 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			toolManager = (ToolManager) ComponentManager.get(ToolManager.class.getName());
 		}
 		return toolManager;
+	}
+
+	private SimplePageToolDao simplePageToolDao;
+	public SimplePageToolDao getSimplePageToolDao() {
+		if (simplePageToolDao == null) {
+			simplePageToolDao = (SimplePageToolDao) ComponentManager.get(SimplePageToolDao.class.getName());
+		}
+		return simplePageToolDao;
 	}
 
 	public void setToolManager(ToolManager toolManager) {
@@ -823,8 +824,7 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 		if (ServerConfigurationService.getBoolean("lessons_submenu.globally-enabled", false) ||
 			"true".equals(site.getProperties().getProperty("lessons_submenu"))) {
 			if (!l.isEmpty()) {
-				LessonsTreeView lessonsTreeView = new LessonsTreeView(UserDirectoryService.getCurrentUser().getId(), siteUpdate);
-				theMap.put("additionalLessonsPages", lessonsTreeView.lessonsPagesJSON(l));
+				theMap.put("additionalLessonsPages", getSimplePageToolDao().getLessonSubPageJSON(UserDirectoryService.getCurrentUser().getId(), siteUpdate, l));
 			}
 		}
 
