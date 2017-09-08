@@ -201,7 +201,7 @@
 
     #if($!isLessonsSubNavEnabledForSite)
     <p class="instruction">
-        You have enabled the Lessons sub navigation this site.
+        $tlang.getString("sinfo.lessonbuildersubnav.confirmEnabled")
     </p>
     #end
 	

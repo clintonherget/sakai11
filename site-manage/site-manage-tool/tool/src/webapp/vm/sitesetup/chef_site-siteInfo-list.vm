@@ -432,12 +432,16 @@
             </tr>
             #end			
 
-  #if ($isLessonsSubNavEnabledForSite)
-    <tr class="summary-lessons-subnav-enabled">
-      <th>Lessons subpage navigation</th>
-      <td>Enabled</td>
-    </tr>
-  #end
+		#if ($isLessonsSubNavEnabledForSite)
+			<tr class="summary-lessons-subnav-enabled">
+				<th>
+					$tlang.getString("sinfo.lessonbuildersubnav.name")
+				</th>
+				<td>
+					$tlang.getString("sinfo.lessonbuildersubnav.enabled")
+				</td>
+			</tr>
+		#end
 
 	    #if ($!allowUpdate)
 		    #if ($!importedFromSites)

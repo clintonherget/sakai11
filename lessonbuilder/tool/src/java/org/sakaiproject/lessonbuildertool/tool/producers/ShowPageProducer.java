@@ -3325,7 +3325,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 		createDialogs(tofill, currentPage, pageItem);
 
-		// NYU set lessonsSubnavPageId
+		// Add pageids to the page so the portal lessons subnav menu can update its state
 		List<SimplePageBean.PathEntry> path = simplePageBean.getHierarchy();
 		if (path.size() > 2) {
 			SimplePageBean.PathEntry topLevelSubPage = path.get(1);
@@ -3340,7 +3340,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		UIOutput.make(tofill, "lessonsSubnavItemId")
 			.decorate(new UIFreeAttributeDecorator("value", String.valueOf(pageItem.getId())));
 
-		// NYU set lessonsCurrentPageId
 		UIOutput.make(tofill, "lessonsCurrentPageId")
 			.decorate(new UIFreeAttributeDecorator("value", String.valueOf(simplePageBean.getCurrentPage().getPageId())));
 	}

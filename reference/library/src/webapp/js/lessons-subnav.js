@@ -1,18 +1,19 @@
 (function() {
-    var LESSONS_SUBPAGE_NAVIGATION_LABELS = {
-        expand:                     'Expand to show subpages',
-        collapse:                   'Collapse to hide subpages',
-        open_top_level_page:        'Click to open top-level page',
-        hidden:                     ' [Hidden]',
-        hidden_with_release_date:   ' [Not released until {releaseDate}]',
-        prerequisite:               ' [Has prerequisites]',
-        prerequisite_and_disabled:  ' [You must complete all prerequisites before viewing this item]'
-    };
-
     var LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH = 90;
 
     function LessonsSubPageNavigation(data) {
-        this.data = data;
+        if (!data.hasOwnProperty('pages')) {
+          console.warn('No page data for LessonsSubPageNavigation');
+          return;
+        }
+
+        if (!data.hasOwnProperty('i18n')) {
+          console.warn('No i18n data for LessonsSubPageNavigation');
+          return;
+        }
+
+        this.data = data.pages;
+        this.i18n = data.i18n;
         this.has_current = false;
         this.setup();
     };
@@ -64,9 +65,9 @@
             if (sub_page.hidden == 'true') {
                 $submenu_action.classList.add('is-invisible');
                 if (sub_page.releaseDate) {
-                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.hidden_with_release_date.replace(/\{releaseDate\}/, sub_page.releaseDate);
+                    title_string += ' ' + self.i18n.hidden_with_release_date.replace(/\{releaseDate\}/, sub_page.releaseDate);
                 } else {
-                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.hidden;
+                    title_string += ' ' + self.i18n.hidden;
                 }
             }
 
@@ -75,20 +76,16 @@
                 if (sub_page.disabled == 'true') {
                     $submenu_action.classList.add('disabled');
                     $submenu_action.setAttribute('href', 'javascript:void(0);')
-                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.prerequisite_and_disabled;
+                    title_string += ' ' + self.i18n.prerequisite_and_disabled;
                 } else {
-                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.prerequisite;
+                    title_string += ' ' + self.i18n.prerequisite;
                 }
-            } else {
-                if(sub_page.required == 'true') {
-                    if (sub_page.completed == 'false') {
-                        $submenu_action.classList.add('is-required');
-                    } else {
-                        $submenu_action.classList.add('is-complete');
-                    }
-                }
-                if (sub_page.prerequisite == 'true' && sub_page.instructor == 'true') {
-                    title_string += LESSONS_SUBPAGE_NAVIGATION_LABELS.prerequisite;
+
+            } else if(sub_page.required == 'true') {
+                if (sub_page.completed == 'false') {
+                    $submenu_action.classList.add('is-required');
+                } else {
+                    $submenu_action.classList.add('is-complete');
                 }
             }
 
@@ -192,7 +189,7 @@
         $collapseToggle.setAttribute('href', 'javascript:void(0);');
         $collapseToggle.setAttribute('aria-controls', submenu_id);
         $collapseToggle.setAttribute('aria-expanded', true);
-        $collapseToggle.setAttribute('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.collapse);
+        $collapseToggle.setAttribute('title', self.i18n.collapse);
         $collapseToggle.classList.add("lessons-expand-collapse-icon");
         $collapseToggle.innerHTML = $menu.querySelector('.Mrphs-toolsNav__menuitem--icon').outerHTML;
         $expandedMenuPlaceholder.appendChild($collapseToggle);
@@ -200,7 +197,7 @@
         // create a link to go to the top level page (only visible when expanded)
         var $expandedGoToTopItem = document.createElement('a');
         $expandedGoToTopItem.setAttribute('href', topLevelPageHref);
-        $expandedGoToTopItem.setAttribute('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.open_top_level_page);
+        $expandedGoToTopItem.setAttribute('title', self.i18n.open_top_level_page);
         $expandedGoToTopItem.classList.add("lessons-goto-top-page");
         $expandedGoToTopItem.innerHTML = $menu.querySelector('.Mrphs-toolsNav__menuitem--title').outerHTML;
         $expandedMenuPlaceholder.appendChild($expandedGoToTopItem);
@@ -212,7 +209,7 @@
         $menu.setAttribute('aria-controls', submenu_id);
         $menu.setAttribute('aria-expanded', false);
         $menu.setAttribute('aria-hidden', false);
-        $menu.setAttribute('title', LESSONS_SUBPAGE_NAVIGATION_LABELS.expand);
+        $menu.setAttribute('title', self.i18n.expand);
 
         $menu.addEventListener('click', function(event) {
             event.preventDefault();
@@ -305,6 +302,7 @@
         url += '&newTopLevel=false';
         return url;
     };
+
 
     LessonsSubPageNavigation.prototype.set_current_for_page_id = function(page_id, context_id) {
         var self = this;

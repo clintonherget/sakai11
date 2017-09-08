@@ -236,11 +236,10 @@
 		#end ## END of IF ( $subSites )
 
 		#if (${sitePages.additionalLessonsPages})
-		<script src="/library/js/lessons-subnav.js$!{portalCDNQuery}"></script>
-		<script>
-		 sakai.lessons_subnav = new LessonsSubPageNavigation($sitePages.additionalLessonsPages);
-		</script>
-
+		    <script src="/library/js/lessons-subnav.js$!{portalCDNQuery}"></script>
+		    <script>
+		     sakai.lessons_subnav = new LessonsSubPageNavigation($sitePages.additionalLessonsPages);
+		    </script>
 		#end
 
 	</div>

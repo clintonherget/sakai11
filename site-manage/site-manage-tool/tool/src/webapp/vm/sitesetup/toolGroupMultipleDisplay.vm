@@ -190,8 +190,8 @@
           </label>
       </div>
     </div>
-    <div class="lessonsSubNavToggleArea" style='display: none'>
-      <p>Enable <strong>Lessons subpage navigation</strong> in the left tool menu. <a href="http://www.nyu.edu/servicelink/KB0016013" target="_blank">Learn More</a>.</p>
+<div class="lessonsSubNavToggleArea" style='display: none'>
+      <p>$tlang.getString("sinfo.lessonbuildersubnav.allowForSite")</p>
       <div class="onoffswitch">
           <input type="checkbox" name="isLessonsSubNavEnabledForSite" class="onoffswitch-checkbox" id="isLessonsSubNavEnabledForSite" #if($isLessonsSubNavEnabledForSite)checked="checked"#end>
           <label class="onoffswitch-label" for="isLessonsSubNavEnabledForSite">

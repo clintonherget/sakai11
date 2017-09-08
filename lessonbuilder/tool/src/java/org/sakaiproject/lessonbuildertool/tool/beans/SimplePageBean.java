@@ -2421,7 +2421,7 @@ public class SimplePageBean {
 	public String adjustPath(String op, Long pageId, Long pageItemId, String title) {
 		List<PathEntry> path = (List<PathEntry>)sessionManager.getCurrentToolSession().getAttribute(LESSONBUILDER_PATH);
 
-		// NYU's custom op trumps all!
+		// Allow the new portal lessons subnav to push a subpage on the context
 		if (op.equals("clear_and_push")) {
 			// clear path for top level subpage
 			path = new ArrayList<PathEntry>();
@@ -2433,7 +2433,7 @@ public class SimplePageBean {
 			if (currentPage.getParent() != null && currentPage.getParent() != 0) {
 				parentPage = getPage(currentPage.getParent());
 
-			// try and get it from the current item
+				// try and get it from the current item
 			} else if (currentPageItemId != null) {
 				SimplePageItem item = getCurrentPageItem(currentPageItemId);
 				parentPage = getPage(item.getPageId());
@@ -2458,7 +2458,7 @@ public class SimplePageBean {
 			entry.title = title;
 			path.add(entry);  // put it on the end
 
-		// if no current path, op doesn't matter. we can just do the current page
+			// if no current path, op doesn't matter. we can just do the current page
 		} else if (path == null || path.size() == 0) {
 			PathEntry entry = new PathEntry();
 			entry.pageId = pageId;
