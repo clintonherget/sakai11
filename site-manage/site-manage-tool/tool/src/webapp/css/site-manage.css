@@ -599,3 +599,11 @@ input#btnSearch {
 #removeClass #remove{
 	width: 5%;
 }
+
+#toolHolderWW .mathJaxToggleArea,
+#toolHolderWW .lessonsSubNavToggleArea {
+    border: 1px solid #DDDDDD;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 20px 0 0 0;
+}

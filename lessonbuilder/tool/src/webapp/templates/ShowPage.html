@@ -54,11 +54,11 @@
  <input type='hidden' rsf:id="lessonsSubnavItemId" id="lessonsSubnavItemId"/>
  <input type='hidden' rsf:id="lessonsCurrentPageId" id="lessonsCurrentPageId"/>
  <script>
-     // NYU Notify the lessons_subnav of this page (or the current page's topmost subpage id)
      if (sakai) {
-       if (sakai.lessons_subnav) {
-         sakai.lessons_subnav.set_current_lessons_page();
-       }
+         if (sakai.lessons_subnav) {
+             // Notify the lessons_subnav that we're on a lessons page
+             sakai.lessons_subnav.set_current_lessons_page();
+         }
      }
  </script>
  <script type="text/javascript" src="$context/js/jquery-1.9.1.min.js"></script>
