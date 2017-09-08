@@ -35,7 +35,7 @@ public class LessonsSubnavEnabler {
 
 
     /**
-     * Add Lesson subnav settings to the Site Info (view, edit, or confirm) context 
+     * Add Lesson subnav settings to the Site Info (view, edit, or confirm) context
      * @param context the context
      * @param site the site
      * @param state the session state
