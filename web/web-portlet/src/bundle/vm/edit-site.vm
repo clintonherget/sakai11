@@ -20,13 +20,15 @@ $(document).ready(function() {
 			<input type="text" id="title-of-page" name="title" value="$!title" maxlength="$max_length_title" /><br />
 		</p>	
 		<p class="shorttext indnt1">
-			<label for="height">$tlang.getString("gen.height")</label>
+			<label for="height">Minimum Height</label>
 			<select id="height" name="height" size="1">
-				<option value = "300px" #if ($!height == "300px") selected="selected" #end>$tlang.getString('gen.hei1')</option>
-				<option value = "450px" #if ($!height == "450px") selected="selected" #end>$tlang.getString('gen.hei2')</option>
-				<option value = "600px" #if ($!height == "600px") selected="selected" #end>$tlang.getString('gen.hei3')</option>
-				<option value = "750px" #if ($!height == "750px") selected="selected" #end>$tlang.getString('gen.hei4')</option>
-				<option value = "900px" #if ($!height == "900px") selected="selected" #end>$tlang.getString('gen.hei5')</option>
+				<option value = "0px" #if ($!custom_height == "0") selected="selected" #end>Size to Content</option>
+				<option value = "250px" #if ($!custom_height == "250") selected="selected" #end>250 pixels</option>
+				<option value = "400px" #if ($!custom_height == "400") selected="selected" #end>400 pixels</option>
+				<option value = "550px" #if ($!custom_height == "550") selected="selected" #end>550 pixels</option>
+				<option value = "700px" #if ($!custom_height == "700") selected="selected" #end>700 pixels</option>
+				<option value = "850px" #if ($!custom_height == "850") selected="selected" #end>850 pixels</option>
+				<option value = "1000px" #if ($!custom_height == "1000") selected="selected" #end>1000 pixels</option>
 				<option value = "1200px" #if ($!height == "1200px") selected="selected" #end>$tlang.getString('gen.hei6')</option>
 				<option value = "1800px" #if ($!height == "1800px") selected="selected" #end>$tlang.getString('gen.hei7')</option>
 				<option value = "2400px" #if ($!height == "2400px") selected="selected" #end>$tlang.getString('gen.hei8')</option>
