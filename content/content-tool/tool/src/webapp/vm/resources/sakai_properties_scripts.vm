@@ -433,14 +433,7 @@
 		{
 			var newContentDiv = copyTree(modelContentDiv, index);
 			fileInputDiv.appendChild(newContentDiv);
-		}
-		
-		var modelPropertiesDiv = document.getElementById("propertiesDiv$DOT" + prevIndex);
-		if(modelPropertiesDiv)
-		{
-			var newPropertiesDiv = copyTree(modelPropertiesDiv, index);
-			newPropertiesDiv.style.display = "none";
-			fileInputDiv.appendChild(newPropertiesDiv);
+
 			var addDetailsLink = document.getElementById("propsTrigger${DOT}" + index);
 			if(addDetailsLink)
 			{
