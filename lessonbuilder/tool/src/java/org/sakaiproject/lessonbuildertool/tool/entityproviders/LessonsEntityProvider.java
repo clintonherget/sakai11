@@ -438,21 +438,28 @@ public class LessonsEntityProvider extends AbstractEntityProvider implements Ent
 		final JSONObject result = new JSONObject();
 
 		final List<SimplePage> topLevelPages = simplePageToolDao.getTopLevelPages(siteId);
-		SimplePageBean simplePageBean = null;
 		final String currentUserId = sessionManager.getCurrentSessionUserId();
 
-		for (SimplePage topLevelPage : topLevelPages) {
-			final List<SimplePageItem> itemsOnPage = simplePageToolDao.findItemsOnPage(topLevelPage.getPageId());
-			final JSONArray inaccessibleItems = new JSONArray();
+		for (final SimplePage topLevelPage : topLevelPages) {
+			// reset this for each top level page to avoid caching of item isItemComplete values
+			// across different contexts (pages, items can be reused!)
+			SimplePageBean simplePageBean = null;
 
-			for (SimplePageItem item : itemsOnPage) {
-				simplePageBean = makeSimplePageBean(simplePageBean, siteId, item);
-				if (!lessonsAccess.isItemAccessible(item.getId(), siteId, currentUserId, simplePageBean)) {
-					inaccessibleItems.add(String.valueOf(item.getId()));
+			final List<SimplePageItem> itemsOnPage = simplePageToolDao.findItemsOnPage(topLevelPage.getPageId());
+			final JSONArray inaccessibleSubPageIds = new JSONArray();
+
+			for (final SimplePageItem item : itemsOnPage) {
+				if (item.getType() == SimplePageItem.PAGE) {
+					simplePageBean = makeSimplePageBean(simplePageBean, siteId, item);
+					simplePageBean.setCurrentPage(topLevelPage);
+					simplePageBean.setCurrentPageId(topLevelPage.getPageId());
+					if (!simplePageBean.isItemAvailable(item)) {
+						inaccessibleSubPageIds.add(item.getSakaiId());
+					}
 				}
 			}
 
-			result.put(topLevelPage.getToolId(), inaccessibleItems);
+			result.put(topLevelPage.getToolId(), inaccessibleSubPageIds);
 		}
 
 		return result.toJSONString();

@@ -101,7 +101,7 @@
         $expandMe.hide().show(0);
         $expandMe.addClass('sliding-down');
         $expandMe.find('.lessons-sub-page-menu').slideDown((doNotAnimate == true) ? 0 : 500, function() {
-            var $submenu = $(this);
+            var $submenu = $PBJQ(this);
 
             $expandMe.removeClass('sliding-down');
             $expandMe.addClass('expanded');
@@ -131,7 +131,7 @@
     LessonsSubPageNavigation.prototype.collapse = function($collapseMe, callback) {
         $collapseMe.addClass('sliding-up');
         $collapseMe.find('.lessons-sub-page-menu').slideUp(500, function() {
-            var $submenu = $(this);
+            var $submenu = $PBJQ(this);
 
             $collapseMe.removeClass('sliding-up');
             $collapseMe.removeClass('expanded');
@@ -213,7 +213,7 @@
 
             // when the tool menu is collapsed, a click should take you to the top page
             // and not toggle the menu
-            if ($(document.body).is('.Mrphs-toolMenu-collapsed')) {
+            if ($PBJQ(document.body).is('.Mrphs-toolMenu-collapsed')) {
                 location.href = topLevelPageHref;
                 return false;
             }
@@ -386,6 +386,8 @@
                 cache: false,
                 dataType: 'json',
                 success: function(json) {
+                    // json is keyed on the sakai page id to an array of lesson page ids that
+                    // are not accessible due to prerequisites
                     self.applyPrerequisites(json);
                 }
             });
@@ -401,8 +403,8 @@
                 var sub_pages = self.data[page_id];
                 sub_pages.forEach(function(sub_page) {
                     if (prereqData.hasOwnProperty(sub_page.sakaiPageId)) {
-                        if (sub_page.prerequisite == 'true' && $.inArray(sub_page.itemId, prereqData[sub_page.sakaiPageId]) >= 0) {
-                            var $link = $(sub_page.submenu_item).find('> a');
+                        if (sub_page.prerequisite == 'true' && $PBJQ.inArray(sub_page.sendingPage, prereqData[sub_page.sakaiPageId]) >= 0) {
+                            var $link = $PBJQ(sub_page.submenu_item).find('> a');
                             $link.addClass('has-prerequisite');
                             var title_string = $link.attr('title');
                             if (self.isInstructor) {
