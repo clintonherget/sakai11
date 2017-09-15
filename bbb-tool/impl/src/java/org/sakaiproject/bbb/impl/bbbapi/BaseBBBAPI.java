@@ -48,6 +48,9 @@ import org.sakaiproject.bbb.api.BBBMeeting;
 import org.sakaiproject.bbb.api.BBBMeetingManager;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.content.api.ContentHostingService;
+import org.sakaiproject.authz.api.SecurityAdvisor;
+import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.util.ResourceLoader;
 import org.w3c.dom.Document;
@@ -58,7 +61,7 @@ import org.xml.sax.SAXException;
 
 /**
  * Base class for interacting with any BigBlueButton API version.
- * 
+ *
  * @author Nuno Fernandes
  */
 public class BaseBBBAPI implements BBBAPI {
@@ -72,8 +75,6 @@ public class BaseBBBAPI implements BBBAPI {
     protected String bbbUrl = "http://127.0.0.1/bigbluebutton";
     /** BBB security salt */
     protected String bbbSalt = null;
-    /** Auto close BBB meeting window on exit? */
-    protected boolean bbbAutocloseMeetingWindow = true;
 
     // API Server Path
     protected final static String API_SERVERPATH = "/api/";
@@ -88,6 +89,7 @@ public class BaseBBBAPI implements BBBAPI {
     protected final static String APICALL_VERSION = "";
     protected final static String APICALL_GETRECORDINGS = "getRecordings";
     protected final static String APICALL_PUBLISHRECORDINGS = "publishRecordings";
+    protected final static String APICALL_PROTECTRECORDINGS = "updateRecordings";
     protected final static String APICALL_DELETERECORDINGS = "deleteRecordings";
 
     // API Response Codes
@@ -105,6 +107,10 @@ public class BaseBBBAPI implements BBBAPI {
 
     protected ServerConfigurationService config;
 
+    private ContentHostingService m_contentHostingService = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
+
+    private SecurityService m_securityService = (SecurityService) ComponentManager.get("org.sakaiproject.authz.api.SecurityService");
+
     protected Random randomGenerator = new Random(System.currentTimeMillis());
 
     // -----------------------------------------------------------------------
@@ -113,15 +119,14 @@ public class BaseBBBAPI implements BBBAPI {
     public BaseBBBAPI(String url, String salt) {
         this.bbbUrl = url;
 
-        if (bbbUrl.endsWith("/") && bbbUrl.length() > 0)
+        if (bbbUrl.endsWith("/") && bbbUrl.length() > 0) {
             bbbUrl = bbbUrl.substring(0, bbbUrl.length() - 1);
+        }
 
         this.bbbSalt = salt;
 
         // read BBB settings from sakai.properties
         config = (ServerConfigurationService) ComponentManager.get(ServerConfigurationService.class);
-
-        bbbAutocloseMeetingWindow = config.getBoolean(BBBMeetingManager.CFG_AUTOCLOSE_WIN, bbbAutocloseMeetingWindow);
     }
 
     public String getUrl() {
@@ -136,7 +141,7 @@ public class BaseBBBAPI implements BBBAPI {
     // --- BBB API implementation methods ------------------------------------
     // -----------------------------------------------------------------------
     /** Create a meeting on BBB server */
-    public BBBMeeting createMeeting(final BBBMeeting meeting)
+    public BBBMeeting createMeeting(final BBBMeeting meeting, boolean autoclose, boolean recordingenabled, boolean recordingreadynotification, boolean preuploadpresentation)
             throws BBBException {
 
         try {
@@ -154,7 +159,7 @@ public class BaseBBBAPI implements BBBAPI {
             query.append("&moderatorPW=");
             String moderatorPW = meeting.getModeratorPassword();
             query.append(moderatorPW);
-            if (bbbAutocloseMeetingWindow) {
+            if (autoclose) {
                 query.append("&logoutURL=");
                 StringBuilder logoutUrl = new StringBuilder(config.getServerUrl());
                 logoutUrl.append(BBBMeetingManager.TOOL_WEBAPP);
@@ -163,10 +168,8 @@ public class BaseBBBAPI implements BBBAPI {
             }
 
             // BSN: Parameters required for playback recording
-            query.append("&record=");
-            String recording = meeting.getRecording() != null && meeting.getRecording().booleanValue() ? "true" : "false";
-            query.append(recording);
-
+            boolean recording = ( recordingenabled && meeting.getRecording() != null && meeting.getRecording().booleanValue() );
+            query.append("&record=" + Boolean.toString(recording));
             query.append("&duration=");
             String duration = meeting.getRecordingDuration() != null? meeting.getRecordingDuration().toString(): "0";
             query.append(duration);
@@ -189,32 +192,61 @@ public class BaseBBBAPI implements BBBAPI {
             String welcomeDescription = meeting.getProps().getWelcomeMessage();
             if ( !"<br />".equals(welcomeDescription) )
                 welcomeMessage += "<br><br>" + welcomeDescription;
-            
+
             welcomeMessage += "<br><br>" + toolMessages.getFormattedMessage("bbb_welcome_message_general_info", new Object[] {toolMessages.getString("bbb_welcome_message_external_link"), "%%DIALNUM%%", "%%CONFNUM%%"} );
-            
-            if (recording == "true")
+
+            if (recording)
                 welcomeMessage += "<br><br><b>" + toolMessages.getFormattedMessage("bbb_welcome_message_recording_warning", new Object[] {} ) + "</b>";
             if (duration.compareTo("0") > 0)
                 welcomeMessage += "<br><br><b>" + toolMessages.getFormattedMessage("bbb_welcome_message_duration_warning", new Object[] { duration });
+
+            if (recording && recordingreadynotification) {
+                query.append("&meta_bn-recording-ready-url=");
+                StringBuilder recordingReadyUrl = new StringBuilder(config.getServerUrl());
+                recordingReadyUrl.append("/direct");
+                recordingReadyUrl.append(BBBMeetingManager.TOOL_WEBAPP);
+                recordingReadyUrl.append("/recordingReady");
+                query.append(URLEncoder.encode(recordingReadyUrl.toString(), getParametersEncoding()));
+            }
 
             query.append("&welcome=");
             query.append(URLEncoder.encode(welcomeMessage, getParametersEncoding()));
 
             query.append(getCheckSumParameterForQuery(APICALL_CREATE, query.toString()));
 
+            SecurityAdvisor sa = editResourceSecurityAdvisor();
+            //preupload presentation
+            String xml_presentation = "";
+            if (preuploadpresentation) {
+                if (meeting.getPresentation() != "" && meeting.getPresentation() != null){
+                    m_securityService.pushAdvisor(sa);
+                    m_contentHostingService.setPubView(meeting.getPresentation().substring(meeting.getPresentation().indexOf("/attachment")), true);
+                    StringBuilder presentationUrl = new StringBuilder(config.getServerUrl());
+                    presentationUrl.append(meeting.getPresentation());
+                    xml_presentation = "<modules> <module name=\"presentation\"> <document url=\""+presentationUrl+"\" /> </module> </modules>";
+                }
+            }
+
             // do API call
-            Map<String, Object> response = doAPICall(APICALL_CREATE, query.toString());
+            Map<String, Object> response = doAPICall(APICALL_CREATE, query.toString(), xml_presentation);
         } catch (BBBException e) {
             throw e;
         } catch (UnsupportedEncodingException e) {
             throw new BBBException(BBBException.MESSAGEKEY_INTERNALERROR, e.getMessage(), e);
         }
-
+        if (meeting.getPresentation() != "" && meeting.getPresentation() != null)
+            m_contentHostingService.setPubView(meeting.getPresentation().substring(meeting.getPresentation().indexOf("/attachment")), false);
         return meeting;
     }
 
+    private SecurityAdvisor editResourceSecurityAdvisor() {
+		return (userId, function, reference) -> {
+			return SecurityAdvisor.SecurityAdvice.ALLOWED;
+		};
+	}
+
     /** Check if meeting is running on BBB server. */
-    public boolean isMeetingRunning(String meetingID) 
+    public boolean isMeetingRunning(String meetingID)
             throws BBBException {
         try {
             StringBuilder query = new StringBuilder();
@@ -230,7 +262,7 @@ public class BaseBBBAPI implements BBBAPI {
     }
 
     /** Get live meeting information from BBB server */
-    public Map<String, Object> getMeetings() 
+    public Map<String, Object> getMeetings()
             throws BBBException {
         try {
             StringBuilder query = new StringBuilder();
@@ -250,9 +282,9 @@ public class BaseBBBAPI implements BBBAPI {
             throw new BBBException(BBBException.MESSAGEKEY_INTERNALERROR, e.getMessage(), e);
         }
     }
-    
+
     /** Get detailed live meeting information from BBB server */
-    public Map<String, Object> getMeetingInfo(String meetingID, String password) 
+    public Map<String, Object> getMeetingInfo(String meetingID, String password)
             throws BBBException {
         try {
             StringBuilder query = new StringBuilder();
@@ -278,9 +310,9 @@ public class BaseBBBAPI implements BBBAPI {
     }
 
     /** Get recordings from BBB server */
-    public Map<String, Object> getRecordings(String meetingID) 
+    public Map<String, Object> getRecordings(String meetingID)
             throws BBBException {
-    	try {
+    	  try {
             StringBuilder query = new StringBuilder();
             query.append("meetingID=");
             query.append(meetingID);
@@ -307,9 +339,9 @@ public class BaseBBBAPI implements BBBAPI {
     }
 
     /** End/delete a meeting on BBB server */
-    public boolean endMeeting(String meetingID, String password) 
+    public boolean endMeeting(String meetingID, String password)
             throws BBBException {
-        
+
         StringBuilder query = new StringBuilder();
         query.append("meetingID=");
         query.append(meetingID);
@@ -333,7 +365,7 @@ public class BaseBBBAPI implements BBBAPI {
     }
 
     /** Delete a recording on BBB server */
-    public boolean deleteRecordings(String meetingID, String recordID) 
+    public boolean deleteRecordings(String meetingID, String recordID)
             throws BBBException {
         StringBuilder query = new StringBuilder();
         query.append("recordID=");
@@ -342,16 +374,16 @@ public class BaseBBBAPI implements BBBAPI {
 
         try {
             doAPICall(APICALL_DELETERECORDINGS, query.toString());
-            
+
         } catch (BBBException e) {
             throw e;
         }
-        
+
         return true;
     }
 
     /** Publish/Unpublish a recording on BBB server */
-    public boolean publishRecordings(String meetingID, String recordID, String publish) 
+    public boolean publishRecordings(String meetingID, String recordID, String publish)
             throws BBBException {
         StringBuilder query = new StringBuilder();
         query.append("recordID=");
@@ -366,24 +398,46 @@ public class BaseBBBAPI implements BBBAPI {
         } catch (BBBException e) {
             throw e;
         }
-        
+
+        return true;
+    }
+
+    /** Protect/Unprotect a recording on BBB server */
+    public boolean protectRecordings(String meetingID, String recordID, String protect)
+            throws BBBException {
+        StringBuilder query = new StringBuilder();
+        query.append("recordID=");
+        query.append(recordID);
+        query.append("&protect=");
+        query.append(protect);
+        query.append(getCheckSumParameterForQuery(APICALL_PROTECTRECORDINGS, query.toString()));
+
+        try {
+            doAPICall(APICALL_PROTECTRECORDINGS, query.toString());
+
+        } catch (BBBException e) {
+            throw e;
+        }
+
         return true;
     }
 
     /** Build the join meeting url based on user role */
-    public String getJoinMeetingURL(String meetingID, User user, String password) {
-        String userDisplayName, userId;
-        try {
-            userId = user.getId();
-            userDisplayName = user.getDisplayName();
-        } catch (Exception e) {
-            userId = null;
-            userDisplayName = "user";
-        }
+    public String getJoinMeetingURL(String meetingID, String userId, String userDisplayName, String password) {
         StringBuilder joinQuery = new StringBuilder();
         joinQuery.append("meetingID=");
         joinQuery.append(meetingID);
+        if (userId != null) {
+            try {
+                joinQuery.append("&userID=");
+                joinQuery.append(URLEncoder.encode(userId, getParametersEncoding()));
+            } catch (UnsupportedEncodingException e) {
+            }
+        }
         joinQuery.append("&fullName=");
+        if (userDisplayName == null) {
+            userDisplayName = "user";
+        }
         try {
             joinQuery.append(URLEncoder.encode(userDisplayName, getParametersEncoding()));
         } catch (UnsupportedEncodingException e) {
@@ -391,14 +445,14 @@ public class BaseBBBAPI implements BBBAPI {
         }
         joinQuery.append("&password=");
         joinQuery.append(password);
-        //if (userId != null) {
-        //    joinQuery.append("&userID=");
-        //    joinQuery.append(userId);
-        //}
         joinQuery.append(getCheckSumParameterForQuery(APICALL_JOIN, joinQuery.toString()));
 
         StringBuilder url = new StringBuilder(bbbUrl);
-        url.append(API_SERVERPATH);
+        if (url.toString().endsWith("/api")) {
+            url.append("/");
+        } else {
+            url.append(API_SERVERPATH);
+        }
         url.append(APICALL_JOIN);
         url.append("?");
         url.append(joinQuery);
@@ -407,10 +461,10 @@ public class BaseBBBAPI implements BBBAPI {
     }
 
     /** Make sure the meeting (still) exists on BBB server */
-    public void makeSureMeetingExists(BBBMeeting meeting) 
+    public void makeSureMeetingExists(BBBMeeting meeting, boolean autoclose, boolean recordingenabled, boolean recordingreadynotification, boolean preuploadpresentation)
             throws BBBException {
         // (re)create meeting in BBB
-        createMeeting(meeting);
+        createMeeting(meeting, autoclose, recordingenabled, recordingreadynotification, preuploadpresentation);
     }
 
     /** Get the BBB API version running on BBB server */
@@ -460,11 +514,20 @@ public class BaseBBBAPI implements BBBAPI {
         return "UTF-8";
     }
 
+    protected Map<String, Object> doAPICall(String apiCall, String query)
+            throws BBBException {
+        return doAPICall(apiCall, query, "");
+    }
+
     /** Make an API call */
-    protected Map<String, Object> doAPICall(String apiCall, String query) 
+    protected Map<String, Object> doAPICall(String apiCall, String query, String presentation)
             throws BBBException {
         StringBuilder urlStr = new StringBuilder(bbbUrl);
-        urlStr.append(API_SERVERPATH);
+        if (urlStr.toString().endsWith("/api")){
+            urlStr.append("/");
+        } else {
+            urlStr.append(API_SERVERPATH);
+        }
         urlStr.append(apiCall);
         if (query != null) {
             urlStr.append("?");
@@ -474,12 +537,25 @@ public class BaseBBBAPI implements BBBAPI {
         try {
             // open connection
             logger.debug("doAPICall.call: " + apiCall + "?" + (query != null ? query : ""));
-            
+
             URL url = new URL(urlStr.toString());
             HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
             httpConnection.setUseCaches(false);
             httpConnection.setDoOutput(true);
-            httpConnection.setRequestMethod("GET");
+            if(presentation != ""){
+                httpConnection.setRequestMethod("POST");
+                httpConnection.setRequestProperty("Content-Type", "text/xml");
+                httpConnection.setRequestProperty("Content-Length", "" + Integer.toString(presentation.getBytes().length));
+                httpConnection.setRequestProperty("Content-Language", "en-US");
+                httpConnection.setDoInput(true);
+
+                DataOutputStream wr = new DataOutputStream( httpConnection.getOutputStream() );
+                wr.writeBytes (presentation);
+                wr.flush();
+                wr.close();
+            } else {
+                httpConnection.setRequestMethod("GET");
+            }
             httpConnection.connect();
 
             int responseCode = httpConnection.getResponseCode();
@@ -531,7 +607,7 @@ public class BaseBBBAPI implements BBBAPI {
 
 
                 Map<String, Object> response = getNodesAsMap(dom, "response");
-                
+
                 String returnCode = (String) response.get("returncode");
                 if (APIRESPONSE_FAILED.equals(returnCode)) {
                     throw new BBBException((String) response.get("messageKey"), (String) response.get("message"));
@@ -547,10 +623,10 @@ public class BaseBBBAPI implements BBBAPI {
 		    if( !e.getMessageKey().equals("notFound") )
 		        logger.debug("doAPICall.BBBException: MessageKey=" + e.getMessageKey() + ", Message=" + e.getMessage());
 			throw new BBBException( e.getMessageKey(), e.getMessage(), e);
-        } catch(IOException e) { 
+        } catch(IOException e) {
             logger.debug("doAPICall.IOException: Message=" + e.getMessage());
             throw new BBBException(BBBException.MESSAGEKEY_UNREACHABLE, e.getMessage(), e);
-        	
+
         } catch(SAXException e) {
             logger.debug("doAPICall.SAXException: Message=" + e.getMessage());
         	throw new BBBException(BBBException.MESSAGEKEY_INVALIDRESPONSE, e.getMessage(), e);
@@ -558,14 +634,14 @@ public class BaseBBBAPI implements BBBAPI {
         } catch(IllegalArgumentException e) {
             logger.debug("doAPICall.IllegalArgumentException: Message=" + e.getMessage());
         	throw new BBBException(BBBException.MESSAGEKEY_INVALIDRESPONSE, e.getMessage(), e);
-        
+
         } catch(Exception e) {
             logger.debug("doAPICall.Exception: Message=" + e.getMessage());
             throw new BBBException(BBBException.MESSAGEKEY_UNREACHABLE, e.getMessage(), e);
         }
     }
 
-    
+
     // -----------------------------------------------------------------------
     // --- BBB Other utility methods -----------------------------------------
     // -----------------------------------------------------------------------
@@ -578,21 +654,35 @@ public class BaseBBBAPI implements BBBAPI {
     protected Map<String, Object> processNode(Node _node) {
         Map<String, Object> map = new HashMap<String, Object>();
         NodeList responseNodes = _node.getChildNodes();
+        int images = 1; //counter for images (i.e image1, image2, image3)
         for (int i = 0; i < responseNodes.getLength(); i++) {
             Node node = responseNodes.item(i);
             String nodeName = node.getNodeName().trim();
             if (node.getChildNodes().getLength() == 1
                     && ( node.getChildNodes().item(0).getNodeType() == org.w3c.dom.Node.TEXT_NODE || node.getChildNodes().item(0).getNodeType() == org.w3c.dom.Node.CDATA_SECTION_NODE) ) {
                 String nodeValue = node.getTextContent();
-                map.put(nodeName, nodeValue != null ? nodeValue.trim() : null);
-            
+                if (nodeName == "image" && node.getAttributes() != null){
+                    Map<String, String> imageMap = new HashMap<String, String>();
+                    Node heightAttr = node.getAttributes().getNamedItem("height");
+                    Node widthAttr = node.getAttributes().getNamedItem("width");
+                    Node altAttr = node.getAttributes().getNamedItem("alt");
+
+                    imageMap.put("height", heightAttr.getNodeValue());
+                    imageMap.put("width", widthAttr.getNodeValue());
+                    imageMap.put("title", altAttr.getNodeValue());
+                    imageMap.put("url", nodeValue);
+                    map.put(nodeName + images, imageMap);
+                    images++;
+                } else {
+                    map.put(nodeName, nodeValue != null ? nodeValue.trim() : null);
+                }
             } else if (node.getChildNodes().getLength() == 0
-                    && node.getNodeType() != org.w3c.dom.Node.TEXT_NODE 
+                    && node.getNodeType() != org.w3c.dom.Node.TEXT_NODE
                     && node.getNodeType() != org.w3c.dom.Node.CDATA_SECTION_NODE) {
                 map.put(nodeName, "");
-            
-            } else if ( node.getChildNodes().getLength() >= 1 
-                    && node.getChildNodes().item(0).getChildNodes().item(0).getNodeType() != org.w3c.dom.Node.TEXT_NODE 
+
+            } else if ( node.getChildNodes().getLength() >= 1
+                    && node.getChildNodes().item(0).getChildNodes().item(0).getNodeType() != org.w3c.dom.Node.TEXT_NODE
                     && node.getChildNodes().item(0).getChildNodes().item(0).getNodeType() != org.w3c.dom.Node.CDATA_SECTION_NODE ) {
 
             	List<Object> list = new ArrayList<Object>();
@@ -600,8 +690,13 @@ public class BaseBBBAPI implements BBBAPI {
                     Node n = node.getChildNodes().item(c);
                     list.add(processNode(n));
                 }
-                map.put(nodeName, list);
-            
+                if (nodeName == "preview"){
+                    Node n = node.getChildNodes().item(0);
+                    map.put(nodeName, new ArrayList<Object>(processNode(n).values()));
+                }else{
+                    map.put(nodeName, list);
+                }
+
             } else {
                 map.put(nodeName, processNode(node));
             }
@@ -616,23 +711,23 @@ public class BaseBBBAPI implements BBBAPI {
 
     /** To fix the old format of getRecordings, it parses a data string ant convert it to unix timestamp */
     protected String getDateAsStringTimestamp( String input ) {
-    	
+
     	long timestamp;
-        try {  
+        try {
             timestamp = Long.parseLong( input );
             timestamp = timestamp/1000*1000;
-            return Long.toString(timestamp);  
-         }  
-         catch( Exception e )  {  
-             try {  
+            return Long.toString(timestamp);
+         }
+         catch( Exception e )  {
+             try {
                  java.text.DateFormat formatter = new java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
                  Date date = (Date)formatter.parse(input);
-                 timestamp = Long.valueOf(date.getTime());  
+                 timestamp = Long.valueOf(date.getTime());
                  timestamp = timestamp/1000*1000;
-                 return Long.toString(timestamp);  
-              }  catch( Exception e2 )  {  
+                 return Long.toString(timestamp);
+              }  catch( Exception e2 )  {
               	return "";
               }
-         }  
-    }  
+         }
+    }
 }
