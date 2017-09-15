@@ -426,14 +426,16 @@ public class LessonsEntityProvider extends AbstractEntityProvider implements Ent
 		if (siteId == null || "".equals(siteId)) {
 			throw new IllegalArgumentException("siteId is required");
 		}
-
+		Site site = null;
 		try {
-			siteService.getSiteVisit(siteId);
+			site = siteService.getSiteVisit(siteId);
 		} catch (IdUnusedException e) {
 			throw new EntityNotFoundException("Invalid siteId: " + siteId, siteId);
 		} catch (PermissionException e) {
 			throw new EntityNotFoundException("No access to site: " + siteId, siteId);
 		}
+
+		setToolSession(site);
 
 		final JSONObject result = new JSONObject();
 
