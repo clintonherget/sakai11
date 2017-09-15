@@ -12,8 +12,6 @@
 
     <title>${pageTitle}</title>
     ${sakai_html_head_css}
-
-    <meta http-equiv="refresh" content="10; url=/portal/login">
   </head>
 
   <body class="portalBody">
@@ -34,13 +32,6 @@
 
           <p>We were unable to use your single sign-on session to log
           you in to NYU Classes.</p>
-
-          <p>In a moment, you will be redirected to a form where you can
-          log in directly using
-            your <strong>NetID</strong>
-            and <strong>password</strong>.</p>
-
-          <p>Alternatively, <a href="/portal/login">click here to be redirected immediately.</a></p>
         </div>
 
       </div>
