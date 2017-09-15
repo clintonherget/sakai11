@@ -79,6 +79,7 @@ import org.sakaiproject.portal.charon.handlers.FavoritesHandler;
 import org.sakaiproject.portal.charon.handlers.GenerateBugReportHandler;
 import org.sakaiproject.portal.charon.handlers.HelpHandler;
 import org.sakaiproject.portal.charon.handlers.JoinHandler;
+import org.sakaiproject.portal.charon.handlers.LMSLoginHandler;
 import org.sakaiproject.portal.charon.handlers.LoginHandler;
 import org.sakaiproject.portal.charon.handlers.LogoutHandler;
 import org.sakaiproject.portal.charon.handlers.NavLoginHandler;
@@ -2159,6 +2160,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		addHandler(new NavLoginHandler());
 		addHandler(new PresenceHandler());
 		addHandler(new HelpHandler());
+		addHandler(new LMSLoginHandler());
 		addHandler(new ReLoginHandler());
 		addHandler(new LoginHandler());
 		addHandler(new XLoginHandler());

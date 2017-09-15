@@ -58,6 +58,10 @@ import org.sakaiproject.tool.api.Tool;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.Web;
+import org.sakaiproject.authz.api.AuthzGroupService;
+import org.sakaiproject.event.api.UsageSession;
+
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 
 @Slf4j
 public class SkinnableLogin extends HttpServlet implements Login {
@@ -133,6 +137,48 @@ public class SkinnableLogin extends HttpServlet implements Login {
 		return "Sakai Login";
 	}
 
+	private boolean forceSaml() {
+		String ssoURL = serverConfigurationService.getString("edu.nyu.classes.saml.ssoURL");
+		return ssoURL != null && !"".equals(ssoURL);
+	}
+
+	private void sendSamlRedirect(HttpServletRequest req, HttpServletResponse res, Session session)
+	{
+		if (!"GET".equals(req.getMethod())) {
+			// A POST to any of the login handlers will hit this if
+			// we're running with Shibboleth turned on.
+			throw new RuntimeException("Access denied");
+		}
+
+		String ssoURL = serverConfigurationService.getString("edu.nyu.classes.saml.ssoURL");
+
+		try {
+			res.sendRedirect(ssoURL + "&target=" + getOriginalURL(session));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private String getOriginalURL(Session session) {
+		String result = (String)session.getAttribute(Tool.HELPER_DONE_URL);
+
+		if (result == null) {
+			return "";
+		} else {
+			return result;
+		}
+	}
+
+	public static String lmsUrlFragment() {
+		String result = HotReloadConfigurationService.getString("lms-login.fragment", null);
+
+		if (result == null) {
+			throw new RuntimeException("No value set for lms-login.fragment");
+		}
+
+		return result;
+	}
+
 	@SuppressWarnings(value = "HRS_REQUEST_PARAMETER_TO_HTTP_HEADER", justification = "Looks like the data is already URL encoded")
 	protected void doGet(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException, IOException 
@@ -145,6 +191,11 @@ public class SkinnableLogin extends HttpServlet implements Login {
 
 		// recognize what to do from the path
 		String option = req.getPathInfo();
+
+		if (session.getUserId() == null && forceSaml() && !("/" + lmsUrlFragment()).equals(option) && !"/logout".equals(option)) {
+			sendSamlRedirect(req, res, session);
+			return;
+		}
 
 		// maybe we don't want to do the container this time
 		boolean skipContainer = false;
