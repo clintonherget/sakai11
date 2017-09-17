@@ -73,7 +73,10 @@ public class LessonsSubNavBuilder {
         final List<String> pageIds = new ArrayList<>(typedPages.size());
 
         for (Map<String, String> page : typedPages) {
-            pageIds.add(page.get("pageId"));
+            // try to limit to only lesson pages
+            if (!page.containsKey("wellKnownToolId") || "sakai.lessonbuildertool".equals(page.get("wellKnownToolId"))) {
+                pageIds.add(page.get("pageId"));
+            }
         }
 
         return pageIds;
