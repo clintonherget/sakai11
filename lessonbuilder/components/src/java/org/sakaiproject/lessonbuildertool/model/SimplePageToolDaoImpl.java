@@ -1797,10 +1797,16 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 				"   AND p.toolId IN (" + pages.stream().map(i -> "?").collect(Collectors.joining(",")) + ")" +
 				" ORDER BY i.sequence");
 
-		final Object [] fields = new Object[pages.size() + 1];
+		final List<String> pageIds = LessonsSubNavBuilder.collectPageIds(pages);
+
+		if (pageIds.isEmpty()) {
+			// no lesson pages, so no JSON!
+			return null;
+		}
+
+		final Object [] fields = new Object[pageIds.size() + 1];
 		fields[0] = userId;
 
-		final List<String> pageIds = LessonsSubNavBuilder.collectPageIds(pages);
 		for (int i=0; i<pageIds.size(); i++) {
 			fields[i+1] = pageIds.get(i);
 		}
