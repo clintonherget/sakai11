@@ -1771,38 +1771,38 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 
 
 	public String getLessonSubPageJSON(final String userId, final boolean isInstructor, final String siteId, final List pages) {
-		final String sql = ("SELECT p.toolId AS sakaiPageId," +
-				" p.pageId AS lessonsPageId," +
-				" s.site_id AS sakaiSiteId," +
-				" s.tool_id AS sakaiToolId," +
-				" i.id AS itemId," +
-				" i.name AS itemName," +
-				" i.description AS itemDescription," +
-				" i.sakaiId AS itemSakaiId," +
-				" p2.hidden AS pageHidden," +
-				" p2.releaseDate AS pageReleaseDate," +
-				" log.complete AS completed," +
-				" i.required," +
-				" i.prerequisite" +
-				" FROM lesson_builder_pages p" +
-				" INNER JOIN SAKAI_SITE_TOOL s" +
-				"   ON p.toolId = s.page_id" +
-				" INNER JOIN lesson_builder_items i" +
-				"   ON (i.pageId = p.pageId AND type = 2)" +
-				" INNER JOIN lesson_builder_pages p2" +
-				"   ON (p2.pageId = i.sakaiId)" +
-				" LEFT OUTER JOIN lesson_builder_log log" +
-				"   ON (log.itemId = i.id AND log.userId = ?)" +
-				" WHERE p.parent IS NULL" +
-				"   AND p.toolId IN (" + pages.stream().map(i -> "?").collect(Collectors.joining(",")) + ")" +
-				" ORDER BY i.sequence");
-
 		final List<String> pageIds = LessonsSubNavBuilder.collectPageIds(pages);
 
 		if (pageIds.isEmpty()) {
 			// no lesson pages, so no JSON!
 			return null;
 		}
+
+		final String sql = ("SELECT p.toolId AS sakaiPageId," +
+			" p.pageId AS lessonsPageId," +
+			" s.site_id AS sakaiSiteId," +
+			" s.tool_id AS sakaiToolId," +
+			" i.id AS itemId," +
+			" i.name AS itemName," +
+			" i.description AS itemDescription," +
+			" i.sakaiId AS itemSakaiId," +
+			" p2.hidden AS pageHidden," +
+			" p2.releaseDate AS pageReleaseDate," +
+			" log.complete AS completed," +
+			" i.required," +
+			" i.prerequisite" +
+			" FROM lesson_builder_pages p" +
+			" INNER JOIN SAKAI_SITE_TOOL s" +
+			"   ON p.toolId = s.page_id" +
+			" INNER JOIN lesson_builder_items i" +
+			"   ON (i.pageId = p.pageId AND type = 2)" +
+			" INNER JOIN lesson_builder_pages p2" +
+			"   ON (p2.pageId = i.sakaiId)" +
+			" LEFT OUTER JOIN lesson_builder_log log" +
+			"   ON (log.itemId = i.id AND log.userId = ?)" +
+			" WHERE p.parent IS NULL" +
+			"   AND p.toolId IN (" + pageIds.stream().map(i -> "?").collect(Collectors.joining(",")) + ")" +
+			" ORDER BY i.sequence");
 
 		final Object [] fields = new Object[pageIds.size() + 1];
 		fields[0] = userId;
