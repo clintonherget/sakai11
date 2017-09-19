@@ -970,8 +970,8 @@
 
         <tool
             id="nyu.turningpoint.cloud"
-            title="TurningPoint Cloud"
-            description="TurningPoint Cloud">
+            title="TurningPoint"
+            description="TurningPoint">
           <configuration name="sakai:portlet-pre-render" value="true" />
           <category name="course" />
           <category name="project" />
@@ -982,8 +982,8 @@
           <configuration name="imsti.xml" />
           <configuration name="imsti.secret" />
           <configuration name="imsti.key" />
-          <configuration name="imsti.pagetitle" value="TurningPoint Cloud"/>
-          <configuration name="imsti.tooltitle" value="TurningPoint Cloud"/>
+          <configuration name="imsti.pagetitle" value="TurningPoint"/>
+          <configuration name="imsti.tooltitle" value="TurningPoint"/>
           <configuration name="imsti.newpage" value="on" />
           <configuration name="imsti.maximize" value="on" />
           <configuration name="imsti.frameheight" value="1024" />
