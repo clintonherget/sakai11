@@ -19,6 +19,8 @@ package org.sakaiproject.attendance.tool.pages;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
+import org.apache.wicket.datetime.StyleDateConverter;
+import org.apache.wicket.datetime.markup.html.basic.DateLabel;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -40,6 +42,7 @@ import org.sakaiproject.attendance.tool.pages.panels.AttendanceRecordFormDataPan
 import org.sakaiproject.attendance.tool.pages.panels.AttendanceRecordFormHeaderPanel;
 import org.sakaiproject.attendance.tool.pages.panels.PrintPanel;
 import org.sakaiproject.attendance.tool.pages.panels.StatisticsPanel;
+import org.sakaiproject.time.cover.TimeService;
 
 import java.util.*;
 
@@ -102,7 +105,14 @@ public class EventView extends BasePage {
         createStatsTable();
 
         add(new Label("event-name", attendanceEvent.getName()));
-        add(new Label("event-date", attendanceEvent.getStartDateTime()));
+        add(new DateLabel("event-date", Model.of(attendanceEvent.getStartDateTime()), new StyleDateConverter("MM", true) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected TimeZone getClientTimeZone() {
+                return TimeService.getLocalTimeZone();
+            }
+        }));
         add(new Label("take-attendance-header", getString("attendance.event.view.take.attendance")));
 
         final Form<?> setAllForm = new Form<Void>("set-all-form"){
