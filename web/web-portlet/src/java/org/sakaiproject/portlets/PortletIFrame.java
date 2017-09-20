@@ -309,7 +309,7 @@ public class PortletIFrame extends GenericPortlet {
 			if ( height == null ) {
 				if (SPECIAL_WORKSITE.equals(special)) {
 					// NYU default the min-height for inline /vm/info.vm
-					height = "450px";
+					height = "400px";
 				} else {
 					// NYU iFrame default height
 					height = "1200px";
