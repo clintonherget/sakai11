@@ -26,6 +26,9 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.sakaiproject.attendance.model.AttendanceEvent;
 import org.sakaiproject.attendance.tool.util.PlaceholderBehavior;
+import org.sakaiproject.time.cover.TimeService;
+
+import java.util.TimeZone;
 
 
 /**
@@ -98,7 +101,14 @@ public class EventInputPanel extends BasePanel {
                 add(new PlaceholderBehavior(getString("event.placeholder.name")));
             }
         };
-        final DateTimeField startDateTime = new DateTimeField("startDateTime");
+        final DateTimeField startDateTime = new DateTimeField("startDateTime") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected TimeZone getClientTimeZone() {
+                return TimeService.getLocalTimeZone();
+            }
+        };
         final DateTimeField endDateTime = new DateTimeField("endDateTime");
         final CheckBox isRequired = new CheckBox("isRequired");
         final TextField<String> location = new TextField<String>("location") {
