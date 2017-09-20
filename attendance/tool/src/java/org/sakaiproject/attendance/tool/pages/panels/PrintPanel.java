@@ -16,6 +16,8 @@
 
 package org.sakaiproject.attendance.tool.pages.panels;
 
+import org.apache.wicket.datetime.StyleDateConverter;
+import org.apache.wicket.datetime.markup.html.basic.DateLabel;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.*;
 import org.apache.wicket.model.IModel;
@@ -24,6 +26,7 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.util.resource.AbstractResourceStreamWriter;
 import org.sakaiproject.attendance.model.AttendanceEvent;
+import org.sakaiproject.time.cover.TimeService;
 import org.sakaiproject.user.api.User;
 
 import java.io.IOException;
@@ -32,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * PrintPanel is a panel which allows users to pring an Attendance Sheet or Sign-in Sheet
@@ -93,7 +97,14 @@ public class PrintPanel extends BasePanel {
 
         if(eventModel.getObject() != null) {
             printForm.add(new Label("event-name", eventModel.getObject().getName()));
-            printForm.add(new Label("event-date", eventModel.getObject().getStartDateTime()));
+            printForm.add(new DateLabel("event-date", Model.of(eventModel.getObject().getStartDateTime()), new StyleDateConverter("MM", true) {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected TimeZone getClientTimeZone() {
+                    return TimeService.getLocalTimeZone();
+                }
+            }));
         } else {
             printForm.add(new Label("event-name", ""));
             printForm.add(new Label("event-date", ""));
