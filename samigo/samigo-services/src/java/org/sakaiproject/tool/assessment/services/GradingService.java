@@ -3235,7 +3235,7 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 		  randomValue = bd.doubleValue();
 		  String displayNumber = randomValue.toString();*/
 		  
-		  String displayNumber = toScientificNotation(randomValue.toString(), decimalPlaces);
+		  String displayNumber = toScientificNotation(new BigDecimal(randomValue).toPlainString(), decimalPlaces);
 		  
 		  // Remove ".0" if decimalPlaces ==0
 		  if (decimalPlaces == 0) {
