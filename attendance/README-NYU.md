@@ -1,0 +1,1 @@
+Contrib attendance tool from tag v20170215 https://github.com/sakaicontrib/attendance/releases/tag/v20170215
