@@ -302,22 +302,12 @@ public class PortletIFrame extends GenericPortlet {
 			response.setTitle(placement.getTitle());
 			String source = config.getProperty(SOURCE);
 			if ( source == null ) source = "";
-
-			String special = getSpecial(config);
-
 			String height = config.getProperty(HEIGHT);
-			if ( height == null ) {
-				if (SPECIAL_WORKSITE.equals(special)) {
-					// NYU default the min-height for inline /vm/info.vm
-					height = "400px";
-				} else {
-					// NYU iFrame default height
-					height = "1200px";
-				}
-			}
-
+			if ( height == null ) height = "1200px";
             String sakaiPropertiesUrlKey = config.getProperty(SAKAI_PROPERTIES_URL_KEY);
             String hideOptions = config.getProperty(HIDE_OPTIONS);
+
+            String special = getSpecial(config);
 
 			// Handle the situation where we are displaying the worksite information
 			if ( SPECIAL_WORKSITE.equals(special) ) {
@@ -335,7 +325,6 @@ public class PortletIFrame extends GenericPortlet {
 						StringBuilder alertMsg = new StringBuilder();
 						if ( siteInfo != null ) siteInfo = validator.processFormattedText(siteInfo, alertMsg, org.sakaiproject.util.api.FormattedText.Level.NONE);
 						context.put("siteInfo", siteInfo);
-						context.put("minHeight", height);
 						vHelper.doTemplate(vengine, "/vm/info.vm", context, out);
 						return;
 					}
