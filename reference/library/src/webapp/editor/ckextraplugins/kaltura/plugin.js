@@ -32,7 +32,7 @@ var ckeditorId;
                 editor.addCommand(pluginName, new CKEDITOR.dialogCommand( 'kaltura' ) );
 
                 editor.ui.addButton(pluginName, {
-                    label: pluginName,
+                    label: 'Add NYU Stream Video',
                     command: pluginName,
                     icon: this.path + 'images/kaltura.png'
                 });
