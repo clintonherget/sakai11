@@ -14,7 +14,7 @@ var ckeditorId;
                 var height = 480;
                 var width = 770;
                 CKEDITOR.dialog.addIframe(pluginName,
-                    'Kaltura',
+                    'NYU Stream',
                     '/media-gallery-tool/ckeditor.htm?siteid=' + parent.portal.siteId,
                     width,
                     height,
