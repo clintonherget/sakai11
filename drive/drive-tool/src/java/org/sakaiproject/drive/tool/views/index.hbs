@@ -2,8 +2,33 @@
 
 <p>Here are your files:</p>
 
-<ul>
-    {{#each filenames}}
-        <li><img src="{{this.iconLink}}"> <a href="{{this.viewLink}}">{{this.name}}</a></li>
-    {{/each}}
+<ul id="drive">
 </ul>
+
+<script id="fileTemplate" type="text/template">
+  <li><img src="${iconLink}"> <a href="${viewLink}">${name}</a></li>
+</script>
+
+<script>includeLatestJQuery('index.hbs');</script>
+<script>
+function Drive() {
+  this.baseURL = "{{baseURL}}";
+
+  this.getFiles(null, null);
+};
+
+Drive.prototype.getFiles = function(query, pageToken) {
+  var fileTemplate = TrimPath.parseTemplate($("#fileTemplate").html().trim().toString());
+
+  $.getJSON(this.baseURL + "/drive-data", function(json) {
+    $.each(json, function(index, file) {
+      var html = fileTemplate.process(file);
+      $("#drive").append(html);
+    });
+  });
+};
+
+$(document).ready(function() {
+  new Drive();
+});
+</script>
