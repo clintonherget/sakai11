@@ -131,6 +131,8 @@ public class DriveServlet extends HttpServlet {
             return new OAuthHandler(OAuthHandler.SEND_TO_GOOGLE);
         } else if (path.contains("/drive-data")) {
             return new DriveHandler();
+        } else if (path.contains("/add-selected")) {
+            return new AddResourceHandler();
         }
 
         return new IndexHandler();

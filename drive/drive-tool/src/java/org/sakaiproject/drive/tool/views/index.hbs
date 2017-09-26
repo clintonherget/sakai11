@@ -2,11 +2,14 @@
 
 <p>Here are your files:</p>
 
-<ul id="drive">
-</ul>
+<form method="POST" action="{{baseURL}}add-selected">
+  <ul id="drive">
+  </ul>
+  <input type="submit" value="Add to resources" />
+</form>
 
 <script id="fileTemplate" type="text/template">
-  <li><img src="${iconLink}"> <a href="${viewLink}">${name}</a></li>
+  <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
 </script>
 
 <script>includeLatestJQuery('index.hbs');</script>

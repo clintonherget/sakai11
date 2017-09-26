@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.tool.cover.SessionManager;
+import org.sakaiproject.tool.cover.ToolManager;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.CredentialRefreshListener;
@@ -59,12 +60,17 @@ import java.util.Collections;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.content.api.ContentHostingService;
+import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.util.BaseResourcePropertiesEdit;
+
 import java.net.URL;
 
 /**
  * A handler to access Google Drive file data
  */
-public class DriveHandler implements Handler {
+public class AddResourceHandler implements Handler {
 
     private String redirectTo = null;
 
@@ -72,45 +78,28 @@ public class DriveHandler implements Handler {
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
             GoogleClient google = new GoogleClient();
-
             Drive drive = google.getDrive((String) context.get("googleUser"));
 
-            String query = request.getParameter("q");
-            String pageToken = request.getParameter("pageToken");
+            String[] fileIds = request.getParameterValues("fileid[]");
 
-            Drive.Files files = drive.files();
-            Drive.Files.List list = files.list();
+            // One by one... cheesy
+            for (String id : fileIds) {
+                File googleFile = drive.files().get(id).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink").execute();
 
-            list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
-            list.setOrderBy("name");
+                String siteId = ToolManager.getCurrentPlacement().getContext();
+                String collectionId = "/group/" + siteId + "/";
 
-            String queryString = "mimeType != 'application/vnd.google-apps.folder'";
+                ResourceProperties properties = new BaseResourcePropertiesEdit();
+                properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, googleFile.getName());
+                properties.addProperty("google-id", id);
+                properties.addProperty("google-view-link", googleFile.getWebViewLink());
+                properties.addProperty("google-icon-link", googleFile.getIconLink());
 
-            if (query != null) {
-                queryString += " AND fullText contains '" + query + "'"; // FIXME escaping
+                ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
+                chs.addResource(googleFile.getName(), collectionId, 10, "x-nyu-google/item", new byte[0], properties, Collections.<String>emptyList(), 1);
             }
 
-            list.setQ(queryString);
-            list.setPageSize(20);
-
-            if (pageToken != null) {
-                list.setPageToken(pageToken);
-            }
-
-            FileList fileList = list.execute();
-
-            List<GoogleItem> filenames = new ArrayList<>();
-
-            for (File e : fileList.getFiles()) {
-                filenames.add(new GoogleItem(e.getId(),
-                        e.getName(),
-                        e.getIconLink(),
-                        e.getThumbnailLink(),
-                        e.getWebViewLink()));
-            }
-
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(response.getOutputStream(), filenames);
+            redirectTo = "/";
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -132,33 +121,4 @@ public class DriveHandler implements Handler {
         return new HashMap<String, List<String>>();
     }
 
-    public String getContentType() {
-        return "text/json";
-    }
-
-    public boolean hasTemplate() {
-        return false;
-    }
-
-    private class GoogleItem {
-        public String id;
-        public String name;
-        public String iconLink;
-        public String thumbnailLink;
-        public String viewLink;
-
-        public GoogleItem(String id, String name, String iconLink, String thumbnailLink, String viewLink) {
-            this.id = id;
-            this.name = name;
-            this.iconLink = iconLink;
-            this.thumbnailLink = thumbnailLink;
-            this.viewLink = viewLink;
-        }
-
-        public String getId() { return id; }
-        public String getName() { return name; }
-        public String getIconLink() { return iconLink; }
-        public String getThumbnailLink() { return thumbnailLink; }
-        public String getViewLink() { return viewLink; }
-    }
 }
