@@ -3,13 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <link rel="stylesheet" type="text/css" href="{{{skinRepo}}}/tool_base.css" />
-        <link rel="stylesheet" type="text/css" href="/pasystem-tool/stylesheets/pasystem-tool.css" />
 
         {{{randomSakaiHeadStuff}}}
     </head>
     <body>
 
-        <div class="portletBody pasystem-body">
+        <div class="portletBody drive-body">
             {{#if flash}}
                 {{#each flash}}
                     <ul class="alert alert-{{@key}}">
@@ -30,10 +29,5 @@
 
             {{{subpage this subpage}}}
         </div>
-
-	<script>includeLatestJQuery('layout.hbs');</script>
-        <script type="text/javascript" src="/library/js/lang-datepicker/lang-datepicker.js"></script>
-
-        <script type="text/javascript" src="/pasystem-tool/scripts/pasystem-tool.js"></script>
     </body>
 </html>

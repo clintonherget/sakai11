@@ -52,6 +52,8 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.stream.Collectors;
 import java.util.Collections;
 import java.io.FileInputStream;
@@ -60,41 +62,53 @@ import java.io.InputStreamReader;
 import java.net.URL;
 
 /**
- * A handler for the index page in the PA System administration tool.
+ * A handler to access Google Drive file data
  */
-public class IndexHandler implements Handler {
+public class DriveHandler implements Handler {
 
     private String redirectTo = null;
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
-            context.put("subpage", "index");
+            GoogleClient google = new GoogleClient();
 
-//            GoogleClient google = new GoogleClient();
-//
-//            Drive drive = google.getDrive((String) context.get("googleUser"));
-//
-//            Drive.Files files = drive.files();
-//            Drive.Files.List list = files.list();
-//
-//            list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
-//            list.setOrderBy("name");
-//
-//            list.setQ("mimeType != 'application/vnd.google-apps.folder'");
-//
-//            FileList fileList = list.execute();
-//
-//            List<GoogleItem> filenames = new ArrayList<>();
-//
-//            for (File e : fileList.getFiles()) {
-//                filenames.add(new GoogleItem(e.getName(),
-//                        e.getIconLink(),
-//                        e.getThumbnailLink(),
-//                        e.getWebViewLink()));
-//            }
-//
-//            context.put("filenames", filenames);
+            Drive drive = google.getDrive((String) context.get("googleUser"));
+
+            String query = request.getParameter("q");
+            String pageToken = request.getParameter("pageToken");
+
+            Drive.Files files = drive.files();
+            Drive.Files.List list = files.list();
+
+            list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
+            list.setOrderBy("name");
+
+            String queryString = "mimeType != 'application/vnd.google-apps.folder'";
+
+            if (query != null) {
+                queryString += " AND fullText contains '" + query + "'"; // FIXME escaping
+            }
+
+            list.setQ(queryString);
+
+            if (pageToken != null) {
+                list.setPageToken(pageToken);
+            }
+
+            FileList fileList = list.execute();
+
+            List<GoogleItem> filenames = new ArrayList<>();
+
+            for (File e : fileList.getFiles()) {
+                filenames.add(new GoogleItem(e.getName(),
+                    e.getIconLink(),
+                    e.getThumbnailLink(),
+                    e.getWebViewLink()));
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(response.getOutputStream(), filenames);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -116,6 +130,13 @@ public class IndexHandler implements Handler {
         return new HashMap<String, List<String>>();
     }
 
+    public String getContentType() {
+        return "text/json";
+    }
+
+    public boolean hasTemplate() {
+        return false;
+    }
 
     private class GoogleItem {
         public String name;

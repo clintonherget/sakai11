@@ -60,4 +60,12 @@ public interface Handler {
     public Map<String, List<String>> getFlashMessages();
 
     public interface Errors {}
+
+    public default String getContentType() {
+        return "text/html";
+    }
+
+    public default boolean hasTemplate() {
+        return true;
+    }
 }
