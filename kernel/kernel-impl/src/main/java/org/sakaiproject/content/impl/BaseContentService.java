@@ -7013,6 +7013,14 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 				res.addHeader("Last-Modified", rfc1123Date.format(lastModTime));
 			}
 
+                        if (contentType.equalsIgnoreCase("x-nyu-google/item")) {
+                            ResourceProperties props = resource.getProperties();
+
+                            res.sendRedirect((String) props.get("google-view-link"));
+                            return;
+                        }
+
+
 			// for url content type, encode a redirect to the body URL
 			if (contentType.equalsIgnoreCase(ResourceProperties.TYPE_URL))
 			{
