@@ -75,8 +75,8 @@ public class OAuthHandler implements Handler {
 
     public OAuthHandler(int mode) {
         try {
-            mode = mode;
-            google = new GoogleClient();
+            this.mode = mode;
+            this.google = new GoogleClient();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
