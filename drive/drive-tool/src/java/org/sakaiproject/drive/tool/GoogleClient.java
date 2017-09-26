@@ -90,6 +90,7 @@ public class GoogleClient {
                                                        clientSecrets,
                                                        Collections.singleton(DriveScopes.DRIVE))
                 .setDataStoreFactory(store)
+                .setAccessType("offline")
                 .build();
     }
 
@@ -100,34 +101,36 @@ public class GoogleClient {
 
             Credential storedCredential = flow.loadCredential(user);
 
-            if (storedCredential == null) {
-                return null;
-            }
+            return storedCredential;
 
-            // Take our credential and wrap it in a GoogleCredential.  As far as
-            // I can tell, all this gives us is the ability to update our stored
-            // credentials as they get refreshed (using the
-            // DataStoreCredentialRefreshListener).
-            Credential credential = new GoogleCredential.Builder()
-                    .setTransport(flow.getTransport())
-                    .setJsonFactory(flow.getJsonFactory())
-                    // .setClientSecrets(user, secret)
-                    .addRefreshListener(new CredentialRefreshListener() {
-                        public void onTokenErrorResponse(Credential credential, TokenErrorResponse tokenErrorResponse) {
-                            System.err.println("OAuth token refresh error: " + tokenErrorResponse);
-                        }
-
-                        public void onTokenResponse(Credential credential, TokenResponse tokenResponse) {
-                            System.err.println("OAuth token was refreshed");
-                        }
-                    })
-                    .addRefreshListener(new DataStoreCredentialRefreshListener(user, flow.getCredentialDataStore()))
-                    .build();
-
-            credential.setAccessToken(storedCredential.getAccessToken());
-            credential.setRefreshToken(storedCredential.getRefreshToken());
-
-            return credential;
+        //     if (storedCredential == null) {
+        //         return null;
+        //     }
+        //
+        //     // Take our credential and wrap it in a GoogleCredential.  As far as
+        //     // I can tell, all this gives us is the ability to update our stored
+        //     // credentials as they get refreshed (using the
+        //     // DataStoreCredentialRefreshListener).
+        //     Credential credential = new GoogleCredential.Builder()
+        //             .setTransport(flow.getTransport())
+        //             .setJsonFactory(flow.getJsonFactory())
+        //             // .setClientSecrets(user, secret)
+        //             .addRefreshListener(new CredentialRefreshListener() {
+        //                 public void onTokenErrorResponse(Credential credential, TokenErrorResponse tokenErrorResponse) {
+        //                     System.err.println("OAuth token refresh error: " + tokenErrorResponse);
+        //                 }
+        //
+        //                 public void onTokenResponse(Credential credential, TokenResponse tokenResponse) {
+        //                     System.err.println("OAuth token was refreshed");
+        //                 }
+        //             })
+        //             .addRefreshListener(new DataStoreCredentialRefreshListener(user, flow.getCredentialDataStore()))
+        //             .build();
+        //
+        //     credential.setAccessToken(storedCredential.getAccessToken());
+        //     credential.setRefreshToken(storedCredential.getRefreshToken());
+        //
+        //     return credential;
         } catch (Exception e) {
             // FIXME: Log this
             return null;
