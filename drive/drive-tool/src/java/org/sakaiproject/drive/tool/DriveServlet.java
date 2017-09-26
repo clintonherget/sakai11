@@ -81,8 +81,6 @@ public class DriveServlet extends HttpServlet {
 
         I18n i18n = new I18n(this.getClass().getClassLoader(), "org.sakaiproject.drive.tool.i18n.drive");
 
-        response.setHeader("Content-Type", "text/html");
-
         URL toolBaseURL = determineBaseURL();
         Handlebars handlebars = loadHandlebars(toolBaseURL, i18n);
 
@@ -98,6 +96,8 @@ public class DriveServlet extends HttpServlet {
 
             Handler handler = handlerForRequest(request);
 
+            response.setHeader("Content-Type", handler.getContentType());
+
             handler.handle(request, response, context);
 
             if (handler.hasRedirect()) {
@@ -106,7 +106,7 @@ public class DriveServlet extends HttpServlet {
                 } else {
                     response.sendRedirect(toolBaseURL + handler.getRedirect());
                 }
-            } else {
+            } else if (handler.hasTemplate()) {
                 if (Boolean.TRUE.equals(context.get("layout"))) {
                     response.getWriter().write(template.apply(context));
                 }
@@ -129,6 +129,8 @@ public class DriveServlet extends HttpServlet {
             return new OAuthHandler(OAuthHandler.HANDLE_OAUTH);
         } else if (google.getCredential(getCurrentGoogleUser()) == null) {
             return new OAuthHandler(OAuthHandler.SEND_TO_GOOGLE);
+        } else if (path.contains("/drive-data")) {
+            return new DriveHandler();
         }
 
         return new IndexHandler();
