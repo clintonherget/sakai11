@@ -64,12 +64,16 @@ public class GoogleClient {
 
     private HttpTransport httpTransport = null;
     private JacksonFactory jsonFactory = null;
-
+    private GoogleClientSecrets clientSecrets = null;
 
     public GoogleClient() {
         try {
             httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             jsonFactory = JacksonFactory.getDefaultInstance();
+            clientSecrets = GoogleClientSecrets.load(jsonFactory,
+                    new InputStreamReader(new FileInputStream(ServerConfigurationService.getSakaiHomePath() + "/client_secrets.json")));
+
+;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -79,10 +83,6 @@ public class GoogleClient {
         File dataStoreLocation = new File(ServerConfigurationService.getSakaiHomePath() + "/googly-data-store");
         FileDataStoreFactory store = new FileDataStoreFactory(dataStoreLocation);
 
-        // load client secrets
-        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(jsonFactory,
-                new InputStreamReader(new FileInputStream(ServerConfigurationService.getSakaiHomePath() + "/client_secrets.json")));
-
         // set up authorization code flow
         return new GoogleAuthorizationCodeFlow.Builder(
                                                        httpTransport,
@@ -90,6 +90,7 @@ public class GoogleClient {
                                                        clientSecrets,
                                                        Collections.singleton(DriveScopes.DRIVE))
                 .setDataStoreFactory(store)
+                .setApprovalPrompt("force")
                 .setAccessType("offline")
                 .build();
     }
@@ -101,36 +102,34 @@ public class GoogleClient {
 
             Credential storedCredential = flow.loadCredential(user);
 
-            return storedCredential;
+            if (storedCredential == null) {
+                return null;
+            }
 
-        //     if (storedCredential == null) {
-        //         return null;
-        //     }
-        //
-        //     // Take our credential and wrap it in a GoogleCredential.  As far as
-        //     // I can tell, all this gives us is the ability to update our stored
-        //     // credentials as they get refreshed (using the
-        //     // DataStoreCredentialRefreshListener).
-        //     Credential credential = new GoogleCredential.Builder()
-        //             .setTransport(flow.getTransport())
-        //             .setJsonFactory(flow.getJsonFactory())
-        //             // .setClientSecrets(user, secret)
-        //             .addRefreshListener(new CredentialRefreshListener() {
-        //                 public void onTokenErrorResponse(Credential credential, TokenErrorResponse tokenErrorResponse) {
-        //                     System.err.println("OAuth token refresh error: " + tokenErrorResponse);
-        //                 }
-        //
-        //                 public void onTokenResponse(Credential credential, TokenResponse tokenResponse) {
-        //                     System.err.println("OAuth token was refreshed");
-        //                 }
-        //             })
-        //             .addRefreshListener(new DataStoreCredentialRefreshListener(user, flow.getCredentialDataStore()))
-        //             .build();
-        //
-        //     credential.setAccessToken(storedCredential.getAccessToken());
-        //     credential.setRefreshToken(storedCredential.getRefreshToken());
-        //
-        //     return credential;
+            // Take our credential and wrap it in a GoogleCredential.  As far as
+            // I can tell, all this gives us is the ability to update our stored
+            // credentials as they get refreshed (using the
+            // DataStoreCredentialRefreshListener).
+            Credential credential = new GoogleCredential.Builder()
+                    .setTransport(flow.getTransport())
+                    .setJsonFactory(flow.getJsonFactory())
+                    .setClientSecrets(clientSecrets)
+                    .addRefreshListener(new CredentialRefreshListener() {
+                        public void onTokenErrorResponse(Credential credential, TokenErrorResponse tokenErrorResponse) {
+                            System.err.println("OAuth token refresh error: " + tokenErrorResponse);
+                        }
+
+                        public void onTokenResponse(Credential credential, TokenResponse tokenResponse) {
+                            System.err.println("OAuth token was refreshed");
+                        }
+                    })
+                    .addRefreshListener(new DataStoreCredentialRefreshListener(user, flow.getCredentialDataStore()))
+                    .build();
+
+            credential.setAccessToken(storedCredential.getAccessToken());
+            credential.setRefreshToken(storedCredential.getRefreshToken());
+
+            return credential;
         } catch (Exception e) {
             // FIXME: Log this
             return null;
