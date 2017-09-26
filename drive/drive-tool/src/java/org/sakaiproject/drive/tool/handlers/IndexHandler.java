@@ -26,6 +26,7 @@ package org.sakaiproject.drive.tool.handlers;
 
 import org.sakaiproject.drive.tool.GoogleClient;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,9 +78,21 @@ public class IndexHandler implements Handler {
             Drive.Files files = drive.files();
             Drive.Files.List list = files.list();
 
+            list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
+            list.setOrderBy("name");
+
+            list.setQ("mimeType != 'application/vnd.google-apps.folder'");
+
             FileList fileList = list.execute();
 
-            List<String> filenames = fileList.getFiles().stream().map (e -> e.getName()).collect(Collectors.toList());
+            List<GoogleItem> filenames = new ArrayList<>();
+
+            for (File e : fileList.getFiles()) {
+                filenames.add(new GoogleItem(e.getName(),
+                        e.getIconLink(),
+                        e.getThumbnailLink(),
+                        e.getWebViewLink()));
+            }
 
             context.put("filenames", filenames);
         } catch (Exception e) {
@@ -103,4 +116,23 @@ public class IndexHandler implements Handler {
         return new HashMap<String, List<String>>();
     }
 
+
+    private class GoogleItem {
+        public String name;
+        public String iconLink;
+        public String thumbnailLink;
+        public String viewLink;
+
+        public GoogleItem(String name, String iconLink, String thumbnailLink, String viewLink) {
+            this.name = name;
+            this.iconLink = iconLink;
+            this.thumbnailLink = thumbnailLink;
+            this.viewLink = viewLink;
+        }
+
+        public String getName() { return name; }
+        public String getIconLink() { return iconLink; }
+        public String getThumbnailLink() { return thumbnailLink; }
+        public String getViewLink() { return viewLink; }
+    }
 }

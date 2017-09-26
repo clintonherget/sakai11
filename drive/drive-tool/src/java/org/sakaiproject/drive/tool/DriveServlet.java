@@ -86,9 +86,6 @@ public class DriveServlet extends HttpServlet {
         URL toolBaseURL = determineBaseURL();
         Handlebars handlebars = loadHandlebars(toolBaseURL, i18n);
 
-        // toolBaseURL
-        System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[DriveServlet.java:90 3221a]: " + "\n    toolBaseURL => " + (toolBaseURL) + "\n");
-
         try {
             Template template = handlebars.compile("org/sakaiproject/drive/tool/views/layout");
             Map<String, Object> context = new HashMap<String, Object>();
