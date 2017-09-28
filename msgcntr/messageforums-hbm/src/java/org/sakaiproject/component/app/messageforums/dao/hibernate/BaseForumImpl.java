@@ -20,6 +20,7 @@
  **********************************************************************************/
 package org.sakaiproject.component.app.messageforums.dao.hibernate;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +37,9 @@ import org.sakaiproject.api.app.messageforums.DBMembershipItem;
 import org.sakaiproject.api.app.messageforums.Topic;
 import org.sakaiproject.component.app.messageforums.dao.hibernate.util.comparator.AttachmentByCreatedDateDesc;
 import org.sakaiproject.component.app.messageforums.dao.hibernate.util.comparator.TopicBySortIndexAscAndCreatedDateDesc;
+
+import org.hibernate.Hibernate;
+import org.hibernate.proxy.HibernateProxy;
 
 @Slf4j
 public class BaseForumImpl extends MutableEntityImpl implements BaseForum {
@@ -123,7 +127,23 @@ public class BaseForumImpl extends MutableEntityImpl implements BaseForum {
            }
            this.topicsSet = sortedTopics;
         }
-        return Util.setToList(this.topicsSet);
+
+        List result = new ArrayList(this.topicsSet.size());
+        for (Iterator iter = this.topicsSet.iterator(); iter.hasNext();) {
+            Object object = iter.next();
+            if (object != null) {
+
+                Hibernate.initialize(object);
+                if (object instanceof HibernateProxy) {
+                    // Get the real implementation
+                    object = ((HibernateProxy) object).getHibernateLazyInitializer().getImplementation();
+                }
+
+                result.add(object);
+            }
+        }
+
+        return result;
     }
 
     public void setTopics(List topics) {
