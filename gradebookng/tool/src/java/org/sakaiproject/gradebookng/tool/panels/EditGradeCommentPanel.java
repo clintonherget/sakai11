@@ -7,13 +7,14 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.validation.validator.StringValidator;
 import org.sakaiproject.gradebookng.business.model.GbUser;
 import org.sakaiproject.gradebookng.tool.component.GbAjaxButton;
+import org.sakaiproject.gradebookng.tool.component.GbFeedbackPanel;
 import org.sakaiproject.service.gradebook.shared.Assignment;
 
 import lombok.Getter;
@@ -59,6 +60,8 @@ public class EditGradeCommentPanel extends BasePanel {
 		// modal window forms must be submitted via AJAX so we do not specify an onSubmit here
 		final Form<GradeComment> form = new Form<GradeComment>("form", formModel);
 
+		form.add(new GbFeedbackPanel("editGradeCommentFeedback"));
+
 		final GbAjaxButton submit = new GbAjaxButton("submit") {
 			private static final long serialVersionUID = 1L;
 
@@ -78,10 +81,15 @@ public class EditGradeCommentPanel extends BasePanel {
 					EditGradeCommentPanel.this.window.close(target);
 				} else {
 
-					// TODO need to handle the error here
+					error(getString("message.editcomment.error"));
+					target.addChildren(form, FeedbackPanel.class);
 				}
 			}
 
+			@Override
+			protected void onError(final AjaxRequestTarget target, final Form<?> form) {
+				target.addChildren(form, FeedbackPanel.class);
+			}
 		};
 		form.add(submit);
 
@@ -105,8 +113,7 @@ public class EditGradeCommentPanel extends BasePanel {
 						new Object[] { user.getDisplayName(), user.getDisplayId(), assignment.getName() })).getString());
 
 		// textarea
-		form.add(new TextArea<String>("comment", new PropertyModel<String>(formModel, "gradeComment"))
-				.add(StringValidator.maximumLength(500)));
+		form.add(new TextArea<String>("comment", new PropertyModel<String>(formModel, "gradeComment")));
 
 		// instant validation
 		// AjaxFormValidatingBehavior.addToAllFormComponents(form, "onkeyup", Duration.ONE_SECOND);

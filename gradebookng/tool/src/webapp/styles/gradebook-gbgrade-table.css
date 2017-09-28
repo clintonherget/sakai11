@@ -419,6 +419,10 @@
   list-style: none;
   padding-left: 0;
 }
+.gb-metadata .gb-metadata-notifications .gb-metadata-comment-notification blockquote {
+  max-height: 200px;
+  overflow: auto;
+}
 #gradebookGradesToolbar {
   border-top: 1px solid #F6f6f6;
 }
