@@ -383,6 +383,10 @@ public class GradebookPage extends BasePage {
 			groupFilter.setVisible(false);
 		}
 
+		WebMarkupContainer studentFilter = new WebMarkupContainer("studentFilter");
+		studentFilter.setVisible(this.hasAssignmentsAndGrades);
+		toolbar.add(studentFilter);
+
 		this.form.add(groupFilter);
 
 		final Map<String, Object> togglePanelModel = new HashMap<>();
@@ -392,7 +396,6 @@ public class GradebookPage extends BasePage {
 
 		final ToggleGradeItemsToolbarPanel gradeItemsTogglePanel =
 			new ToggleGradeItemsToolbarPanel("gradeItemsTogglePanel", Model.ofMap(togglePanelModel));
-		//gradeItemsTogglePanel.setVisible(false);
 		add(gradeItemsTogglePanel);
 
 		this.form.add(new WebMarkupContainer("captionToggle").setVisible(this.hasAssignmentsAndGrades));
@@ -401,8 +404,11 @@ public class GradebookPage extends BasePage {
 		// hide/show components
 		//
 
-		toolbar.setVisible(this.hasAssignmentsAndGrades);
-		gradeTable.setVisible(this.hasAssignmentsAndGrades);
+		// Only show the toolbar if there are students and grade items
+		toolbar.setVisible(!assignments.isEmpty());
+
+		// Show the table if there are grade items
+		gradeTable.setVisible(!assignments.isEmpty());
 
 		stopwatch.time("Gradebook page done", stopwatch.getTime());
 	}
