@@ -75,23 +75,27 @@ public class DriveHandler implements Handler {
 
             Drive drive = google.getDrive((String) context.get("googleUser"));
 
-            String query = request.getParameter("q");
-            String pageToken = request.getParameter("pageToken");
+            RequestParams p = new RequestParams(request);
+
+            String query = p.getString("q", null);
+            String pageToken = p.getString("pageToken", null);
 
             Drive.Files files = drive.files();
             Drive.Files.List list = files.list();
 
             list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
-            list.setOrderBy("name");
 
             String queryString = "mimeType != 'application/vnd.google-apps.folder'";
 
-            if (query != null) {
+            if (query == null) {
+                // API restriction: We can only sort if we don't have a search query
+                list.setOrderBy("modifiedTime");
+            } else {
                 queryString += " AND fullText contains '" + query + "'"; // FIXME escaping
             }
 
             list.setQ(queryString);
-            list.setPageSize(20);
+            list.setPageSize(100);
 
             if (pageToken != null) {
                 list.setPageToken(pageToken);
@@ -101,16 +105,16 @@ public class DriveHandler implements Handler {
 
             List<GoogleItem> filenames = new ArrayList<>();
 
-            for (File e : fileList.getFiles()) {
-                filenames.add(new GoogleItem(e.getId(),
-                        e.getName(),
-                        e.getIconLink(),
-                        e.getThumbnailLink(),
-                        e.getWebViewLink()));
+            for (File entry : fileList.getFiles()) {
+                filenames.add(new GoogleItem(entry.getId(),
+                        entry.getName(),
+                        entry.getIconLink(),
+                        entry.getThumbnailLink(),
+                        entry.getWebViewLink()));
             }
 
             ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(response.getOutputStream(), filenames);
+            mapper.writeValue(response.getOutputStream(), new GoogleItemPage(filenames, fileList.getNextPageToken()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -138,6 +142,16 @@ public class DriveHandler implements Handler {
 
     public boolean hasTemplate() {
         return false;
+    }
+
+    private class GoogleItemPage {
+        public String nextPageToken;
+        public List<GoogleItem> files;
+
+        public GoogleItemPage(List<GoogleItem> files, String nextPageToken) {
+            this.files = files;
+            this.nextPageToken = nextPageToken;
+        }
     }
 
     private class GoogleItem {
