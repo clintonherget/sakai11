@@ -1,12 +1,20 @@
-<h1>Hello</h1>
+<div class="google-drive">
+  <h1>Hello</h1>
 
-<p>Here are your files:</p>
+  <p>Here are your files:</p>
 
-<form method="POST" action="{{baseURL}}add-selected">
-  <ul id="drive">
-  </ul>
-  <input type="submit" value="Add to resources" />
-</form>
+  <div class="search-bar">
+    <input class="file-search" type="text" placeholder="Search your drive" value="" />
+  </div>
+
+  <form method="POST" action="{{baseURL}}add-selected">
+    <div class="scroll-container">
+      <ul class="file-list">
+      </ul>
+    </div>
+    <input type="submit" value="Add to resources" />
+  </form>
+</div>
 
 <script id="fileTemplate" type="text/template">
   <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
@@ -14,24 +22,133 @@
 
 <script>includeLatestJQuery('index.hbs');</script>
 <script>
-function Drive() {
-  this.baseURL = "{{baseURL}}";
+ function Drive(rootElt) {
+   this.root = rootElt;
+   this.baseURL = "{{baseURL}}";
 
-  this.getFiles(null, null);
-};
+   this.scrollContainer = this.root.find('.scroll-container');
+   this.list = this.root.find('.file-list');
+   this.search = this.root.find('.file-search');
 
-Drive.prototype.getFiles = function(query, pageToken) {
-  var fileTemplate = TrimPath.parseTemplate($("#fileTemplate").html().trim().toString());
+   this.nextPageToken = null;
 
-  $.getJSON(this.baseURL + "/drive-data", function(json) {
-    $.each(json, function(index, file) {
-      var html = fileTemplate.process(file);
-      $("#drive").append(html);
-    });
-  });
-};
+   this.currentSearchTerm = '';
 
-$(document).ready(function() {
-  new Drive();
-});
+   this.loadThresholdPx = parseInt(this.scrollContainer.css('max-height')) * 3;
+   this.currentlyLoading = false;
+
+   this.setupScrollHandling();
+   this.setupSearch();
+
+   this.getFiles();
+ };
+
+ Drive.prototype.setupScrollHandling = function() {
+   var self = this;
+
+   self.scrollContainer.on('scroll', function () {
+     if (self.currentlyLoading || !self.nextPageToken) {
+       /* Nothing needs doing */
+       return true;
+     }
+
+     var scrollPosition = self.scrollContainer.scrollTop() + self.scrollContainer.height();
+
+     if (scrollPosition >= (self.list.height() - self.loadThresholdPx)) {
+       /* Load next page */
+       self.currentlyLoading = true;
+       self.getFiles(self.nextPageToken, {
+         complete: function () {
+           self.currentlyLoading = false;
+         }
+       });
+     }
+
+     return true;
+   });
+ };
+
+ Drive.prototype.setupSearch = function() {
+   var self = this;
+   var updateTimer = null;
+
+   self.search.on('input', function () {
+     if (updateTimer) {
+       clearTimeout(updateTimer);
+     }
+
+     updateTimer = setTimeout(function () {
+       updateTimer = null;
+       self.handleSearchChange();
+     }, 250);
+   });
+ };
+
+ Drive.prototype.handleSearchChange = function () {
+   var self = this;
+
+   console.log("handling search change");
+
+   if (self.currentlyLoading) {
+     console.log("defer...");
+     /* Defer handling until we finish loading */
+     setTimeout(function () {
+       self.handleSearchChange();
+     }, 200);
+
+     return true;
+   }
+
+   var query = self.search.val();
+
+   if (query == this.currentSearchTerm) {
+     /* Nothing to do anyway! */
+     console.log("Nothing to do");
+     return true;
+   }
+
+   console.log("here we go!");
+   self.currentSearchTerm = (query || '');
+   self.nextPageToken = null;
+
+   self.getFiles(null, {
+     replaceList: true
+   });
+
+   return true;
+ };
+
+ Drive.prototype.getFiles = function(pageToken, options) {
+   var self = this;
+   var fileTemplate = TrimPath.parseTemplate($("#fileTemplate").html().trim().toString());
+
+   if (!pageToken) { pageToken = ''; }
+   if (!options) { options = {} }
+   if (!options.complete) { options.complete = $.noop; }
+
+   var query = (self.currentSearchTerm || '');
+
+   $.getJSON(this.baseURL + "/drive-data",
+             {
+               q: query,
+               pageToken: pageToken
+             },
+             function(json) {
+               if (options.replaceList) {
+                 self.list.empty();
+               }
+
+               $.each(json.files, function(index, page) {
+                 var html = fileTemplate.process(page);
+                 self.list.append(html);
+                 self.nextPageToken = json.nextPageToken;
+               });
+
+               options.complete();
+             });
+ };
+
+ $(document).ready(function() {
+   new Drive($('.google-drive'));
+ });
 </script>
