@@ -81,6 +81,7 @@ import org.sakaiproject.component.cover.ComponentManager;
 import edu.nyu.classes.externalhelp.api.ExternalHelpSystem;
 import edu.nyu.classes.externalhelp.api.ExternalHelp;
 
+import org.sakaiproject.event.cover.EventTrackingService;
 
 /**
  * View items such as quizes that are shown inline
@@ -423,39 +424,43 @@ public class ShowItemProducer implements ViewComponentProducer, NavigationCaseRe
 		}
 	    } else if (item.getAttribute("multimediaUrl") != null)
 		source = item.getAttribute("multimediaUrl");
-	    else switch (item.getType()) {
-		case SimplePageItem.RESOURCE:
-		    source = item.getItemURL(simplePageBean.getCurrentSiteId(), simplePageBean.getCurrentPage().getOwner());
-		    if (lessonBuilderAccessService.needsCopyright(item.getSakaiId()))
-			source = "/access/require?ref=" + URLEncoder.encode("/content" + item.getSakaiId()) + "&url=" + URLEncoder.encode(source.substring(7));
-		    break;
-		case SimplePageItem.CHECKLIST:
-		    source = item.getItemURL(simplePageBean.getCurrentSiteId(), simplePageBean.getCurrentPage().getOwner());
-		    break;
-		case SimplePageItem.ASSIGNMENT:
-		case SimplePageItem.ASSESSMENT:
-		case SimplePageItem.FORUM:
-		case SimplePageItem.BLTI:
-		    LessonEntity lessonEntity = null;
+	    else {
+		    postItemAccessEvent(item);
+
 		    switch (item.getType()) {
+		    case SimplePageItem.RESOURCE:
+			    source = item.getItemURL(simplePageBean.getCurrentSiteId(), simplePageBean.getCurrentPage().getOwner());
+			    if (lessonBuilderAccessService.needsCopyright(item.getSakaiId()))
+				    source = "/access/require?ref=" + URLEncoder.encode("/content" + item.getSakaiId()) + "&url=" + URLEncoder.encode(source.substring(7));
+			    break;
+		    case SimplePageItem.CHECKLIST:
+			    source = item.getItemURL(simplePageBean.getCurrentSiteId(), simplePageBean.getCurrentPage().getOwner());
+			    break;
 		    case SimplePageItem.ASSIGNMENT:
-			lessonEntity = assignmentEntity.getEntity(item.getSakaiId()); break;
 		    case SimplePageItem.ASSESSMENT:
-			lessonEntity = quizEntity.getEntity(item.getSakaiId(),simplePageBean); break;
 		    case SimplePageItem.FORUM:
-			lessonEntity = forumEntity.getEntity(item.getSakaiId()); break;
 		    case SimplePageItem.BLTI:
-			if (bltiEntity != null)
-			    lessonEntity = bltiEntity.getEntity(item.getSakaiId()); break;
+			    LessonEntity lessonEntity = null;
+			    switch (item.getType()) {
+			    case SimplePageItem.ASSIGNMENT:
+				    lessonEntity = assignmentEntity.getEntity(item.getSakaiId()); break;
+			    case SimplePageItem.ASSESSMENT:
+				    lessonEntity = quizEntity.getEntity(item.getSakaiId(),simplePageBean); break;
+			    case SimplePageItem.FORUM:
+				    lessonEntity = forumEntity.getEntity(item.getSakaiId()); break;
+			    case SimplePageItem.BLTI:
+				    if (bltiEntity != null)
+					    lessonEntity = bltiEntity.getEntity(item.getSakaiId()); break;
+			    }
+			    if ("EDIT".equals(source))
+				    source = (lessonEntity==null)?"dummy":lessonEntity.editItemUrl(simplePageBean);
+			    else if ("SETTINGS".equals(source))
+				    source = (lessonEntity==null)?"dummy":lessonEntity.editItemSettingsUrl(simplePageBean);
+			    else if ("SETTINGS".equals(source));
+			    else
+				    source = (lessonEntity==null)?"dummy":lessonEntity.getUrl();
 		    }
-		    if ("EDIT".equals(source))
-			source = (lessonEntity==null)?"dummy":lessonEntity.editItemUrl(simplePageBean);
-		    else if ("SETTINGS".equals(source))
-			source = (lessonEntity==null)?"dummy":lessonEntity.editItemSettingsUrl(simplePageBean);
-		    else if ("SETTINGS".equals(source));
-		    else
-			source = (lessonEntity==null)?"dummy":lessonEntity.getUrl();
-		}
+	    }
 
 	    UIComponent iframe = UILink.make(tofill, "iframe1", source);
 	    if (item != null && item.getType() == SimplePageItem.BLTI) {
@@ -466,6 +471,10 @@ public class ShowItemProducer implements ViewComponentProducer, NavigationCaseRe
 		    iframe.decorate(new UIFreeAttributeDecorator("height", height));
 		iframe.decorate(new UIFreeAttributeDecorator("onload", ""));
 	    }
+	}
+
+	private void postItemAccessEvent(SimplePageItem item) {
+		EventTrackingService.post(EventTrackingService.newEvent("lessonbuilder-nyu.read", "/lessonbuilder-nyu/item/" + item.getId(), false));
 	}
 
 	public void setSimplePageBean(SimplePageBean simplePageBean) {
