@@ -1,8 +1,6 @@
 <div class="google-drive">
   <h1>Hello</h1>
 
-  <p>Here are your files:</p>
-
   <div class="search-bar">
     <input class="file-search" type="text" placeholder="Search your drive" value="" />
   </div>
@@ -11,8 +9,11 @@
     <div class="scroll-container">
       <ul class="file-list">
       </ul>
+      <div class="no-matches-msg" style="display: none;">No files matched your query</div>
     </div>
-    <input type="submit" value="Add to resources" />
+    <div class="form-buttons">
+      <input type="submit" value="Add to resources" />
+    </div>
   </form>
 </div>
 
@@ -34,13 +35,48 @@
 
    this.currentSearchTerm = '';
 
-   this.loadThresholdPx = parseInt(this.scrollContainer.css('max-height')) * 3;
+   this.loadThresholdPx = parseInt(this.scrollContainer.css('max-height')) * 4;
    this.currentlyLoading = false;
 
+   this.setupList();
    this.setupScrollHandling();
    this.setupSearch();
 
    this.getFiles();
+ };
+
+ Drive.prototype.setupList = function() {
+   this.listOverlay = $('<div class="list-overlay" />');
+
+   this.listOverlay
+       .css('position', 'absolute')
+       .css('top', this.scrollContainer.position().top)
+       .css('left', this.scrollContainer.position().left);
+
+   this.root.append(this.listOverlay);
+ }
+
+ Drive.prototype.showOverlay = function () {
+   if (this.list.find('li').length == 0) {
+     /* Nothing to overlay */
+     return;
+   }
+   this.listOverlay
+       .css('width', this.scrollContainer.width())
+       .css('height', this.scrollContainer.height())
+       .show();
+ };
+
+ Drive.prototype.hideOverlay = function () {
+   this.listOverlay.hide();
+ };
+
+ Drive.prototype.showNoMatches = function () {
+   this.root.find('.no-matches-msg').show();
+ };
+
+ Drive.prototype.hideNoMatches = function () {
+   this.root.find('.no-matches-msg').hide();
  };
 
  Drive.prototype.setupScrollHandling = function() {
@@ -111,8 +147,13 @@
    self.currentSearchTerm = (query || '');
    self.nextPageToken = null;
 
+   self.showOverlay();
+
    self.getFiles(null, {
-     replaceList: true
+     replaceList: true,
+     complete: function () {
+       self.hideOverlay();
+     }
    });
 
    return true;
@@ -134,6 +175,8 @@
                pageToken: pageToken
              },
              function(json) {
+               self.hideNoMatches();
+
                if (options.replaceList) {
                  self.list.empty();
                }
@@ -144,11 +187,15 @@
                  self.nextPageToken = json.nextPageToken;
                });
 
+               if (json.files.length == 0) {
+                 self.showNoMatches();
+               }
+
                options.complete();
              });
  };
 
  $(document).ready(function() {
-   new Drive($('.google-drive'));
+   window.driveDebug = new Drive($('.google-drive'));
  });
 </script>
