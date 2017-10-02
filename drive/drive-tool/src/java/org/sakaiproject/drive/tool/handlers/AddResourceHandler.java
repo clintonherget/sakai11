@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
+import org.sakaiproject.exception.PermissionException;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.CredentialRefreshListener;
@@ -65,7 +66,11 @@ import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.util.BaseResourcePropertiesEdit;
 
+import com.google.api.client.http.HttpHeaders;
+
 import java.net.URL;
+import com.google.api.client.googleapis.json.GoogleJsonError;
+import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 
 /**
  * A handler to access Google Drive file data
@@ -82,22 +87,18 @@ public class AddResourceHandler implements Handler {
 
             String[] fileIds = request.getParameterValues("fileid[]");
 
-            // One by one... cheesy
+            GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
+
+            ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
+            String siteId = ToolManager.getCurrentPlacement().getContext();
+            String collectionId = "/group/" + siteId + "/";
+
             for (String id : fileIds) {
-                File googleFile = drive.files().get(id).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink").execute();
-
-                String siteId = ToolManager.getCurrentPlacement().getContext();
-                String collectionId = "/group/" + siteId + "/";
-
-                ResourceProperties properties = new BaseResourcePropertiesEdit();
-                properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, googleFile.getName());
-                properties.addProperty("google-id", id);
-                properties.addProperty("google-view-link", googleFile.getWebViewLink());
-                properties.addProperty("google-icon-link", googleFile.getIconLink());
-
-                ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
-                chs.addResource(googleFile.getName(), collectionId, 10, "x-nyu-google/item", new byte[0], properties, Collections.<String>emptyList(), 1);
+                batch.queue(drive.files().get(id).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
+                        new GoogleFileImporter(google, id, chs, collectionId));
             }
+
+            batch.execute();
 
             redirectTo = "/";
         } catch (Exception e) {
@@ -119,6 +120,45 @@ public class AddResourceHandler implements Handler {
 
     public Map<String, List<String>> getFlashMessages() {
         return new HashMap<String, List<String>>();
+    }
+
+
+    private class GoogleFileImporter extends JsonBatchCallback<File> {
+        private GoogleClient google;
+        private String fileId;
+        private ContentHostingService chs;
+        private String collectionId;
+
+        public GoogleFileImporter(GoogleClient google, String fileId, ContentHostingService chs, String collectionId) {
+            this.google = google;
+            this.fileId = fileId;
+            this.chs = chs;
+            this.collectionId = collectionId;
+        }
+
+        public void onSuccess(File googleFile, HttpHeaders responseHeaders) {
+            ResourceProperties properties = new BaseResourcePropertiesEdit();
+            properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, googleFile.getName());
+            properties.addProperty("google-id", fileId);
+            properties.addProperty("google-view-link", googleFile.getWebViewLink());
+            properties.addProperty("google-icon-link", googleFile.getIconLink());
+
+            try {
+                chs.addResource(googleFile.getName(), collectionId, 10, "x-nyu-google/item", new byte[0], properties, Collections.<String>emptyList(), 1);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
+            if (e.getCode() == 403) {
+                google.rateLimitHit();
+            }
+
+            throw new RuntimeException("Failed during Google lookup for file: " + fileId + " " + e);
+        }
+
+
     }
 
 }
