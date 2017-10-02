@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
@@ -144,7 +145,7 @@ public class AddResourceHandler implements Handler {
             properties.addProperty("google-icon-link", googleFile.getIconLink());
 
             try {
-                chs.addResource(googleFile.getName(), collectionId, 10, "x-nyu-google/item", new byte[0], properties, Collections.<String>emptyList(), 1);
+                chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", new byte[0], properties, Collections.<String>emptyList(), 1);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
