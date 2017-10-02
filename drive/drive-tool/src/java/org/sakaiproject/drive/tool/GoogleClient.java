@@ -37,11 +37,14 @@ import com.google.api.client.auth.oauth2.CredentialRefreshListener;
 import com.google.api.client.auth.oauth2.DataStoreCredentialRefreshListener;
 import com.google.api.client.auth.oauth2.TokenErrorResponse;
 import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.auth.oauth2.StoredCredential;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.store.DataStore;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -136,6 +139,13 @@ public class GoogleClient {
         }
     }
 
+    public boolean deleteCredential(String user) throws Exception {
+        GoogleAuthorizationCodeFlow flow = getAuthFlow();
+
+        DataStore<StoredCredential> credentialStore = flow.getCredentialDataStore();
+
+        return (credentialStore.delete(user) != null);
+    }
 
     public Drive getDrive(String googleUser) throws Exception {
         return new Drive.Builder(httpTransport, jsonFactory, getCredential(googleUser))
