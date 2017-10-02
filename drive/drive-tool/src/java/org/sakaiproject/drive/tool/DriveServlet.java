@@ -117,7 +117,7 @@ public class DriveServlet extends HttpServlet {
     }
 
     private Handler handlerForRequest(HttpServletRequest request) {
-        String path = request.getPathInfo();
+        String path = request.getRequestURI();
 
         if (path == null) {
             path = "";
@@ -127,6 +127,8 @@ public class DriveServlet extends HttpServlet {
 
         if (path.contains("/handle-google-login")) {
             return new OAuthHandler(OAuthHandler.HANDLE_OAUTH);
+        } else if (path.contains("/reset-oauth")) {
+            return new OAuthHandler(OAuthHandler.RESET);
         } else if (google.getCredential(getCurrentGoogleUser()) == null) {
             return new OAuthHandler(OAuthHandler.SEND_TO_GOOGLE);
         } else if (path.contains("/drive-data")) {

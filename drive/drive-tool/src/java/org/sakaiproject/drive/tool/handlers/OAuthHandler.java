@@ -66,6 +66,7 @@ public class OAuthHandler implements Handler {
     private String redirectTo = null;
     public static final int SEND_TO_GOOGLE = 0;
     public static final int HANDLE_OAUTH = 1;
+    public static final int RESET = 2;
 
     private static final String APPLICATION = "Sakai Drive";
 
@@ -90,6 +91,14 @@ public class OAuthHandler implements Handler {
                 handleOAuth(request, response, context);
             } else if (mode == SEND_TO_GOOGLE) {
                 sendToGoogle(request, response, context);
+            } else if (mode == RESET) {
+                String googleUser = (String) context.get("googleUser");
+
+                if (googleUser != null) {
+                    google.deleteCredential(googleUser);
+                }
+
+                redirectTo = "/";
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
