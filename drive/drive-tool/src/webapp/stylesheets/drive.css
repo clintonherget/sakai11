@@ -3,6 +3,22 @@
     overflow-y: auto;
 }
 
+.drive-body .file-list {
+    list-style: none;
+}
+
 .drive-body .search-bar {
     text-align: right;
+}
+
+.drive-body .list-overlay {
+    display: none;
+    z-index: 50;
+    background-color: #333;
+    opacity: 0.6;
+}
+
+.drive-body .form-buttons {
+    background-color: #efefef;
+    margin-top: 20px;
 }
