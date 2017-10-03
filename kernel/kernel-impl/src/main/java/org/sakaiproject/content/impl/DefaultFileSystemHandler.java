@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
 import org.springframework.util.FileCopyUtils;
 
 /**
@@ -67,7 +69,12 @@ public class DefaultFileSystemHandler implements FileSystemHandler {
 
     @Override
     public InputStream getInputStream(String id, String root, String filePath) throws IOException {
-        return new FileInputStream(getFile(id, root, filePath));
+
+        if ("true".equals(HotReloadConfigurationService.getString("nyu.use-fs-telemetry", "false"))) {
+            return new TelemetryFileInputStream(getFile(id, root, filePath));
+        } else {
+            return new FileInputStream(getFile(id, root, filePath));
+        }
     }
 
     @Override
