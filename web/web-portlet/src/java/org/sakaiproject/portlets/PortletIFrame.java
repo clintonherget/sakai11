@@ -301,12 +301,22 @@ public class PortletIFrame extends GenericPortlet {
 			response.setTitle(placement.getTitle());
 			String source = config.getProperty(SOURCE);
 			if ( source == null ) source = "";
+
+			String special = getSpecial(config);
+
 			String height = config.getProperty(HEIGHT);
-			if ( height == null ) height = "1200px";
+			if ( height == null ) {
+				if (SPECIAL_WORKSITE.equals(special)) {
+					// NYU default the min-height for inline /vm/info.vm
+					height = "400px";
+				} else {
+					// NYU iFrame default height
+					height = "1200px";
+				}
+			}
+
             String sakaiPropertiesUrlKey = config.getProperty(SAKAI_PROPERTIES_URL_KEY);
             String hideOptions = config.getProperty(HIDE_OPTIONS);
-
-            String special = getSpecial(config);
 
 			// Handle the situation where we are displaying the worksite information
 			if ( SPECIAL_WORKSITE.equals(special) ) {
@@ -542,7 +552,7 @@ public class PortletIFrame extends GenericPortlet {
 			}
 			if ( source == null ) source = "";
 			if ( special == null ) context.put("source",source);
-			String height = placement.getPlacementConfig().getProperty(HEIGHT);
+			String height = config.getProperty(HEIGHT);
 			if ( height == null ) height = "1200px";
 			context.put("height",height);
 
@@ -649,22 +659,22 @@ public class PortletIFrame extends GenericPortlet {
 			    }
 		    }
 
-		    boolean selected = false;
-		    for (int i = 0; i < ourPixels.length; i++)
-		    {
-			    if (height.equals(ourPixels[i]))
-			    {
-				    selected = true;
-				    continue;
-			    }
-		    }
-		    if (!selected)
-		    {
-			    String[] strings = height.trim().split("px");
-			    context.put("custom_height", strings[0]);
-			    height = rb.getString("gen.heisomelse");
-		    }
-		    context.put("height", height);
+		    // boolean selected = false;
+		    // for (int i = 0; i < ourPixels.length; i++)
+		    // {
+		    // 	    if (height.equals(ourPixels[i]))
+		    // 	    {
+		    // 		    selected = true;
+		    // 		    continue;
+		    // 	    }
+		    // }
+		    // if (!selected)
+		    // {
+		    String[] strings = height.trim().split("px");
+		    context.put("custom_height", strings[0]);
+		    // height = rb.getString("gen.heisomelse");
+		    // }
+		    // context.put("height", height);
 
 		    // output the max limit 
 		    context.put("max_length_title", MAX_TITLE_LENGTH);
