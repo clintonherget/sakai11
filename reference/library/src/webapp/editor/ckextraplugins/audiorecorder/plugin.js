@@ -76,6 +76,18 @@ CKEDITOR.plugins.add( 'audiorecorder',
 	 requires : [ 'fakeobjects', 'flash', 'iframedialog' ],
    //http://alfonsoml.blogspot.com/2009/12/plugin-localization-in-ckeditor-vs.html
    lang: ['en'],
+   getPlaceholderCss : function () {
+       return 'img.cke_audiorecorder' +
+		    '{' +
+		    'background-image: url(' + CKEDITOR.getUrl( this.path + 'images/placeholder.png' ) + ');' +
+		    'background-position: center center;' +
+		    'background-repeat: no-repeat;' +
+		    'border: 1px solid #a9a9a9;' +
+		    'width: 110px;' +
+		    'height: 90px;' +
+		    '}';
+   },
+
    getPlaceholderCss1 : function () {
        return 'img.cke_audiorecorder1' +
 		    '{' +
@@ -102,6 +114,7 @@ CKEDITOR.plugins.add( 'audiorecorder',
    onLoad: function() {
        //v4
        if (CKEDITOR.addCss) {
+	   CKEDITOR.addCss(this.getPlaceholderCss());
 	   CKEDITOR.addCss(this.getPlaceholderCss1());
 	   CKEDITOR.addCss(this.getPlaceholderCss2());
        }
@@ -119,6 +132,7 @@ CKEDITOR.plugins.add( 'audiorecorder',
       });
       //v3
       if (editor.addCss) { 
+	  editor.addCss(this.getPlaceholderCss());
 	  editor.addCss(this.getPlaceholderCss1());
 	  editor.addCss(this.getPlaceholderCss2());
       }
@@ -181,22 +195,10 @@ CKEDITOR.plugins.add( 'audiorecorder',
 					var audioElement = e.createCKElement();
 					var objectElementHTML = e.getInnerHTML();
 					var objectElement = CKEDITOR.dom.element.createFromHtml(objectElementHTML);
-					var fakeElement1,fakeElement2;
+					var fakeElement = this._.editor.createFakeElement( audioElement, 'cke_audiorecorder', 'audiorecorder', true );
 
-					if(!isNew) {
-						//TODO: Is this still a problem with Safari?
-						if(!navigator.userAgent.contains('Safari')) {
-							//FCK.Selection.Delete();
-						}
-						fakeElement1= this._.editor.createFakeElement( objectElement, 'cke_audiorecorder1', 'audiorecorder', true );
-						fakeElement2= this._.editor.createFakeElement( audioElement, 'cke_audiorecorder2', 'audiorecorder', true );
-					}else{
-						fakeElement1= this._.editor.createFakeElement( objectElement, 'cke_audiorecorder1', 'audiorecorder', true );
-						fakeElement2= this._.editor.createFakeElement( audioElement, 'cke_audiorecorder2', 'audiorecorder', true );
-					}
-
-					editor.insertHtml(fakeElement1.getOuterHtml());
-					editor.insertHtml(fakeElement2.getOuterHtml());
+					// NYU: Disable the <object> tag because we don't seem to need it anymore and it currently triggers a file download on Chrome running under OSX
+					editor.insertHtml(fakeElement.getOuterHtml());
 				}
 
             };
