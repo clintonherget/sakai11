@@ -228,7 +228,7 @@ PASystemTimezoneChecker.prototype.checkTimezone = function() {
       success: function(data) {
         if (data.status == 'MISMATCH' && data.setTimezoneUrl) {
           // Add banner for Timezone check message
-          pasystem.banners.addBannerAlert("tz", self.getTimezoneBannerContent(data), true, "timezone");
+          pasystem.banners.addBannerAlert("tz", self.getTimezoneBannerContent(data), false, "timezone");
         } else {
           self.doNotCheckAgainForAWhile();
         }
