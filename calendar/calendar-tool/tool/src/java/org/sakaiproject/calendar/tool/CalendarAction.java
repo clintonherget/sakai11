@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import org.sakaiproject.alias.api.Alias;
 import org.sakaiproject.alias.api.AliasService;
 import org.sakaiproject.authz.api.PermissionsHelper;
+import org.sakaiproject.authz.api.FunctionManager;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.calendar.api.*;
 import org.sakaiproject.calendar.cover.CalendarImporterService;
@@ -7762,6 +7763,13 @@ extends VelocityPortletStateAction
 
 		// ... showing only locks that are prpefixed with this
 		state.setAttribute(PermissionsHelper.PREFIX, "calendar.");
+
+		// CLASSES-3005 We'll get our own list so we can exclude subscribe
+		FunctionManager functionManager = ComponentManager.get(FunctionManager.class);
+		List functions = functionManager.getRegisteredFunctions("calendar.");
+		functions.remove("calendar.subscribe");
+		state.setAttribute("permission.abilities", functions);
+
 		// ... pass the resource loader object
 		ResourceLoader pRb = new ResourceLoader("permissions");
 		HashMap<String, String> pRbValues = new HashMap<String, String>();
