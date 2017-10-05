@@ -65,7 +65,9 @@
   </div>
 
   <h:messages styleClass="messageSamigo" rendered="#{! empty facesContext.maximumSeverity}" layout="table"/>
-  
+
+  <div class="bs-callout-warn"><b>Note:</b> to prevent issues while taking assessments, it is <u><b>highly</b></u> recommended that you limit your NYU Classes session to <b><u>1</u></b> browser window / tab.</div>
+
   <div class="bs-callout-primary">
     <!-- ASSESSMENT INTRODUCTION -->
     <h:outputText value="<br/>#{delivery.instructorMessage}<br/>" escape="false" rendered="#{delivery.instructorMessage != null && delivery.instructorMessage != ''}"/>
