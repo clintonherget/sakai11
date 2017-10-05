@@ -236,7 +236,7 @@ CKEDITOR.plugins.add( 'audiorecorder',
 						   if ( !isAudioEmbed( element ) )
 							   return null;
 						   //Otherwise, we return a fake element, this is the element that will be shown in WYSIWYG mode
-						   return editor.createFakeParserElement( element, 'cke_audiorecorder2','audiorecoder',true  );
+						   return editor.createFakeParserElement( element, 'cke_audiorecorder','audiorecoder',true  );
 					   },
 					   'cke:object' : function( element )
 					   {
