@@ -70,6 +70,7 @@
                 <module>dav</module>
                 <module>delegatedaccess</module>
                 <module>deploy</module>
+                <module>drive</module>
                 <module>edu-services</module>
                 <module>external-help</module>
                 <module>emailtemplateservice</module>
