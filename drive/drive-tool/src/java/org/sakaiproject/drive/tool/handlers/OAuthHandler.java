@@ -58,9 +58,6 @@ import java.io.File;
 
 import java.net.URL;
 
-/**
- * A handler for the index page in the PA System administration tool.
- */
 public class OAuthHandler implements Handler {
 
     private String redirectTo = null;

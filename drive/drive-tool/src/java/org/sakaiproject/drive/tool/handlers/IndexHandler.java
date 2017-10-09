@@ -59,9 +59,6 @@ import java.io.InputStreamReader;
 
 import java.net.URL;
 
-/**
- * A handler for the index page in the PA System administration tool.
- */
 public class IndexHandler implements Handler {
 
     private String redirectTo = null;

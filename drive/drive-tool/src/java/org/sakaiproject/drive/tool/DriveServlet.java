@@ -89,6 +89,7 @@ public class DriveServlet extends HttpServlet {
             Map<String, Object> context = new HashMap<String, Object>();
 
             context.put("baseURL", toolBaseURL);
+            context.put("siteID", ToolManager.getCurrentPlacement().getContext());
             context.put("layout", true);
             context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
             context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
@@ -125,7 +126,9 @@ public class DriveServlet extends HttpServlet {
 
         GoogleClient google = new GoogleClient();
 
-        if (path.contains("/handle-google-login")) {
+        if (path.contains("/sakai-resources")) {
+            return new SakaiResourceHandler();
+        } else if (path.contains("/handle-google-login")) {
             return new OAuthHandler(OAuthHandler.HANDLE_OAUTH);
         } else if (path.contains("/reset-oauth")) {
             return new OAuthHandler(OAuthHandler.RESET);
@@ -171,6 +174,8 @@ public class DriveServlet extends HttpServlet {
 
     private Handlebars loadHandlebars(final URL baseURL, final I18n i18n) {
         Handlebars handlebars = new Handlebars();
+
+        handlebars.setInfiniteLoops(true);
 
         handlebars.registerHelper("subpage", new Helper<Object>() {
             @Override
