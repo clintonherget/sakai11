@@ -56,14 +56,16 @@ public class SakaiResourceHandler implements Handler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
-        String[] bits = request.getPathInfo().split("/", 3);
-
         String siteId = (String) context.get("siteID");
         String requestedPath = "/group/" + siteId + "/";
 
-        // path info starts with /sakai-drive/
-        if (bits.length == 3) {
-            requestedPath = "/" + bits[2];
+        if (request.getPathInfo() != null) {
+            String[] bits = request.getPathInfo().split("/", 3);
+
+            // path info starts with /sakai-drive/
+            if (bits.length == 3) {
+                requestedPath = "/" + bits[2];
+            }
         }
 
         if (!requestedPath.endsWith("/")) {

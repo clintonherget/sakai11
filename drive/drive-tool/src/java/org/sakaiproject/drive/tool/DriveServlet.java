@@ -85,7 +85,6 @@ public class DriveServlet extends HttpServlet {
         Handlebars handlebars = loadHandlebars(toolBaseURL, i18n);
 
         try {
-            Template template = handlebars.compile("org/sakaiproject/drive/tool/views/layout");
             Map<String, Object> context = new HashMap<String, Object>();
 
             context.put("baseURL", toolBaseURL);
@@ -109,6 +108,10 @@ public class DriveServlet extends HttpServlet {
                 }
             } else if (handler.hasTemplate()) {
                 if (Boolean.TRUE.equals(context.get("layout"))) {
+                    Template template = handlebars.compile("org/sakaiproject/drive/tool/views/layout");
+                    response.getWriter().write(template.apply(context));
+                } else {
+                    Template template = handlebars.compile("org/sakaiproject/drive/tool/views/" + context.get("subpage"));
                     response.getWriter().write(template.apply(context));
                 }
             }
@@ -118,32 +121,45 @@ public class DriveServlet extends HttpServlet {
     }
 
     private Handler handlerForRequest(HttpServletRequest request) {
-        String path = request.getRequestURI();
+        String path = request.getPathInfo();
 
         if (path == null) {
             path = "";
         }
 
+        // path
+        System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[DriveServlet.java:128 e1cc3e]: " + "\n    path => " + (path) + "\n");
+
         GoogleClient google = new GoogleClient();
 
-        if (path.contains("/sakai-resources")) {
-            return new SakaiResourceHandler();
-        } else if (path.contains("/handle-google-login")) {
+        if (path.startsWith("/handle-google-login")) {
             return new OAuthHandler(OAuthHandler.HANDLE_OAUTH);
-        } else if (path.contains("/reset-oauth")) {
+        } else if (path.startsWith("/reset-oauth")) {
             return new OAuthHandler(OAuthHandler.RESET);
         } else if (google.getCredential(getCurrentGoogleUser()) == null) {
             return new OAuthHandler(OAuthHandler.SEND_TO_GOOGLE);
-        } else if (path.contains("/drive-data")) {
+        } else if (path.startsWith("/show-google-drive")) {
+            return new ShowGoogleDriveHandler();
+        } else if (path.startsWith("/drive-data")) {
             return new DriveHandler();
-        } else if (path.contains("/add-selected")) {
+        } else if (path.startsWith("/add-selected")) {
             return new AddResourceHandler();
         }
 
-        return new IndexHandler();
+        return new SakaiResourceHandler();
     }
 
     private URL determineBaseURL() {
+        try {
+            return new URL(ServerConfigurationService.getPortalUrl() + getBaseURI() + "/");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Couldn't determine tool URL", e);
+        }
+    }
+
+    private String getBaseURI() {
+        String result = "";
+
         String siteId = null;
         String toolId = null;
 
@@ -152,20 +168,14 @@ public class DriveServlet extends HttpServlet {
             toolId = ToolManager.getCurrentPlacement().getId();
         }
 
-        try {
-            String result = ServerConfigurationService.getPortalUrl();
-
-            if (siteId != null) {
-                result += "/site/" + siteId;
-                if (toolId != null) {
-                    result += "/tool/" + toolId + "/";
-                }
+        if (siteId != null) {
+            result += "/site/" + siteId;
+            if (toolId != null) {
+                result += "/tool/" + toolId;
             }
-
-            return new URL(result);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Couldn't determine tool URL", e);
         }
+
+        return result;
     }
 
     private String getCurrentGoogleUser() {
