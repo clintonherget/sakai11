@@ -191,6 +191,13 @@ public class DriveServlet extends HttpServlet {
             }
         });
 
+        handlebars.registerHelper(Handlebars.HELPER_MISSING, new Helper<Object>() {
+            @Override
+            public CharSequence apply(final Object context, final Options options) throws IOException {
+                throw new RuntimeException("Failed to find a match for: " + options.fn.text());
+            }
+        });
+
         handlebars.registerHelper("show-time", new Helper<Object>() {
             @Override
             public CharSequence apply(final Object context, final Options options) {
