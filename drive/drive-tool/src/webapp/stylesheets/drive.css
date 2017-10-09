@@ -26,3 +26,87 @@
     background-color: #efefef;
     margin-top: 20px;
 }
+
+
+.drive-file:before,
+.drive-folder:before {
+  font-family: 'FontAwesome';
+  content: '\f128';
+  color: #777;
+  width: 20px;
+  display: inline-block;
+}
+.drive-folder:before {
+  content: '\f07b';
+}
+.drive-file.text:before,
+.drive-file.content:before {
+  content: '\f0f6';
+}
+.drive-file.image:before,
+.drive-file.photoshop:before {
+  content: '\f1c5';
+}
+.drive-file.citation:before {
+  content: '\f03a';
+}
+.drive-file.pdf:before {
+  content: '\f1c1';
+}
+.drive-file.compressed:before {
+  content: '\f1c6';
+}
+.drive-file.excel:before {
+  content: '\f1c3';
+}
+.drive-file.word:before {
+  content: '\f1c2';
+}
+.drive-file.ppt:before {
+  content: '\f1c4';
+}
+.drive-file.video:before {
+  content: '\f1c8';
+}
+.drive-file.generic:before,
+.drive-file.binary:before {
+  content: '\f016';
+}
+.drive-file.html:before,
+.drive-file.code:before {
+  content: '\f1c9';
+}
+.drive-file.audio:before,
+.drive-file.real:before {
+  content: '\f1c7';
+}
+.drive-file.broken:before {
+  content: '\f016';
+}
+.drive-file.java:before {
+  content: '\f1c9';
+}
+.drive-file.binhex:before {
+  content: '\f016';
+}
+.drive-file.access:before {
+  content: '\f1c0';
+}
+.drive-file.postscript:before {
+  content: '\f1c1';
+}
+.drive-file.shockwave:before {
+  content: '\f0e7';
+}
+.drive-file.application:before {
+  content: '\f016';
+}
+.drive-file.application_form:before {
+  content: '\f298';
+}
+.drive-file.drive:before {
+  content: '\f1a0';
+}
+.drive-file.url:before {
+  content: '\f08e';
+}
