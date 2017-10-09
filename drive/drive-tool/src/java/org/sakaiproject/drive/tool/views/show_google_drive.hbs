@@ -27,7 +27,6 @@
   <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
 </script>
 
-<script>includeLatestJQuery('index.hbs');</script>
 <script>
  function Drive(rootElt) {
    this.root = rootElt;
@@ -201,7 +200,5 @@
              });
  };
 
- $(document).ready(function() {
-   window.driveDebug = new Drive($('.google-drive'));
- });
+ new Drive($('.google-drive'));
 </script>
