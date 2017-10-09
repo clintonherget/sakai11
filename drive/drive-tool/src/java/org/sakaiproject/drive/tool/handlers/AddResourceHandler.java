@@ -91,7 +91,7 @@ public class AddResourceHandler implements Handler {
             GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
 
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
-            String siteId = ToolManager.getCurrentPlacement().getContext();
+            String siteId = (String) context.get("siteID");
             String collectionId = "/group/" + siteId + "/";
 
             for (String id : fileIds) {
