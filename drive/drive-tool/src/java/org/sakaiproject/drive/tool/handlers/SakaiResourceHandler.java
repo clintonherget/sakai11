@@ -55,10 +55,23 @@ public class SakaiResourceHandler implements Handler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
+        String[] bits = request.getPathInfo().split("/", 3);
+
+        String siteId = (String) context.get("siteID");
+        String requestedPath = "/group/" + siteId + "/";
+
+        // path info starts with /sakai-drive/
+        if (bits.length == 3) {
+            requestedPath = "/" + bits[2];
+        }
+
+        if (!requestedPath.endsWith("/")) {
+            requestedPath += "/";
+        }
+
         try {
             // THINKME: Maybe context should be smrter!
-            String siteId = (String) context.get("siteID");
-            ContentCollection siteResources = contentHostingService.getCollection("/group/" + siteId + "/");
+            ContentCollection siteResources = contentHostingService.getCollection(requestedPath);
 
             context.put("resource", new ResourceTree(siteResources, contentHostingService));
             context.put("subpage", "resources");
@@ -88,6 +101,9 @@ public class SakaiResourceHandler implements Handler {
         public String getLabel();
         public boolean isFolder();
         public Collection<Resource> getChildren();
+        public String getTypeClass();
+        public String getPath();
+        public List<Breadcrumb> getBreadcrumbs();
     }
 
     private class ResourceTree implements Resource {
@@ -101,6 +117,14 @@ public class SakaiResourceHandler implements Handler {
 
         public boolean isFolder() {
             return true;
+        }
+
+        public String getTypeClass() {
+            return "drive-folder";
+        }
+
+        public String getPath() {
+            return root.getId();
         }
 
         public Collection<Resource> getChildren() {
@@ -124,9 +148,38 @@ public class SakaiResourceHandler implements Handler {
             return result;
         }
 
-        public String getLabel() {
-            return (String)root.getProperties().get(ResourceProperties.PROP_DISPLAY_NAME);
+        public List<Breadcrumb> getBreadcrumbs() {
+            List<Breadcrumb> result = new ArrayList<>();
+
+            ContentCollection current = root;
+
+            while (current != null && !"/group/".equals(current.getId())) {
+                result.add(0, new Breadcrumb(current.getId(), getLabel(current)));
+                current = current.getContainingCollection();
+            }
+            return result;
         }
+
+        public String getLabel() {
+            return getLabel(root);
+        }
+
+        private String getLabel(ContentCollection other) {
+            return (String)other.getProperties().get(ResourceProperties.PROP_DISPLAY_NAME);
+        }
+    }
+
+    private static class Breadcrumb {
+        private String id;
+        private String label;
+
+        public Breadcrumb(String id, String label) {
+            this.id = id;
+            this.label = label;
+        }
+
+        public String getId() { return id; }
+        public String getLabel() { return label; }
     }
 
     private class ResourceItem implements Resource {
@@ -144,8 +197,21 @@ public class SakaiResourceHandler implements Handler {
             return (String)resource.getProperties().get(ResourceProperties.PROP_DISPLAY_NAME);
         }
 
+        public String getPath() {
+            return resource.getId();
+        }
+
         public Collection<Resource> getChildren() {
             return Collections.EMPTY_LIST;
+        }
+
+        public List<Breadcrumb> getBreadcrumbs() {
+            return Collections.EMPTY_LIST;
+        }
+
+
+        public String getTypeClass() {
+            return ((String) resource.getProperties().get(ResourceProperties.PROP_CONTENT_TYPE)).replace("/", "-");
         }
     }
 
