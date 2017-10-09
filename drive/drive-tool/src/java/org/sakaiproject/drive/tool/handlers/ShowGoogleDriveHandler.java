@@ -59,39 +59,15 @@ import java.io.InputStreamReader;
 
 import java.net.URL;
 
-public class IndexHandler implements Handler {
+public class ShowGoogleDriveHandler implements Handler {
 
     private String redirectTo = null;
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
-            context.put("subpage", "index");
-
-//            GoogleClient google = new GoogleClient();
-//
-//            Drive drive = google.getDrive((String) context.get("googleUser"));
-//
-//            Drive.Files files = drive.files();
-//            Drive.Files.List list = files.list();
-//
-//            list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
-//            list.setOrderBy("name");
-//
-//            list.setQ("mimeType != 'application/vnd.google-apps.folder'");
-//
-//            FileList fileList = list.execute();
-//
-//            List<GoogleItem> filenames = new ArrayList<>();
-//
-//            for (File e : fileList.getFiles()) {
-//                filenames.add(new GoogleItem(e.getName(),
-//                        e.getIconLink(),
-//                        e.getThumbnailLink(),
-//                        e.getWebViewLink()));
-//            }
-//
-//            context.put("filenames", filenames);
+            context.put("subpage", "show_google_drive");
+            context.put("layout", false);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -113,23 +89,4 @@ public class IndexHandler implements Handler {
         return new HashMap<String, List<String>>();
     }
 
-
-    private class GoogleItem {
-        public String name;
-        public String iconLink;
-        public String thumbnailLink;
-        public String viewLink;
-
-        public GoogleItem(String name, String iconLink, String thumbnailLink, String viewLink) {
-            this.name = name;
-            this.iconLink = iconLink;
-            this.thumbnailLink = thumbnailLink;
-            this.viewLink = viewLink;
-        }
-
-        public String getName() { return name; }
-        public String getIconLink() { return iconLink; }
-        public String getThumbnailLink() { return thumbnailLink; }
-        public String getViewLink() { return viewLink; }
-    }
 }

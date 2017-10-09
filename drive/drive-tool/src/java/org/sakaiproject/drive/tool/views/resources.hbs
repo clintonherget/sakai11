@@ -11,6 +11,25 @@
     {{/each}}
   </ul>
 
+  <div id="google-drive-modal" class="google-drive-modal modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Your Google Drive</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button data-toggle="modal" data-target="#google-drive-modal" class="btn google-drive-show">Show me drive</button>
+
   <h2>Here's yer bloomin' resources</h2>
 
   <ul>
@@ -22,4 +41,21 @@
       {{/if}}
     {{/each}}
   </ul>
+
+  <script>includeLatestJQuery('index.hbs');</script>
+  <script>
+   var baseURL = "{{baseURL}}";
+
+   $('.google-drive-modal').on('show.bs.modal', function () {
+     $.ajax(baseURL + "show-google-drive",
+            {
+              type: "GET",
+              contentType: "html",
+            }).success(function (content) {
+              $('.modal-body').html(content);
+            });
+
+     return true;
+   });
+  </script>
 </div>
