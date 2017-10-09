@@ -1,7 +1,25 @@
 <div class="sakai-resources">
+  <ul class="sakai-resources-breadcrumbs breadcrumb">
+    {{#each resource.breadcrumbs}}
+      <li class="breadcrumb-item {{#if @last}}active{{/if}}">
+        {{#if @last}}
+          {{label}}
+        {{else}}
+          <a href="{{baseURL}}/sakai-resources{{id}}">{{label}}</a>
+        {{/if}}
+      </li>
+    {{/each}}
+  </ul>
+
   <h2>Here's yer bloomin' resources</h2>
 
   <ul>
-    {{> org/sakaiproject/drive/tool/views/resource_item resource}}
+    {{#each resource.children}}
+      {{#if folder}}
+        <li><div class="drive-folder"><a href="{{baseURL}}/sakai-resources{{path}}">{{label}}</a></div></li>
+      {{else}}
+        <li><div class="drive-file {{typeClass}}"><a href="/access/content{{path}}">{{label}}</a></div></li>
+      {{/if}}
+    {{/each}}
   </ul>
 </div>
