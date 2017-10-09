@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.tool.cover.SessionManager;
+import org.sakaiproject.content.api.ContentTypeImageService;
 
 import java.util.stream.Collectors;
 import java.util.Collections;
@@ -184,9 +185,11 @@ public class SakaiResourceHandler implements Handler {
 
     private class ResourceItem implements Resource {
         private ContentResource resource;
+        private ContentTypeImageService contentTypeImageService;
 
         public ResourceItem(ContentResource resource) {
             this.resource = resource;
+            this.contentTypeImageService = (ContentTypeImageService) ComponentManager.get("org.sakaiproject.content.api.ContentTypeImageService");
         }
 
         public boolean isFolder() {
@@ -211,7 +214,8 @@ public class SakaiResourceHandler implements Handler {
 
 
         public String getTypeClass() {
-            return ((String) resource.getProperties().get(ResourceProperties.PROP_CONTENT_TYPE)).replace("/", "-");
+            String icon = contentTypeImageService.getContentTypeImage(((String) resource.getProperties().get(ResourceProperties.PROP_CONTENT_TYPE)));
+            return icon.replaceAll("/?sakai/(.*)\\..*", "$1");
         }
     }
 
