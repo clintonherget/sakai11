@@ -5580,10 +5580,17 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		try {
 			out = new ZipOutputStream(outputStream);
 
+                        // CLASSES-3008 It turns out that turning off
+                        // compression will cause Apple's unzip program to get
+                        // stuck in a loop extracting a 'cpgz' file in some
+                        // cases.  Sigh.  Back to how it was.
+                        //
+                        // Original comment:
 			// CLASSES-3008 most submissions will be in an already
 			// compressed format.  Don't waste time attempting to
 			// compress further.
-			out.setLevel(ZipOutputStream.STORED);
+                        //
+			// out.setLevel(ZipOutputStream.STORED);
 
 			// create the folder structure - named after the assignment's title
 			String root = escapeInvalidCharsEntry(Validator.escapeZipEntry(assignmentTitle)) + Entity.SEPARATOR;
