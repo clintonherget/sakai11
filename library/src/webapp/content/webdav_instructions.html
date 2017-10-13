@@ -122,7 +122,7 @@
       <li>
         <p>Double-click the downloaded file.</p>
         <ul>
-          <li>For MacOS, a disk image for Cyberduck-5.3.3 (or higher) will now display. Simply drag and drop the application from the disk image window to your computer's Applications folder.</li>
+          <li>For MacOS, a disk image will now display. Simply drag and drop the application from the disk image window to your computer's Applications folder.</li>
           <li>For Windows, the Cyberduck installer should run and guide you through the installation process.</li>
         </ul>
       </li>
@@ -131,28 +131,20 @@
 
     <h4>Connecting to Your Site's Resources</h4>
     <p>Once you have installed Cyberduck, you can use it to connect to your site's Resources.</p>
-    <p><strong>Note:</strong> If you have a previously installed version, you <strong><u>must</u></strong> update to the latest version (v. 5.3.3 or higher).</p>
+    <p><strong>Note:</strong> If you have a previously installed version, you <strong><u>must</u></strong> update to the latest version.</p>
     <ol>
       <li>Open Cyberduck.</li>
-      <li>Click the <strong>Open Connection</strong> button (or select File > Open Connection from the application menu bar).</li>
+      <li>Click the <strong>Open Connection</strong> button or select File > Open Connection from the application menu bar.</li>
+      <li>In the resulting window, select <strong>WebDAV (HTTPS)</strong> from the drop-down list.</li>
       <li>
-        <p>You will be presented with a form similar to the following (screenshot taken from Cyberduck v. 5.3.3 on MacOS):</p>
-        <img src="webdav.jpg" title="Cyberduck screenshot from v5.3.3" style="width:100%;max-width:680px;"/>
+        <p>Within the "Server" field, copy and paste the following path below (unique to this course site):</p>
+        <p><input class="form-control" id="webDavUrl" type="text" readonly/></p>
+        <p><strong>Note</strong>: Once pasted, only "newclasses.nyu.edu" will be displayed in the "Server" field. <strong>The full path will display as a blue "URL" below.</strong></p>
+        <p><img src="webdav.png" title="Cyberduck screenshot" style="width:100%;max-width:680px;"/></p>
       </li>
-      <li>
-        <p>Complete the form as follows:</p>
-        <ol style="list-style-type: lower-alpha;">
-          <li>Select <strong>WebDAV (HTTP/SSL)</strong> from the drop-down list.</li>
-          <li>
-            <p>Within the "Server" field, paste the following path (unique to this course site):</p>
-            <p><input class="form-control" id="webDavUrl" type="text" readonly/></p>
-            <p>Once pasted, only "<span class="webDavHostName"></span>" will display in the “Server” field. <strong><u>The full path will display as a blue URL below</u></strong>.</p>
-          </li>
-          <li>Type or paste the following into the "Port" field: <strong><span class="webDavPort"></span></strong>.</li>
-          <li>Enter your <strong>NYU NetID</strong> into the "Username" field.</li>
-          <li>Enter your <strong>NetID password</strong> into the "Password" field.</li>
-        </ol>
-      </li>
+      <li>Type or paste the following into the "Port" field: <strong><span class="webDavPort"></span></strong>.</li>
+      <li>Enter your <strong>NYU NetID</strong> into the "Username" field.</li>
+      <li>Enter your <strong>NetID password</strong> into the "Password" field.</li>
       <li>Click <strong>Connect</strong>.</li>
     </ol>
     <p>You will now see a window on your screen showing the Resources in your site. Simply drag-and-drop files/folders between your computer and this window to transfer content to/from the Resources tool.</p>
