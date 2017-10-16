@@ -43,6 +43,14 @@
   </ul>
 
   <script>includeLatestJQuery('index.hbs');</script>
+  <script src="/drive-tool/scripts/drive.js"></script>
+  <script id="previewTemplate" type="text/template">
+    <div id='sakai-drive-preview'>
+      <div class='blockout'></div>
+      <a class='close' href="#!"></a>
+      <iframe></iframe>
+    </div>
+  </script>
   <script>
    var baseURL = "{{baseURL}}";
 
@@ -57,5 +65,7 @@
 
      return true;
    });
+
+    new SakaiDrive();
   </script>
 </div>
