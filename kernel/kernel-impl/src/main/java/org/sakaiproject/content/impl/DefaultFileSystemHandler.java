@@ -100,7 +100,11 @@ public class DefaultFileSystemHandler implements FileSystemHandler {
         }
 
         // write the file
-        return FileCopyUtils.copy(stream, new FileOutputStream(file));
+        if ("true".equals(HotReloadConfigurationService.getString("nyu.use-fs-telemetry", "false"))) {
+            return FileCopyUtils.copy(stream, new TelemetryFileOutputStream(file));
+        } else {
+            return FileCopyUtils.copy(stream, new FileOutputStream(file));
+        }
     }
 
     @Override
