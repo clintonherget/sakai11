@@ -148,6 +148,7 @@ body.sakai-drive-preview-open {
   z-index: 10003;
   padding: 1.5%;
   text-decoration: none;
+  opacity: 0.7;
 }
 #sakai-drive-preview .close:before {
   font-family: 'FontAwesome';

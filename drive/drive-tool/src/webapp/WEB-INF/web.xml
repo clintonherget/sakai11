@@ -29,7 +29,7 @@
 
     <servlet-mapping>
         <servlet-name>default</servlet-name>
-        <url-pattern>*.html</url-pattern>
+        <url-pattern>/pdfjs/*</url-pattern>
     </servlet-mapping>
 
     <!-- Sakai Request Filter -->
