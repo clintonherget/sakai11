@@ -110,3 +110,46 @@
 .drive-file.url:before {
   content: '\f08e';
 }
+
+body.sakai-drive-preview-open {
+  overflow: hidden;
+}
+
+#sakai-drive-preview {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+}
+
+#sakai-drive-preview .blockout {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 10001;
+}
+#sakai-drive-preview iframe {
+  width: 90%;
+  margin: auto 5%;
+  z-index: 10002;
+  position: absolute;
+  border: none;
+  box-shadow: 1px 1px 10px #000;
+}
+
+#sakai-drive-preview .close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: white;
+  z-index: 10003;
+  padding: 1.5%;
+  text-decoration: none;
+}
+#sakai-drive-preview .close:before {
+  font-family: 'FontAwesome';
+  content: '\f00d';
+}
