@@ -74,6 +74,10 @@ public class PreviewHandler implements Handler {
         LIBREOFFICE_SUPPORTED_TYPES.add("application/vnd.openxmlformats-officedocument.spreadsheetml.template");
         LIBREOFFICE_SUPPORTED_TYPES.add("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
         LIBREOFFICE_SUPPORTED_TYPES.add("application/vnd.openxmlformats-officedocument.wordprocessingml.template");
+        LIBREOFFICE_SUPPORTED_TYPES.add("image/jpeg");
+        LIBREOFFICE_SUPPORTED_TYPES.add("image/jpg");
+        LIBREOFFICE_SUPPORTED_TYPES.add("image/png");
+        LIBREOFFICE_SUPPORTED_TYPES.add("image/gif");
     }
 
     @Override
