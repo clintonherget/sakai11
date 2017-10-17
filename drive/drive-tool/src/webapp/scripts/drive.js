@@ -5,13 +5,13 @@ var SakaiDrive = function() {
 SakaiDrive.prototype.setupPreviewer = function() {
   var self = this;
 
-  $('.drive-file.pdf a').on('click', function(event) {
+  $('.drive-file.pdf a, .drive-file.excel a, .drive-file.ppt a, a.drive-file.word a').on('click', function(event) {
     event.preventDefault();
     event.stopPropagation();
 
     var $preview = self.getPreviewTemplate();
 
-    $preview.find('iframe').attr('src', self.VIEW_URL + this.href);
+    $preview.find('iframe').attr('src', self.VIEW_URL + encodeURIComponent(baseURL + 'preview?path=' + $(this).data('path')));
 
     $(document.body).append($preview);
 

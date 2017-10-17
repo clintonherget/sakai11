@@ -37,7 +37,7 @@
       {{#if folder}}
         <li><div class="drive-folder"><a href="{{baseURL}}/sakai-resources{{path}}">{{label}}</a></div></li>
       {{else}}
-        <li><div class="drive-file {{typeClass}}"><a href="/access/content{{path}}">{{label}}</a></div></li>
+        <li><div class="drive-file {{typeClass}}"><a data-path="{{path}}" href="/access/content{{path}}">{{label}}</a></div></li>
       {{/if}}
     {{/each}}
   </ul>
