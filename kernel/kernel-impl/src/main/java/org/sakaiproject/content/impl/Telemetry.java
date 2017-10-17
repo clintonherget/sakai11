@@ -1,5 +1,6 @@
 package org.sakaiproject.content.impl;
 
+import java.util.Calendar;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,6 +73,21 @@ class Telemetry {
     private void runAggregationLoop() {
         int currentTimestep = -1;
         TelemetryReport report = new TelemetryReport(timestepsPerReport);
+
+        // Roughly line up our aggregation loop with the top of the minute.
+        // Gives multiple telemetry outputs a chance of being comparable if they
+        // cover the same range.
+        try {
+            Calendar now = Calendar.getInstance();
+            Thread.sleep(60000 - (now.get(Calendar.SECOND) * 1000) + (now.get(Calendar.MILLISECOND)));
+
+            // Discard our partial readings
+            synchronized (mutex) {
+                lastWritePos = -1;
+                overflowed = false;
+            }
+
+        } catch (InterruptedException e) {}
 
         while (true) {
             currentTimestep++;
