@@ -93,7 +93,7 @@ public class PreviewHandler implements Handler {
 
             if (doc != null) {
                 try {
-                    serve(response, doc.getInputStream(), "text/pdf");
+                    serve(response, doc.getInputStream(), "application/pdf");
                 } finally {
                     doc.close();
                 }
