@@ -5,7 +5,7 @@ var SakaiDrive = function() {
 SakaiDrive.prototype.setupPreviewer = function() {
   var self = this;
 
-  $('.drive-file.pdf a, .drive-file.excel a, .drive-file.ppt a, a.drive-file.word a').on('click', function(event) {
+  $('.drive-file.pdf a, .drive-file.excel a, .drive-file.ppt a, .drive-file.word a').on('click', function(event) {
     event.preventDefault();
     event.stopPropagation();
 
