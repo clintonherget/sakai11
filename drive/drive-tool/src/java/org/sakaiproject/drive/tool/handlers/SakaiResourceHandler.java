@@ -77,6 +77,9 @@ public class SakaiResourceHandler implements Handler {
             ContentCollection siteResources = contentHostingService.getCollection(requestedPath);
 
             context.put("resource", new ResourceTree(siteResources, contentHostingService));
+
+            // FIXME: collectId or collectionID?  Be consistent!
+            context.put("collectionId", siteResources.getId());
             context.put("subpage", "resources");
         } catch (Exception e) {
             throw new RuntimeException(e);
