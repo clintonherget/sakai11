@@ -548,6 +548,8 @@ public abstract class UsageSessionServiceAdaptor implements UsageSessionService
 		// post the login event
 		eventTrackingService().post(eventTrackingService().newEvent(event != null ? event : EVENT_LOGIN, null, true));
 
+		new NYUUserLoginHandler().invoke(sakaiSession);
+
 		return true;
 	}
 
