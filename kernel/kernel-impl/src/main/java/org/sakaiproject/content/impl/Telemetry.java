@@ -100,7 +100,6 @@ class Telemetry {
 
             synchronized (mutex) {
                 if (overflowed) {
-                    log.warn("WARNING: overflowed circular buffer.  Skipping this set of observations");
                     overflowed = false;
 
                     report.observationSums[currentTimestep] = -1;
@@ -159,6 +158,7 @@ class Telemetry {
 
                 for (int i = 0; i < timestepsPerReport; i++) {
                     if (report.observationSums[i] < 0) {
+                        log.warn("WARNING: circular buffer overflowed.  Skipping this observation.");
                         continue;
                     }
 
