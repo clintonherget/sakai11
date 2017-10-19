@@ -88,11 +88,15 @@ public class DriveServlet extends HttpServlet {
             Map<String, Object> context = new HashMap<String, Object>();
 
             context.put("baseURL", toolBaseURL);
-            context.put("siteID", ToolManager.getCurrentPlacement().getContext());
             context.put("layout", true);
             context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
             context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
             context.put("googleUser", getCurrentGoogleUser());
+
+            // context may be null on handle-google-login callback 
+            if (ToolManager.getCurrentPlacement() != null) {
+                context.put("siteID", ToolManager.getCurrentPlacement().getContext());
+            }
 
             Handler handler = handlerForRequest(request);
 
@@ -132,7 +136,7 @@ public class DriveServlet extends HttpServlet {
 
         GoogleClient google = new GoogleClient();
 
-        if (path.startsWith("/handle-google-login")) {
+        if ("/drive-tool/handle-google-login".equals(request.getRequestURI())) {
             return new OAuthHandler(OAuthHandler.HANDLE_OAUTH);
         } else if (path.startsWith("/reset-oauth")) {
             return new OAuthHandler(OAuthHandler.RESET);
