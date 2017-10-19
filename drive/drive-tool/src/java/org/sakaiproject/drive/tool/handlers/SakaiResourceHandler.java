@@ -29,11 +29,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+import java.text.DateFormat;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.tool.cover.SessionManager;
-import org.sakaiproject.content.api.ContentTypeImageService;
+import org.sakaiproject.util.ResourceLoader;
+import org.sakaiproject.time.cover.TimeService;
+import org.sakaiproject.time.api.Time;
 
 import java.util.stream.Collectors;
 import java.util.Collections;
@@ -46,7 +50,13 @@ import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.api.ContentTypeImageService;
 import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.entity.api.EntityPropertyNotDefinedException;
+import org.sakaiproject.entity.api.EntityPropertyTypeException;
+import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.user.api.UserNotDefinedException;
+import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 
 public class SakaiResourceHandler implements Handler {
 
@@ -110,14 +120,20 @@ public class SakaiResourceHandler implements Handler {
         public String getTypeClass();
         public String getPath();
         public List<Breadcrumb> getBreadcrumbs();
+        public String getSize();
+        public String getLastModified();
+        public String getOwner();
+        public String getAccessSummary();
     }
 
     private class ResourceTree implements Resource {
         private ContentCollection root;
         private ContentHostingService contentHostingService;
+        private ResourceProperties properties;
 
         public ResourceTree(ContentCollection root, ContentHostingService contentHostingService) {
             this.root = root;
+            this.properties = root.getProperties();
             this.contentHostingService = contentHostingService;
         }
 
@@ -173,6 +189,52 @@ public class SakaiResourceHandler implements Handler {
         private String getLabel(ContentCollection other) {
             return (String)other.getProperties().get(ResourceProperties.PROP_DISPLAY_NAME);
         }
+
+        public String getSize() {
+            return String.format("%s items", root.getMemberCount());
+        }
+
+        public String getLastModified() {
+            try {
+                long modifiedTime = properties.getTimeProperty(ResourceProperties.PROP_MODIFIED_DATE).getTime();
+                final DateFormat df = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, new ResourceLoader().getLocale());
+                final TimeZone tz = TimeService.getLocalTimeZone();
+                df.setTimeZone(tz);
+                return df.format(modifiedTime);
+            } catch (EntityPropertyNotDefinedException e) {
+                return "";
+            } catch (EntityPropertyTypeException e) {
+                return properties.getProperty(ResourceProperties.PROP_MODIFIED_DATE);
+            }
+        }
+
+        public String getOwner() {
+            String userId = properties.getProperty(ResourceProperties.PROP_CREATOR);
+
+            if (userId != null) {
+                try {
+                    return UserDirectoryService.getUser(userId).getDisplayName();
+                } catch (UserNotDefinedException e) {
+                }
+            }
+
+            return "";
+        }
+
+        public String getAccessSummary() {
+            if (AccessMode.GROUPED.equals(root.getAccess())) {
+                return "Select group(s)";
+            } else if (root.getRoleAccessIds().size() > 0) {
+                if (root.getRoleAccessIds().contains(".anon")) {
+                    return "Public";
+                } else {
+                    //return root.getRoleAccessIds().stream().collect(Collectors.joining(", "));
+                    return "Select role(s)";
+                }
+            } else {
+                return "Entire site";
+            }
+        }
     }
 
     private static class Breadcrumb {
@@ -191,10 +253,13 @@ public class SakaiResourceHandler implements Handler {
     private class ResourceItem implements Resource {
         private ContentResource resource;
         private ContentTypeImageService contentTypeImageService;
-
+        private ResourceProperties properties;
+        
         public ResourceItem(ContentResource resource) {
             this.resource = resource;
+            this.properties = resource.getProperties();
             this.contentTypeImageService = (ContentTypeImageService) ComponentManager.get("org.sakaiproject.content.api.ContentTypeImageService");
+            
         }
 
         public boolean isFolder() {
@@ -217,10 +282,59 @@ public class SakaiResourceHandler implements Handler {
             return Collections.EMPTY_LIST;
         }
 
+        public String getSize() {
+            long bytes = resource.getContentLength();
+            if (bytes < 1024) return bytes + " B";
+            int exp = (int) (Math.log(bytes) / Math.log(1024));
+            String pre = ("KMGTPE").charAt(exp-1) + "";
+            return String.format("%.1f %sB", bytes / Math.pow(1024, exp), pre);
+        }
 
         public String getTypeClass() {
             String icon = contentTypeImageService.getContentTypeImage(((String) resource.getProperties().get(ResourceProperties.PROP_CONTENT_TYPE)));
             return icon.replaceAll("/?sakai/(.*)\\..*", "$1");
+        }
+
+        public String getLastModified() {
+            try {
+                long modifiedTime = properties.getTimeProperty(ResourceProperties.PROP_MODIFIED_DATE).getTime();
+                final DateFormat df = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, new ResourceLoader().getLocale());
+                final TimeZone tz = TimeService.getLocalTimeZone();
+                df.setTimeZone(tz);
+                return df.format(modifiedTime);
+            } catch (EntityPropertyNotDefinedException e) {
+                return "";
+            } catch (EntityPropertyTypeException e) {
+                return properties.getProperty(ResourceProperties.PROP_MODIFIED_DATE);
+            }
+        }
+
+        public String getOwner() {
+            String userId = properties.getProperty(ResourceProperties.PROP_CREATOR);
+
+            if (userId != null) {
+                try {
+                    return UserDirectoryService.getUser(userId).getDisplayName();
+                } catch (UserNotDefinedException e) {
+                }
+            }
+
+            return "";
+        }
+
+        public String getAccessSummary() {
+            if (AccessMode.GROUPED.equals(resource.getAccess())) {
+                return "Select group(s)";
+            } else if (resource.getRoleAccessIds().size() > 0) {
+                if (resource.getRoleAccessIds().contains(".anon")) {
+                    return "Public";
+                } else {
+                    //return resource.getRoleAccessIds().stream().collect(Collectors.joining(", "));
+                    return "Select role(s)";
+                }
+            } else {
+                return "Entire site";
+            }
         }
     }
 

@@ -141,7 +141,12 @@
     @extend .fa-commenting;
   }
 
+
   .icon-sakai--sakai-pages {
     @extend .fa-file;
+  }
+
+  .icon-sakai-drive {
+    @extend .fa-hdd-o;
   }
 }

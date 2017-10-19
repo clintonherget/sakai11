@@ -154,3 +154,16 @@ body.sakai-drive-preview-open {
   font-family: 'FontAwesome';
   content: '\f00d';
 }
+
+.sakai-resources-breadcrumbs.breadcrumb,
+.sakai-resources-toolbar {
+  margin-bottom: 10px;
+}
+
+.sakai-resources-toolbar .btn {
+  margin-right: 5px !important;
+}
+
+.sakai-resources-table .last-modified {
+  white-space: nowrap;
+}
