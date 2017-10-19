@@ -167,3 +167,12 @@ body.sakai-drive-preview-open {
 .sakai-resources-table .last-modified {
   white-space: nowrap;
 }
+
+.sakai-resources-table tr.active td {
+  background-color: #347EB2 !important;
+  color: white;
+}
+.sakai-resources-table tr.active td.name > div:before,
+.sakai-resources-table tr.active td.name a {
+  color: white;
+}
