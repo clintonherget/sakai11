@@ -1,5 +1,6 @@
 var SakaiDrive = function() {
   this.setupPreviewer();
+  this.setupRow();
 };
 
 SakaiDrive.prototype.setupPreviewer = function() {
@@ -38,5 +39,40 @@ SakaiDrive.prototype.setupPreviewer = function() {
 SakaiDrive.prototype.getPreviewTemplate = function() {
   return $($("#previewTemplate").html().trim());
 }
+
+
+SakaiDrive.prototype.setupRow = function() {
+  var self = this;
+
+  $('.sakai-resources-table').on('mousedown', 'tbody tr', function(event) {
+    var $tr = $(this).closest('tr');
+
+    if (!$tr.is('.active')) {
+      $('.sakai-resources-table .active').removeClass('active');
+      $tr.addClass('active');
+    }
+
+    return true;
+ }).on('click', 'tbody tr', function(event) {
+      var $tr = $(this).closest('tr');
+
+      if ($(event.target).is('a')) {
+        return true;
+      }
+
+      return false;
+  }).on('dblclick', 'tbody tr', function(event) {
+      var $tr = $(this).closest('tr');
+
+      if ($(event.target).is('a')) {
+        return true;
+      }
+
+      $tr.find('td.name a')[0].click();
+
+      return false;
+  });
+};
+
 
 SakaiDrive.prototype.VIEW_URL = '/drive-tool/pdfjs/web/viewer.html?file=';
