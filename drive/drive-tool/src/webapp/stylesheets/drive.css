@@ -176,3 +176,7 @@ body.sakai-drive-preview-open {
 .sakai-resources-table tr.active td.name a {
   color: white;
 }
+
+.sakai-resource-dropzone.sakai-resource-dropzone-active {
+  outline: 2px solid #347EB2;
+}

@@ -1,6 +1,7 @@
 var SakaiDrive = function() {
   this.setupPreviewer();
   this.setupRow();
+  this.setupDragAndDrop();
 };
 
 SakaiDrive.prototype.setupPreviewer = function() {
@@ -72,6 +73,62 @@ SakaiDrive.prototype.setupRow = function() {
 
       return false;
   });
+};
+
+
+SakaiDrive.prototype.setupDragAndDrop = function() {
+    function doMove(source, target) {
+      var $form = $('form#move-form');
+      var $sourceInput = $form.find('[name="source"]');
+      $sourceInput.val($(source).find('[data-path]').data('path'));
+      var $targetInput = $form.find('[name="target"]');
+      $targetInput.val($(target).find('[data-path]').data('path'));
+      $form.submit();
+    };
+
+    // setup droppables
+    var dragging;
+
+    $('.sakai-resources .sakai-resources-breadcrumbs .breadcrumb-item:not(.active)').addClass('sakai-resource-dropzone');
+    $('.sakai-resources .sakai-resources-table .drive-folder').each(function() {
+        $(this).closest('tr').addClass('sakai-resource-dropzone');
+    });
+
+
+    $('.sakai-resources-table tr[draggable]').on('dragstart', function() {
+        dragging = event.target;
+
+        event.target.style.opacity = .6;
+        event.dataTransfer.dragEffect = 'none';
+        event.dataTransfer.dropEffect = 'move';
+        event.dataTransfer.effectAllowed = 'move';
+    }).on('dragend', function( event ) {
+        event.target.style.opacity = "";
+    });
+
+    $('.sakai-resource-dropzone').on('dragover', function(event) {
+        event.preventDefault();
+
+        if (!$(event.target).closest('.sakai-resource-dropzone').is(dragging)) {
+            $(event.target).closest('.sakai-resource-dropzone').addClass('sakai-resource-dropzone-active');
+        }
+
+
+    }).on('dragenter', function(event) {
+
+
+    }).on('dragleave', function(event) {
+        $(event.target).closest('.sakai-resource-dropzone').removeClass('sakai-resource-dropzone-active');
+
+    }).on('drop', function(event) {
+        event.preventDefault();
+
+        $('.sakai-resource-dropzone-active').removeClass('sakai-resource-dropzone-active');
+
+        if (!$(event.target).closest('.sakai-resource-dropzone').is(dragging)) {
+            doMove(dragging, $(event.target).closest('.sakai-resource-dropzone'));
+        }
+    });
 };
 
 
