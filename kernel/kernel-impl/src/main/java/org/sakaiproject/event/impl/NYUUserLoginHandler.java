@@ -130,6 +130,11 @@ class NYUUserLoginHandler {
             return false;
         }
 
+        String pretendInstructors = HotReloadConfigurationService.getString("nyu.pretend-instructors", "");
+        if (("," + pretendInstructors.trim().replace(" ", "") + ",").indexOf("," + eid + ",") >= 0) {
+            return true;
+        }
+
         Connection connection = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
