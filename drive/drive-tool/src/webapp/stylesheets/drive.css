@@ -180,3 +180,11 @@ body.sakai-drive-preview-open {
 .sakai-resource-dropzone.sakai-resource-dropzone-active {
   outline: 2px solid #347EB2;
 }
+.sakai-resource-drag-helper {
+    background-color: #347EB2;
+    padding: 8px;
+}
+.sakai-resource-drag-helper a,
+.sakai-resource-drag-helper div:before {
+    color: white !important;
+}
