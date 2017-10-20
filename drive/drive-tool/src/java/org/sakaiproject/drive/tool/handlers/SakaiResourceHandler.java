@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.Comparator;
 import java.text.DateFormat;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -47,6 +48,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.content.api.ContentEntity;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentResource;
@@ -153,14 +155,14 @@ public class SakaiResourceHandler implements Handler {
             Collection<Resource> result = new ArrayList<>();
 
             try {
-                List<String> children = root.getMembers();
+                List<ContentEntity> children = root.getMemberResources();
+                Collections.sort(children, contentHostingService.newContentHostingComparator(ResourceProperties.PROP_DISPLAY_NAME, true));
 
-                for (String resourceId : children) {
-                    if (contentHostingService.isCollection(resourceId)) {
-                        result.add(new ResourceTree(contentHostingService.getCollection(resourceId),
-                                contentHostingService));
+                for (ContentEntity entity : children) {
+                    if (entity.isCollection()) {
+                        result.add(new ResourceTree((ContentCollection) entity, contentHostingService));
                     } else {
-                        result.add(new ResourceItem(contentHostingService.getResource(resourceId)));
+                        result.add(new ResourceItem((ContentResource) entity));
                     }
                 }
             } catch (Exception e) {
