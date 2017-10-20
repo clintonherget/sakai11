@@ -145,7 +145,7 @@ public class AddResourceHandler implements Handler {
             properties.addProperty("google-icon-link", googleFile.getIconLink());
 
             try {
-                chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", new byte[0], properties, Collections.<String>emptyList(), 1);
+                chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
