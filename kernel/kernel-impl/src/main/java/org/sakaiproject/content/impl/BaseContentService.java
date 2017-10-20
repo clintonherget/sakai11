@@ -6030,12 +6030,13 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
         
         //use magic to fix mimetype
         //Don't process for special TYPE_URL type
+        //FIXME NYU or x-nyu-google/item
         String currentContentType = edit.getContentType();
         m_useMimeMagic = m_serverConfigurationService.getBoolean("content.useMimeMagic", m_useMimeMagic);
         m_ignoreExtensions = Arrays.asList(ArrayUtils.nullToEmpty(m_serverConfigurationService.getStrings("content.mimeMagic.ignorecontent.extensions")));
         m_ignoreMimeTypes = Arrays.asList(ArrayUtils.nullToEmpty(m_serverConfigurationService.getStrings("content.mimeMagic.ignorecontent.mimetypes")));
 
-        if (m_useMimeMagic && DETECTOR != null && !ResourceProperties.TYPE_URL.equals(currentContentType) && !hasContentTypeAlready) {
+        if (m_useMimeMagic && DETECTOR != null && !ResourceProperties.TYPE_URL.equals(currentContentType) && !"x-nyu-google/item".equals(currentContentType) && !hasContentTypeAlready) {
             try (
                     TikaInputStream buff = TikaInputStream.get(edit.streamContent());
             ) {
