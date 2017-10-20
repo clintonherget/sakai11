@@ -21,6 +21,7 @@ import java.util.List;
 import javax.faces.context.FacesContext;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -914,7 +915,12 @@ public class PDFAssessmentBean implements Serializable {
 			document.open();
 			document.resetPageCount();
 
-			HTMLWorker worker = new HTMLWorker(document);
+			FacesContext faces = FacesContext.getCurrentInstance();
+			// HttpServletRequest request = (HttpServletRequest)faces.getExternalContext().getRequest();
+
+			ServletContext servletContext = (ServletContext)faces.getExternalContext().getContext();
+
+			HTMLWorker worker = new HTMLWorker(document, servletContext);
 
 			HashMap props = worker.getInterfaceProps();
 			if (props == null) {
@@ -941,7 +947,7 @@ public class PDFAssessmentBean implements Serializable {
 			//head = head.replaceAll("[ \t\n\f\r]+", " ");
 
 			//parse out the elements from the html
-			ArrayList elementBuffer = HTMLWorker.parseToList(safeReader(head.toString()), style, props);
+			ArrayList elementBuffer = HTMLWorker.parseToList(safeReader(head.toString()), style, props, servletContext);
 			float[] singleWidth = {1f};
 			PdfPTable single = new PdfPTable(singleWidth);
 			single.setWidthPercentage(100f);
@@ -968,7 +974,7 @@ public class PDFAssessmentBean implements Serializable {
 
 				PDFPartBean pBean = (PDFPartBean) parts.get(i);
 				if (pBean.getIntro() != null && !"".equals(pBean.getIntro())) {
-					elementBuffer = HTMLWorker.parseToList(safeReader(pBean.getIntro()), style, props);
+					elementBuffer = HTMLWorker.parseToList(safeReader(pBean.getIntro()), style, props, servletContext);
 					single = new PdfPTable(singleWidth);
 					single.setWidthPercentage(100f);
 					cell = new PdfPCell();
@@ -998,7 +1004,7 @@ public class PDFAssessmentBean implements Serializable {
 					leftCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
 					leftCell.setVerticalAlignment(Element.ALIGN_TOP);
 					rightCell.setBorderWidth(0);
-					elementBuffer = HTMLWorker.parseToList(safeReader(iBean.getMeta()), style, props);
+					elementBuffer = HTMLWorker.parseToList(safeReader(iBean.getMeta()), style, props, servletContext);
 					for (int k = 0; k < elementBuffer.size(); k++) {
 						Element element = (Element)elementBuffer.get(k);
 						if (element instanceof Paragraph) {
@@ -1011,7 +1017,7 @@ public class PDFAssessmentBean implements Serializable {
 
 					table.addCell(leftCell);
 
-					elementBuffer = HTMLWorker.parseToList(safeReader(iBean.getContent()), style, props);
+					elementBuffer = HTMLWorker.parseToList(safeReader(iBean.getContent()), style, props, servletContext);
 					for (int k = 0; k < elementBuffer.size(); k++) {
 						Element element = (Element)elementBuffer.get(k);
 
