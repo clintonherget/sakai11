@@ -121,15 +121,11 @@ SakaiDrive.prototype.setupDragAndDrop = function() {
 
     $('.sakai-resource-dropzone').droppable({
         accept: function(draggable) {
-            console.log(draggable.is('.sakai-resource-draggable'));
             return draggable.is('.sakai-resource-draggable');
         },
         hoverClass: 'sakai-resource-dropzone-active',
         drop: function(event, ui) {
             doMove(ui.draggable[0], event.target);
-        },
-        over: function(event, ui) {
-            console.log('over', event);
         },
         tolerance: 'pointer',
     });
