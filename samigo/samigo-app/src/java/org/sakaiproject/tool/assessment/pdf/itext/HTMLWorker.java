@@ -90,6 +90,9 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.xml.simpleparser.SimpleXMLDocHandler;
 import com.lowagie.text.xml.simpleparser.SimpleXMLParser;
 
+import javax.servlet.ServletContext;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
 public class HTMLWorker implements SimpleXMLDocHandler, DocListener {
 
 	protected ArrayList objectList;
@@ -109,8 +112,15 @@ public class HTMLWorker implements SimpleXMLDocHandler, DocListener {
 	private FactoryProperties factoryProperties = new FactoryProperties();
 	private int maxWidth = 450;
 
+	private ServletContext servletContext;
+
 	/** Creates a new instance of HTMLWorker */
-	public HTMLWorker(DocListener document) {
+    public HTMLWorker(DocListener document) {
+	    this(document, null);
+    }
+
+    public HTMLWorker(DocListener document, ServletContext context) {
+		this.servletContext = context;
 		this.document = document;
 		cprops = new ChainedProperties();
 		String fontName = ServerConfigurationService.getString("pdf.default.font");
@@ -151,11 +161,11 @@ public class HTMLWorker implements SimpleXMLDocHandler, DocListener {
 	}
 
 	public static ArrayList parseToList(Reader reader, StyleSheet style) throws IOException {
-		return parseToList(reader, style, null);
+		return parseToList(reader, style, null, null);
 	}
 
-	public static ArrayList parseToList(Reader reader, StyleSheet style, HashMap interfaceProps) throws IOException {
-		HTMLWorker worker = new HTMLWorker(null);
+	public static ArrayList parseToList(Reader reader, StyleSheet style, HashMap interfaceProps, ServletContext context) throws IOException {
+		HTMLWorker worker = new HTMLWorker(null, context);
 		if (style != null)
 			worker.style = style;
 		worker.document = worker;
@@ -254,10 +264,24 @@ public class HTMLWorker implements SimpleXMLDocHandler, DocListener {
 							img = Image.getInstance(tim);
 					} else {
 						if (!src.startsWith("http")) { // relative src references only
-							String baseurl = (String)interfaceProps.get("img_baseurl");
-							if (baseurl != null) {
-								src = baseurl+src;
-								img = Image.getInstance(src);
+
+							if (servletContext != null && "true".equals(HotReloadConfigurationService.getString("nyu.feature-flag.samigo-pdf-image-fix", "false"))) {
+								// Attempt to pull the image from the servlet context
+								if (src.startsWith("/samigo-app/images")) {
+									File imageFile = new File(servletContext.getRealPath(src.substring("/samigo-app".length())));
+									if (imageFile.exists()) {
+										img = Image.getInstance(imageFile.getPath());
+									}
+								}
+							}
+
+							if (img == null) {
+								String baseurl = (String)interfaceProps.get("img_baseurl");
+								if (baseurl != null) {
+									src = baseurl+src;
+
+									img = Image.getInstance(src);
+								}
 							}
 						}
 					}
