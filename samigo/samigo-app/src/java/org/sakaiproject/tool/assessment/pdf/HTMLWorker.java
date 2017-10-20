@@ -32,6 +32,11 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.cover.ContentHostingService;
 
+import com.lowagie.text.DocListener;
+import com.lowagie.text.html.simpleparser.StyleSheet;
+
+import javax.servlet.ServletContext;
+
 /**
  * 
  * @author Joshua Ryan <a href="mailto:joshua.ryan@asu.edu">joshua.ryan@asu.edu</a>
@@ -60,13 +65,18 @@ import org.sakaiproject.content.cover.ContentHostingService;
 	 * 
 	 */
 	public HTMLWorker(DocListener doc) {
-		super(doc);
+		super(doc, null);
 	}
+
+	public HTMLWorker(DocListener doc, ServletContext context) {
+		super(doc, context);
+	}
+
 
 	//duplicated here only because static reference to this was creating a base class instance
 	//is there a better way to do this with spring?
-	public static ArrayList parseToList(Reader reader, StyleSheet style, HashMap interfaceProps) throws IOException {
-		HTMLWorker worker = new HTMLWorker(null);
+	public static ArrayList parseToList(Reader reader, StyleSheet style, HashMap interfaceProps, ServletContext context) throws IOException {
+		HTMLWorker worker = new HTMLWorker(null, context);
 		if (style != null)
 			worker.setStyleSheet(style);
 		worker.document = worker;
