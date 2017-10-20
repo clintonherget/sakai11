@@ -86,48 +86,52 @@ SakaiDrive.prototype.setupDragAndDrop = function() {
       $form.submit();
     };
 
-    // setup droppables
-    var dragging;
+    // setup draggables
+    $('.sakai-resources-table tbody tr').addClass('sakai-resource-draggable');
 
+    $('.sakai-resource-draggable').draggable({
+        opacity: 0.8,
+        helper: function(event) {
+            var $tr = $(event.target).closest('.sakai-resource-draggable');
+            var $helper = $('<div>');
+            var $name = $('<div>').append($tr.find('td.name').html());
+            $name.addClass('name');
+            $name.width($tr.find('td.name a').width() + 50);
+            $helper.append($name);
+            $helper.addClass('sakai-resource-drag-helper');
+            $helper.width($tr.width());
+            $helper.height($tr.height());
+            return $helper;
+        },
+        cursorAt: {
+            left: 5,
+        },
+        start: function(event, ui) {
+            $(ui.helper).animate({
+                'width': $(ui.helper).find('> .name').width()
+            });
+        }
+    });
+
+    // setup droppables
     $('.sakai-resources .sakai-resources-breadcrumbs .breadcrumb-item:not(.active)').addClass('sakai-resource-dropzone');
     $('.sakai-resources .sakai-resources-table .drive-folder').each(function() {
         $(this).closest('tr').addClass('sakai-resource-dropzone');
     });
 
-
-    $('.sakai-resources-table tr[draggable]').on('dragstart', function() {
-        dragging = event.target;
-
-        event.target.style.opacity = .6;
-        event.dataTransfer.dragEffect = 'none';
-        event.dataTransfer.dropEffect = 'move';
-        event.dataTransfer.effectAllowed = 'move';
-    }).on('dragend', function( event ) {
-        event.target.style.opacity = "";
-    });
-
-    $('.sakai-resource-dropzone').on('dragover', function(event) {
-        event.preventDefault();
-
-        if (!$(event.target).closest('.sakai-resource-dropzone').is(dragging)) {
-            $(event.target).closest('.sakai-resource-dropzone').addClass('sakai-resource-dropzone-active');
-        }
-
-
-    }).on('dragenter', function(event) {
-
-
-    }).on('dragleave', function(event) {
-        $(event.target).closest('.sakai-resource-dropzone').removeClass('sakai-resource-dropzone-active');
-
-    }).on('drop', function(event) {
-        event.preventDefault();
-
-        $('.sakai-resource-dropzone-active').removeClass('sakai-resource-dropzone-active');
-
-        if (!$(event.target).closest('.sakai-resource-dropzone').is(dragging)) {
-            doMove(dragging, $(event.target).closest('.sakai-resource-dropzone'));
-        }
+    $('.sakai-resource-dropzone').droppable({
+        accept: function(draggable) {
+            console.log(draggable.is('.sakai-resource-draggable'));
+            return draggable.is('.sakai-resource-draggable');
+        },
+        hoverClass: 'sakai-resource-dropzone-active',
+        drop: function(event, ui) {
+            doMove(ui.draggable[0], event.target);
+        },
+        over: function(event, ui) {
+            console.log('over', event);
+        },
+        tolerance: 'touch',
     });
 };
 
