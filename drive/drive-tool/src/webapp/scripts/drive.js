@@ -131,7 +131,7 @@ SakaiDrive.prototype.setupDragAndDrop = function() {
         over: function(event, ui) {
             console.log('over', event);
         },
-        tolerance: 'touch',
+        tolerance: 'pointer',
     });
 };
 
