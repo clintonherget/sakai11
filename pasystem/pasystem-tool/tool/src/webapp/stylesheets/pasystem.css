@@ -30,10 +30,12 @@
   line-height: 24px;
 }
 .pasystem-banner-alert,
+.pasystem-banner-alert..pasystem-banner-timezone,
 .pasystem-banner-alert.pasystem-banner-medium {
   background-color: #f7e084;
 }
 .pasystem-banner-alert:before,
+.pasystem-banner-alert.pasystem-banner-timezone:before,
 .pasystem-banner-alert.pasystem-banner-medium:before {
   content: '\f071';
   color: #a9860c;
@@ -45,11 +47,9 @@
   content: '\f06a';
   color: #b30e0a;
 }
-.pasystem-banner-alert.pasystem-banner-timezone,
 .pasystem-banner-alert.pasystem-banner-low {
   background-color: #c7e4f4;
 }
-.pasystem-banner-alert.pasystem-banner-timezone:before,
 .pasystem-banner-alert.pasystem-banner-low:before {
   content: '\f05a';
   color: #144bae;
