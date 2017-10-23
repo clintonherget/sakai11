@@ -91,7 +91,7 @@ public class DriveHandler implements Handler {
                 // API restriction: We can only sort if we don't have a search query
                 list.setOrderBy("modifiedTime");
             } else {
-                queryString += " AND fullText contains '" + query.replace("'", "") + "'"; // FIXME escaping
+                queryString += " AND fullText contains '" + query.replace("'", "\\'") + "'";
             }
 
             list.setQ(queryString);
