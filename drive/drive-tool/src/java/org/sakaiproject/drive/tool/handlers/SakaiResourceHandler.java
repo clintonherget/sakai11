@@ -152,19 +152,15 @@ public class SakaiResourceHandler implements Handler {
         public Collection<Resource> getChildren() {
             Collection<Resource> result = new ArrayList<>();
 
-            try {
-                List<ContentEntity> children = root.getMemberResources();
-                Collections.sort(children, contentHostingService.newContentHostingComparator(ResourceProperties.PROP_DISPLAY_NAME, true));
+            List<ContentEntity> children = root.getMemberResources();
+            Collections.sort(children, contentHostingService.newContentHostingComparator(ResourceProperties.PROP_DISPLAY_NAME, true));
 
-                for (ContentEntity entity : children) {
-                    if (entity.isCollection()) {
-                        result.add(new ResourceTree((ContentCollection) entity, contentHostingService));
-                    } else {
-                        result.add(new ResourceItem((ContentResource) entity));
-                    }
+            for (ContentEntity entity : children) {
+                if (entity.isCollection()) {
+                    result.add(new ResourceTree((ContentCollection) entity, contentHostingService));
+                } else {
+                    result.add(new ResourceItem((ContentResource) entity));
                 }
-            } catch (Exception e) {
-                // FIXME: think about this!
             }
 
             return result;
