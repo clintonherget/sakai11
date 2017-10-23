@@ -46,9 +46,6 @@ import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.util.BaseResourcePropertiesEdit;
 
-/**
- * Return a PDF preview URL
- */
 public class UploadHandler implements Handler {
 
     private String redirectTo = null;
@@ -61,7 +58,6 @@ public class UploadHandler implements Handler {
 
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
 
-            // FIXME: sanity checking?
             ResourceProperties properties = new BaseResourcePropertiesEdit();
             properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, uploadedFile.getName());
 
