@@ -42,12 +42,14 @@ import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Return a PDF preview URL
  */
 public class PreviewHandler implements Handler {
+    private static final Logger LOG = LoggerFactory.getLogger(PreviewHandler.class);
 
     private String redirectTo = null;
 
@@ -175,8 +177,8 @@ public class PreviewHandler implements Handler {
                 }
             }
         } catch (Exception e) {
-            // FIXME: log
-            System.err.println("EXCEPTION: " + e);
+            LOG.error("Failure during PDF conversion: {}", e);
+            e.printStackTrace();
         }
 
         throw new RuntimeException("Couldn't preview this file");

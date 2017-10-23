@@ -24,52 +24,51 @@
 
 package org.sakaiproject.drive.tool;
 
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.sakaiproject.component.cover.ServerConfigurationService;
-import org.sakaiproject.tool.cover.SessionManager;
-
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.CredentialRefreshListener;
 import com.google.api.client.auth.oauth2.DataStoreCredentialRefreshListener;
+import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.auth.oauth2.TokenErrorResponse;
 import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.auth.oauth2.StoredCredential;
-
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.googleapis.batch.BatchRequest;
+import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.services.AbstractGoogleClient;
+import com.google.api.client.googleapis.services.json.AbstractGoogleJsonClientRequest;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.DataStore;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
-
-
-import java.util.Collections;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.io.File;
-
 import java.net.URL;
-import com.google.api.client.googleapis.services.AbstractGoogleClient;
-import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
-import com.google.api.client.googleapis.services.json.AbstractGoogleJsonClientRequest;
-import java.util.LinkedList;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.googleapis.batch.BatchRequest;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.tool.cover.SessionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory; 
+
 
 // FIXME: split this class up.  Maybe want a .google package?
 public class GoogleClient {
+    private static final Logger LOG = LoggerFactory.getLogger(GoogleClient.class);
     private static final String APPLICATION = "Sakai Drive";
 
     private int requestsPerBatch = 100;
@@ -133,11 +132,11 @@ public class GoogleClient {
                     .setClientSecrets(clientSecrets)
                     .addRefreshListener(new CredentialRefreshListener() {
                         public void onTokenErrorResponse(Credential credential, TokenErrorResponse tokenErrorResponse) {
-                            System.err.println("OAuth token refresh error: " + tokenErrorResponse);
+                            LOG.error("OAuth token refresh error: {}", tokenErrorResponse);
                         }
 
                         public void onTokenResponse(Credential credential, TokenResponse tokenResponse) {
-                            System.err.println("OAuth token was refreshed");
+                            LOG.info("OAuth token was refreshed");
                         }
                     })
                     .addRefreshListener(new DataStoreCredentialRefreshListener(user, flow.getCredentialDataStore()))
@@ -148,7 +147,8 @@ public class GoogleClient {
 
             return credential;
         } catch (Exception e) {
-            // FIXME: Log this
+            LOG.error("Exception during OAuth response handling: {}", e);
+            e.printStackTrace();
             return null;
         }
     }
@@ -228,9 +228,9 @@ public class GoogleClient {
                 GoogleClient.this.rateLimiter.wantQueries(batch.size());
 
                 long start = System.currentTimeMillis();
-                // logger.info("Executing batch of size: {}", batch.size());
+                LOG.info("Executing batch of size: {}", batch.size());
                 batch.execute();
-                // logger.info("Batch finished in {} ms", System.currentTimeMillis() - start);
+                LOG.info("Batch finished in {} ms", System.currentTimeMillis() - start);
             }
 
             return !requests.isEmpty();
@@ -260,7 +260,7 @@ public class GoogleClient {
             }
 
             while ((queriesInLastTimestep() + count) >= queriesPerTimestep) {
-                // logger.warn("Waiting for rate limiter to allow another {} queries", count);
+                LOG.warn("Waiting for rate limiter to allow another {} queries", count);
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {}
@@ -303,7 +303,7 @@ public class GoogleClient {
         }
 
         public void rateLimitHit() {
-            // logger.warn("Google rate limit hit!");
+            LOG.warn("Google rate limit hit!");
         }
     }
 }
