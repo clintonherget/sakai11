@@ -95,7 +95,7 @@ public class DriveServlet extends HttpServlet {
 
             // context may be null on handle-google-login callback 
             if (ToolManager.getCurrentPlacement() != null) {
-                context.put("siteID", ToolManager.getCurrentPlacement().getContext());
+                context.put("siteId", ToolManager.getCurrentPlacement().getContext());
             }
 
             Handler handler = handlerForRequest(request);
@@ -130,9 +130,6 @@ public class DriveServlet extends HttpServlet {
         if (path == null) {
             path = "";
         }
-
-        // path
-        System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[DriveServlet.java:128 e1cc3e]: " + "\n    path => " + (path) + "\n");
 
         GoogleClient google = new GoogleClient();
 

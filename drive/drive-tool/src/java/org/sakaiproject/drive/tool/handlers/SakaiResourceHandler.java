@@ -68,7 +68,7 @@ public class SakaiResourceHandler implements Handler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
-        String siteId = (String) context.get("siteID");
+        String siteId = (String) context.get("siteId");
         String requestedPath = "/group/" + siteId + "/";
 
         if (request.getPathInfo() != null) {
@@ -89,8 +89,6 @@ public class SakaiResourceHandler implements Handler {
             ContentCollection siteResources = contentHostingService.getCollection(requestedPath);
 
             context.put("resource", new ResourceTree(siteResources, contentHostingService));
-
-            // FIXME: collectId or collectionID?  Be consistent!
             context.put("collectionId", siteResources.getId());
             context.put("subpage", "resources");
         } catch (Exception e) {
