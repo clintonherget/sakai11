@@ -183,7 +183,13 @@ public class SakaiResourceHandler implements Handler {
         }
 
         private String getLabel(ContentCollection other) {
-            return (String)other.getProperties().get(ResourceProperties.PROP_DISPLAY_NAME);
+            String label = (String)other.getProperties().get(ResourceProperties.PROP_DISPLAY_NAME);
+            // FIXME label shouldn't be null, but sometimes it is??
+            if (label == null) {
+                return "Error: no label";
+            } else {
+                return label;
+            }
         }
 
         public String getSize() {
@@ -263,7 +269,13 @@ public class SakaiResourceHandler implements Handler {
         }
 
         public String getLabel() {
-            return (String)resource.getProperties().get(ResourceProperties.PROP_DISPLAY_NAME);
+            String label = (String)resource.getProperties().get(ResourceProperties.PROP_DISPLAY_NAME);
+            // FIXME label shouldn't be null, but sometimes it is??
+            if (label == null) {
+                return "Error: no label";
+            } else {
+                return label;
+            }
         }
 
         public String getPath() {

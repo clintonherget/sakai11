@@ -53,13 +53,20 @@ public class MoveHandler implements Handler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
-            String source = (String) request.getParameter("source");
-            String target = (String) request.getParameter("target");
+            String[] sources = request.getParameterValues("source[]");
+            String target = request.getParameter("target");
             
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
 
             // FIXME: sanity checking?
-            chs.moveIntoFolder(source, target);
+            for (String source: sources) {
+                // multiselect allows drop of folder into itself
+                // just skip that folder and do the other seleted things
+                if (source.equals(target)) {
+                    continue;
+                }
+                chs.moveIntoFolder(source, target);
+            }
 
             // Redirect to the target
             redirectTo = context.get("baseURL") + "sakai-resources" + target;
