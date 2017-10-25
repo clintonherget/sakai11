@@ -43,47 +43,88 @@ SakaiDrive.prototype.getPreviewTemplate = function() {
 
 
 SakaiDrive.prototype.setupRow = function() {
-  var self = this;
+    var self = this;
+    var lastSelectedRow = null;
 
-  $('.sakai-resources-table').on('mousedown', 'tbody tr', function(event) {
-    var $tr = $(this).closest('tr');
+    function toggleRow($tr, force_active) {
+        if (force_active) {
+            $tr.addClass('active');
+        } else {
+            $tr.toggleClass('active');
+        }
+        if ($tr.is('.active')) {
+            lastSelectedRow = $tr;
+        } else if (lastSelectedRow[0] == $tr[0]) {
+            lastSelectedRow = null;
+        }
+    };
 
-    if (!$tr.is('.active')) {
-      $('.sakai-resources-table .active').removeClass('active');
-      $tr.addClass('active');
-    }
+    function clearAll() {
+        $('.sakai-resources-table tbody tr.active').removeClass('active');
+        lastSelectedRow = null;
+    };
 
-    return true;
- }).on('click', 'tbody tr', function(event) {
-      var $tr = $(this).closest('tr');
+    function selectRowsBetweenIndexes(a, b) {
+        var min = Math.min(a, b);
+        var max = Math.max(a, b);
 
-      if ($(event.target).is('a')) {
-        return true;
-      }
+        for (var i = min; i <= max; i++) {
+            var $row = $($('.sakai-resources-table tbody tr').get(i));
+            toggleRow($row, true);
+        }
+    };
 
-      return false;
-  }).on('dblclick', 'tbody tr', function(event) {
-      var $tr = $(this).closest('tr');
+    $('.sakai-resources-table').on('mousedown', 'tbody tr', function(event) {
+        var $tr = $(event.target).closest('tr');
 
-      if ($(event.target).is('a')) {
-        return true;
-      }
+        if (event.ctrlKey || event.metaKey) {
+            toggleRow($tr);
+        } else if (event.shiftKey) {
+            if (lastSelectedRow) {
+                selectRowsBetweenIndexes(lastSelectedRow.index(), $tr.index());
+            } else {
+                toggleRow($tr);
+            }
+        } else {
+            toggleRow($tr, true);
+        }
+    }).on('click', 'tbody tr', function(event) {
+        var $tr = $(event.target).closest('tr');
 
-      $tr.find('td.name a')[0].click();
+        if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
+            clearAll();
+            toggleRow($tr, true);
+        }
+    }).on('dblclick', 'tbody tr', function(event) {
+        var $tr = $(this).closest('tr');
 
-      return false;
-  });
+        if ($(event.target).is('a')) {
+            return true;
+        }
+
+        $tr.find('td.name a')[0].click();
+
+        return false;
+    });;
 };
 
 
 SakaiDrive.prototype.setupDragAndDrop = function() {
-    function doMove(source, target) {
-      var $form = $('form#move-form');
-      var $sourceInput = $form.find('[name="source"]');
-      $sourceInput.val($(source).find('[data-path]').data('path'));
-      var $targetInput = $form.find('[name="target"]');
-      $targetInput.val($(target).find('[data-path]').data('path'));
-      $form.submit();
+    function doMove(target) {
+        var $form = $('form#move-form');
+        $form.empty();
+
+        $.each($('.sakai-resources-table tbody tr.active'), function() {
+            var $sourceInput = $('<input type="hidden" name="source[]">');
+            $sourceInput.val($(this).find('[data-path]').data('path'));
+            $form.append($sourceInput);
+        });
+
+        var $targetInput = $('<input type="hidden" name="target">');
+        $targetInput.val($(target).find('[data-path]').data('path'));
+        $form.append($targetInput);
+
+        $form.submit();
     };
 
     // setup draggables
@@ -92,15 +133,25 @@ SakaiDrive.prototype.setupDragAndDrop = function() {
     $('.sakai-resource-draggable').draggable({
         opacity: 0.8,
         helper: function(event) {
-            var $tr = $(event.target).closest('.sakai-resource-draggable');
+            var $active = $('.sakai-resources-table tbody tr.active');
             var $helper = $('<div>');
-            var $name = $('<div>').append($tr.find('td.name').html());
-            $name.addClass('name');
-            $name.width($tr.find('td.name a').width() + 50);
-            $helper.append($name);
+
+            if ($active.length > 1) {
+                var $label = $('<div>').append('<i class="fa fa-files-o" aria-hidden="true"></i> ').append($active.length + ' items');
+                $label.addClass('name');
+                $label.width(200);
+                $helper.append($label);
+            } else {
+                var $tr = $(event.target).closest('.sakai-resource-draggable');
+                var $name = $('<div>').append($tr.find('td.name').html());
+                $name.addClass('name');
+                $name.width($active.find('td.name a').width() + 50);
+                $helper.append($name);
+            }
+
             $helper.addClass('sakai-resource-drag-helper');
-            $helper.width($tr.width());
-            $helper.height($tr.height());
+            $helper.width($($active.get(0)).width());
+            $helper.height($($active.get(0)).height());
             return $helper;
         },
         cursorAt: {
@@ -125,7 +176,7 @@ SakaiDrive.prototype.setupDragAndDrop = function() {
         },
         hoverClass: 'sakai-resource-dropzone-active',
         drop: function(event, ui) {
-            doMove(ui.draggable[0], event.target);
+            doMove(event.target);
         },
         tolerance: 'pointer',
     });

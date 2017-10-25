@@ -168,7 +168,13 @@ body.sakai-drive-preview-open {
   white-space: nowrap;
 }
 
+.sakai-resources-table tr td {
+  transition: background-color 0.2s;
+}
+
 .sakai-resources-table tr.active td {
+  transition: background-color 0.2s;
+
   background-color: #347EB2 !important;
   color: white;
 }
@@ -184,6 +190,7 @@ body.sakai-drive-preview-open {
     background-color: #347EB2;
     padding: 8px;
 }
+.sakai-resource-drag-helper,
 .sakai-resource-drag-helper a,
 .sakai-resource-drag-helper div:before {
     color: white !important;
