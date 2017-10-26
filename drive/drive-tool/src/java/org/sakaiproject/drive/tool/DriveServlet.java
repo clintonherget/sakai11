@@ -151,6 +151,8 @@ public class DriveServlet extends HttpServlet {
             return new AddResourceHandler();
         } else if (path.startsWith("/move")) {
             return new MoveHandler();
+        } else if (path.startsWith("/add-folder")) {
+            return new AddFolderHandler();
         }
 
         return new SakaiResourceHandler();
