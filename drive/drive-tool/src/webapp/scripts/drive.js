@@ -85,8 +85,9 @@ SakaiDrive.prototype.setupRow = function() {
             } else {
                 toggleRow($tr);
             }
-        } else {
-            toggleRow($tr, true);
+        } else if (!$tr.is('.active')) {
+            clearAll();
+            toggleRow($tr);
         }
     }).on('click', 'tbody tr', function(event) {
         var $tr = $(event.target).closest('tr');
