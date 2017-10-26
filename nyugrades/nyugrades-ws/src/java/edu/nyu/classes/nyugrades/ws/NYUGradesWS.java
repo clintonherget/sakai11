@@ -22,14 +22,19 @@ import edu.nyu.classes.nyugrades.api.NYUGradesService;
 import edu.nyu.classes.nyugrades.api.NYUGradesSessionService;
 import edu.nyu.classes.nyugrades.api.SectionNotFoundException;
 import edu.nyu.classes.nyugrades.api.SiteNotFoundForSectionException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import javax.servlet.ServletException;
+import java.util.Enumeration;
+import java.util.Locale;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -45,7 +50,9 @@ import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 
 
 public class NYUGradesWS extends HttpServlet
@@ -328,20 +335,69 @@ public class NYUGradesWS extends HttpServlet
         public SOAPRequest(HttpServletRequest request) throws Exception {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 
-            doc = builder.parse(request.getInputStream());
+            String xmlInput = readInputStream(request.getInputStream());
+
+            logRequest(request, xmlInput);
+
+            doc = builder.parse(new ByteArrayInputStream(xmlInput.getBytes("UTF-8")));
             xpath = XPathFactory.newInstance().newXPath();
         }
 
         public String get(String parameter) throws Exception {
-            XPathExpression expr = xpath.compile(String.format("//*[local-name()='Body']/*/*[local-name()='%s']",
-                    parameter));
+            XPathExpression expr = xpath.compile("//*[translate(local-name(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='body']/*/*");
             NodeList matches = (NodeList)expr.evaluate(doc, XPathConstants.NODESET);
 
-            if (matches.getLength() == 1) {
-                return matches.item(0).getTextContent();
-            } else {
-                throw new RequestFailedException("Missing value for required parameter: " + parameter);
+            for (int i = 0; i < matches.getLength(); i++) {
+                Node node = matches.item(i);
+                String nodeName = node.getNodeName();
+
+                if (nodeName == null) {
+                    continue;
+                }
+
+                if (nodeName.indexOf(":") >= 0) {
+                    nodeName = nodeName.substring(nodeName.indexOf(":") + 1);
+                }
+
+                if (parameter.equalsIgnoreCase(nodeName)) {
+                    return node.getTextContent();
+                }
             }
+
+            throw new RequestFailedException("Missing value for required parameter: " + parameter);
+        }
+
+        private String readInputStream(InputStream in) throws IOException {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+
+            byte[] buffer = new byte[4096];
+            int len;
+
+            while ((len = in.read(buffer)) >= 0) {
+                bytes.write(buffer, 0, len);
+            }
+
+            return bytes.toString("UTF-8");
+        }
+
+        private void logRequest(HttpServletRequest request, String xmlInput) {
+            System.err.println("NYU Grades received the following request:");
+
+            System.err.println("METHOD: " + request.getMethod());
+            System.err.println("HEADERS:");
+
+            Enumeration<String> headerNames = request.getHeaderNames();
+
+            while (headerNames.hasMoreElements()) {
+                String header = headerNames.nextElement();
+                System.err.println(header + ": " + request.getHeader(header));
+            }
+
+            System.err.println("\n");
+
+            System.err.println(xmlInput);
+
+            System.err.println("================================================");
         }
     }
 }
