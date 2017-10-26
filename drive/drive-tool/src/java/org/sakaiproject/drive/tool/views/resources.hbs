@@ -11,6 +11,30 @@
     {{/each}}
   </ul>
 
+  <div id="add-folder-modal" class="add-folder-modal modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Add a Folder</h4>
+        </div>
+        <form id="add-folder-form" method="POST" action="{{baseURL}}add-folder">
+          <input type="hidden" name="target" value="{{collectionId}}">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="folderName">Folder name</label>
+              <input type="text" class="form-control" id="folderName" name="name" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Add Folder</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div id="google-drive-modal" class="google-drive-modal modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -41,6 +65,7 @@
   <div class="btn-group sakai-resources-toolbar">
     <button data-toggle="modal" data-target="#google-drive-modal" class="btn btn-default google-drive-show">Show my drive</button>
     <button class="btn btn-default btn-upload-file">Upload a file</button>
+    <button data-toggle="modal" data-target="#add-folder-modal" class="btn btn-default btn-add-folder">Add a folder</button>
     <!-- FIXME: delete when this stops being funny -->
     <button id="buy-me-a-pony" class="btn btn-default">Buy me a pony</button>
   </div>
@@ -99,7 +124,7 @@
               type: "GET",
               contentType: "html",
             }).success(function (content) {
-              $('.modal-body').html(content);
+              $('#google-drive-modal .modal-body').html(content);
             });
 
      return true;
@@ -119,6 +144,10 @@
    $('#buy-me-a-pony').on('click', function () {
      window.location.href = 'https://www.youtube.com/watch?v=HmWkgZ-b6sk';
    });
+
+    $('.add-folder-modal').on('shown.bs.modal', function() {
+        $('#folderName').focus();
+    });
 
     new SakaiDrive();
   </script>
