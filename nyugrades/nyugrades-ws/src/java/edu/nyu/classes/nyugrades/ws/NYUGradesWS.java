@@ -45,6 +45,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.component.api.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionManager;
@@ -142,7 +143,7 @@ public class NYUGradesWS extends HttpServlet
                 } else if (action.startsWith("getGradesForSite")) {
                     GradeSet grades = getGradesForSite(soapRequest.get("sessionId"),
                             soapRequest.get("courseId"),
-                            soapRequest.get("strm"),
+                            soapRequest.get("term"),
                             soapRequest.get("sessionCode"),
                             soapRequest.get("classSection"));
 
@@ -319,7 +320,6 @@ public class NYUGradesWS extends HttpServlet
                 sakaiSession.invalidate();
             }
         }
-
     }
 
     private class RequestFailedException extends Exception {
@@ -337,7 +337,9 @@ public class NYUGradesWS extends HttpServlet
 
             String xmlInput = readInputStream(request.getInputStream());
 
-            logRequest(request, xmlInput);
+            if ("true".equals(HotReloadConfigurationService.getString("nyugrades.log-requests", "false"))) {
+                logRequest(request, xmlInput);
+            }
 
             doc = builder.parse(new ByteArrayInputStream(xmlInput.getBytes("UTF-8")));
             xpath = XPathFactory.newInstance().newXPath();
