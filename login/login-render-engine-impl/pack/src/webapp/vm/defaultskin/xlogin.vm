@@ -23,9 +23,12 @@
     				<aside>${loginAdvice}</aside>
     			#end
     			<p class="buttons">
-                    <input name="cancel" type="submit" class="loginsubmit" value="NYU Login"/>
-    				<input name="submit" type="submit" id="submit" class="loginsubmit" value="${loginWording}" disabled/>
-    				<!-- <input name="cancel" type="submit" class="loginsubmit" value="${cancelWording}"/> -->
+    			#if (${doCancel})
+    				<input name="submit" type="submit" id="submit" class="loginsubmit" value="${loginWording}"/>
+    				<input name="cancel" type="submit" class="loginsubmit" value="${cancelWording}"/>
+    			#else
+    				<input name="submit" type="submit" id="submit" value="${loginWording}"/>
+    			#end
     			</p>
     			#if (${passwordResetUrl})
     				<p>
