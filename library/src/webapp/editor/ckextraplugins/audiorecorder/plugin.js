@@ -43,6 +43,8 @@ Audio.prototype.createCKElement = function () {
 	var sourceElement = new CKEDITOR.dom.element('source');
 	sourceElement.setAttributes({'src': mediaurl});
 	sourceElement.setAttributes({'type': this.contentType});
+	// CLASSES-3051 hide the download button
+	sourceElement.setAttribute('controlslist','nodownload');
 	audioElement.append(sourceElement);
 	return audioElement;
 }
