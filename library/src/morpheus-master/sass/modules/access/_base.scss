@@ -56,12 +56,6 @@
 			font-size: 1.1em;
 			margin: 0 0 1em 0;
 		}
-		input[name="cancel"]{
-		    background-color: #dd1b4d !important;
-		    color: white !important;
-		    width: 100%;
-		    padding: 2%;
-		}
 		p{
 			text-align: right;
 			@media #{$phone}{
