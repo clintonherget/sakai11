@@ -3885,6 +3885,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			createToolBarLink(BltiPickerProducer.VIEW_ID, tofill, "add-blti", "simplepage.blti", currentPage, "simplepage.blti.tooltip");
 		    }
 			}
+
+			// CLASSES-3076 only show these sections when *not* a student page
+			UIOutput.make(tofill, "addContentToolContentSubSection");
+			UIOutput.make(tofill, "addContentLessonsContentSubSection");
 		}
 	}
 
