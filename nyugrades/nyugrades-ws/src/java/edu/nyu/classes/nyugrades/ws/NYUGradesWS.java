@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.Enumeration;
 import java.util.Locale;
 import javax.servlet.http.HttpServlet;
@@ -53,7 +54,6 @@ import org.sakaiproject.user.api.UserDirectoryService;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 
 
 public class NYUGradesWS extends HttpServlet
@@ -236,7 +236,18 @@ public class NYUGradesWS extends HttpServlet
                 result = result.replace("{{SOAP_ACTION}}", getSoapAction());
             }
 
+            if ("true".equals(HotReloadConfigurationService.getString("nyugrades.log-requests", "false"))) {
+                try {
+                    LOG.info("Responding with XML document: " + result);
+                    LOG.info("Base64 response: " + base64(result));
+                } catch (Exception ex) {}
+            }
+
             response.getWriter().write(result);
+        }
+
+        private String base64(String source) throws Exception {
+            return Base64.getEncoder().encodeToString(source.getBytes("UTF-8"));
         }
 
         private boolean passwordValid(String username, String password)
