@@ -44,7 +44,7 @@ Audio.prototype.createCKElement = function () {
 	sourceElement.setAttributes({'src': mediaurl});
 	sourceElement.setAttributes({'type': this.contentType});
 	// CLASSES-3051 hide the download button
-	sourceElement.setAttribute('controlslist','nodownload');
+	audioElement.setAttribute('controlslist','nodownload');
 	audioElement.append(sourceElement);
 	return audioElement;
 }
