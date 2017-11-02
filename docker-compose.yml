@@ -3,9 +3,8 @@ services:
     sakai:
         image: maven:3.5.0-jdk-8
         volumes:
-            - ./:/root/sakai11:rw
-            - ../output/:/root/sakai/output:rw
+            - ./:/root/sakai:rw
         environment:
           - TOMCAT_HOME
-          - SKIN_CUSTOMIZATION_FILE
-        entrypoint: sh -c 'cd /root/sakai11 && pwd && ls -lrt && mvn clean install sakai:deploy -DskipTests=true -Dmaven.tomcat.home=$$TOMCAT_HOME -Dsakai.skin.target=morpheus-nyu -Dsakai.skin.customization.file=$$SKIN_CUSTOMIZATION_FILE -Dsakai.cleanup=true'
+          - SKIP_TESTS
+        entrypoint: sh -c 'cd /root/sakai11 && mvn clean install sakai:deploy -DskipTests=$$SKIP_TESTS -Dmaven.tomcat.home=$$TOMCAT_HOME -Dsakai.skin.target=morpheus-nyu -Dsakai.skin.customization.file=/root/sakai/reference/library/src/morpheus-master/sass/_nyu.scss -Dsakai.cleanup=true'
