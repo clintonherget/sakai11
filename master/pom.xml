@@ -1503,6 +1503,12 @@
         <scope>provided</scope>
       </dependency>
       <dependency>
+        <groupId>org.sakaiproject.stealth</groupId>
+        <artifactId>stealth-api</artifactId>
+        <version>${sakai.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
         <groupId>org.sakaiproject</groupId>
         <artifactId>sakai-syllabus-api</artifactId>
         <version>${sakai.version}</version>

@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'stealth-icons';
+  src:url('../fonts/stealth-icons.eot?-wa2nby');
+  src:url('../fonts/stealth-icons.eot?#iefix-wa2nby') format('embedded-opentype'),
+    url('../fonts/stealth-icons.woff?-wa2nby') format('woff'),
+    url('../fonts/stealth-icons.ttf?-wa2nby') format('truetype'),
+    url('../fonts/stealth-icons.svg?-wa2nby#pasystem-icons') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}

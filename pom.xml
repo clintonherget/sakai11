@@ -125,6 +125,7 @@
                 <module>site</module>
                 <module>site-manage</module>
                 <module>sitestats</module>
+                <module>stealth</module>
                 <module>syllabus</module>
                 <module>taggable</module>
                 <module>textarea</module>
