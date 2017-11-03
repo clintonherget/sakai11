@@ -179,9 +179,10 @@ function clickSubmitForGrade(){
             <h:graphicImage alt="#{deliveryMessages.alt_q_marked}"
                url="/images/questionMarkBubble15.png"  rendered="#{question.review}"/>
               <h:commandLink title="#{deliveryMessages.t_takeAssessment}" immediate="true" action="takeAssessment"> 
-                <h:outputText escape="false" value="#{question.sequence}#{deliveryMessages.dot} #{question.strippedText}">
+                <h:outputText escape="false" value="#{question.sequence}#{deliveryMessages.dot} ">
                 	<f:convertNumber maxFractionDigits="2"/>
                 </h:outputText>
+                <h outputText escape="true" value="#{question.strippedText}" />
                 <h:outputText escape="false" value=" (#{question.pointsDisplayString}#{question.roundedMaxPointsToDisplay} #{deliveryMessages.pt})" rendered="#{(delivery.settings.displayScoreDuringAssessments != '2' && question.itemData.scoreDisplayFlag) || question.pointsDisplayString!=''}">
                 	<f:convertNumber maxFractionDigits="2"/>
                 </h:outputText>
