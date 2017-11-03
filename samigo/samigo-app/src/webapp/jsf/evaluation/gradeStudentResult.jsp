@@ -173,7 +173,8 @@ function toPoint(id)
                   <h:outputText escape="false" value="#{question.roundedMaxPoints} #{deliveryMessages.pt} "/>
                 </span>
                 <h:outputLink value="##{part.number}#{deliveryMessages.underscore}#{question.number}"> 
-                  <h:outputText escape="false" value="#{question.number}#{deliveryMessages.dot} #{question.strippedText}"/>
+                  <h:outputText escape="false" value="#{question.number}#{deliveryMessages.dot} "/>
+                  <h:outputText escape="true" value="#{question.strippedText}" />
                 </h:outputLink>
         </t:dataList>
       </samigo:hideDivision>
