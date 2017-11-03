@@ -260,7 +260,7 @@
 	],
 	"height": 1024,
 	"metadata": {
-		"name": "pasystem-icons"
+		"name": "stealth-icons"
 	},
 	"preferences": {
 		"showGlyphs": true,
@@ -270,7 +270,7 @@
 		"fontPref": {
 			"prefix": "icon-",
 			"metadata": {
-				"fontFamily": "pasystem-icons"
+				"fontFamily": "stealth-icons"
 			},
 			"metrics": {
 				"emSize": 1024,

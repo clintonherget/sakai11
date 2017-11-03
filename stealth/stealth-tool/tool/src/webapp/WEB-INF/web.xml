@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
          version="2.4">
 
-    <display-name>sakai.pasystem</display-name>
+    <display-name>sakai.stealth</display-name>
 
     <servlet>
-        <servlet-name>sakai.pasystem</servlet-name>
-        <servlet-class>org.sakaiproject.pasystem.tool.PASystemServlet</servlet-class>
+        <servlet-name>sakai.stealth</servlet-name>
+        <servlet-class>org.sakaiproject.stealth.tool.stealthServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -23,7 +23,7 @@
     </filter>
     <filter-mapping>
         <filter-name>sakai.request</filter-name>
-        <servlet-name>sakai.pasystem</servlet-name>
+        <servlet-name>sakai.stealth</servlet-name>
         <dispatcher>REQUEST</dispatcher>
         <dispatcher>FORWARD</dispatcher>
         <dispatcher>INCLUDE</dispatcher>

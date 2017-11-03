@@ -22,7 +22,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.pasystem.impl;
+package org.sakaiproject.stealth.impl;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  */
 class StealthImpl implements Stealth {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PASystemImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StealthImpl.class);
 
     private TemplateCache cache;
 

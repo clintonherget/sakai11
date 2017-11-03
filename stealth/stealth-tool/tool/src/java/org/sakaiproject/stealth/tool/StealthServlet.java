@@ -97,7 +97,7 @@ public class StealthServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         checkAccessControl();
 
-        I18n i18n = stealth.getI18n(this.getClass().getClassLoader(), "org.sakaiproject.pasystem.tool.i18n.pasystem");
+        I18n i18n = stealth.getI18n(this.getClass().getClassLoader(), "org.sakaiproject.stealth.tool.i18n.stealth");
 
         response.setHeader("Content-Type", "text/html");
 
@@ -141,7 +141,7 @@ public class StealthServlet extends HttpServlet {
 
         if (!SecurityService.unlock("stealth.manage", "/site/" + siteId)) {
             LOG.error("Access denied to PA System management tool for user " + SessionManager.getCurrentSessionUserId());
-            throw new PASystemException("Access denied");
+            throw new stealthException("Access denied");
         }
     }
 
@@ -170,7 +170,7 @@ public class StealthServlet extends HttpServlet {
         try {
             return new URL(ServerConfigurationService.getPortalUrl() + "/site/" + siteId + "/tool/" + toolId + "/");
         } catch (MalformedURLException e) {
-            throw new PASystemException("Couldn't determine tool URL", e);
+            throw new stealthException("Couldn't determine tool URL", e);
         }
     }
 
@@ -216,7 +216,7 @@ public class StealthServlet extends HttpServlet {
                 try {
                     return new URL(baseURL, type + "/" + uuid + "/" + action).toString();
                 } catch (MalformedURLException e) {
-                    throw new PASystemException("Failed while building action URL", e);
+                    throw new stealthException("Failed while building action URL", e);
                 }
             }
         });
@@ -230,7 +230,7 @@ public class StealthServlet extends HttpServlet {
                 try {
                     return new URL(baseURL, type + "/" + action).toString();
                 } catch (MalformedURLException e) {
-                    throw new PASystemException("Failed while building newURL", e);
+                    throw new stealthException("Failed while building newURL", e);
                 }
             }
         });

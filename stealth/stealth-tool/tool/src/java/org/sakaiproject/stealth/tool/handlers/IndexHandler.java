@@ -22,7 +22,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.pasystem.tool.handlers;
+package org.sakaiproject.stealth.tool.handlers;
 
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
