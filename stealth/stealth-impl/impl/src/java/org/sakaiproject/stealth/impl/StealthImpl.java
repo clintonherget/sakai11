@@ -69,7 +69,7 @@ class StealthImpl implements Stealth {
     @Override
     public void init() {
         if (ServerConfigurationService.getBoolean("auto.ddl", false) || ServerConfigurationService.getBoolean("stealth.auto.ddl", false)) {
-            runDBMigration(ServerConfigurationService.getString("vendor@org.sakaiproject.db.api.SqlService"));
+            // runDBMigration(ServerConfigurationService.getString("vendor@org.sakaiproject.db.api.SqlService"));
         }
 
         // No need to parse each time.
@@ -80,11 +80,6 @@ class StealthImpl implements Stealth {
 
     @Override
     public void destroy() {
-    }
-
-    @Override
-    public I18n getI18n(ClassLoader loader, String resourceBase) {
-        return new SakaiI18n(loader, resourceBase);
     }
 
     private Handlebars loadHandleBars(final I18n i18n) {
