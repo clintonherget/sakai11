@@ -1,204 +1,59 @@
 <div class="google-drive">
-  <div style="text-align: right;">
-    <form method="POST" action="{{baseURL}}reset-oauth">
-      <input type="submit" class="btn btn-danger" value="Relink my Google account" />
-    </form>
+  <div class="row">
+    <div class="col-sm-12">
+      <div style="text-align: right;">
+        <form method="POST" action="{{baseURL}}reset-oauth">
+          <input type="submit" class="btn btn-danger" value="Relink my Google account" />
+        </form>
+      </div>
+
+      <div class="search-bar">
+        <input class="file-search" type="text" placeholder="Search your drive" value="" />
+      </div>
+    </div>
   </div>
 
-  <h1>Hello</h1>
-
-  <div class="search-bar">
-    <input class="file-search" type="text" placeholder="Search your drive" value="" />
+  <div class="row">
+    <div class="col-sm-2 google-drive-menu">
+      <div>
+        <ul class="nav">
+          <li class="active"><a href="#googledriverecent" data-toggle="tab">Most Recent</a></li>
+          <li><a href="#googledrivehome" data-toggle="tab">My Drive</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-sm-10 google-drive-panel">
+      <div class="tab-content">
+        <div id="googledriverecent" class="tab-pane active">
+          <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
+            <div class="scroll-container">
+              <ul class="file-list">
+              </ul>
+              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+            </div>
+          </form>
+        </div>
+        <div id="googledrivehome" class="tab-pane">
+          <ul class="breadcrumb">
+            <li class="active"><a href="#" data-id="root">My Drive</a></li>
+          </ul>
+          <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
+            <div class="scroll-container">
+              <ul class="file-list">
+              </ul>
+              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <form method="POST" action="{{baseURL}}add-selected">
-    <div class="scroll-container">
-      <ul class="file-list">
-      </ul>
-      <div class="no-matches-msg" style="display: none;">No files matched your query</div>
-    </div>
-    <div class="form-buttons">
-      <input type="submit" value="Add to resources" />
-    </div>
-  </form>
 </div>
 
 <script id="fileTemplate" type="text/template">
-  <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
-</script>
-
-<script>
- function Drive(rootElt) {
-   this.root = rootElt;
-   this.baseURL = "{{baseURL}}";
-
-   this.scrollContainer = this.root.find('.scroll-container');
-   this.list = this.root.find('.file-list');
-   this.search = this.root.find('.file-search');
-
-   this.nextPageToken = null;
-
-   this.currentSearchTerm = '';
-
-   this.loadThresholdPx = parseInt(this.scrollContainer.css('max-height')) * 4;
-   this.currentlyLoading = false;
-
-   this.setupList();
-   this.setupScrollHandling();
-   this.setupSearch();
-
-   this.getFiles();
- };
-
- Drive.prototype.setupList = function() {
-   this.listOverlay = $('<div class="list-overlay" />');
-
-   this.listOverlay
-       .css('position', 'absolute')
-       .css('top', this.scrollContainer.position().top)
-       .css('left', this.scrollContainer.position().left);
-
-   this.root.append(this.listOverlay);
- }
-
- Drive.prototype.showOverlay = function () {
-   if (this.list.find('li').length == 0) {
-     /* Nothing to overlay */
-     return;
-   }
-   this.listOverlay
-       .css('width', this.scrollContainer.width())
-       .css('height', this.scrollContainer.height())
-       .show();
- };
-
- Drive.prototype.hideOverlay = function () {
-   this.listOverlay.hide();
- };
-
- Drive.prototype.showNoMatches = function () {
-   this.root.find('.no-matches-msg').show();
- };
-
- Drive.prototype.hideNoMatches = function () {
-   this.root.find('.no-matches-msg').hide();
- };
-
- Drive.prototype.setupScrollHandling = function() {
-   var self = this;
-
-   self.scrollContainer.on('scroll', function () {
-     if (self.currentlyLoading || !self.nextPageToken) {
-       /* Nothing needs doing */
-       return true;
-     }
-
-     var scrollPosition = self.scrollContainer.scrollTop() + self.scrollContainer.height();
-
-     if (scrollPosition >= (self.list.height() - self.loadThresholdPx)) {
-       /* Load next page */
-       self.currentlyLoading = true;
-       self.getFiles(self.nextPageToken, {
-         complete: function () {
-           self.currentlyLoading = false;
-         }
-       });
-     }
-
-     return true;
-   });
- };
-
- Drive.prototype.setupSearch = function() {
-   var self = this;
-   var updateTimer = null;
-
-   self.search.on('input', function () {
-     if (updateTimer) {
-       clearTimeout(updateTimer);
-     }
-
-     updateTimer = setTimeout(function () {
-       updateTimer = null;
-       self.handleSearchChange();
-     }, 250);
-   });
- };
-
- Drive.prototype.handleSearchChange = function () {
-   var self = this;
-
-   console.log("handling search change");
-
-   if (self.currentlyLoading) {
-     console.log("defer...");
-     /* Defer handling until we finish loading */
-     setTimeout(function () {
-       self.handleSearchChange();
-     }, 200);
-
-     return true;
-   }
-
-   var query = self.search.val();
-
-   if (query == this.currentSearchTerm) {
-     /* Nothing to do anyway! */
-     console.log("Nothing to do");
-     return true;
-   }
-
-   console.log("here we go!");
-   self.currentSearchTerm = (query || '');
-   self.nextPageToken = null;
-
-   self.showOverlay();
-
-   self.getFiles(null, {
-     replaceList: true,
-     complete: function () {
-       self.hideOverlay();
-     }
-   });
-
-   return true;
- };
-
- Drive.prototype.getFiles = function(pageToken, options) {
-   var self = this;
-   var fileTemplate = TrimPath.parseTemplate($("#fileTemplate").html().trim().toString());
-
-   if (!pageToken) { pageToken = ''; }
-   if (!options) { options = {} }
-   if (!options.complete) { options.complete = $.noop; }
-
-   var query = (self.currentSearchTerm || '');
-
-   $.getJSON(this.baseURL + "/drive-data",
-             {
-               q: query,
-               pageToken: pageToken
-             },
-             function(json) {
-               self.hideNoMatches();
-
-               if (options.replaceList) {
-                 self.list.empty();
-               }
-
-               $.each(json.files, function(index, page) {
-                 var html = fileTemplate.process(page);
-                 self.list.append(html);
-                 self.nextPageToken = json.nextPageToken;
-               });
-
-               if (json.files.length == 0) {
-                 self.showNoMatches();
-               }
-
-               options.complete();
-             });
- };
-
- new Drive($('.google-drive'));
+  {if folder}
+    <li><img src="${iconLink}" /> <a class="google-drive-folder" href="#" data-id="${id}">${name}</a></li>
+  {else}
+    <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
+  {/if}
 </script>
