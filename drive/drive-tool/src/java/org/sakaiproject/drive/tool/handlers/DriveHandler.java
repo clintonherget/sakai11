@@ -68,53 +68,47 @@ public class DriveHandler implements Handler {
 
     private String redirectTo = null;
 
+    public static final int RECENT = 0;
+    public static final int MY_DRIVE = 1;
+
+    private int mode = 0;
+
+    public DriveHandler(int mode) {
+        this.mode = mode;
+    }
+
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
             GoogleClient google = new GoogleClient();
 
-            Drive drive = google.getDrive((String) context.get("googleUser"));
-
             RequestParams p = new RequestParams(request);
 
-            String query = p.getString("q", null);
-            String pageToken = p.getString("pageToken", null);
+            String user = (String) context.get("googleUser");
 
-            Drive.Files files = drive.files();
-            Drive.Files.List list = files.list();
+            FileList fileList = null;
 
-            list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
-
-            String queryString = "mimeType != 'application/vnd.google-apps.folder'";
-
-            if (query == null) {
-                // API restriction: We can only sort if we don't have a search query
-                list.setOrderBy("modifiedTime");
+            if (RECENT == mode) {
+                fileList = getRecentFiles(google, user, p);
+            } else if (MY_DRIVE == mode) {
+                fileList = getChildrenForContext(google, user, p);
             } else {
-                queryString += " AND fullText contains '" + query.replace("'", "\\'") + "'";
+                throw new RuntimeException("DriveHandler mode not supported: " + mode);
             }
 
-            list.setQ(queryString);
-            list.setPageSize(50);
-
-            if (pageToken != null) {
-                list.setPageToken(pageToken);
-            }
-
-            FileList fileList = list.execute();
-
-            List<GoogleItem> filenames = new ArrayList<>();
+            List<GoogleItem> items = new ArrayList<>();
 
             for (File entry : fileList.getFiles()) {
-                filenames.add(new GoogleItem(entry.getId(),
-                        entry.getName(),
-                        entry.getIconLink(),
-                        entry.getThumbnailLink(),
-                        entry.getWebViewLink()));
+                items.add(new GoogleItem(entry.getId(),
+                    entry.getName(),
+                    entry.getIconLink(),
+                    entry.getThumbnailLink(),
+                    entry.getWebViewLink(),
+                    entry.getMimeType()));
             }
 
             ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(response.getOutputStream(), new GoogleItemPage(filenames, fileList.getNextPageToken()));
+            mapper.writeValue(response.getOutputStream(), new GoogleItemPage(items, fileList.getNextPageToken()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -144,6 +138,68 @@ public class DriveHandler implements Handler {
         return false;
     }
 
+    private FileList getRecentFiles(GoogleClient google, String user, RequestParams p) {
+        try {
+            Drive drive = google.getDrive(user);
+
+            String query = p.getString("q", null);
+            String pageToken = p.getString("pageToken", null);
+
+            Drive.Files files = drive.files();
+            Drive.Files.List list = files.list();
+
+            list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
+
+            String queryString = "mimeType != 'application/vnd.google-apps.folder'";
+
+            if (query == null) {
+                // API restriction: We can only sort if we don't have a search query
+                list.setOrderBy("modifiedTime");
+            } else {
+                queryString += " AND fullText contains '" + query.replace("'", "\\'") + "'";
+            }
+
+            list.setQ(queryString);
+            list.setPageSize(50);
+
+            if (pageToken != null) {
+                list.setPageToken(pageToken);
+            }
+
+            return list.execute();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private FileList getChildrenForContext(GoogleClient google, String user, RequestParams p) {
+        try {
+            Drive drive = google.getDrive(user);
+
+            String folderId = p.getString("context", "root");
+            String pageToken = p.getString("pageToken", null);
+
+            Drive.Files files = drive.files();
+            Drive.Files.List list = files.list();
+
+            list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
+
+            String queryString = "'"+folderId+"' in parents";
+
+            list.setQ(queryString);
+            list.setPageSize(50);
+            list.setOrderBy("folder,name");
+
+            if (pageToken != null) {
+                list.setPageToken(pageToken);
+            }
+
+            return list.execute();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private class GoogleItemPage {
         public String nextPageToken;
         public List<GoogleItem> files;
@@ -160,13 +216,15 @@ public class DriveHandler implements Handler {
         public String iconLink;
         public String thumbnailLink;
         public String viewLink;
+        public String mimeType;
 
-        public GoogleItem(String id, String name, String iconLink, String thumbnailLink, String viewLink) {
+        public GoogleItem(String id, String name, String iconLink, String thumbnailLink, String viewLink, String mimeType) {
             this.id = id;
             this.name = name;
             this.iconLink = iconLink;
             this.thumbnailLink = thumbnailLink;
             this.viewLink = viewLink;
+            this.mimeType = mimeType;
         }
 
         public String getId() { return id; }
@@ -174,5 +232,6 @@ public class DriveHandler implements Handler {
         public String getIconLink() { return iconLink; }
         public String getThumbnailLink() { return thumbnailLink; }
         public String getViewLink() { return viewLink; }
+        public boolean isFolder() { return mimeType.equals("application/vnd.google-apps.folder"); }
     }
 }
