@@ -195,3 +195,24 @@ body.sakai-drive-preview-open {
 .sakai-resource-drag-helper div:before {
     color: white !important;
 }
+
+#google-drive-modal .modal-dialog {
+  width: 95%;
+  max-width: 1200px;
+}
+
+#google-drive-modal .modal-body {
+  overflow: hidden;
+}
+
+.google-drive-menu .nav .active {
+  background-color: #EEE;
+}
+
+.google-drive-panel {
+  border-left: 1px solid #AAA;
+}
+
+#googledrivehome .breadcrumb {
+  margin: 0;
+}

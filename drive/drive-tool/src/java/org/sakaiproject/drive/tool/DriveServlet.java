@@ -142,7 +142,9 @@ public class DriveServlet extends HttpServlet {
         } else if (path.startsWith("/show-google-drive")) {
             return new ShowGoogleDriveHandler();
         } else if (path.startsWith("/drive-data")) {
-            return new DriveHandler();
+            return new DriveHandler(DriveHandler.RECENT);
+        } else if (path.startsWith("/my-drive-data")) {
+            return new DriveHandler(DriveHandler.MY_DRIVE);
         } else if (path.startsWith("/upload-file")) {
             return new UploadHandler();
         } else if (path.startsWith("/preview")) {
