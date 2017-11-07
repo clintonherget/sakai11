@@ -47,6 +47,8 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.stealth.api.I18n;
 import org.sakaiproject.stealth.api.Stealth;
 import org.sakaiproject.stealth.api.StealthException;
+import org.sakaiproject.stealth.tool.handlers.Handler;
+import org.sakaiproject.stealth.tool.handlers.IndexHandler;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
 import org.sakaiproject.tool.api.Session;
@@ -77,17 +79,7 @@ public class StealthServlet extends HttpServlet {
     private Handler handlerForRequest(HttpServletRequest request) {
         String path = request.getPathInfo();
 
-        if (path == null) {
-            path = "";
-        }
-
-        if (path.contains("/popups/")) {
-            return new PopupsHandler(stealth);
-        } else if (path.contains("/banners/")) {
-            return new BannersHandler(stealth);
-        } else {
-            return new IndexHandler(stealth);
-        }
+        return new IndexHandler(stealth);
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -95,45 +87,14 @@ public class StealthServlet extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        checkAccessControl();
+        //checkAccessControl();
 
-        I18n i18n = stealth.getI18n(this.getClass().getClassLoader(), "org.sakaiproject.stealth.tool.i18n.stealth");
+        //I18n i18n = Stealth.getI18n(this.getClass().getClassLoader(), "org.sakaiproject.stealth.tool.i18n.stealth");
 
-        response.setHeader("Content-Type", "text/html");
+        //response.setHeader("Content-Type", "text/html");
 
-        URL toolBaseURL = determineBaseURL();
-        Handlebars handlebars = loadHandlebars(toolBaseURL, i18n);
-
-        try {
-            Template template = handlebars.compile("org/sakaiproject/stealth/tool/views/layout");
-            Map<String, Object> context = new HashMap<String, Object>();
-
-            context.put("baseURL", toolBaseURL);
-            context.put("layout", true);
-            context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
-            context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
-
-            Handler handler = handlerForRequest(request);
-
-            Map<String, List<String>> messages = loadFlashMessages();
-
-            handler.handle(request, response, context);
-
-            storeFlashMessages(handler.getFlashMessages());
-
-            if (handler.hasRedirect()) {
-                response.sendRedirect(toolBaseURL + handler.getRedirect());
-            } else {
-                context.put("flash", messages);
-                context.put("errors", handler.getErrors().toList());
-
-                if (Boolean.TRUE.equals(context.get("layout"))) {
-                    response.getWriter().write(template.apply(context));
-                }
-            }
-        } catch (IOException e) {
-            LOG.warn("Write failed", e);
-        }
+        //URL toolBaseURL = determineBaseURL();
+        //Handlebars handlebars = loadHandlebars(toolBaseURL, i18n);
     }
 
     private void checkAccessControl() {
@@ -141,25 +102,7 @@ public class StealthServlet extends HttpServlet {
 
         if (!SecurityService.unlock("stealth.manage", "/site/" + siteId)) {
             LOG.error("Access denied to PA System management tool for user " + SessionManager.getCurrentSessionUserId());
-            throw new stealthException("Access denied");
-        }
-    }
-
-    private void storeFlashMessages(Map<String, List<String>> messages) {
-        Session session = SessionManager.getCurrentSession();
-        session.setAttribute(FLASH_MESSAGE_KEY, messages);
-    }
-
-    private Map<String, List<String>> loadFlashMessages() {
-        Session session = SessionManager.getCurrentSession();
-
-        if (session.getAttribute(FLASH_MESSAGE_KEY) != null) {
-            Map<String, List<String>> flashErrors = (Map<String, List<String>>) session.getAttribute(FLASH_MESSAGE_KEY);
-            session.removeAttribute(FLASH_MESSAGE_KEY);
-
-            return flashErrors;
-        } else {
-            return new HashMap<String, List<String>>();
+            throw new StealthException("Access denied");
         }
     }
 
@@ -170,7 +113,7 @@ public class StealthServlet extends HttpServlet {
         try {
             return new URL(ServerConfigurationService.getPortalUrl() + "/site/" + siteId + "/tool/" + toolId + "/");
         } catch (MalformedURLException e) {
-            throw new stealthException("Couldn't determine tool URL", e);
+            throw new StealthException("Couldn't determine tool URL", e);
         }
     }
 
@@ -216,7 +159,7 @@ public class StealthServlet extends HttpServlet {
                 try {
                     return new URL(baseURL, type + "/" + uuid + "/" + action).toString();
                 } catch (MalformedURLException e) {
-                    throw new stealthException("Failed while building action URL", e);
+                    throw new StealthException("Failed while building action URL", e);
                 }
             }
         });
@@ -230,7 +173,7 @@ public class StealthServlet extends HttpServlet {
                 try {
                     return new URL(baseURL, type + "/" + action).toString();
                 } catch (MalformedURLException e) {
-                    throw new stealthException("Failed while building newURL", e);
+                    throw new StealthException("Failed while building newURL", e);
                 }
             }
         });
