@@ -176,7 +176,7 @@ public class DriveHandler implements Handler {
         try {
             Drive drive = google.getDrive(user);
 
-            String folderId = p.getString("context", "root");
+            String folderId = p.getString("folderId", "root");
             String pageToken = p.getString("pageToken", null);
 
             Drive.Files files = drive.files();
