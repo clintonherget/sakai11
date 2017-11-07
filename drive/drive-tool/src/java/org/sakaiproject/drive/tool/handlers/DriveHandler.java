@@ -178,6 +178,7 @@ public class DriveHandler implements Handler {
 
             String folderId = p.getString("folderId", "root");
             String pageToken = p.getString("pageToken", null);
+            String query = p.getString("q", null);
 
             Drive.Files files = drive.files();
             Drive.Files.List list = files.list();
@@ -186,13 +187,18 @@ public class DriveHandler implements Handler {
 
             String queryString = "'"+folderId+"' in parents";
 
-            list.setQ(queryString);
-            list.setPageSize(50);
-            list.setOrderBy("folder,name");
+            if (query == null) {
+                list.setOrderBy("folder,name");
+            } else {
+                queryString += " AND fullText contains '" + query.replace("'", "\\'") + "'";
+            }
 
             if (pageToken != null) {
                 list.setPageToken(pageToken);
             }
+
+            list.setQ(queryString);
+            list.setPageSize(50);
 
             return list.execute();
         } catch (Exception e) {
