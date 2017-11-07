@@ -187,26 +187,28 @@ SakaiDrive.prototype.setupDragAndDrop = function() {
 SakaiDrive.prototype.VIEW_URL = '/drive-tool/pdfjs/web/viewer.html?file=';
 
 
-function GoogleDrive(rootElt, baseURL) {
+function GoogleDrive(rootElt, baseURL, options) {
   this.root = rootElt;
   this.baseURL = baseURL;
+  this.options = options;
 
   this.scrollContainer = this.root.find('.scroll-container');
-  this.list = this.root.find('#googledriverecent .file-list');
-  this.search = this.root.find('.file-search');
+  this.list = this.root.find('.file-list');
 
   this.nextPageToken = null;
 
   this.currentSearchTerm = '';
 
-  this.loadThresholdPx = parseInt(this.scrollContainer.css('max-height')) * 4;
+  this.loadThresholdPx = parseInt(this.scrollContainer.height()) * 4;
   this.currentlyLoading = false;
 
   this.setupList();
   this.setupScrollHandling();
-  this.setupSearch();
 
-  this.setupMenu();
+  if (options.enable_search) {
+    this.search = this.root.find('.file-search');
+    this.setupSearch();
+  }
 
   this.getFiles();
 };
@@ -335,28 +337,35 @@ GoogleDrive.prototype.getFiles = function(pageToken, options) {
   if (!pageToken) { pageToken = ''; }
   if (!options) { options = {} }
   if (!options.complete) { options.complete = $.noop; }
-  if (!options.list) { options.list = self.list; }
   if (!options.data) { options.data = {}; }
 
   var query = (self.currentSearchTerm || '');
 
-  var data = {
-    q: query,
-    pageToken: pageToken
+  var data = {};
+
+  if (pageToken != '') {
+    data = self._currentPageData;
+    data.pageToken = pageToken;
   };
 
-  $.getJSON(this.baseURL + "/drive-data",
-            $.merge(data, options.data),
+  if (self.options.enable_search) {
+    data.q = query;
+  }
+
+  self._currentPageData = $.extend({}, data, options.data);
+
+  $.getJSON(this.baseURL + this.options.path,
+            self._currentPageData,
             function(json) {
               self.hideNoMatches();
 
               if (options.replaceList) {
-                options.list.empty();
+                self.list.empty();
               }
 
               $.each(json.files, function(index, page) {
                 var html = fileTemplate.process(page);
-                options.list.append(html);
+                self.list.append(html);
                 self.nextPageToken = json.nextPageToken;
               });
 
@@ -368,62 +377,13 @@ GoogleDrive.prototype.getFiles = function(pageToken, options) {
             });
 };
 
-GoogleDrive.prototype.getMyDrive = function(context) {
-  var fileTemplate = TrimPath.parseTemplate($("#fileTemplate").html().trim().toString());
-
-  $.getJSON(this.baseURL + "/my-drive-data",
-            {
-              context: context
-            },
-            function(json) {
-              var $list = $("#googledrivehome .file-list");
-              $.each(json.files, function(index, page) {
-                              var html = fileTemplate.process(page);
-                              $list.append(html);
-                            });
-            });
-};
-
-
-GoogleDrive.prototype.setupMenu = function() {
-    var self = this;
-
-    // bootstap tabs please
-    self.root.find('.google-drive-menu').tab();
-
-    self.root.find('.google-drive-menu a[href="#googledriverecent"]').on('show.bs.tab', function() {
-      // do nothing! for the moment anyway
-    });
-
-    self.root.find('.google-drive-menu a[href="#googledrivehome"]').on('show.bs.tab', function() {
-      // load the drive home
-        if (!self._homeLoaded) {
-            // load my drive (for root context)
-            self.getMyDrive('root');
-
-            $("#googledrivehome").on('click', '.google-drive-folder, .breadcrumb a', function() {
-                var $link = $(this);
-                var text = $link.text();
-                var folder = $link.data('id');
-                $("#googledrivehome .file-list").empty();
-
-                if ($link.closest('.breadcrumb').length == 1) {
-                    $link.closest('li').nextAll().remove();
-                    $link.closest('li').addClass('active');
-                } else {
-                    var breadcrumb = $('<li>');
-                    var a = $('<a>').attr('href','#').data('id', folder).text(text);
-                    breadcrumb.append(a);
-                    breadcrumb.addClass('active');
-                    $("#googledrivehome .breadcrumb .active").removeClass('active');
-                    $("#googledrivehome .breadcrumb").append(breadcrumb);
-                }
-                self.getMyDrive(folder);
-            });
-
-            self._homeLoaded = true;
-        }
-    });
+GoogleDrive.prototype.refreshListForFolder = function(folderId) {
+  this.getFiles(null, {
+    replaceList: true,
+    data: {
+      folderId: folderId,
+    }
+  });
 };
 
 
@@ -449,7 +409,7 @@ GoogleDriveModal.prototype.init = function() {
            }).success(function (content) {
              $('#google-drive-modal .modal-body').html(content);
 
-             new GoogleDrive($('#google-drive-modal .google-drive'), baseURL);
+             self.setupTabs();
 
              // setup form submit
              $('#google-drive-modal .modal-footer .btn-primary').on('click', function() {
@@ -471,4 +431,57 @@ GoogleDriveModal.prototype.resizeGoogleModal = function() {
     this.$modal.find('.tab-content').height(this.$modal.find('.modal-body').height() - (this.$modal.find('.tab-content').offset().top - this.$modal.find('.modal-body').offset().top))
     this.$modal.find('.scroll-container').height(this.$modal.find('.tab-content').height() - (this.$modal.find('.tab-pane.active .breadcrumb').height() || 0));
   }
+};
+
+GoogleDriveModal.prototype.setupTabs = function() {
+    var self = this;
+
+    // bootstap tabs please
+    self.$modal.find('.google-drive-menu').tab();
+
+    // Recent/Search
+    new GoogleDrive(self.$modal.find('#googledriverecent'), baseURL, {
+      enable_search: true,
+      path: '/drive-data',
+    });
+
+    self.$modal.find('.google-drive-menu a[href="#googledriverecent"]').on('show.bs.tab', function() {
+      // do nothing! for the moment anyway
+    });
+
+    // My Drive
+    self.$modal.find('.google-drive-menu a[href="#googledrivehome"]').on('show.bs.tab', function() {
+      // load the drive home
+        if (!self._homeLoaded) {
+          // load my drive (for root context)
+          var googleDrive = new GoogleDrive($('#googledrivehome'), baseURL, {
+            enable_search: false,
+            path: '/my-drive-data',
+          });
+
+
+          $("#googledrivehome").on('click', '.google-drive-folder, .breadcrumb a', function() {
+              var $link = $(this);
+              var text = $link.text();
+              var folder = $link.data('id');
+              $("#googledrivehome .file-list").empty();
+
+              if ($link.closest('.breadcrumb').length == 1) {
+                  $link.closest('li').nextAll().remove();
+                  $link.closest('li').addClass('active');
+              } else {
+                  var breadcrumb = $('<li>');
+                  var a = $('<a>').attr('href','#').data('id', folder).text(text);
+                  breadcrumb.append(a);
+                  breadcrumb.addClass('active');
+                  $("#googledrivehome .breadcrumb .active").removeClass('active');
+                  $("#googledrivehome .breadcrumb").append(breadcrumb);
+              }
+
+              googleDrive.refreshListForFolder(folder);
+          });
+
+          self._homeLoaded = true;
+       }
+    });
 };
