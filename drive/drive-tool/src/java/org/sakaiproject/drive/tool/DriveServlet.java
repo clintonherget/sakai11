@@ -145,6 +145,8 @@ public class DriveServlet extends HttpServlet {
             return new DriveHandler(DriveHandler.RECENT);
         } else if (path.startsWith("/my-drive-data")) {
             return new DriveHandler(DriveHandler.MY_DRIVE);
+        } else if (path.startsWith("/starred-drive-data")) {
+            return new DriveHandler(DriveHandler.STARRED);
         } else if (path.startsWith("/upload-file")) {
             return new UploadHandler();
         } else if (path.startsWith("/preview")) {
