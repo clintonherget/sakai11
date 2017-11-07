@@ -205,10 +205,10 @@ function GoogleDrive(rootElt, baseURL, options) {
   this.setupList();
   this.setupScrollHandling();
 
-  if (options.enable_search) {
-    this.search = this.root.find('.file-search');
+  // if (options.enable_search) {
+    this.search = this.root.closest('.google-drive').find('.file-search');
     this.setupSearch();
-  }
+  // }
 
   this.getFiles();
 };
@@ -272,6 +272,11 @@ GoogleDrive.prototype.setupScrollHandling = function() {
   });
 };
 
+GoogleDrive.prototype.clearSearch = function() {
+  this.currentSearchTerm = '';
+  this.search.val('');
+};
+
 GoogleDrive.prototype.setupSearch = function() {
   var self = this;
   var updateTimer = null;
@@ -292,7 +297,11 @@ GoogleDrive.prototype.handleSearchChange = function () {
   var self = this;
 
   // ensure recent tab is visible
-  this.root.find('.google-drive-menu a[href="#googledriverecent"]').tab('show');
+  // this.root.closest('.google-drive').find('.google-drive-menu a[href="#googledriverecent"]').tab('show');
+
+  if (!self.root.is(':visible')) {
+    return true;
+  }
 
   console.log("handling search change");
 
@@ -324,7 +333,10 @@ GoogleDrive.prototype.handleSearchChange = function () {
     replaceList: true,
     complete: function () {
       self.hideOverlay();
-    }
+    },
+    data: $.extend({}, self._currentPageData || {}, {
+      q: self.currentSearchTerm,
+    }),
   });
 
   return true;
@@ -339,18 +351,12 @@ GoogleDrive.prototype.getFiles = function(pageToken, options) {
   if (!options.complete) { options.complete = $.noop; }
   if (!options.data) { options.data = {}; }
 
-  var query = (self.currentSearchTerm || '');
-
   var data = {};
 
   if (pageToken != '') {
     data = self._currentPageData;
     data.pageToken = pageToken;
   };
-
-  if (self.options.enable_search) {
-    data.q = query;
-  }
 
   self._currentPageData = $.extend({}, data, options.data);
 
@@ -366,8 +372,9 @@ GoogleDrive.prototype.getFiles = function(pageToken, options) {
               $.each(json.files, function(index, page) {
                 var html = fileTemplate.process(page);
                 self.list.append(html);
-                self.nextPageToken = json.nextPageToken;
               });
+
+              self.nextPageToken = json.nextPageToken;
 
               if (json.files.length == 0) {
                 self.showNoMatches();
@@ -440,21 +447,22 @@ GoogleDriveModal.prototype.setupTabs = function() {
     self.$modal.find('.google-drive-menu').tab();
 
     // Recent/Search
-    new GoogleDrive(self.$modal.find('#googledriverecent'), baseURL, {
+    var recentDrive = new GoogleDrive(self.$modal.find('#googledriverecent'), baseURL, {
       enable_search: true,
       path: '/drive-data',
     });
 
     self.$modal.find('.google-drive-menu a[href="#googledriverecent"]').on('show.bs.tab', function() {
-      // do nothing! for the moment anyway
+      recentDrive.clearSearch();
     });
 
     // My Drive
+    var myDrive = null;
     self.$modal.find('.google-drive-menu a[href="#googledrivehome"]').on('show.bs.tab', function() {
       // load the drive home
         if (!self._homeLoaded) {
           // load my drive (for root context)
-          var googleDrive = new GoogleDrive($('#googledrivehome'), baseURL, {
+          myDrive = new GoogleDrive($('#googledrivehome'), baseURL, {
             enable_search: false,
             path: '/my-drive-data',
           });
@@ -465,6 +473,8 @@ GoogleDriveModal.prototype.setupTabs = function() {
               var text = $link.text();
               var folder = $link.data('id');
               $("#googledrivehome .file-list").empty();
+
+              myDrive.clearSearch();
 
               if ($link.closest('.breadcrumb').length == 1) {
                   $link.closest('li').nextAll().remove();
@@ -478,10 +488,17 @@ GoogleDriveModal.prototype.setupTabs = function() {
                   $("#googledrivehome .breadcrumb").append(breadcrumb);
               }
 
-              googleDrive.refreshListForFolder(folder);
+              myDrive.refreshListForFolder(folder);
           });
 
           self._homeLoaded = true;
+       } else {
+         // reset the list
+         if (myDrive != null) {
+           myDrive.clearSearch();
+         }
+         var activeFolderId = $('#googledrivehome .breadcrumb .active a').data('id');
+         myDrive.refreshListForFolder(activeFolderId);
        }
     });
 };
