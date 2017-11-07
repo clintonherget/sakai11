@@ -205,10 +205,8 @@ function GoogleDrive(rootElt, baseURL, options) {
   this.setupList();
   this.setupScrollHandling();
 
-  // if (options.enable_search) {
-    this.search = this.root.closest('.google-drive').find('.file-search');
-    this.setupSearch();
-  // }
+  this.search = this.root.closest('.google-drive').find('.file-search');
+  this.setupSearch();
 
   this.getFiles();
 };
@@ -448,7 +446,6 @@ GoogleDriveModal.prototype.setupTabs = function() {
 
     // Recent/Search
     var recentDrive = new GoogleDrive(self.$modal.find('#googledriverecent'), baseURL, {
-      enable_search: true,
       path: '/drive-data',
     });
 
@@ -463,7 +460,6 @@ GoogleDriveModal.prototype.setupTabs = function() {
         if (!self._homeLoaded) {
           // load my drive (for root context)
           myDrive = new GoogleDrive($('#googledrivehome'), baseURL, {
-            enable_search: false,
             path: '/my-drive-data',
           });
 
@@ -499,6 +495,51 @@ GoogleDriveModal.prototype.setupTabs = function() {
          }
          var activeFolderId = $('#googledrivehome .breadcrumb .active a').data('id');
          myDrive.refreshListForFolder(activeFolderId);
+       }
+    });
+
+    // Starred
+    var starredDrive = null;
+    self.$modal.find('.google-drive-menu a[href="#googledrivestarred"]').on('show.bs.tab', function() {
+      // load the drive home
+        if (!self._starredLoaded) {
+          // load my drive (for root context)
+          starredDrive = new GoogleDrive($('#googledrivestarred'), baseURL, {
+            path: '/starred-drive-data',
+          });
+
+
+          $("#googledrivestarred").on('click', '.google-drive-folder, .breadcrumb a', function() {
+              var $link = $(this);
+              var text = $link.text();
+              var folder = $link.data('id');
+              $("#googledrivestarred .file-list").empty();
+
+              starredDrive.clearSearch();
+
+              if ($link.closest('.breadcrumb').length == 1) {
+                  $link.closest('li').nextAll().remove();
+                  $link.closest('li').addClass('active');
+              } else {
+                  var breadcrumb = $('<li>');
+                  var a = $('<a>').attr('href','#').data('id', folder).text(text);
+                  breadcrumb.append(a);
+                  breadcrumb.addClass('active');
+                  $("#googledrivestarred .breadcrumb .active").removeClass('active');
+                  $("#googledrivestarred .breadcrumb").append(breadcrumb);
+              }
+
+              starredDrive.refreshListForFolder(folder);
+          });
+
+          self._starredLoaded = true;
+       } else {
+         // reset the list
+         if (starredDrive != null) {
+           starredDrive.clearSearch();
+         }
+         var activeFolderId = $('#googledrivestarred .breadcrumb .active a').data('id');
+         starredDrive.refreshListForFolder(activeFolderId);
        }
     });
 };
