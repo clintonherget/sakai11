@@ -13,6 +13,15 @@
 
 .drive-body .search-bar {
     text-align: right;
+    float: right;
+    padding: 5px;
+}
+.drive-body .search-bar input {
+    padding: 2px 8px;
+    border: 1px solid #CCC;
+    font-size: 12px;
+    height: 27px;
+    border-radius: 4px;
 }
 
 .drive-body .list-overlay {
@@ -211,8 +220,4 @@ body.sakai-drive-preview-open {
 
 .google-drive-panel {
   border-left: 1px solid #AAA;
-}
-
-#googledrivehome .breadcrumb {
-  margin: 0;
 }

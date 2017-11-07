@@ -6,10 +6,6 @@
           <input type="submit" class="btn btn-danger" value="Relink my Google account" />
         </form>
       </div>
-
-      <div class="search-bar">
-        <input class="file-search" type="text" placeholder="Search your drive" value="" />
-      </div>
     </div>
   </div>
 
@@ -26,6 +22,9 @@
     <div class="col-sm-10 google-drive-panel">
       <div class="tab-content">
         <div id="googledriverecent" class="tab-pane active">
+          <div class="search-bar">
+            <input class="file-search" type="text" placeholder="Search Most Recent" value="" />
+          </div>
           <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
             <div class="scroll-container">
               <ul class="file-list">
@@ -35,6 +34,9 @@
           </form>
         </div>
         <div id="googledrivehome" class="tab-pane">
+          <div class="search-bar">
+            <input class="file-search" type="text" placeholder="Search My Drive" value="" />
+          </div>
           <ul class="breadcrumb">
             <li class="active"><a href="#" data-id="root">My Drive</a></li>
           </ul>
@@ -47,6 +49,9 @@
           </form>
         </div>
         <div id="googledrivestarred" class="tab-pane">
+          <div class="search-bar">
+            <input class="file-search" type="text" placeholder="Search Starred" value="" />
+          </div>
           <ul class="breadcrumb">
             <li class="active"><a href="#" data-id="root">Starred</a></li>
           </ul>
