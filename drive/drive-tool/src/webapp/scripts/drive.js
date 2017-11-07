@@ -205,7 +205,7 @@ function GoogleDrive(rootElt, baseURL, options) {
   this.setupList();
   this.setupScrollHandling();
 
-  this.search = this.root.closest('.google-drive').find('.file-search');
+  this.search = this.root.find('.file-search');
   this.setupSearch();
 
   this.getFiles();
@@ -383,10 +383,15 @@ GoogleDrive.prototype.getFiles = function(pageToken, options) {
 };
 
 GoogleDrive.prototype.refreshListForFolder = function(folderId) {
-  this.getFiles(null, {
+  var self = this;
+
+  self.getFiles(null, {
     replaceList: true,
     data: {
       folderId: folderId,
+    },
+    complete: function() {
+      self.hideOverlay();
     }
   });
 };
@@ -445,21 +450,21 @@ GoogleDriveModal.prototype.setupTabs = function() {
     self.$modal.find('.google-drive-menu').tab();
 
     // Recent/Search
-    var recentDrive = new GoogleDrive(self.$modal.find('#googledriverecent'), baseURL, {
+    self.recentDrive = new GoogleDrive(self.$modal.find('#googledriverecent'), baseURL, {
       path: '/drive-data',
     });
 
     self.$modal.find('.google-drive-menu a[href="#googledriverecent"]').on('show.bs.tab', function() {
-      recentDrive.clearSearch();
+      // nothing at the moment
     });
 
     // My Drive
-    var myDrive = null;
+    self.myDrive = null;
     self.$modal.find('.google-drive-menu a[href="#googledrivehome"]').on('show.bs.tab', function() {
       // load the drive home
-        if (!self._homeLoaded) {
+        if (self.myDrive == null) {
           // load my drive (for root context)
-          myDrive = new GoogleDrive($('#googledrivehome'), baseURL, {
+          self.myDrive = new GoogleDrive($('#googledrivehome'), baseURL, {
             path: '/my-drive-data',
           });
 
@@ -468,9 +473,10 @@ GoogleDriveModal.prototype.setupTabs = function() {
               var $link = $(this);
               var text = $link.text();
               var folder = $link.data('id');
-              $("#googledrivehome .file-list").empty();
 
-              myDrive.clearSearch();
+              self.myDrive.showOverlay();
+
+              self.myDrive.clearSearch();
 
               if ($link.closest('.breadcrumb').length == 1) {
                   $link.closest('li').nextAll().remove();
@@ -484,27 +490,18 @@ GoogleDriveModal.prototype.setupTabs = function() {
                   $("#googledrivehome .breadcrumb").append(breadcrumb);
               }
 
-              myDrive.refreshListForFolder(folder);
+              self.myDrive.refreshListForFolder(folder);
           });
-
-          self._homeLoaded = true;
-       } else {
-         // reset the list
-         if (myDrive != null) {
-           myDrive.clearSearch();
-         }
-         var activeFolderId = $('#googledrivehome .breadcrumb .active a').data('id');
-         myDrive.refreshListForFolder(activeFolderId);
        }
     });
 
     // Starred
-    var starredDrive = null;
+    self.starredDrive = null;
     self.$modal.find('.google-drive-menu a[href="#googledrivestarred"]').on('show.bs.tab', function() {
       // load the drive home
-        if (!self._starredLoaded) {
+        if (self.starredDrive == null) {
           // load my drive (for root context)
-          starredDrive = new GoogleDrive($('#googledrivestarred'), baseURL, {
+          self.starredDrive = new GoogleDrive($('#googledrivestarred'), baseURL, {
             path: '/starred-drive-data',
           });
 
@@ -513,9 +510,10 @@ GoogleDriveModal.prototype.setupTabs = function() {
               var $link = $(this);
               var text = $link.text();
               var folder = $link.data('id');
-              $("#googledrivestarred .file-list").empty();
 
-              starredDrive.clearSearch();
+              self.starredDrive.showOverlay();
+
+              self.starredDrive.clearSearch();
 
               if ($link.closest('.breadcrumb').length == 1) {
                   $link.closest('li').nextAll().remove();
@@ -529,17 +527,8 @@ GoogleDriveModal.prototype.setupTabs = function() {
                   $("#googledrivestarred .breadcrumb").append(breadcrumb);
               }
 
-              starredDrive.refreshListForFolder(folder);
+              self.starredDrive.refreshListForFolder(folder);
           });
-
-          self._starredLoaded = true;
-       } else {
-         // reset the list
-         if (starredDrive != null) {
-           starredDrive.clearSearch();
-         }
-         var activeFolderId = $('#googledrivestarred .breadcrumb .active a').data('id');
-         starredDrive.refreshListForFolder(activeFolderId);
        }
     });
 };
