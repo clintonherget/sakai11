@@ -19,6 +19,7 @@
         <ul class="nav">
           <li class="active"><a href="#googledriverecent" data-toggle="tab">Most Recent</a></li>
           <li><a href="#googledrivehome" data-toggle="tab">My Drive</a></li>
+          <li><a href="#googledrivestarred" data-toggle="tab">Starred</a></li>
         </ul>
       </div>
     </div>
@@ -36,6 +37,18 @@
         <div id="googledrivehome" class="tab-pane">
           <ul class="breadcrumb">
             <li class="active"><a href="#" data-id="root">My Drive</a></li>
+          </ul>
+          <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
+            <div class="scroll-container">
+              <ul class="file-list">
+              </ul>
+              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+            </div>
+          </form>
+        </div>
+        <div id="googledrivestarred" class="tab-pane">
+          <ul class="breadcrumb">
+            <li class="active"><a href="#" data-id="root">Starred</a></li>
           </ul>
           <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
             <div class="scroll-container">

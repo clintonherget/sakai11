@@ -70,6 +70,7 @@ public class DriveHandler implements Handler {
 
     public static final int RECENT = 0;
     public static final int MY_DRIVE = 1;
+    public static final int STARRED = 2;
 
     private int mode = 0;
 
@@ -92,6 +93,8 @@ public class DriveHandler implements Handler {
                 fileList = getRecentFiles(google, user, p);
             } else if (MY_DRIVE == mode) {
                 fileList = getChildrenForContext(google, user, p);
+            } else if (STARRED == mode) {
+                fileList = getChildrenForContext(google, user, p, true);
             } else {
                 throw new RuntimeException("DriveHandler mode not supported: " + mode);
             }
@@ -173,6 +176,10 @@ public class DriveHandler implements Handler {
     }
 
     private FileList getChildrenForContext(GoogleClient google, String user, RequestParams p) {
+        return getChildrenForContext(google, user, p, false);
+    }
+
+    private FileList getChildrenForContext(GoogleClient google, String user, RequestParams p, boolean starred) {
         try {
             Drive drive = google.getDrive(user);
 
@@ -186,6 +193,10 @@ public class DriveHandler implements Handler {
             list.setFields("nextPageToken, files(id, name, mimeType, description, webViewLink, iconLink, thumbnailLink)");
 
             String queryString = "'"+folderId+"' in parents";
+
+            if (starred && folderId.equals("root")) {
+                queryString = "starred";
+            }
 
             if (query == null) {
                 list.setOrderBy("folder,name");
