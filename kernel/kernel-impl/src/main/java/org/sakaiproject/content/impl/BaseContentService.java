@@ -1730,6 +1730,11 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 				return false;
 			}
 
+			if (m_securityService.unlock("site.visit.unp", "/site/" + site.getId())) {
+				// Can view unpublished content.  Also OK.
+				return false;
+			}
+
 			if (site.isPublished()) {
 				// Pass through to the rest of the permission checks
 				return false;
