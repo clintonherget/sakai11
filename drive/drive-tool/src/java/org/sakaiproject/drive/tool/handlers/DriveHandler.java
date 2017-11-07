@@ -157,7 +157,7 @@ public class DriveHandler implements Handler {
 
             if (query == null) {
                 // API restriction: We can only sort if we don't have a search query
-                list.setOrderBy("modifiedTime");
+                list.setOrderBy("viewedByMeTime desc");
             } else {
                 queryString += " AND fullText contains '" + query.replace("'", "\\'") + "'";
             }
