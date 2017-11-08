@@ -2,6 +2,7 @@ var SakaiDrive = function() {
   this.setupPreviewer();
   this.setupRow();
   this.setupDragAndDrop();
+  this.setupContextMenu();
 };
 
 SakaiDrive.prototype.setupPreviewer = function() {
@@ -183,6 +184,52 @@ SakaiDrive.prototype.setupDragAndDrop = function() {
     });
 };
 
+
+SakaiDrive.prototype.setupContextMenu = function() {
+    $('.sakai-resources-table tbody tr td').on("contextmenu", function (e) {
+        // remove already showing menus
+        $('.sakai-drive-context-menu').hide().remove();
+
+        if (e.ctrlKey) return;
+
+        var template = TrimPath.parseTemplate($("#contextMenuTemplate").html().trim().toString());
+        var $target = $(e.target);
+        var $menu = $(template.process({
+          isFolder: $target.closest('tr').find('.drive-folder').length > 0
+        }));
+        $menu.css({
+                position: "absolute",
+                left: e.clientX,
+                top: $(e.target).offset().top + 10
+            })
+            .off('click')
+            .on('click', 'a', function (e) {
+                $menu.hide();
+
+                var $selectedMenu = $(e.target);
+
+                if ($selectedMenu.is('.sakai-drive-context-menu-open')) {
+                  $target.closest('tr').find('td.name a')[0].click();
+                } else {
+                  alert('TODO :)');
+                }
+
+                $menu.remove();
+
+                return false;
+            });
+
+        $(document.body).append($menu);
+        $menu.show();
+
+        //make sure menu closes on any click
+        $('body').on('click', function () {
+            $menu.hide().remove();
+        });
+
+        return false;
+    });
+};
 
 SakaiDrive.prototype.VIEW_URL = '/drive-tool/pdfjs/web/viewer.html?file=';
 
