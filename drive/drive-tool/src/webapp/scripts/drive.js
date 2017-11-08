@@ -480,6 +480,14 @@ GoogleDriveModal.prototype.init = function() {
   self.$modal.on('shown.bs.modal', function () {
     self.resizeGoogleModal();
   });
+
+  self.$modal.on('click', '.file-list :checkbox', function(event) {
+    if ($(this).is(':checked')) {
+      $(this).closest('li').addClass('active');
+    } else {
+      $(this).closest('li').removeClass('active');
+    }
+  });
 };
 
 GoogleDriveModal.prototype.resizeGoogleModal = function() {

@@ -11,6 +11,21 @@
     list-style: none;
 }
 
+.drive-body .file-list label {
+    display: block;
+    padding: 4px;
+    margin: 0;
+    border-bottom: 1px solid #FFFFFF;
+}
+
+.drive-body .file-list label:hover {
+    background-color: #FAFAFA;
+}
+
+.drive-body .file-list .active label {
+    background-color: #EEFAFF;
+}
+
 .drive-body .search-bar {
     text-align: right;
     float: right;
