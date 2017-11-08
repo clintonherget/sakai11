@@ -115,6 +115,17 @@
       <iframe></iframe>
     </div>
   </script>
+  <script id="contextMenuTemplate" type="text/template">
+    <ul class="sakai-drive-context-menu dropdown-menu" role="menu">
+      {if isFolder}
+        <li><a href="#" class="sakai-drive-context-menu-open">Open Folder</a></li>
+      {else}
+        <li><a href="#" class="sakai-drive-context-menu-open">Preview</a></li>
+      {/if}
+      <li class="divider"></li>
+      <li><a href="#" class="sakai-drive-context-menu-edit">Edit Item Details</a></li>
+    </ul>
+  </script>
   <script>
     var baseURL = "{{baseURL}}";
 
