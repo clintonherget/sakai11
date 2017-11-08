@@ -70,7 +70,7 @@
 
 <script id="fileTemplate" type="text/template">
   {if folder}
-    <li><img src="${iconLink}" /> <a class="google-drive-folder" href="#" data-id="${id}">${name}</a></li>
+    <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a class="google-drive-folder" href="#" data-id="${id}">${name}</a></label></li>
   {else}
     <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
   {/if}
