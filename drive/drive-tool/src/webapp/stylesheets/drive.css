@@ -236,3 +236,21 @@ body.sakai-drive-preview-open {
 .google-drive-panel {
   border-left: 1px solid #AAA;
 }
+
+.sakai-resources-tree {
+  overflow: hidden;
+}
+.sakai-resources-tree, .sakai-resources-tree ul {
+  padding: 0;
+  list-style: none;
+}
+.sakai-resources-tree ul {
+  padding-left: 15px;
+}
+.sakai-resources-tree li {
+  white-space: nowrap;
+}
+
+.sakai-resources-tree li.active > .drive-folder {
+  font-weight: bold;
+}

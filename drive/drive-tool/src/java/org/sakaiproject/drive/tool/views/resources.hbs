@@ -70,41 +70,50 @@
     <button id="buy-me-a-pony" class="btn btn-default">Buy me a pony</button>
   </div>
 
-  {{#if resource.children}}
-    <table class="table table-hover sakai-resources-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th class="col-xs-1">Access</th>
-          <th class="col-xs-2">Owner</th>
-          <th class="col-xs-1">Last Modified</th>
-          <th class="col-xs-1">Size</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each resource.children}}
-          <tr draggable="true">
-            <td class="name">
-              {{#if folder}}
-                <div class="drive-folder"><a data-path="{{path}}" href="{{baseURL}}sakai-resources{{path}}">{{label}}</a></div>
-              {{else}}
-                <div class="drive-file {{typeClass}}"><a data-path="{{path}}" href="/access/content{{path}}">{{label}}</a></div>
-              {{/if}}
-            </td>
-            <td class="access">{{accessSummary}}</td>
-            <td class="owner">{{owner}}</td>
-            <td class="last-modified">{{lastModified}}</td>
-            <td class="size">{{size}}</td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  {{else}}
-    <br>
-    <div class="alert alert-info">
-      <p>Folder is empty.</p>
+  <div class="row">
+    <div class="col-sm-2">
+      <div class="well">
+        <ul class="sakai-resources-tree"></ul>
+      </div>
     </div>
-  {{/if}}
+    <div class="col-sm-10">
+    {{#if resource.children}}
+        <table class="table table-hover sakai-resources-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th class="col-xs-1">Access</th>
+              <th class="col-xs-2">Owner</th>
+              <th class="col-xs-1">Last Modified</th>
+              <th class="col-xs-1">Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each resource.children}}
+              <tr draggable="true">
+                <td class="name">
+                  {{#if folder}}
+                    <div class="drive-folder"><a data-path="{{path}}" href="{{baseURL}}sakai-resources{{path}}">{{label}}</a></div>
+                  {{else}}
+                    <div class="drive-file {{typeClass}}"><a data-path="{{path}}" href="/access/content{{path}}">{{label}}</a></div>
+                  {{/if}}
+                </td>
+                <td class="access">{{accessSummary}}</td>
+                <td class="owner">{{owner}}</td>
+                <td class="last-modified">{{lastModified}}</td>
+                <td class="size">{{size}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      {{else}}
+        <br>
+        <div class="alert alert-info">
+          <p>Folder is empty.</p>
+        </div>
+      {{/if}}
+    </div>
+  </div>
 
   <script>includeLatestJQuery('index.hbs');</script>
   <script src="/drive-tool/scripts/drive.js"></script>
@@ -126,8 +135,16 @@
       <li><a href="#" class="sakai-drive-context-menu-edit">Edit Item Details</a></li>
     </ul>
   </script>
+  <script id="treeFolderTemplate" type="text/template">
+      <li>
+        <div class="drive-folder">
+          <a data-path="${id}" href="{{baseURL}}sakai-resources${id}">${name}</a>
+        </div>
+      </li>
+  </script>
   <script>
     var baseURL = "{{baseURL}}";
+    var collectionId = "{{collectionId}}";
 
     new GoogleDriveModal($('.google-drive-modal'), baseURL);
 
@@ -150,6 +167,8 @@
         $('#folderName').focus();
     });
 
-    new SakaiDrive();
+    $(document).ready(function() {
+      new SakaiDrive(baseURL, collectionId);
+    });
   </script>
 </div>
