@@ -32,5 +32,10 @@ public interface Stealth {
 
     public void destroy();
 
+    /**
+     * Return an I18N translator for a given file and locale.
+     */
+    public I18n getI18n(ClassLoader loader, String resourceBase);
+
 }
     

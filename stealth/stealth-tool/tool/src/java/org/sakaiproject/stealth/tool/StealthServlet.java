@@ -87,21 +87,47 @@ public class StealthServlet extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        //checkAccessControl();
+        checkAccessControl();
 
-        //I18n i18n = Stealth.getI18n(this.getClass().getClassLoader(), "org.sakaiproject.stealth.tool.i18n.stealth");
+        I18n i18n = stealth.getI18n(this.getClass().getClassLoader(), "org.sakaiproject.stealth.tool.i18n.stealth");
 
-        //response.setHeader("Content-Type", "text/html");
+        response.setHeader("Content-Type", "text/html");
 
-        //URL toolBaseURL = determineBaseURL();
-        //Handlebars handlebars = loadHandlebars(toolBaseURL, i18n);
+        URL toolBaseURL = determineBaseURL();
+        Handlebars handlebars = loadHandlebars(toolBaseURL, i18n);
+
+        try {
+            Template template = handlebars.compile("org/sakaiproject/stealth/tool/views/layout");
+            Map<String, Object> context = new HashMap<String, Object>();
+
+            context.put("baseURL", toolBaseURL);
+            context.put("layout", true);
+            context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
+            context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
+
+            Handler handler = handlerForRequest(request);
+
+            handler.handle(request, response, context);
+
+            if (handler.hasRedirect()) {
+                response.sendRedirect(toolBaseURL + handler.getRedirect());
+            } else {
+                context.put("errors", handler.getErrors().toList());
+
+                if (Boolean.TRUE.equals(context.get("layout"))) {
+                    response.getWriter().write(template.apply(context));
+                }
+            }
+        } catch (IOException e) {
+            LOG.warn("Write failed", e);
+        }
     }
 
     private void checkAccessControl() {
         String siteId = ToolManager.getCurrentPlacement().getContext();
 
         if (!SecurityService.unlock("stealth.manage", "/site/" + siteId)) {
-            LOG.error("Access denied to PA System management tool for user " + SessionManager.getCurrentSessionUserId());
+            LOG.error("Access denied to Stealth management tool for user " + SessionManager.getCurrentSessionUserId());
             throw new StealthException("Access denied");
         }
     }
@@ -131,21 +157,6 @@ public class StealthServlet extends HttpServlet {
                     LOG.warn("IOException while loading subpage", e);
                     return "";
                 }
-            }
-        });
-
-        handlebars.registerHelper("show-time", new Helper<Object>() {
-            @Override
-            public CharSequence apply(final Object context, final Options options) {
-                long utcTime = options.param(0) == null ? 0 : options.param(0);
-
-                if (utcTime == 0) {
-                    return "-";
-                }
-
-                Time time = TimeService.newTime(utcTime);
-
-                return time.toStringLocalFull();
             }
         });
 

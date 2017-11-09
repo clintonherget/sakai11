@@ -4,3 +4,75 @@
 </section>
 {{/unless}}
 
+	<div class="portletBody unstealth">
+		<h2 class="unstealth-header">Add Tool Permissions</h2><br/>
+
+		<div>
+			<h3 class="unstealth-section-head">User/Site Selection</h3>
+
+			Add User(s)
+			<input type="textbox" name="Users" placeholder="NetID"></br></br>
+
+			And/Or</br></br>
+
+			Add Site ID(s)
+			<input type="textbox" name="SiteId" placeholder="SiteID">
+		</div>
+		</br>
+		<div>
+			<h3 class="unstealth-section-head">Restrict By Term</h3>
+			Term Availability
+			<select id="select" name="" style="width: 115px;">
+				<option value="Value for Item 1" title="Title for Item 1">Item 1</option>
+				<option value="Value for Item 2" title="Title for Item 2">Item 2</option>
+				<option value="Value for Item 3" title="Title for Item 3">Item 3</option>
+			</select>
+		</div>
+
+		<div>
+			<h3 class="unstealth-section-head">Tool Selection</h3></br>
+			Tool Name
+			<select id="select" name="" style="width: 115px;">
+				<option value="Value for Item 1" title="Title for Item 1">Item 1</option>
+				<option value="Value for Item 2" title="Title for Item 2">Item 2</option>
+				<option value="Value for Item 3" title="Title for Item 3">Item 3</option>
+			</select>
+		</div>
+	</br></br>
+		<input type="button" value="Grant tool Permissions"> <input type="button" value="Cancel"> </br>
+		</br>
+		
+		<h2 class="unstealth-header">Search Existing Permissions</h2><br/>
+
+		<div class="tab">
+			<button class="tablinks" onclick="openTab(event, 'NetID')">Search By NetId</button>
+			<button class="tablinks" onclick="openTab(event, 'SiteID')">Search By Site Id</button>
+		</div>
+
+		<div id="NetID" class="tabcontent">
+	  		</br>Search
+  			<input type="textbox" name="search-by-netid" placeholder="NetID">
+		</div>
+
+		<div id="SiteID" class="tabcontent">
+  			</br>Search
+  			<input type="textbox" name="search-by-siteid" placeholder="SiteID">
+		</div>
+
+		<script>
+		function openTab(evt, TabName) {
+    		var i, tabcontent, tablinks;
+    		tabcontent = document.getElementsByClassName("tabcontent");
+    		for (i = 0; i < tabcontent.length; i++) {
+        		tabcontent[i].style.display = "none";
+    		}
+    		tablinks = document.getElementsByClassName("tablinks");
+    		for (i = 0; i < tablinks.length; i++) {
+        		tablinks[i].className = tablinks[i].className.replace(" active", "");
+    		}
+    		document.getElementById(TabName).style.display = "block";
+    		evt.currentTarget.className += " active";
+		}
+		</script>
+		
+	</div>

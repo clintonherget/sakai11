@@ -57,8 +57,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The implementation of the PA System service.  Provides system initialization
- * and access to the PA System banner and popup sub-services.
+ * The implementation of the Stealth service.  Provides system initialization
+ * and access to the Stealth System
  */
 class StealthImpl implements Stealth {
 
@@ -80,6 +80,11 @@ class StealthImpl implements Stealth {
 
     @Override
     public void destroy() {
+    }
+
+    @Override
+    public I18n getI18n(ClassLoader loader, String resourceBase) {
+        return new SakaiI18n(loader, resourceBase);
     }
 
     private Handlebars loadHandleBars(final I18n i18n) {
