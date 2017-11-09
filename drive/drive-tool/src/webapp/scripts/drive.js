@@ -1,8 +1,12 @@
-var SakaiDrive = function() {
+var SakaiDrive = function(baseURL, collectionId) {
+  this.baseURL = baseURL;
+  this.collectionId = collectionId;
+
   this.setupPreviewer();
   this.setupRow();
   this.setupDragAndDrop();
   this.setupContextMenu();
+  this.setupFolderTree();
 };
 
 SakaiDrive.prototype.setupPreviewer = function() {
@@ -110,24 +114,26 @@ SakaiDrive.prototype.setupRow = function() {
     });;
 };
 
+SakaiDrive.prototype.doMove = function(target) {
+    var $form = $('form#move-form');
+    $form.empty();
+
+    $.each($('.sakai-resources-table tbody tr.active'), function() {
+        var $sourceInput = $('<input type="hidden" name="source[]">');
+        $sourceInput.val($(this).find('[data-path]').data('path'));
+        $form.append($sourceInput);
+    });
+
+    var $targetInput = $('<input type="hidden" name="target">');
+    $targetInput.val($(target).find('[data-path]').data('path'));
+    $form.append($targetInput);
+
+    $form.submit();
+};
+
 
 SakaiDrive.prototype.setupDragAndDrop = function() {
-    function doMove(target) {
-        var $form = $('form#move-form');
-        $form.empty();
-
-        $.each($('.sakai-resources-table tbody tr.active'), function() {
-            var $sourceInput = $('<input type="hidden" name="source[]">');
-            $sourceInput.val($(this).find('[data-path]').data('path'));
-            $form.append($sourceInput);
-        });
-
-        var $targetInput = $('<input type="hidden" name="target">');
-        $targetInput.val($(target).find('[data-path]').data('path'));
-        $form.append($targetInput);
-
-        $form.submit();
-    };
+    var self = this;
 
     // setup draggables
     $('.sakai-resources-table tbody tr').addClass('sakai-resource-draggable');
@@ -167,22 +173,27 @@ SakaiDrive.prototype.setupDragAndDrop = function() {
     });
 
     // setup droppables
-    $('.sakai-resources .sakai-resources-breadcrumbs .breadcrumb-item:not(.active)').addClass('sakai-resource-dropzone');
-    $('.sakai-resources .sakai-resources-table .drive-folder').each(function() {
-        $(this).closest('tr').addClass('sakai-resource-dropzone');
+    self.addDroppables($('.sakai-resources .sakai-resources-breadcrumbs .breadcrumb-item:not(.active)'));
+    $('.sakai-resources .sakai-resources-table .drive-folder').map(function() {
+        self.addDroppables($(this).closest('tr'));
     });
+};
 
-    $('.sakai-resource-dropzone').droppable({
+SakaiDrive.prototype.addDroppables = function($droppables) {
+    var self = this;
+
+    $droppables.addClass('sakai-resource-dropzone');
+    $droppables.droppable({
         accept: function(draggable) {
             return draggable.is('.sakai-resource-draggable');
         },
         hoverClass: 'sakai-resource-dropzone-active',
         drop: function(event, ui) {
-            doMove(event.target);
+            self.doMove(event.target);
         },
         tolerance: 'pointer',
     });
-};
+}
 
 
 SakaiDrive.prototype.setupContextMenu = function() {
@@ -229,6 +240,33 @@ SakaiDrive.prototype.setupContextMenu = function() {
 
         return false;
     });
+};
+
+SakaiDrive.prototype.setupFolderTree = function() {
+  var self = this;
+  var template = TrimPath.parseTemplate($("#treeFolderTemplate").html().trim().toString());
+
+  function renderFolder(folder, $target) {
+    var $li = $(template.process(folder));
+    $target.append($li);
+
+    if (self.collectionId == folder.id) {
+      $li.addClass('active');
+    }
+
+    if (folder.children.length > 0) {
+      var $ul = $('<ul>');
+      $.each(folder.children, function() {
+        renderFolder(this, $ul);
+      });
+      $li.append($ul);
+    }
+  };
+
+  $.getJSON(baseURL+'/folder-tree', function(root) {
+    renderFolder(root, $('.sakai-resources-tree'));
+    self.addDroppables($('.sakai-resources-tree .drive-folder'));
+  });
 };
 
 SakaiDrive.prototype.VIEW_URL = '/drive-tool/pdfjs/web/viewer.html?file=';
