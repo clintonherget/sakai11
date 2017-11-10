@@ -245,7 +245,9 @@ body.sakai-drive-preview-open {
   list-style: none;
 }
 .sakai-resources-tree ul {
-  padding-left: 15px;
+  border-left: 1px solid #DDD;
+  padding-left: 9px;
+  margin-left: 6px;
 }
 .sakai-resources-tree li {
   white-space: nowrap;
