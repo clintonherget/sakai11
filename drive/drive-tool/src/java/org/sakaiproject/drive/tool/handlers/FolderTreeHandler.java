@@ -146,7 +146,7 @@ public class FolderTreeHandler implements Handler {
         }
     }
 
-    private class Folder {
+    private class Folder implements Comparable<Folder> {
         private String id;
         private String name;
         private List<Folder> children;
@@ -159,6 +159,7 @@ public class FolderTreeHandler implements Handler {
 
         public void addChild(Folder folder) {
             children.add(folder);
+            Collections.sort(children);
         }
 
         public String getId() {
@@ -175,6 +176,11 @@ public class FolderTreeHandler implements Handler {
 
         public boolean hashChildren() {
             return !children.isEmpty();
+        }
+
+        @Override
+        public int compareTo(Folder other) {
+            return this.getName().compareTo(other.getName());
         }
     }
 }
