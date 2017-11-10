@@ -2474,16 +2474,45 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 			 answer = answer.replaceAll(" ", "");
 			 input = input.replaceAll(" ", "");
 		 }
- 		 StringBuilder regex_quotebuf = new StringBuilder();
-		 
+
+		 StringBuilder regex_quotebuf = new StringBuilder();
+
 		 String REGEX = answer.replaceAll("\\*", "|*|");
 		 String[] oneblank = REGEX.split("\\|");
-		 for (String str : oneblank) {
-			 if ("*".equals(str)) {
-				 regex_quotebuf.append(".+");
+
+		 for (int j = 0; j < oneblank.length; j++) {
+			 if ("*".equals(oneblank[j])) {
+
+				 // CLASSES-3079 If the FITB answer has a bunch of adjacent
+				 // wildcards, collapse them into a single equivalent expression.
+				 int adjacentWildcardCount = 0;
+
+				 // Scan forward from the current position (j) until we stop
+				 // seeing wildcards.  We skip over empty strings in our input
+				 // because the split will intersperse them between adjacent
+				 // wildcards.
+				 int subidx = j + 1;
+				 for (; subidx < oneblank.length && ("*".equals(oneblank[subidx]) || "".equals(oneblank[subidx])); subidx++) {
+					 if ("*".equals(oneblank[subidx])) {
+						 adjacentWildcardCount++;
+					 }
+				 }
+
+				 if (adjacentWildcardCount == 0) {
+					 regex_quotebuf.append(".+");
+				 } else {
+					 // Match the current character plus at least `adjacentWildcardCount` additional characters
+					 regex_quotebuf.append(String.format(".{%d,}", adjacentWildcardCount + 1));
+
+					 // Skip over our handled wildcards.  `subidx` now points to
+					 // the next non-wildcard character to be processed, but
+					 // since `j` will be incremented by the outer loop, subtract
+					 // one to compensate.
+					 j = subidx - 1;
+				 }
 			 }
 			 else {
-				 regex_quotebuf.append(Pattern.quote(str));
+				 regex_quotebuf.append(Pattern.quote(oneblank[j]));
 			 }
 		 }
 
