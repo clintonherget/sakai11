@@ -8,7 +8,7 @@
 
     <servlet>
         <servlet-name>sakai.stealth</servlet-name>
-        <servlet-class>org.sakaiproject.stealth.tool.stealthServlet</servlet-class>
+        <servlet-class>org.sakaiproject.stealth.tool.StealthServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

@@ -4,16 +4,19 @@
         <meta charset="utf-8" />
         <link rel="stylesheet" type="text/css" href="{{{skinRepo}}}/tool_base.css" />
         <link rel="stylesheet" type="text/css" href="/stealth-tool/stylesheets/stealth.css" />
+        <link rel="stylesheet" type="text/css" href="/stealth-tool/stylesheets/select2.min.css" />
 
         {{{randomSakaiHeadStuff}}}
     </head>
     <body>
 
-        <div class="portletBody pasystem-body">
+        <div class="portletBody stealth-body">
 
             {{{subpage this subpage}}}
         </div>
 
-        <script type="text/javascript" src="/pasystem-tool/scripts/stealth-tool.js"></script>
+        <script>includeLatestJQuery('layout.hbs');</script>
+        <script type="text/javascript" src="/stealth-tool/scripts/stealth-tool.js"></script>
+        <script type="text/javascript" src="/stealth-tool/scripts/select2.min.js"></script>
     </body>
 </html>

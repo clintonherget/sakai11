@@ -11,18 +11,25 @@
 			<h3 class="unstealth-section-head">User/Site Selection</h3>
 
 			Add User(s)
-			<input type="textbox" name="Users" placeholder="NetID"></br></br>
+			<select class="unstealth-multiple-netid" name="NetIDs" multiple="multiple">
+				<option>tst240</option>
+				<option>tst352</option>
+				<option>tst354</option>
+			</select>
+		</br></br>
 
 			And/Or</br></br>
 
 			Add Site ID(s)
-			<input type="textbox" name="SiteId" placeholder="SiteID">
+			<select class="unstealth-multiple-siteid" name="SiteIDs" multiple="multiple">
+				
+			</select>
 		</div>
 		</br>
 		<div>
 			<h3 class="unstealth-section-head">Restrict By Term</h3>
 			Term Availability
-			<select id="select" name="" style="width: 115px;">
+			<select id="select-term" name="" style="width: 115px;">
 				<option value="Value for Item 1" title="Title for Item 1">Item 1</option>
 				<option value="Value for Item 2" title="Title for Item 2">Item 2</option>
 				<option value="Value for Item 3" title="Title for Item 3">Item 3</option>
@@ -32,7 +39,7 @@
 		<div>
 			<h3 class="unstealth-section-head">Tool Selection</h3></br>
 			Tool Name
-			<select id="select" name="" style="width: 115px;">
+			<select id="select-tool" name="" style="width: 115px;">
 				<option value="Value for Item 1" title="Title for Item 1">Item 1</option>
 				<option value="Value for Item 2" title="Title for Item 2">Item 2</option>
 				<option value="Value for Item 3" title="Title for Item 3">Item 3</option>
@@ -57,22 +64,5 @@
 		<div id="SiteID" class="tabcontent">
   			</br>Search
   			<input type="textbox" name="search-by-siteid" placeholder="SiteID">
-		</div>
-
-		<script>
-		function openTab(evt, TabName) {
-    		var i, tabcontent, tablinks;
-    		tabcontent = document.getElementsByClassName("tabcontent");
-    		for (i = 0; i < tabcontent.length; i++) {
-        		tabcontent[i].style.display = "none";
-    		}
-    		tablinks = document.getElementsByClassName("tablinks");
-    		for (i = 0; i < tablinks.length; i++) {
-        		tablinks[i].className = tablinks[i].className.replace(" active", "");
-    		}
-    		document.getElementById(TabName).style.display = "block";
-    		evt.currentTarget.className += " active";
-		}
-		</script>
-		
+		</div>		
 	</div>

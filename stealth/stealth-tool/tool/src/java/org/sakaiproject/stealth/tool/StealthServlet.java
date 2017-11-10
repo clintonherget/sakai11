@@ -64,8 +64,6 @@ import org.slf4j.LoggerFactory;
  */
 public class StealthServlet extends HttpServlet {
 
-    private static final String FLASH_MESSAGE_KEY = "stealth-tool.flash.errors";
-
     private static final Logger LOG = LoggerFactory.getLogger(StealthServlet.class);
 
     private Stealth stealth;
