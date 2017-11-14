@@ -9,4 +9,8 @@
         destroy-method="destroy">
   </bean>
 
+  <bean parent="org.sakaiproject.entitybroker.entityprovider.AbstractEntityProvider" 
+        class="org.sakaiproject.stealth.impl.rest.StealthAdminEntityProvider">
+  </bean>
+
 </beans>
