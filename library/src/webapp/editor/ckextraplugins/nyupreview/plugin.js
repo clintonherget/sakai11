@@ -53,6 +53,16 @@
           });
         }
 
+        var kalturaBusiness = "";
+        // CLASSES-3017 setup kaltura vids if any
+        // only attempt this if browser supports srcdoc attribute, as this will allow the kaltura iframe to load
+        if ("srcdoc" in document.createElement("iframe")) {
+          if (typeof portal == 'object' && $PBJQ('script[src*="kaltura-upgrade.js"]').length > 0) {
+            kalturaBusiness = '<script>var portal = '+JSON.stringify(portal)+';</script>';
+            kalturaBusiness = kalturaBusiness + $PBJQ('script[src*="kaltura-upgrade.js"]')[0].outerHTML;
+          }
+        }
+
         var baseURL = location.protocol + "//" + location.hostname;
         if (location.port != "") {
           baseURL = baseURL + ":" + location.port
@@ -84,7 +94,7 @@
         var previewHighlightedOnly = isHighlight();
 
 
-        function getPreviewContentHTML(contentToPreview) {
+        function getPreviewContentHTML(contentToPreview, formatForPrint) {
             return editor.config.docType + '<html dir="' + editor.config.contentsLangDirection + '">' +
                     '<head>' +
                         baseTag +
@@ -93,6 +103,7 @@
                         CKEDITOR.tools.buildStyleHtml( editor.config.contentsCss ) +
                         sakaiStylesheets +
                         mathjaxIncludes +
+                        (formatForPrint ? '' : kalturaBusiness) + //disable kaltura conversion when printing
                     '</head>'+
                     bodyHtml +
                     contentToPreview +
@@ -101,7 +112,11 @@
 
         function getIframe(html) {
             var $iframe = $PBJQ('<iframe>');
-            $iframe.attr('src', 'data:text/html;charset=utf-8,' + encodeURI(html));
+            if ("srcdoc" in document.createElement("iframe")) {
+              $iframe.attr('srcdoc', html);
+            } else {
+              $iframe.attr('src', 'data:text/html;charset=utf-8,' + encodeURI(html));
+            }
             $iframe.attr('frameborder', '0');
             $iframe.attr('width', '100%');
             $iframe.attr('height', $PBJQ(window).height() - 240 + "px");
@@ -119,7 +134,8 @@
           return editor.getData();
         }
 
-        sHTML = getPreviewContentHTML(getEditorContent());
+        var formatForPrint = false;
+        sHTML = getPreviewContentHTML(getEditorContent(), formatForPrint);
 			}
 
 			var iWidth = 640,
@@ -168,7 +184,8 @@
 
                     $previewAll.on("click", function() {
                         previewHighlightedOnly = false;
-                        $modal.find(".modal-body").html(getIframe(getPreviewContentHTML(getEditorContent())));
+                        var formatForPrint = false;
+                        $modal.find(".modal-body").html(getIframe(getPreviewContentHTML(getEditorContent(), formatForPrint)));
                         $message.remove();
                     });
 
@@ -183,7 +200,8 @@
                   $modal.find(".nyupreview-print").prop("disabled", true);
                   // we need to get the editor HTML again and tack on some
                   // javascript to do the printing for us!
-                  var html = getPreviewContentHTML(getEditorContent());
+                  var formatForPrint = true;
+                  var html = getPreviewContentHTML(getEditorContent(), formatForPrint);
                   if (typeof MathJax != "undefined") {
                     // print after MathJax has finished rendering
                     html = html + "<script type='text/javascript'>"+
