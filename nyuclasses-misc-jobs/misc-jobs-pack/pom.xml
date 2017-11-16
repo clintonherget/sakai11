@@ -4,7 +4,7 @@
   <parent>
     <artifactId>nyuclasses-misc-jobs-base</artifactId>
     <groupId>edu.nyu.classes.jobs</groupId>
-    <version>11.2</version>
+    <version>11.4</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -19,7 +19,7 @@
     <dependency>
       <groupId>edu.nyu.classes.jobs</groupId>
       <artifactId>misc-jobs-impl</artifactId>
-      <version>11.2</version>
+      <version>11.4</version>
     </dependency>
   </dependencies>
   <build>

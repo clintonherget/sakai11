@@ -4,7 +4,7 @@
   <parent>
     <artifactId>monitoring-base</artifactId>
     <groupId>edu.nyu.classes.monitoring</groupId>
-    <version>11.2</version>
+    <version>11.4</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <name>monitoring-pack</name>
@@ -18,7 +18,7 @@
     <dependency>
       <groupId>edu.nyu.classes.monitoring</groupId>
       <artifactId>monitoring-impl</artifactId>
-      <version>11.2</version>
+      <version>11.4</version>
     </dependency>
   </dependencies>
   <build>
