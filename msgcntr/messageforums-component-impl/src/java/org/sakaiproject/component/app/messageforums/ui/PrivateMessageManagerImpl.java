@@ -1413,17 +1413,6 @@ public class PrivateMessageManagerImpl extends HibernateDaoSupport implements
 		  LOG.error(e.getMessage(), e);
 	  }
 
-	  String thisPageId = "";
-	  ToolSession nyuts = sessionManager.getCurrentToolSession();
-	  if (nyuts != null)
-	  {
-		  ToolConfiguration tool = SiteService.findTool(nyuts.getPlacementId());
-		  if (tool != null)
-		  {
-			  thisToolId = tool.getId();
-		  }
-	  }
-
           // NYU modification
 	  String footer = ("</div><p>" +
 			   "If you wish to keep a record of your reply to this message within the " +
