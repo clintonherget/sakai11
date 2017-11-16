@@ -159,10 +159,8 @@ import org.sakaiproject.util.FormattedText;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.Web;
 
-import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.site.api.ToolConfiguration;
 
-import org.sakaiproject.authz.cover.SecurityService;
 import edu.nyu.classes.externalhelp.api.ExternalHelpSystem;
 import edu.nyu.classes.externalhelp.api.ExternalHelp;
 
@@ -872,10 +870,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 		ExternalHelpSystem helpSystem = (ExternalHelpSystem) ComponentManager.get("edu.nyu.classes.externalhelp.api.ExternalHelpSystem");
 		if (helpSystem.isActive()) {
-		    ToolConfiguration toolConfiguration = SiteService.findTool(toolSession.getPlacementId());
+		    ToolConfiguration toolConfiguration = org.sakaiproject.site.cover.SiteService.findTool(toolSession.getPlacementId());
 		    String siteId = toolConfiguration.getSiteId();
 
-		    boolean instructor = SecurityService.unlock(SiteService.SECURE_UPDATE_SITE, SiteService.siteReference(siteId));
+		    boolean instructor = org.sakaiproject.authz.cover.SecurityService.unlock(SiteService.SECURE_UPDATE_SITE, org.sakaiproject.site.cover.SiteService.siteReference(siteId));
 
 		    ExternalHelp help = helpSystem.getHelp("sakai.lessonbuildertool", instructor ? "instructor" : "student");
 
