@@ -17,6 +17,7 @@ import org.sakaiproject.gradebookng.business.GbCategoryType;
 import org.sakaiproject.gradebookng.business.model.GbCourseGrade;
 import org.sakaiproject.gradebookng.business.model.GbGradeInfo;
 import org.sakaiproject.gradebookng.business.model.GbStudentGradeInfo;
+import org.sakaiproject.gradebookng.business.util.EventHelper;
 import org.sakaiproject.gradebookng.business.util.FormatHelper;
 import org.sakaiproject.gradebookng.tool.panels.BasePanel;
 import org.sakaiproject.service.gradebook.shared.Assignment;
@@ -295,6 +296,8 @@ public class ExportPanel extends BasePanel {
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+
+		EventHelper.postExportEvent(getGradebook(), isCustomExport);
 
 		return tempFile;
 	}
