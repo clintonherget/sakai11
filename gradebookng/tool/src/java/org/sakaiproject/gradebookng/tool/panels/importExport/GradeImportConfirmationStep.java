@@ -22,6 +22,7 @@ import org.sakaiproject.gradebookng.business.GradeSaveResponse;
 import org.sakaiproject.gradebookng.business.model.ProcessedGradeItem;
 import org.sakaiproject.gradebookng.business.model.ProcessedGradeItem.Type;
 import org.sakaiproject.gradebookng.business.model.ProcessedGradeItemDetail;
+import org.sakaiproject.gradebookng.business.util.EventHelper;
 import org.sakaiproject.gradebookng.business.util.MessageHelper;
 import org.sakaiproject.gradebookng.tool.model.ImportWizardModel;
 import org.sakaiproject.gradebookng.tool.pages.GradebookPage;
@@ -78,6 +79,8 @@ public class GradeImportConfirmationStep extends BasePanel {
 
 			@Override
 			protected void onSubmit() {
+
+				EventHelper.postImportBeginEvent(getGradebook());
 
 				final Map<String, Long> assignmentMap = new HashMap<>();
 
@@ -194,6 +197,8 @@ public class GradeImportConfirmationStep extends BasePanel {
 					setResponsePage(GradebookPage.class);
 				}
 				//auto refresh will render the errors
+
+				EventHelper.postImportCompletedEvent(getGradebook(), !GradeImportConfirmationStep.this.errors);
 			}
 		};
 		add(form);

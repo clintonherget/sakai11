@@ -26,4 +26,8 @@ public enum GbRole {
 		return this.value;
 	}
 
+	public String toEventString() {
+		return this.toString().toLowerCase();
+	}
+
 }
