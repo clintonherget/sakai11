@@ -356,12 +356,12 @@ div.wicket-modal div.w_right > div {
 #gbConnectionTimeoutFeedback {
   position: fixed;
   z-index: 99999999;
-  top: 80px;
-  padding: 5px;
-  box-shadow: 1px 1px 5px #999;
-  font-size: 12px;
-  width: 350px;
-  margin-left: -175px;
+  top: 100px;
+  padding: 10px 20px;
+  box-shadow: 1px 1px 5px #333;
+  font-size: 14px;
+  width: 480px;
+  margin-left: -240px;
   left: 50%;
 }
 
