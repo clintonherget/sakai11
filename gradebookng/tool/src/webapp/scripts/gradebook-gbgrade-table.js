@@ -527,15 +527,39 @@ GbGradeTable.ajaxCallbacks = {}
 
 GbGradeTable.ajaxComplete = function (requestId, status, data) {
   GbGradeTable.ajaxCallbacks[requestId](status, data);
+  delete GbGradeTable.ajaxCallbacks[requestId];
 };
 
 GbGradeTable.ajax = function (params, callback) {
   params['_requestId'] = nextRequestId++;
 
-  GbGradeTable.ajaxCallbacks[params['_requestId']] = callback || $.noop;;
+  GbGradeTable.ajaxCallbacks[params['_requestId']] = callback || $.noop;
 
   GbGradeTable.domElement.trigger("gbgradetable.action", params);
 };
+
+
+$(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
+  // if a wicket callback, try to parse the parameters and execute the callback with a status 'ajaxError'
+  if (ajaxSettings.url.indexOf('ajaxParams') >= 0) {
+    var ajaxParams = {};
+
+    var paramPairs = decodeURIComponent(ajaxSettings.url).split("&");
+
+    for(var i = 0; i < paramPairs.length; i++) {
+      var str = paramPairs[i];
+
+      if (str.indexOf('ajaxParams=') == 0) {
+        ajaxParams = JSON.parse(decodeURIComponent(str.substring("ajaxParams=".length)));
+        break;
+      }
+    }
+
+    if (ajaxParams.hasOwnProperty('_requestId') && GbGradeTable.ajaxCallbacks.hasOwnProperty(ajaxParams._requestId)) {
+      GbGradeTable.ajaxCallbacks[ajaxParams._requestId]("ajaxError", null);
+    }
+  }
+});
 
 // FIXME: Hard-coded stuff here
 GbGradeTable.renderTable = function (elementId, tableData) {
@@ -2877,6 +2901,12 @@ GbGradeTable.setScore = function(studentId, assignmentId, oldScore, newScore) {
         }
       } else if (status == "nochange") {
         GbGradeTable.clearCellState(row, col);
+      } else if (status == "ajaxError") {
+        GbGradeTable.setCellState('error', row, col);
+
+        if (!GbGradeTable.lastValidGrades[studentId][assignmentId]) {
+          GbGradeTable.lastValidGrades[studentId][assignmentId] = oldScore;
+        }
       } else {
         console.log("Unhandled saveValue response: " + status);
       }
