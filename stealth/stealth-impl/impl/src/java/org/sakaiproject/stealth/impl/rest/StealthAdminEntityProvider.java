@@ -78,30 +78,10 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         return "stealth-admin";
     }
 
-    /**
-     * Return a Stealth System service token to be passed with subsequent requests.
-     */
-    @EntityCustomAction(action = "startSession", viewKey = EntityView.VIEW_NEW)
-    public String startSession(EntityView view, Map<String, Object> params) {
-        try {
-            assertPermission();
-
-            JSONObject result = new JSONObject();
-            String newSessionId = mintSessionId();
-            result.put(REQUEST_SESSION_PARAMETER, newSessionId);
-
-            SessionManager.getCurrentSession().setAttribute(SAKAI_SESSION_TOKEN_PROPERTY, newSessionId);
-
-            return result.toJSONString();
-        } catch (Exception e) {
-            return respondWithError(e);
-        }
-    }
-
     @EntityCustomAction(action = "searchNetid", viewKey = EntityView.VIEW_LIST)
     public String searchNetid(EntityView view, Map<String, Object> params) {
         try {
-            assertSession(params);
+            assertPermission();
             JSONObject result = new JSONObject();
 
             result.put("status", "OK");
@@ -115,7 +95,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
     @EntityCustomAction(action = "validateSite", viewKey = EntityView.VIEW_LIST)
     public String validateSite(EntityView view, Map<String, Object> params) {
         try {
-            assertSession(params);
+            assertPermission();
             JSONObject result = new JSONObject();
 
             result.put("status", "OK");
@@ -129,7 +109,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
     @EntityCustomAction(action = "getTerms", viewKey = EntityView.VIEW_LIST)
     public String getTerms(EntityView view, Map<String, Object> params) {
         try {
-            assertSession(params);
+            assertPermission();
             JSONObject result = new JSONObject();
 
             result.put("status", "OK");
@@ -143,7 +123,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
     @EntityCustomAction(action = "getTools", viewKey = EntityView.VIEW_LIST)
     public String getTools(EntityView view, Map<String, Object> params) {
         try {
-            assertSession(params);
+            assertPermission();
             JSONObject result = new JSONObject();
 
             return result.toJSONString();
@@ -170,18 +150,6 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         return result.toJSONString();
     }
 
-    private void assertSession(Map<String, Object> params) {
-        assertPermission();
-
-        String tokenFromUser = (String)params.get(REQUEST_SESSION_PARAMETER);
-        String tokenFromSession = (String)SessionManager.getCurrentSession().getAttribute(SAKAI_SESSION_TOKEN_PROPERTY);
-
-        if (tokenFromSession == null || tokenFromUser == null || !tokenFromSession.equals(tokenFromUser)) {
-            LOG.error("assertSession failed for user " + SessionManager.getCurrentSessionUserId());
-            throw new StealthException("Access denied, invalid session");
-        }
-    }
-
     private void assertPermission() {
         if (!SecurityService.unlock("stealth.manage", ADMIN_SITE_REALM)) {
             LOG.error("assertPermission denied access to user " + SessionManager.getCurrentSessionUserId());
@@ -191,23 +159,6 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
 
     private Stealth stealth() {
         return (Stealth) ComponentManager.get(Stealth.class);
-    }
-
-    private String mintSessionId() {
-        byte[] b = new byte[32];
-
-        try {
-            SecureRandom.getInstance("SHA1PRNG").nextBytes(b);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Couldn't generate a session ID", e);
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < b.length; i++) {
-            sb.append(String.format("%02x", b[i]));
-        }
-
-        return sb.toString();
     }
 
     public void setEntityProviderManager(EntityProviderManager entityProviderManager) {
