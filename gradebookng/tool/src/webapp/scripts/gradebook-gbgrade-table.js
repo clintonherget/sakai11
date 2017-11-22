@@ -1124,6 +1124,7 @@ GbGradeTable.renderTable = function (elementId, tableData) {
   GbGradeTable.setupAccessiblityBits();
   GbGradeTable.refreshSummaryLabels();
   GbGradeTable.setupDragAndDrop();
+  GbGradeTable.setupConnectionPoll();
 
   // Patch HandsonTable getWorkspaceWidth for improved scroll performance on big tables
   var origGetWorkspaceWidth = WalkontableViewport.prototype.getWorkspaceWidth;
@@ -3129,6 +3130,20 @@ GbGradeTable.findIndex = function(array, predicateFunction) {
     }
     return index;
 }
+
+
+GbGradeTable.setupConnectionPoll = function() {
+  this.connectionPoll = new ConnectionPoll($("#gbConnectionTimeoutFeedback"));
+  this.connectionPoll
+    .onTimeout(function() {
+      GbGradeTable.container.addClass('gb-connection-timeout-detected');
+      GbGradeTable.instance.updateSettings({ 'readOnly': true });
+    }).onRecover(function() {
+      GbGradeTable.container.removeClass('gb-connection-timeout-detected');
+      GbGradeTable.instance.updateSettings({ 'readOnly': false });
+    });
+};
+
 
 /**************************************************************************************
  * GradebookAPI - all the GradebookNG entity provider calls in one happy place
