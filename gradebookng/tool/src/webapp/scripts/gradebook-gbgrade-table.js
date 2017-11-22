@@ -1060,6 +1060,7 @@ GbGradeTable.renderTable = function (elementId, tableData) {
   GbGradeTable.setupAccessiblityBits();
   GbGradeTable.refreshSummaryLabels();
   GbGradeTable.setupDragAndDrop();
+  GbGradeTable.setupConnectionPoll();
 
   // Patch HandsonTable getWorkspaceWidth for improved scroll performance on big tables
   var origGetWorkspaceWidth = WalkontableViewport.prototype.getWorkspaceWidth;
@@ -2950,6 +2951,19 @@ GbGradeTable.positionModalAtTop = function($modal) {
     // position the modal at the top of the viewport
     // taking into account the current scroll offset
     $modal.css('top', 30 + $(window).scrollTop() + "px");
+};
+
+
+GbGradeTable.setupConnectionPoll = function() {
+  this.connectionPoll = new ConnectionPoll($("#gbConnectionTimeoutFeedback"));
+  this.connectionPoll
+    .onTimeout(function() {
+      GbGradeTable.container.addClass('gb-connection-timeout-detected');
+      GbGradeTable.instance.updateSettings({ 'readOnly': true });
+    }).onRecover(function() {
+      GbGradeTable.container.removeClass('gb-connection-timeout-detected');
+      GbGradeTable.instance.updateSettings({ 'readOnly': false });
+    });
 };
 
 /**************************************************************************************
