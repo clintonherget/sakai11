@@ -370,6 +370,10 @@ div.wicket-modal div.w_right > div {
   content: "\f071";
 }
 
+#gradebookSpreadsheet.gb-connection-timeout-detected .ht_master td .relative {
+  background: #EEE !important;
+}
+
 /* Summary styles */
 #instructorView.tab-pane,
 #studentView.tab-pane {
