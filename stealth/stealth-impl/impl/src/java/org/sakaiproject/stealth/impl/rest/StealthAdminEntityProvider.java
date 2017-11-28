@@ -83,6 +83,11 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         try {
             assertPermission();
             JSONObject result = new JSONObject();
+            String netID = view.getPathSegment(2);
+
+            if (netID != null) {
+              result.put("query", netID);
+            }
 
             result.put("status", "OK");
 
