@@ -1,10 +1,5 @@
 package org.sakaiproject.stealth.api;
 
-import lombok.Getter;
-
-/**
- * A data object representing a banner.
- */
 public class Site implements Comparable<Site> {
     private final String siteId;
 
