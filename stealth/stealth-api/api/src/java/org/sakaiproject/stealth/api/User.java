@@ -12,6 +12,11 @@ public class User implements Comparable<User> {
     }
 
     @Override
+    public String toString() {
+        return getNetId();
+    }
+
+    @Override
     public int compareTo(User other) {
         return this.netId.compareTo(other.netId);
     }

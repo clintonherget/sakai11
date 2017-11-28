@@ -1,5 +1,5 @@
 
-package org.sakaiproject.stealth.impl.stealthtools;
+package org.sakaiproject.stealth.impl.site;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +19,7 @@ public class SiteIdStorage implements Sites{
     private final String SiteIdTable;
 
     public SiteIdStorage() {
-        SiteIdTable = ("sakai_site").toLowerCase(Locale.ROOT); 
+        SiteIdTable = ("sakai_site").toLowerCase(Locale.ROOT);
     }
 
     public List<Site> getSiteIdList(final String searchPattern) {
@@ -29,7 +29,7 @@ public class SiteIdStorage implements Sites{
                             @Override
                             public List<Site> call(DBConnection db) throws SQLException {
                                 List<Site> siteIds = new ArrayList<Site>();
-                                try (DBResults results = db.run("SELECT * from " + SiteIdTable + "where site_id like " + searchPattern + "%")
+                                try (DBResults results = db.run("SELECT * from " + SiteIdTable + " where site_id like '" + searchPattern + "%'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
                                         siteIds.add(new Site(result.getString("site_id")));

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.entitybroker.DeveloperHelperService;
@@ -48,9 +49,11 @@ import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.stealth.api.Errors;
 import org.sakaiproject.stealth.api.Stealth;
 import org.sakaiproject.stealth.api.StealthException;
-import org.sakaiproject.site.api.Site;
+import org.sakaiproject.stealth.api.User;
+import org.sakaiproject.stealth.api.Site;
+import org.sakaiproject.stealth.api.ToolsBySite;
+import org.sakaiproject.stealth.api.ToolsByUser;
 import org.sakaiproject.tool.cover.SessionManager;
-import org.sakaiproject.user.api.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,11 +87,12 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             String netID = view.getPathSegment(2);
+            List<User> list_user = stealth().getUsers().getNetIdList(netID);
 
             if (netID != null) {
               result.put("query", netID);
             }
-
+            result.put("result", list_user);
             result.put("status", "OK");
 
             return result.toJSONString();

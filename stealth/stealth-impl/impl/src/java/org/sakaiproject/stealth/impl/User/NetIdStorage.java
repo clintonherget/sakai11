@@ -1,5 +1,5 @@
 
-package org.sakaiproject.stealth.impl.stealthtools;
+package org.sakaiproject.stealth.impl.user;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,7 +29,8 @@ public class NetIdStorage implements Users {
                             @Override
                             public List<User> call(DBConnection db) throws SQLException {
                                 List<User> netids = new ArrayList<User>();
-                                try (DBResults results = db.run("SELECT * from " + NetIdTable + "where netid like " + searchPattern + "%")
+                                System.out.println("SELECT * from " + NetIdTable + " where netid like '" + searchPattern + "%'");
+                                try (DBResults results = db.run("SELECT * from " + NetIdTable + " where netid like '" + searchPattern + "%'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
                                         netids.add(new User(result.getString("netid")));

@@ -43,15 +43,24 @@ import org.json.simple.JSONObject;
 import org.sakaiproject.authz.cover.FunctionManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.db.cover.SqlService;
+import org.sakaiproject.stealth.api.Sites;
+import org.sakaiproject.stealth.api.Site;
+import org.sakaiproject.stealth.api.Users;
+import org.sakaiproject.stealth.api.User;
+import org.sakaiproject.stealth.api.Tools;
+import org.sakaiproject.stealth.api.ToolsBySite;
+import org.sakaiproject.stealth.api.ToolsByUser;
 import org.sakaiproject.stealth.api.I18n;
 import org.sakaiproject.stealth.api.Stealth;
 import org.sakaiproject.stealth.api.StealthException;
 import org.sakaiproject.stealth.impl.common.SakaiI18n;
 import org.sakaiproject.stealth.impl.handlebars.ForeverTemplateCache;
+import org.sakaiproject.stealth.impl.user.NetIdStorage;
+import org.sakaiproject.stealth.impl.site.SiteIdStorage;
+import org.sakaiproject.stealth.impl.stealthtools.StealthRulesStorage;
 import org.sakaiproject.portal.util.PortalUtils;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.cover.SessionManager;
-import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +89,21 @@ class StealthImpl implements Stealth {
 
     @Override
     public void destroy() {
+    }
+
+    @Override
+    public Users getUsers() {
+        return new NetIdStorage();
+    }
+
+    @Override
+    public Sites getSites() {
+        return new SiteIdStorage();
+    }
+
+    @Override
+    public Tools getRules() {
+        return new StealthRulesStorage();
     }
 
     @Override

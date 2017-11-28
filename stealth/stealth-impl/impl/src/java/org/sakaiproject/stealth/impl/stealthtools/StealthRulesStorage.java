@@ -35,7 +35,7 @@ public class StealthRulesStorage implements Tools{
                             @Override
                             public List<ToolsByUser> call(DBConnection db) throws SQLException {
                                 List<ToolsByUser> tools = new ArrayList<ToolsByUser>();
-                                try (DBResults results = db.run("SELECT * from " + stealthByUserTable + "where netid like " + netId + "%")
+                                try (DBResults results = db.run("SELECT * from " + stealthByUserTable + " where netid like '" + netId + "%'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
                                         tools.add(new ToolsByUser(result.getString("netid"),
@@ -57,7 +57,7 @@ public class StealthRulesStorage implements Tools{
                             @Override
                             public List<ToolsBySite> call(DBConnection db) throws SQLException {
                                 List<ToolsBySite> tools = new ArrayList<ToolsBySite>();
-                                try (DBResults results = db.run("SELECT * from " + stealthBySiteTable + "where siteid like " + siteId + "%")
+                                try (DBResults results = db.run("SELECT * from " + stealthBySiteTable + " where siteid like '" + siteId + "%'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
                                         tools.add(new ToolsBySite(result.getString("siteid"),
@@ -102,7 +102,7 @@ public class StealthRulesStorage implements Tools{
                                         .executeUpdate();
                                 db.commit();
                                 return null;
-                                
+
                             }
                         }
                 );
@@ -120,7 +120,7 @@ public class StealthRulesStorage implements Tools{
                                         .executeUpdate();
                                 db.commit();
                                 return null;
-                                
+
                             }
                         }
                 );
@@ -137,7 +137,7 @@ public class StealthRulesStorage implements Tools{
                                         .executeUpdate();
                                 db.commit();
                                 return null;
-                                
+
                             }
                         }
                 );

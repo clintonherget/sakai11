@@ -33,9 +33,23 @@ public interface Stealth {
     public void destroy();
 
     /**
+     * Return a list of active user based on query
+     */
+    public Users getUsers();
+
+    /**
+     * Return a list of active site ids with query
+     */
+    public Sites getSites();
+
+    /**
+     * Return a list of active tool rules
+     */
+    public Tools getRules();
+
+    /**
      * Return an I18N translator for a given file and locale.
      */
     public I18n getI18n(ClassLoader loader, String resourceBase);
 
 }
-    
