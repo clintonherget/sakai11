@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import org.sakaiproject.stealth.api.Tools;
+import org.sakaiproject.stealth.api.ToolService;
 import org.sakaiproject.stealth.api.PilotTool;
 import org.sakaiproject.stealth.api.ToolsByUser;
 import org.sakaiproject.stealth.api.ToolsBySite;
@@ -16,7 +16,7 @@ import org.sakaiproject.stealth.impl.common.DBAction;
 import org.sakaiproject.stealth.impl.common.DBConnection;
 import org.sakaiproject.stealth.impl.common.DBResults;
 
-public class StealthRulesStorage implements Tools{
+public class StealthRulesStorage implements ToolService{
 
     private final String stealthByUserTable;
     private final String stealthBySiteTable;

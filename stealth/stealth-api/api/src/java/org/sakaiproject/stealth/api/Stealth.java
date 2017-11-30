@@ -35,17 +35,17 @@ public interface Stealth {
     /**
      * Return a list of active user based on query
      */
-    public Users getUsers();
+    public UserService getUsers();
 
     /**
      * Return a list of active site ids with query
      */
-    public Sites getSites();
+    public SiteService getSites();
 
     /**
      * Return a list of active tool rules
      */
-    public Tools getRules();
+    public ToolService getRules();
 
     /**
      * Return an I18N translator for a given file and locale.

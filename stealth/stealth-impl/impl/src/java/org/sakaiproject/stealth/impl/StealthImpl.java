@@ -43,11 +43,11 @@ import org.json.simple.JSONObject;
 import org.sakaiproject.authz.cover.FunctionManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.db.cover.SqlService;
-import org.sakaiproject.stealth.api.Sites;
+import org.sakaiproject.stealth.api.SiteService;
 import org.sakaiproject.stealth.api.Site;
-import org.sakaiproject.stealth.api.Users;
+import org.sakaiproject.stealth.api.UserService;
 import org.sakaiproject.stealth.api.User;
-import org.sakaiproject.stealth.api.Tools;
+import org.sakaiproject.stealth.api.ToolService;
 import org.sakaiproject.stealth.api.ToolsBySite;
 import org.sakaiproject.stealth.api.ToolsByUser;
 import org.sakaiproject.stealth.api.I18n;
@@ -92,17 +92,17 @@ class StealthImpl implements Stealth {
     }
 
     @Override
-    public Users getUsers() {
+    public UserService getUsers() {
         return new NetIdStorage();
     }
 
     @Override
-    public Sites getSites() {
+    public SiteService getSites() {
         return new SiteIdStorage();
     }
 
     @Override
-    public Tools getRules() {
+    public ToolService getRules() {
         return new StealthRulesStorage();
     }
 

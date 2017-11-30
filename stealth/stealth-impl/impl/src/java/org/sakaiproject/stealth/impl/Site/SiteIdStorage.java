@@ -8,13 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.sakaiproject.stealth.api.Site;
-import org.sakaiproject.stealth.api.Sites;
+import org.sakaiproject.stealth.api.SiteService;
 import org.sakaiproject.stealth.impl.common.DB;
 import org.sakaiproject.stealth.impl.common.DBAction;
 import org.sakaiproject.stealth.impl.common.DBConnection;
 import org.sakaiproject.stealth.impl.common.DBResults;
 
-public class SiteIdStorage implements Sites{
+public class SiteIdStorage implements SiteService{
 
     private final String SiteIdTable;
 

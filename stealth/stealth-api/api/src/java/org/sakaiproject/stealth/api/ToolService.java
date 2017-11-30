@@ -2,7 +2,7 @@ package org.sakaiproject.stealth.api;
 
 import java.util.List;
 
-public interface Tools {
+public interface ToolService {
 
     public List<ToolsByUser> searchByNetId(String netId);
     public List<ToolsBySite> searchBySiteId(String siteId);

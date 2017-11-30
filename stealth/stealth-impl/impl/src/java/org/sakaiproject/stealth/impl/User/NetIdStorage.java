@@ -8,13 +8,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.sakaiproject.stealth.api.User;
-import org.sakaiproject.stealth.api.Users;
+import org.sakaiproject.stealth.api.UserService;
 import org.sakaiproject.stealth.impl.common.DB;
 import org.sakaiproject.stealth.impl.common.DBAction;
 import org.sakaiproject.stealth.impl.common.DBConnection;
 import org.sakaiproject.stealth.impl.common.DBResults;
 
-public class NetIdStorage implements Users {
+public class NetIdStorage implements UserService {
 
     private final String NetIdTable;
 
