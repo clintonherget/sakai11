@@ -12,6 +12,11 @@ public class PilotTool implements Comparable<PilotTool> {
     }
 
     @Override
+    public String toString() {
+        return getToolId();
+    }
+
+    @Override
     public int compareTo(PilotTool other) {
         return this.toolId.compareTo(other.toolId);
     }

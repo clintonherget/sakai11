@@ -23,9 +23,9 @@ public class StealthRulesStorage implements ToolService{
     private final String PilotToolTable;
 
     public StealthRulesStorage() {
-        stealthByUserTable = ("").toLowerCase(Locale.ROOT); //Insert table name here
-        stealthBySiteTable = ("").toLowerCase(Locale.ROOT); //Insert table name here
-        PilotToolTable     = ("").toLowerCase(Locale.ROOT); //Insert table name here
+        stealthByUserTable = ("stealth_byuser").toLowerCase(Locale.ROOT); //Insert table name here
+        stealthBySiteTable = ("stealth_bysite").toLowerCase(Locale.ROOT); //Insert table name here
+        PilotToolTable     = ("stealth_tools").toLowerCase(Locale.ROOT); //Insert table name here
     }
 
     public List<ToolsByUser> searchByNetId(final String netId) {
@@ -39,7 +39,7 @@ public class StealthRulesStorage implements ToolService{
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
                                         tools.add(new ToolsByUser(result.getString("netid"),
-                                                result.getInt("term"),
+                                                result.getString("term"),
                                                 result.getLong("index"),
                                                 result.getString("toolid")));
                                     }

@@ -6,14 +6,11 @@ import lombok.Getter;
  */
 public class ToolsByUser implements Comparable<ToolsByUser> {
     private final String netid;
-    @Getter
-    private final int term;
-    @Getter
+    private final String term;
     private final long index;
-    @Getter
     private final String toolid;
 
-    public ToolsByUser(String netid, int term, long index, String toolid) {
+    public ToolsByUser(String netid, String term, long index, String toolid) {
         this.netid  = netid;
         this.term   = term;
         this.index  = index;
@@ -22,6 +19,14 @@ public class ToolsByUser implements Comparable<ToolsByUser> {
 
     public String getNetId() {
         return this.netid;
+    }
+
+    public String getTerm() {
+        return this.term;
+    }
+
+    public String getToolId() {
+        return this.toolid;
     }
 
     @Override

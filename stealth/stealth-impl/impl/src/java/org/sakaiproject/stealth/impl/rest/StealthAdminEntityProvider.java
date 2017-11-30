@@ -53,6 +53,7 @@ import org.sakaiproject.stealth.api.Stealth;
 import org.sakaiproject.stealth.api.StealthException;
 import org.sakaiproject.stealth.api.User;
 import org.sakaiproject.stealth.api.Site;
+import org.sakaiproject.stealth.api.PilotTool;
 import org.sakaiproject.stealth.api.ToolsBySite;
 import org.sakaiproject.stealth.api.ToolsByUser;
 import org.sakaiproject.tool.cover.SessionManager;
@@ -92,15 +93,12 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             List<User> list_user = null;
 
             if (netID != null) {
-                result.put("query", netID);
                 if(netID.length() > 1) {
                     list_user = stealth().getUsers().getNetIdList(netID);
                 }
-                result.put("result", list_user);
-                result.put("status", "OK");
+                result.put("results", list_user);
             } else {
-                result.put("result", "MISSING QUERY");
-                result.put("status", "ERROR");
+                result.put("results", "[\"Error\"]");
             }
             return result.toJSONString();
         } catch (Exception e) {
@@ -117,13 +115,10 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             List<Site> list_sites;
 
             if (siteID != null) {
-                result.put("query", siteID);
                 list_sites = stealth().getSites().getSiteIdList(siteID);
-                result.put("result", !list_sites.isEmpty());
-                result.put("status", "OK");
+                result.put("results", !list_sites.isEmpty());
             } else {
-                result.put("result", "MISSING QUERY");
-                result.put("status", "ERROR");
+                result.put("results", "[\"Error\"]");
             }
 
             return result.toJSONString();
@@ -148,8 +143,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
                 list_terms.add("Fall " + (currentYear + i));
             }
 
-            result.put("result", list_terms);
-            result.put("status", "OK");
+            result.put("results", list_terms);
 
             return result.toJSONString();
         } catch (Exception e) {
@@ -162,7 +156,66 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         try {
             assertPermission();
             JSONObject result = new JSONObject();
+            List<PilotTool> list_tools = stealth().getRules().getAllPilotTools();
 
+            result.put("results", list_tools);
+
+            return result.toJSONString();
+        } catch (Exception e) {
+            return respondWithError(e);
+        }
+    }
+
+    @EntityCustomAction(action = "getRuleByUser", viewKey = EntityView.VIEW_LIST)
+    public String getRuleByUser(EntityView view, Map<String, Object> params) {
+        try {
+            assertPermission();
+            JSONObject result = new JSONObject();
+            String netID = view.getPathSegment(2);
+            List<ToolsByUser> list_user = null;
+
+            if (netID != null) {
+                list_user = stealth().getRules().searchByNetId(netID);
+                JSONArray data = new JSONArray();
+                for (ToolsByUser rule : list_user) {
+                    JSONObject row = new JSONObject();
+                    row.put("netid", rule.getNetId());
+                    row.put("term", rule.getTerm());
+                    row.put("toolid", rule.getToolId());
+                    data.add(row);
+                }
+                result.put("results", data);
+            } else {
+                result.put("results", "[\"Error\"]");
+            }
+            return result.toJSONString();
+        } catch (Exception e) {
+            return respondWithError(e);
+        }
+    }
+
+    @EntityCustomAction(action = "getRuleBySite", viewKey = EntityView.VIEW_LIST)
+    public String getRuleBySite(EntityView view, Map<String, Object> params) {
+        try {
+            assertPermission();
+            JSONObject result = new JSONObject();
+            String siteID = view.getPathSegment(2);
+            List<ToolsBySite> list_sites = null;
+
+            if (siteID != null) {
+                result.put("query", siteID);
+                list_sites = stealth().getRules().searchBySiteId(siteID);
+                JSONArray data = new JSONArray();
+                for (ToolsBySite rule : list_sites) {
+                    JSONObject row = new JSONObject();
+                    row.put("siteid", rule.getSiteId());
+                    row.put("toolid", rule.getToolId());
+                    data.add(row);
+                }
+                result.put("results", data);
+            } else {
+                result.put("results", "[\"Error\"]");
+            }
             return result.toJSONString();
         } catch (Exception e) {
             return respondWithError(e);

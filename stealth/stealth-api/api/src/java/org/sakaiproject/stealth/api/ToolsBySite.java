@@ -7,9 +7,7 @@ import lombok.Getter;
  */
 public class ToolsBySite implements Comparable<ToolsBySite> {
     private final String siteid;
-    @Getter
     private final long index;
-    @Getter
     private final String toolid;
 
     public ToolsBySite(String siteid, long index, String toolid) {
@@ -21,6 +19,11 @@ public class ToolsBySite implements Comparable<ToolsBySite> {
     public String getSiteId() {
         return this.siteid;
     }
+
+    public String getToolId() {
+        return this.toolid;
+    }
+
 
     @Override
     public int compareTo(ToolsBySite other) {
