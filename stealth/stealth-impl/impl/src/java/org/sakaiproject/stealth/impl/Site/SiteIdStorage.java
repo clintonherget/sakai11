@@ -29,7 +29,7 @@ public class SiteIdStorage implements SiteService{
                             @Override
                             public List<Site> call(DBConnection db) throws SQLException {
                                 List<Site> siteIds = new ArrayList<Site>();
-                                try (DBResults results = db.run("SELECT * from " + SiteIdTable + " where site_id like '" + searchPattern + "%'")
+                                try (DBResults results = db.run("SELECT * from " + SiteIdTable + " where site_id = '" + searchPattern + "'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
                                         siteIds.add(new Site(result.getString("site_id")));

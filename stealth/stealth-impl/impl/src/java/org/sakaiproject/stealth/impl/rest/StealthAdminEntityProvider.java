@@ -29,6 +29,8 @@ import java.io.ByteArrayInputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -87,14 +89,19 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             String netID = view.getPathSegment(2);
-            List<User> list_user = stealth().getUsers().getNetIdList(netID);
+            List<User> list_user = null;
 
             if (netID != null) {
-              result.put("query", netID);
+                result.put("query", netID);
+                if(netID.length() > 1) {
+                    list_user = stealth().getUsers().getNetIdList(netID);
+                }
+                result.put("result", list_user);
+                result.put("status", "OK");
+            } else {
+                result.put("result", "MISSING QUERY");
+                result.put("status", "ERROR");
             }
-            result.put("result", list_user);
-            result.put("status", "OK");
-
             return result.toJSONString();
         } catch (Exception e) {
             return respondWithError(e);
@@ -106,8 +113,18 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         try {
             assertPermission();
             JSONObject result = new JSONObject();
+            String siteID = view.getPathSegment(2);
+            List<Site> list_sites;
 
-            result.put("status", "OK");
+            if (siteID != null) {
+                result.put("query", siteID);
+                list_sites = stealth().getSites().getSiteIdList(siteID);
+                result.put("result", !list_sites.isEmpty());
+                result.put("status", "OK");
+            } else {
+                result.put("result", "MISSING QUERY");
+                result.put("status", "ERROR");
+            }
 
             return result.toJSONString();
         } catch (Exception e) {
@@ -120,7 +137,18 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         try {
             assertPermission();
             JSONObject result = new JSONObject();
+            int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+            List<String> list_terms = new ArrayList<>();
 
+            // Generate two years worth of terms
+            for (int i = -2; i <= 2; i ++){
+                list_terms.add("Winter " + (currentYear + i));
+                list_terms.add("Spring " + (currentYear + i));
+                list_terms.add("Summer " + (currentYear + i));
+                list_terms.add("Fall " + (currentYear + i));
+            }
+
+            result.put("result", list_terms);
             result.put("status", "OK");
 
             return result.toJSONString();

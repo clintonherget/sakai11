@@ -12,6 +12,11 @@ public class Site implements Comparable<Site> {
     }
 
     @Override
+    public String toString() {
+        return getSiteId();
+    }
+
+    @Override
     public int compareTo(Site other) {
         return this.siteId.compareTo(other.siteId);
     }
