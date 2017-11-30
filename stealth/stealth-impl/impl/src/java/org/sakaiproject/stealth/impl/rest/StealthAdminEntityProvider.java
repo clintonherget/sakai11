@@ -90,13 +90,22 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             String netID = view.getPathSegment(2);
-            List<User> list_user = null;
 
             if (netID != null) {
                 if(netID.length() > 1) {
-                    list_user = stealth().getUsers().getNetIdList(netID);
+                    List<User> list_user = stealth().getUsers().getNetIdList(netID);
+                    JSONArray data = new JSONArray();
+                    for (User u : list_user) {
+                        JSONObject row = new JSONObject();
+                        row.put("id", u.getNetId());
+                        row.put("text", u.getNetId());
+                        data.add(row);
+                    }
+                    result.put("results", data);
+                } else {
+                    result.put("results", new JSONArray());
                 }
-                result.put("results", list_user);
+
             } else {
                 result.put("results", "[\"Error\"]");
             }
@@ -133,17 +142,32 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-            List<String> list_terms = new ArrayList<>();
+            JSONArray data = new JSONArray();
 
             // Generate two years worth of terms
             for (int i = -2; i <= 2; i ++){
-                list_terms.add("Winter " + (currentYear + i));
-                list_terms.add("Spring " + (currentYear + i));
-                list_terms.add("Summer " + (currentYear + i));
-                list_terms.add("Fall " + (currentYear + i));
+                JSONObject row = new JSONObject();
+                row.put("id", "Winter " + (currentYear + i));
+                row.put("text", "Winter " + (currentYear + i));
+                data.add(row);
+
+                row = new JSONObject();
+                row.put("id", "Spring " + (currentYear + i));
+                row.put("text", "Spring " + (currentYear + i));
+                data.add(row);
+
+                row = new JSONObject();
+                row.put("id", "Summer " + (currentYear + i));
+                row.put("text", "Summer " + (currentYear + i));
+                data.add(row);
+
+                row = new JSONObject();
+                row.put("id", "Fall " + (currentYear + i));
+                row.put("text", "Fall " + (currentYear + i));
+                data.add(row);
             }
 
-            result.put("results", list_terms);
+            result.put("results", data);
 
             return result.toJSONString();
         } catch (Exception e) {
