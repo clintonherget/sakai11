@@ -22,24 +22,40 @@
  **********************************************************************************/
 package org.sakaiproject.stealth.api;
 
-public class User implements Comparable<User> {
-    private final String netId;
+/**
+ * A data object representing Tool permissions.
+ */
+public class StealthRules implements Comparable<StealthRules> {
+    private final String netid;
+    private final String siteid;
+    private final String term;
+    private final String toolid;
 
-    public User(String netId) {
-        this.netId  = netId;
+    public StealthRules(String netid, String siteid,String term, String toolid) {
+        this.netid  = netid;
+        this.siteid = siteid    ;
+        this.term   = term;
+        this.toolid = toolid;
     }
 
     public String getNetId() {
-        return this.netId;
+        return this.netid;
+    }
+
+    public String getSiteId() {
+        return this.siteid;
+    }
+
+    public String getTerm() {
+        return this.term;
+    }
+
+    public String getToolId() {
+        return this.toolid;
     }
 
     @Override
-    public String toString() {
-        return getNetId();
-    }
-
-    @Override
-    public int compareTo(User other) {
-        return this.netId.compareTo(other.netId);
+    public int compareTo(StealthRules other) {
+        return this.toolid.compareTo(other.toolid);
     }
 }

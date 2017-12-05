@@ -2,7 +2,16 @@ $(document).ready(function(){
 	$("#select-term").select2();
 	$("#select-tool").select2();
     $(".unstealth-multiple-netid").select2({
-        placeholder:"NetID"
+        placeholder:"NetID",
+        minimumInputLength: 2,
+    	ajax: {
+    		url: function (params) {
+    			console.log("Search string" + params.term);
+    			return "http://localhost:8080/direct/stealth-admin/searchNetid/" + params.term;
+    		},
+	        delay: 500,
+	        dataType: 'json'
+       	}
     });
     $(".unstealth-multiple-siteid").select2({
         placeholder:"SiteID"

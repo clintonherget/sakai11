@@ -53,9 +53,8 @@ import org.sakaiproject.stealth.api.Stealth;
 import org.sakaiproject.stealth.api.StealthException;
 import org.sakaiproject.stealth.api.User;
 import org.sakaiproject.stealth.api.Site;
-import org.sakaiproject.stealth.api.PilotTool;
-import org.sakaiproject.stealth.api.ToolsBySite;
-import org.sakaiproject.stealth.api.ToolsByUser;
+import org.sakaiproject.stealth.api.StealthTool;
+import org.sakaiproject.stealth.api.StealthRules;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,7 +179,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         try {
             assertPermission();
             JSONObject result = new JSONObject();
-            List<PilotTool> list_tools = stealth().getRules().getAllPilotTools();
+            List<StealthTool> list_tools = stealth().getRules().getAllStealthTools();
 
             result.put("results", list_tools);
 
@@ -196,12 +195,12 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             String netID = view.getPathSegment(2);
-            List<ToolsByUser> list_user = null;
+            List<StealthRules> list_user = null;
 
             if (netID != null) {
                 list_user = stealth().getRules().searchByNetId(netID);
                 JSONArray data = new JSONArray();
-                for (ToolsByUser rule : list_user) {
+                for (StealthRules rule : list_user) {
                     JSONObject row = new JSONObject();
                     row.put("netid", rule.getNetId());
                     row.put("term", rule.getTerm());
@@ -224,13 +223,13 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             String siteID = view.getPathSegment(2);
-            List<ToolsBySite> list_sites = null;
+            List<StealthRules> list_sites = null;
 
             if (siteID != null) {
                 result.put("query", siteID);
                 list_sites = stealth().getRules().searchBySiteId(siteID);
                 JSONArray data = new JSONArray();
-                for (ToolsBySite rule : list_sites) {
+                for (StealthRules rule : list_sites) {
                     JSONObject row = new JSONObject();
                     row.put("siteid", rule.getSiteId());
                     row.put("toolid", rule.getToolId());

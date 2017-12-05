@@ -8,9 +8,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.sakaiproject.stealth.api.ToolService;
-import org.sakaiproject.stealth.api.PilotTool;
-import org.sakaiproject.stealth.api.ToolsByUser;
-import org.sakaiproject.stealth.api.ToolsBySite;
+import org.sakaiproject.stealth.api.StealthTool;
+import org.sakaiproject.stealth.api.StealthRules;
 import org.sakaiproject.stealth.impl.common.DB;
 import org.sakaiproject.stealth.impl.common.DBAction;
 import org.sakaiproject.stealth.impl.common.DBConnection;
@@ -20,27 +19,26 @@ public class StealthRulesStorage implements ToolService{
 
     private final String stealthByUserTable;
     private final String stealthBySiteTable;
-    private final String PilotToolTable;
+    private final String StealthToolTable;
 
     public StealthRulesStorage() {
         stealthByUserTable = ("stealth_byuser").toLowerCase(Locale.ROOT); //Insert table name here
         stealthBySiteTable = ("stealth_bysite").toLowerCase(Locale.ROOT); //Insert table name here
-        PilotToolTable     = ("stealth_tools").toLowerCase(Locale.ROOT); //Insert table name here
+        StealthToolTable   = ("stealth_tools").toLowerCase(Locale.ROOT); //Insert table name here
     }
 
-    public List<ToolsByUser> searchByNetId(final String netId) {
+    public List<StealthRules> searchByNetId(final String netId) {
         return DB.transaction
                 ("Search tool permissions by NetId",
-                        new DBAction<List<ToolsByUser>>() {
+                        new DBAction<List<StealthRules>>() {
                             @Override
-                            public List<ToolsByUser> call(DBConnection db) throws SQLException {
-                                List<ToolsByUser> tools = new ArrayList<ToolsByUser>();
+                            public List<StealthRules> call(DBConnection db) throws SQLException {
+                                List<StealthRules> tools = new ArrayList<StealthRules>();
                                 try (DBResults results = db.run("SELECT * from " + stealthByUserTable + " where netid like '" + netId + "%'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
-                                        tools.add(new ToolsByUser(result.getString("netid"),
+                                        tools.add(new StealthRules(result.getString("netid"),null,
                                                 result.getString("term"),
-                                                result.getLong("index"),
                                                 result.getString("toolid")));
                                     }
                                     return tools;
@@ -50,18 +48,17 @@ public class StealthRulesStorage implements ToolService{
                 );
     }
 
-   public List<ToolsBySite> searchBySiteId(final String siteId) {
+   public List<StealthRules> searchBySiteId(final String siteId) {
         return DB.transaction
                 ("Search tool permissions by SiteId",
-                        new DBAction<List<ToolsBySite>>() {
+                        new DBAction<List<StealthRules>>() {
                             @Override
-                            public List<ToolsBySite> call(DBConnection db) throws SQLException {
-                                List<ToolsBySite> tools = new ArrayList<ToolsBySite>();
+                            public List<StealthRules> call(DBConnection db) throws SQLException {
+                                List<StealthRules> tools = new ArrayList<StealthRules>();
                                 try (DBResults results = db.run("SELECT * from " + stealthBySiteTable + " where siteid like '" + siteId + "%'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
-                                        tools.add(new ToolsBySite(result.getString("siteid"),
-                                                result.getLong("index"),
+                                        tools.add(new StealthRules(null,result.getString("siteid"),null,
                                                 result.getString("toolid")));
                                     }
                                     return tools;
@@ -71,17 +68,17 @@ public class StealthRulesStorage implements ToolService{
                 );
     }
 
-    public List<PilotTool> getAllPilotTools() {
+    public List<StealthTool> getAllStealthTools() {
         return DB.transaction
                 ("Search tools present in the pilot tool table",
-                        new DBAction<List<PilotTool>>() {
+                        new DBAction<List<StealthTool>>() {
                             @Override
-                            public List<PilotTool> call(DBConnection db) throws SQLException {
-                                List<PilotTool> tools = new ArrayList<PilotTool>();
-                                try (DBResults results = db.run("SELECT * from " + PilotToolTable)
+                            public List<StealthTool> call(DBConnection db) throws SQLException {
+                                List<StealthTool> tools = new ArrayList<StealthTool>();
+                                try (DBResults results = db.run("SELECT * from " + StealthToolTable)
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
-                                        tools.add(new PilotTool(
+                                        tools.add(new StealthTool(
                                                 result.getString("toolid")));
                                     }
                                     return tools;
@@ -132,7 +129,7 @@ public class StealthRulesStorage implements ToolService{
                         new DBAction<Void>() {
                             @Override
                             public Void call(DBConnection db) throws SQLException {
-                                db.run("DELETE FROM " + PilotToolTable + " where toolid = ?")
+                                db.run("DELETE FROM " + StealthToolTable + " where toolid = ?")
                                         .param(toolId)
                                         .executeUpdate();
                                 db.commit();

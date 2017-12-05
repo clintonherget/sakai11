@@ -22,24 +22,24 @@
  **********************************************************************************/
 package org.sakaiproject.stealth.api;
 
-public class User implements Comparable<User> {
-    private final String netId;
+public class StealthTool implements Comparable<StealthTool> {
+    private final String toolId;
 
-    public User(String netId) {
-        this.netId  = netId;
+    public StealthTool(String toolId) {
+        this.toolId  = toolId;
     }
 
-    public String getNetId() {
-        return this.netId;
+    public String getToolId() {
+        return this.toolId;
     }
 
     @Override
     public String toString() {
-        return getNetId();
+        return getToolId();
     }
 
     @Override
-    public int compareTo(User other) {
-        return this.netId.compareTo(other.netId);
+    public int compareTo(StealthTool other) {
+        return this.toolId.compareTo(other.toolId);
     }
 }
