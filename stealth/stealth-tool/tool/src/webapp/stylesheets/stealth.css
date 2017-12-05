@@ -62,3 +62,11 @@ div.tab button.active {
     border: 0px solid #ccc;
     border-top: none;
 }
+
+.unstealth-multiple-siteid{
+    width: 50px;
+}
+
+.unstealth-multiple-netid{
+    width: 50px;
+}

@@ -14,7 +14,16 @@ $(document).ready(function(){
        	}
     });
     $(".unstealth-multiple-siteid").select2({
-        placeholder:"SiteID"
+        placeholder:"SiteID",
+        minimumInputLength: 2,
+    	ajax: {
+    		url: function (params) {
+    			console.log("Search string" + params.term);
+    			return "http://localhost:8080/direct/stealth-admin/searchSiteid/" + params.term;
+    		},
+	        delay: 500,
+	        dataType: 'json'
+       	}
     });
 });
 function openTab(evt, TabName) {

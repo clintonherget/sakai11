@@ -11,15 +11,14 @@
 			<h3 class="unstealth-section-head">User/Site Selection</h3>
 
 			Add User(s)
-			<select class="unstealth-multiple-netid" name="NetIDs" multiple="multiple">
+			<select class="unstealth-multiple-netid" name="NetIDs[]" multiple="multiple">
 			</select>
 		</br></br>
 
 			And/Or</br></br>
 
 			Add Site ID(s)
-			<select class="unstealth-multiple-siteid" name="SiteIDs" multiple="multiple">
-				
+			<select class="unstealth-multiple-siteid" name="SiteIDs[]" multiple="multiple">
 			</select>
 		</div>
 		</br>
@@ -55,11 +54,17 @@
 
 		<div id="NetID" class="tabcontent">
 	  		</br>Search
-  			<input type="textbox" name="search-by-netid" placeholder="NetID">
+	  		<form action="http://localhost:8080/direct/stealth-admin/searchNetid/" method="post">
+	  			<select class="unstealth-multiple-netid" type="textbox" name="search-by-netid[]" placeholder="NetID"></select>
+	  			<button type="submit" class="btn btn-primary">Search</button>
+	  		</form>
 		</div>
 
 		<div id="SiteID" class="tabcontent">
   			</br>Search
-  			<input type="textbox" name="search-by-siteid" placeholder="SiteID">
+  			<form action="/direct/stealth-admin/searchSiteid/" method="post">
+  				<select class="unstealth-multiple-siteid" type="textbox" name="search-by-siteid[]" placeholder="SiteID"></select>
+  				<button type="submit" class="btn btn-primary">Search</button>
+  			</form>
 		</div>		
 	</div>
