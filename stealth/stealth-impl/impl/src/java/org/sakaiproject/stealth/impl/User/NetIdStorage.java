@@ -29,7 +29,6 @@ public class NetIdStorage implements UserService {
                             @Override
                             public List<User> call(DBConnection db) throws SQLException {
                                 List<User> netids = new ArrayList<User>();
-                                System.out.println("SELECT * from " + NetIdTable + " where netid like '" + searchPattern + "%'");
                                 try (DBResults results = db.run("SELECT * from " + NetIdTable + " where netid like '" + searchPattern + "%'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
