@@ -28,12 +28,14 @@ package org.sakaiproject.stealth.impl.rest;
 import java.io.ByteArrayInputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Collection;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.lang.reflect.Array;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 import org.sakaiproject.authz.cover.SecurityService;
@@ -181,7 +183,14 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             JSONObject result = new JSONObject();
             List<StealthTool> list_tools = stealth().getRules().getAllStealthTools();
 
-            result.put("results", list_tools);
+            JSONArray data = new JSONArray();
+            for (StealthTool t : list_tools) {
+                JSONObject row = new JSONObject();
+                row.put("id", t.getToolId());
+                row.put("text", t.getToolName());
+                data.add(row);
+            }
+            result.put("results", data);
 
             return result.toJSONString();
         } catch (Exception e) {
@@ -239,6 +248,39 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             } else {
                 result.put("results", "[\"Error\"]");
             }
+            return result.toJSONString();
+        } catch (Exception e) {
+            return respondWithError(e);
+        }
+    }
+
+    @EntityCustomAction(action = "testPost", viewKey = EntityView.VIEW_NEW)
+    public String testPost(EntityView view, Map<String, Object> params) {
+        try {
+            assertPermission();
+            JSONObject result = new JSONObject();
+
+            for(Map.Entry<String, Object> entry : params.entrySet()) {
+                if(entry.getValue() instanceof Collection<?>){
+                    JSONArray data = new JSONArray();
+                    for(Object o : (Collection<?>) entry.getValue()){
+                        data.add(o.toString());
+                    }
+                    result.put(entry.getKey(), data);
+                } else if (entry.getValue().getClass().isArray()) { // String[], int[]
+                    Object array = entry.getValue();
+                    JSONArray data = new JSONArray();
+                    for(int i = 0; i < Array.getLength(array); i++){
+                        data.add(Array.get(array, i).toString());
+                    }
+                    result.put(entry.getKey(), data);
+                } else {
+                    JSONArray data = new JSONArray();
+                    data.add(entry.getValue());
+                    result.put(entry.getKey(), data);
+                }
+            }
+
             return result.toJSONString();
         } catch (Exception e) {
             return respondWithError(e);

@@ -79,7 +79,8 @@ public class StealthRulesStorage implements ToolService{
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
                                         tools.add(new StealthTool(
-                                                result.getString("tool_id")));
+                                                result.getString("toolid"),
+                                                result.getString("toolname")));
                                     }
                                     return tools;
                                 }

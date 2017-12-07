@@ -24,18 +24,24 @@ package org.sakaiproject.stealth.api;
 
 public class StealthTool implements Comparable<StealthTool> {
     private final String toolId;
+    private final String toolName;
 
-    public StealthTool(String toolId) {
+    public StealthTool(String toolId, String toolName) {
         this.toolId  = toolId;
+        this.toolName = toolName;
     }
 
     public String getToolId() {
         return this.toolId;
     }
 
+    public String getToolName() {
+        return this.toolName;
+    }
+
     @Override
     public String toString() {
-        return getToolId();
+        return getToolId() + " " + getToolName();
     }
 
     @Override
