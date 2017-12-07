@@ -1,5 +1,14 @@
 $(document).ready(function(){
-	$("#select-term").select2();
+	$("#select-term").select2({
+        placeholder:"Term",
+        ajax: {
+            url: function (params) {
+                return "http://localhost:8080/direct/stealth-admin/getTerms/";
+            },
+            delay: 500,
+            dataType: 'json'
+        }
+    });
 	$("#select-tool").select2();
     $(".unstealth-multiple-netid").select2({
         placeholder:"NetID",

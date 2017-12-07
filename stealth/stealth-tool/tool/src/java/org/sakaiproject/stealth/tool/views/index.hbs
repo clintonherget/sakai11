@@ -36,9 +36,6 @@
 			<h3 class="unstealth-section-head">Tool Selection</h3></br>
 			Tool Name
 			<select id="select-tool" name="" style="width: 115px;">
-				<option value="Value for Item 1" title="Title for Item 1">Item 1</option>
-				<option value="Value for Item 2" title="Title for Item 2">Item 2</option>
-				<option value="Value for Item 3" title="Title for Item 3">Item 3</option>
 			</select>
 		</div>
 	</br></br>
@@ -55,7 +52,7 @@
 		<div id="NetID" class="tabcontent">
 	  		</br>Search
 	  		<form action="http://localhost:8080/direct/stealth-admin/searchNetid/" method="post">
-	  			<select class="unstealth-multiple-netid" type="textbox" name="search-by-netid[]" placeholder="NetID"></select>
+	  			<select class="unstealth-multiple-netid" multiple="multiple" name="search-by-netid[]" placeholder="NetID"></select>
 	  			<button type="submit" class="btn btn-primary">Search</button>
 	  		</form>
 		</div>
@@ -63,7 +60,7 @@
 		<div id="SiteID" class="tabcontent">
   			</br>Search
   			<form action="/direct/stealth-admin/searchSiteid/" method="post">
-  				<select class="unstealth-multiple-siteid" type="textbox" name="search-by-siteid[]" placeholder="SiteID"></select>
+  				<select class="unstealth-multiple-siteid" multiple="multiple" name="search-by-siteid[]" placeholder="SiteID"></select>
   				<button type="submit" class="btn btn-primary">Search</button>
   			</form>
 		</div>		
