@@ -34,8 +34,15 @@ public class StealthRulesStorage implements ToolService{
                             @Override
                             public List<StealthRules> call(DBConnection db) throws SQLException {
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
-                                try (DBResults results = db.run("SELECT * from " + stealthByUserTable + " where netid like '" + netId + "%'")
-                                        .executeQuery()) {
+                                String query ="SELECT X.netid,X.coursetitle,X.siteid,Y.tool_name from ";
+                                query += "(SELECT A.netid as netid, A.tool_id as tool_id, B.siteid as siteid, B.coursetitle as coursetitle from ";
+                                query += "(SELECT netid,tool_id from " + stealthByUserTable + " where netid like '" + netId + "%') as A, ";
+                                query += "(SELECT U.EID as netid, S.SITE_ID as siteid, S.Title as coursetitle from sakai_site S, sakai_user_id_map U where S.CREATEDBY=U.USER_ID) as B ";
+                                query += "where A.netid=B.netid) as X, ";
+                                query += "(SELECT distinct TOOL_ID as tool_id, tool_name as tool_name from "+ StealthToolTable +") as Y ";
+                                query += "where X.tool_id=Y.tool_id";
+                                System.out.print(query);
+                                try (DBResults results = db.run(query).executeQuery()) {
                                     for (ResultSet result : results) {
                                         tools.add(new StealthRules(result.getString("netid"),null,
                                                 result.getString("term"),
@@ -55,8 +62,15 @@ public class StealthRulesStorage implements ToolService{
                             @Override
                             public List<StealthRules> call(DBConnection db) throws SQLException {
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
-                                try (DBResults results = db.run("SELECT * from " + stealthBySiteTable + " where siteid like '" + siteId + "%'")
-                                        .executeQuery()) {
+                                String query = "SELECT X.netid,X.coursetitle,X.siteid,Y.tool_name from ";
+                                query += "(SELECT B.netid, A.siteid, A.toolid, B.coursetitle from ";
+                                query += "(SELECT site_id as siteid ,tool_id as toolid from " + stealthBySiteTable + " where siteid like '" + siteId + "%') as A, ";
+                                query += "(SELECT S.SITE_ID as siteid ,S.TITLE as coursetitle,U.EID as netid from sakai_site S, sakai_user_id_map U where S.CREATEDBY=U.USER_ID) as B ";
+                                query += "where A.siteid=B.siteid) as X, ";
+                                query += "(SELECT distinct TOOL_ID as tool_id, tool_name as tool_name from "+ StealthToolTable +") as Y ";
+                                query += "where X.toolid=Y.tool_id";
+                                System.out.print(query);
+                                try (DBResults results = db.run(query).executeQuery()) {
                                     for (ResultSet result : results) {
                                         tools.add(new StealthRules(null,result.getString("siteid"),null,
                                                 result.getString("toolid")));
