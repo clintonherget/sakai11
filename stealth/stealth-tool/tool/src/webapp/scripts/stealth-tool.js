@@ -28,7 +28,7 @@ $(document).ready(function(){
     	ajax: {
     		url: function (params) {
     			console.log("Search string" + params.term);
-    			return "http://localhost:8080/direct/stealth-admin/searchSiteid/" + params.term;
+    			return "http://localhost:8080/direct/stealth-admin/validateSite/" + params.term;
     		},
 	        delay: 500,
 	        dataType: 'json'

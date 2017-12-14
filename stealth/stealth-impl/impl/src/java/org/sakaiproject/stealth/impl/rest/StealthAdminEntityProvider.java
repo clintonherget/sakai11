@@ -123,12 +123,24 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             List<Site> list_sites;
 
             if (siteID != null) {
-                list_sites = stealth().getSites().getSiteIdList(siteID);
-                result.put("results", !list_sites.isEmpty());
-            } else {
+                if(siteID.length()>1){
+                    list_sites = stealth().getSites().getSiteIdList(siteID);
+                    JSONArray data = new JSONArray();
+                    for (Site s : list_sites) {
+                        JSONObject row = new JSONObject();
+                        row.put("id", s.getSiteId());
+                        row.put("text", s.getSiteId());
+                        data.add(row);
+                    }
+                    result.put("results", data);
+                }
+                else {
+                    result.put("results", new JSONArray());
+                } 
+            }
+            else {
                 result.put("results", "[\"Error\"]");
             }
-
             return result.toJSONString();
         } catch (Exception e) {
             return respondWithError(e);
