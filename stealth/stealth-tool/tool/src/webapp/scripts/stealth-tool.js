@@ -34,6 +34,20 @@ $(document).ready(function(){
 	        dataType: 'json'
        	}
     });
+    // action="http://localhost:8080/direct/stealth-admin/searchNetid/"
+    $('#search-netid-form').submit(function(event){
+        event.preventDefault();
+        document.getElementById('display-results').innerHTML="";
+        var payload = $('#search-netid-form').serialize();
+        // $('#search-permissions-by-netid').click(function(){
+        showNetidTable();
+        $.post('http://localhost:8080/direct/stealth-admin/getRuleByUser'),
+        payload,
+        function(data,status){
+            showNetidTable(data);
+        }
+        // })
+    })
 });
 function openTab(evt, TabName) {
 	var i, tabcontent, tablinks;
@@ -47,4 +61,8 @@ function openTab(evt, TabName) {
 	}
 	document.getElementById(TabName).style.display = "block";
 	evt.currentTarget.className += " active";
+}
+function showNetidTable(jsondata){
+    thHtml='<tr><th>NetId</th><th>Course title</th><th>Site id</th><th>Tool(s)</th>'
+    $('#display-results').append(thHtml);
 }

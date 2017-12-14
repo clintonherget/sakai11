@@ -51,9 +51,9 @@
 
 		<div id="NetID" class="tabcontent">
 	  		</br>Search
-	  		<form action="http://localhost:8080/direct/stealth-admin/searchNetid/" method="post">
+	  		<form id="search-netid-form">
 	  			<select class="unstealth-multiple-netid" multiple="multiple" name="search-by-netid[]" placeholder="NetID"></select>
-	  			<button type="submit" class="btn btn-primary">Search</button>
+	  			<button type="submit" id="search-permissions-by-netid" class="btn btn-primary">Search</button>
 	  		</form>
 		</div>
 
@@ -64,4 +64,10 @@
   				<button type="submit" class="btn btn-primary">Search</button>
   			</form>
 		</div>		
+		<table id ="display-results">
+			<thead>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
 	</div>
