@@ -116,17 +116,23 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         }
     }
 
-    @EntityCustomAction(action = "validateSite", viewKey = EntityView.VIEW_LIST)
+    @EntityCustomAction(action = "searchSiteid", viewKey = EntityView.VIEW_LIST)
     public String validateSite(EntityView view, Map<String, Object> params) {
         try {
             assertPermission();
             JSONObject result = new JSONObject();
             String siteID = view.getPathSegment(2);
-            List<Site> list_sites;
 
             if (siteID != null) {
-                list_sites = stealth().getSites().getSiteIdList(siteID);
-                result.put("results", !list_sites.isEmpty());
+                List<Site> list_sites = stealth().getSites().getSiteIdList(siteID);
+                JSONArray data = new JSONArray();
+                for (Site s : list_sites) {
+                    JSONObject row = new JSONObject();
+                    row.put("id", s.getSiteId());
+                    row.put("text", s.getSiteId());
+                    data.add(row);
+                }
+                result.put("results", data);
             } else {
                 result.put("results", "[\"Error\"]");
             }
@@ -235,7 +241,6 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             List<StealthRules> list_sites = null;
 
             if (siteID != null) {
-                result.put("query", siteID);
                 list_sites = stealth().getRules().searchBySiteId(siteID);
                 JSONArray data = new JSONArray();
                 for (StealthRules rule : list_sites) {
