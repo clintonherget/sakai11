@@ -34,13 +34,24 @@ public class StealthRulesStorage implements ToolService{
                             @Override
                             public List<StealthRules> call(DBConnection db) throws SQLException {
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
-                                String query ="SELECT X.netid as netid,X.coursetitle as coursetitle,X.siteid as siteid,Y.tool_name as toolname from ";
-                                query += "(SELECT A.netid as netid, A.tool_id as tool_id, B.siteid as siteid, B.coursetitle as coursetitle from ";
-                                query += "(SELECT netid,tool_id from " + stealthByUserTable + " where netid like '" + netId + "%') as A, ";
-                                query += "(SELECT U.EID as netid, S.SITE_ID as siteid, S.Title as coursetitle from sakai_site S, sakai_user_id_map U where S.CREATEDBY=U.USER_ID) as B ";
-                                query += "where A.netid=B.netid) as X, ";
-                                query += "(SELECT distinct TOOL_ID as tool_id, tool_name as tool_name from "+ StealthToolTable +") as Y ";
-                                query += "where X.tool_id=Y.tool_id";
+                                String query ="SELECT X.netid,X.coursetitle,X.siteid,Y.toolname from ";
+                                query +="(SELECT A.netid as netid, A.toolid as toolid, B.siteid as siteid, B.coursetitle as coursetitle from ";
+                                query +="(SELECT netid,toolid from stealth_byuser where netid like 'sl5268%') as A, ";
+                                query +="(select  ss.site_id as siteid, ss.title as coursetitle,suim.EID as netid ";
+                                query +="from ";
+                                query +=" sakai_site ss ";
+                                query +=" inner join sakai_realm sr on CONCAT('/site/', ss.site_id) = sr.realm_id ";
+                                query +=" inner join sakai_realm_rl_gr srrg on srrg.realm_key = sr.realm_key ";
+                                query +=" inner join sakai_realm_role srr on srrg.role_key = srr.role_key ";
+                                query +=" inner join sakai_user_id_map suim on srrg.user_id = suim.user_id ";
+                                query +=" where ";
+                                
+                                query +=" (srr.role_key = 9 or srr.role_key = 10 or srr.role_key = 21 or srr.role_key = 5) ";
+                                query +=" ) as B  ";
+                                query +=" where A.netid=B.netid) as X, ";
+                                query +=" (SELECT distinct TOOLID as toolid, toolname as toolname from stealth_tools) as Y ";
+                                query +=" where X.toolid=Y.toolid;";
+
                                 System.out.print(query);
                                 try (DBResults results = db.run(query).executeQuery()) {
                                     for (ResultSet result : results) {
@@ -63,13 +74,13 @@ public class StealthRulesStorage implements ToolService{
                             @Override
                             public List<StealthRules> call(DBConnection db) throws SQLException {
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
-                                String query = "SELECT X.netid as netid,X.coursetitle as coursetitle,X.siteid as siteid,Y.tool_name as toolname from ";
+                                String query = "SELECT X.netid as netid,X.coursetitle as coursetitle,X.siteid as siteid,Y.toolname as toolname from ";
                                 query += "(SELECT B.netid, A.siteid, A.toolid, B.coursetitle from ";
-                                query += "(SELECT site_id as siteid ,tool_id as toolid from " + stealthBySiteTable + " where siteid like '" + siteId + "%') as A, ";
+                                query += "(SELECT site_id as siteid ,toolid as toolid from " + stealthBySiteTable + " where siteid like '" + siteId + "%') as A, ";
                                 query += "(SELECT S.SITE_ID as siteid ,S.TITLE as coursetitle,U.EID as netid from sakai_site S, sakai_user_id_map U where S.CREATEDBY=U.USER_ID) as B ";
                                 query += "where A.siteid=B.siteid) as X, ";
-                                query += "(SELECT distinct TOOL_ID as tool_id, tool_name as tool_name from "+ StealthToolTable +") as Y ";
-                                query += "where X.toolid=Y.tool_id";
+                                query += "(SELECT distinct TOOLID as toolid, toolname as toolname from "+ StealthToolTable +") as Y ";
+                                query += "where X.toolid=Y.toolid";
                                 System.out.print(query);
                                 try (DBResults results = db.run(query).executeQuery()) {
                                     for (ResultSet result : results) {
