@@ -34,13 +34,13 @@ public class StealthRulesStorage implements ToolService{
                             @Override
                             public List<StealthRules> call(DBConnection db) throws SQLException {
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
-                                String query ="SELECT X.netid as netid,X.coursetitle as coursetitle,X.siteid as siteid,Y.tool_name as toolname from ";
-                                query += "(SELECT A.netid as netid, A.tool_id as tool_id, B.siteid as siteid, B.coursetitle as coursetitle from ";
-                                query += "(SELECT netid,tool_id from " + stealthByUserTable + " where netid like '" + netId + "%') as A, ";
+                                String query ="SELECT X.netid as netid,X.coursetitle as coursetitle,X.siteid as siteid,Y.toolname as toolname from ";
+                                query += "(SELECT A.netid as netid, A.toolid as toolid, B.siteid as siteid, B.coursetitle as coursetitle from ";
+                                query += "(SELECT netid,toolid from " + stealthByUserTable + " where netid like '" + netId + "%') as A, ";
                                 query += "(SELECT U.EID as netid, S.SITE_ID as siteid, S.Title as coursetitle from sakai_site S, sakai_user_id_map U where S.CREATEDBY=U.USER_ID) as B ";
                                 query += "where A.netid=B.netid) as X, ";
-                                query += "(SELECT distinct TOOL_ID as tool_id, tool_name as tool_name from "+ StealthToolTable +") as Y ";
-                                query += "where X.tool_id=Y.tool_id";
+                                query += "(SELECT distinct TOOLID as toolid, toolname as toolname from "+ StealthToolTable +") as Y ";
+                                query += "where X.toolid=Y.toolid";
                                 System.out.print(query);
                                 try (DBResults results = db.run(query).executeQuery()) {
                                     for (ResultSet result : results) {
