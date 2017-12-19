@@ -1,3 +1,5 @@
+let table = false;
+
 $(document).ready(function(){
 	$("#select-term").select2({
 		placeholder:"Term",
@@ -49,37 +51,38 @@ $(document).ready(function(){
 		document.getElementById('display-results').innerHTML="";
 		var payload = $('#search-netid-form').serialize();
 		// $('#search-permissions-by-netid').click(function(){
-		showTable();
-		$.post('http://localhost:8080/direct/stealth-admin/getRuleByUser'),
+		$.post('http://localhost:8080/direct/stealth-admin/getRuleByUser',
 		payload,
 		function(data,status){
-			showNetidTable(data);
-		}
+			showTable(data);
+		});
 		// })
-	})
+	});
 	$('#search-siteid-form').submit(function(event){
 		event.preventDefault();
 		document.getElementById('display-results').innerHTML="";
 		var payload = $('#search-siteid-form').serialize();
 		// $('#search-permissions-by-netid').click(function(){
-		showTable();
-		$.post('http://localhost:8080/direct/stealth-admin/getRuleByUser'),
+		$.post('http://localhost:8080/direct/stealth-admin/getRuleBySite',
 		payload,
 		function(data,status){
-			showNetidTable(data);
-		}
+			showTable(data);
+		});
 		// })
-	})
+	});
 	$('#grant-permission-form').submit(function(event){
 		event.preventDefault();
 		var payload = $('#grant-permission-form').serialize();
-		$.post('http://localhost:8080/direct/stealth-admin/handleAddForm/'),
+		$.post('http://localhost:8080/direct/stealth-admin/handleAddForm/',
 		payload,
 		function(data,status){
+			console.log("Data:" + data);
+			console.log("Status: " + status);
 			alert('tool permission granted');//showNetidTable(data);
-		}
+		});
+		return false;
 		// })
-	})
+	});
 
 });
 
@@ -97,16 +100,14 @@ function openTab(evt, TabName) {
 	evt.currentTarget.className += " active";
 }
 function showTable(jsondata){
-    thHtml='<tr><th>NetId</th><th>Course title</th><th>Site id</th><th>Tool(s)</th>'
-    $('#display-results').append(thHtml);
-
-    $('#display-results').DataTable( {
-        "ajax" : jsondata,
+    table = $('#display-results').DataTable( {
+		"destroy": true,
+		"data": JSON.parse(jsondata),
         "columns": [
-            { "data": "NetId" },
-            { "data": "Course Tilte" },
-            { "data": "SiteId" },
-            { "data": "Tool Name" }
+            { title: "Net ID" },
+            { title: "Course Title" },
+            { title: "Site ID" },
+            { title: "Tool Name" }
         ]
-    } );
+    });
 }

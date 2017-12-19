@@ -76,7 +76,7 @@ public class StealthRulesStorage implements ToolService{
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
                                 String query = "SELECT X.netid as netid,X.coursetitle as coursetitle,X.siteid as siteid,Y.toolname as toolname from ";
                                 query += "(SELECT B.netid, A.siteid, A.toolid, B.coursetitle from ";
-                                query += "(SELECT site_id as siteid ,toolid as toolid from " + stealthBySiteTable + " where siteid like '" + siteId + "%') as A, ";
+                                query += "(SELECT siteid as siteid ,toolid as toolid from " + stealthBySiteTable + " where siteid like '" + siteId + "%') as A, ";
                                 query += "(SELECT S.SITE_ID as siteid ,S.TITLE as coursetitle,U.EID as netid from sakai_site S, sakai_user_id_map U where S.CREATEDBY=U.USER_ID) as B ";
                                 query += "where A.siteid=B.siteid) as X, ";
                                 query += "(SELECT distinct TOOLID as toolid, toolname as toolname from "+ StealthToolTable +") as Y ";

@@ -209,59 +209,57 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         }
     }
 
-    @EntityCustomAction(action = "getRuleByUser", viewKey = EntityView.VIEW_LIST)
+    @EntityCustomAction(action = "getRuleByUser", viewKey = EntityView.VIEW_NEW)
     public String getRuleByUser(EntityView view, Map<String, Object> params) {
         try {
             assertPermission();
-            JSONObject result = new JSONObject();
-            String netID = view.getPathSegment(2);
-            List<StealthRules> list_rules = null;
+            WrappedParams wp = new WrappedParams(params);
+            JSONArray data = new JSONArray();
+            String netID = wp.getString("rule-by-netid");
+            List<StealthRules> list_rules;
 
             if (netID != null) {
                 list_rules = stealth().getRules().searchByNetId(netID);
-                JSONArray data = new JSONArray();
                 for (StealthRules rule : list_rules) {
-                    JSONObject row = new JSONObject();
-                    row.put("netid", rule.getNetId());
-                    row.put("course", rule.getCourseTitle());
-                    row.put("siteid", rule.getSiteId());
-                    row.put("tool", rule.getToolName());
+                    JSONArray row = new JSONArray();
+                    row.add(rule.getNetId());
+                    row.add(rule.getCourseTitle());
+                    row.add(rule.getSiteId());
+                    row.add(rule.getToolName());
                     data.add(row);
                 }
-                result.put("results", data);
             } else {
-                result.put("results", "[\"Error\"]");
+                return (new JSONArray()).toJSONString();
             }
-            return result.toJSONString();
+            return data.toJSONString();
         } catch (Exception e) {
             return respondWithError(e);
         }
     }
 
-    @EntityCustomAction(action = "getRuleBySite", viewKey = EntityView.VIEW_LIST)
+    @EntityCustomAction(action = "getRuleBySite", viewKey = EntityView.VIEW_NEW)
     public String getRuleBySite(EntityView view, Map<String, Object> params) {
         try {
             assertPermission();
-            JSONObject result = new JSONObject();
-            String siteID = view.getPathSegment(2);
-            List<StealthRules> list_sites = null;
+            WrappedParams wp = new WrappedParams(params);
+            JSONArray data = new JSONArray();
+            String siteID = wp.getString("rule-by-siteid");
+            List<StealthRules> list_rules;
 
             if (siteID != null) {
-                list_sites = stealth().getRules().searchBySiteId(siteID);
-                JSONArray data = new JSONArray();
-                for (StealthRules rule : list_sites) {
-                    JSONObject row = new JSONObject();
-                    row.put("netid", rule.getNetId());
-                    row.put("course", rule.getCourseTitle());
-                    row.put("siteid", rule.getSiteId());
-                    row.put("tool", rule.getToolName());
+                list_rules = stealth().getRules().searchByNetId(siteID);
+                for (StealthRules rule : list_rules) {
+                    JSONArray row = new JSONArray();
+                    row.add(rule.getNetId());
+                    row.add(rule.getCourseTitle());
+                    row.add(rule.getSiteId());
+                    row.add(rule.getToolName());
                     data.add(row);
                 }
-                result.put("results", data);
             } else {
-                result.put("results", "[\"Error\"]");
+                return (new JSONArray()).toJSONString();
             }
-            return result.toJSONString();
+            return data.toJSONString();
         } catch (Exception e) {
             return respondWithError(e);
         }
@@ -273,19 +271,19 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             WrappedParams wp = new WrappedParams(params);
-            String[] netid = wp.getList("netid[]");
-            String[] siteid = wp.getList("siteid[]");
+            String[] netid = wp.getList("netid");
+            String[] siteid = wp.getList("siteid");
 
             JSONArray data = new JSONArray();
             for (String s : netid) {
                 data.add(s);
             }
-            result.put("netid[]", data);
+            result.put("netid", data);
             data = new JSONArray();
             for (String s : siteid) {
                 data.add(s);
             }
-            result.put("siteid[]", data);
+            result.put("siteid", data);
 
             return result.toJSONString();
         } catch (Exception e) {
@@ -373,7 +371,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
 
         public String[] getList(String name){
             try{
-                String[] result = (String[])params.get(name);
+                String[] result = (String[]) params.get(name);
                 return result;
             } catch (Exception e) {
                 throw new IllegalArgumentException("Error converting argument " + name + " to array.");
