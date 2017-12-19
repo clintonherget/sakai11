@@ -215,16 +215,17 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             String netID = view.getPathSegment(2);
-            List<StealthRules> list_user = null;
+            List<StealthRules> list_rules = null;
 
             if (netID != null) {
-                list_user = stealth().getRules().searchByNetId(netID);
+                list_rules = stealth().getRules().searchByNetId(netID);
                 JSONArray data = new JSONArray();
-                for (StealthRules rule : list_user) {
+                for (StealthRules rule : list_rules) {
                     JSONObject row = new JSONObject();
                     row.put("netid", rule.getNetId());
-                    row.put("term", rule.getTerm());
-                    row.put("toolid", rule.getToolId());
+                    row.put("course", rule.getCourseTitle());
+                    row.put("siteid", rule.getSiteId());
+                    row.put("tool", rule.getToolName());
                     data.add(row);
                 }
                 result.put("results", data);
@@ -250,8 +251,10 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
                 JSONArray data = new JSONArray();
                 for (StealthRules rule : list_sites) {
                     JSONObject row = new JSONObject();
+                    row.put("netid", rule.getNetId());
+                    row.put("course", rule.getCourseTitle());
                     row.put("siteid", rule.getSiteId());
-                    row.put("toolid", rule.getToolId());
+                    row.put("tool", rule.getToolName());
                     data.add(row);
                 }
                 result.put("results", data);

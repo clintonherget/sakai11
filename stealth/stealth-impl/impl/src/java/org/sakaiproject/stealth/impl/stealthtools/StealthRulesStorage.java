@@ -45,7 +45,7 @@ public class StealthRulesStorage implements ToolService{
                                 query +=" inner join sakai_realm_role srr on srrg.role_key = srr.role_key ";
                                 query +=" inner join sakai_user_id_map suim on srrg.user_id = suim.user_id ";
                                 query +=" where ";
-                                
+
                                 query +=" (srr.role_key = 9 or srr.role_key = 10 or srr.role_key = 21 or srr.role_key = 5) ";
                                 query +=" ) as B  ";
                                 query +=" where A.netid=B.netid) as X, ";
