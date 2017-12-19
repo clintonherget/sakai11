@@ -27,15 +27,15 @@ package org.sakaiproject.stealth.api;
  */
 public class StealthRules implements Comparable<StealthRules> {
     private final String netid;
+    private final String coursetitle;
     private final String siteid;
-    private final String term;
-    private final String toolid;
+    private final String toolname;
 
-    public StealthRules(String netid, String siteid,String term, String toolid) {
+    public StealthRules(String netid, String coursetitle,String siteid, String toolname) {
         this.netid  = netid;
-        this.siteid = siteid    ;
-        this.term   = term;
-        this.toolid = toolid;
+        this.coursetitle = coursetitle;
+        this.siteid   = siteid;
+        this.toolname = toolname;
     }
 
     public String getNetId() {
@@ -46,16 +46,16 @@ public class StealthRules implements Comparable<StealthRules> {
         return this.siteid;
     }
 
-    public String getTerm() {
-        return this.term;
+    public String getCourseTitle() {
+        return this.coursetitle;
     }
 
-    public String getToolId() {
-        return this.toolid;
+    public String getToolName() {
+        return this.toolname;
     }
 
     @Override
     public int compareTo(StealthRules other) {
-        return this.toolid.compareTo(other.toolid);
+        return this.toolname.compareTo(other.toolname);
     }
 }
