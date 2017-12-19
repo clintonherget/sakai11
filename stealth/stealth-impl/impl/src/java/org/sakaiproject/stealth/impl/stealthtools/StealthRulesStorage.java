@@ -117,6 +117,22 @@ public class StealthRulesStorage implements ToolService{
                 );
     }
 
+     public void addPermissionBySite(final String siteId, final String toolId) {
+        DB.transaction
+                ("Add tool permissions by SiteId",
+                        new DBAction<Void>() {
+                            @Override
+                            public Void call(DBConnection db) throws SQLException {
+                                db.run("Insert into " + stealthBySiteTable + " (siteid,toolid) values('"+siteId+"','"+toolId+"')")
+                                        .executeUpdate();
+                                db.commit();
+                                return null;
+
+                            }
+                        }
+                );
+    }
+
     public void removePermissionBySite(final String siteId) {
         DB.transaction
                 ("Remove tool permissions by SiteId",
@@ -125,6 +141,22 @@ public class StealthRulesStorage implements ToolService{
                             public Void call(DBConnection db) throws SQLException {
                                 db.run("DELETE FROM " + stealthBySiteTable + " where siteid = ?")
                                         .param(siteId)
+                                        .executeUpdate();
+                                db.commit();
+                                return null;
+
+                            }
+                        }
+                );
+    }
+
+    public void addPermissionByUser(final String netId, final String term, final String toolId) {
+        DB.transaction
+                ("Add tool permissions by NetId",
+                        new DBAction<Void>() {
+                            @Override
+                            public Void call(DBConnection db) throws SQLException {
+                                db.run("Insert into " + stealthByUserTable + " (netid,term,toolid) values('"+netId+"','"+term+"','"+toolId+"')")
                                         .executeUpdate();
                                 db.commit();
                                 return null;

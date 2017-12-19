@@ -28,7 +28,9 @@ public interface ToolService {
 
     public List<StealthRules> searchByNetId(String netId);
     public List<StealthRules> searchBySiteId(String siteId);
+    public void addPermissionBySite(String siteId, String toolId);
     public void removePermissionBySite(String siteId);
+	public void addPermissionByUser(String netId, String term, String toolId);
     public void removePermissionByUser(String netId, int term);
     public List<StealthTool> getAllStealthTools();
     public void removeToolsFromPilotTable(String toolId);

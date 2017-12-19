@@ -49,8 +49,21 @@ $(document).ready(function(){
 		document.getElementById('display-results').innerHTML="";
 		var payload = $('#search-netid-form').serialize();
 		// $('#search-permissions-by-netid').click(function(){
-		showNetidTable();
-		$.post('≈'),
+		showTable();
+		$.post('http://localhost:8080/direct/stealth-admin/getRuleByUser'),
+		payload,
+		function(data,status){
+			showNetidTable(data);
+		}
+		// })
+	})
+	$('#search-siteid-form').submit(function(event){
+		event.preventDefault();
+		document.getElementById('display-results').innerHTML="";
+		var payload = $('#search-siteid-form').serialize();
+		// $('#search-permissions-by-netid').click(function(){
+		showTable();
+		$.post('http://localhost:8080/direct/stealth-admin/getRuleByUser'),
 		payload,
 		function(data,status){
 			showNetidTable(data);
@@ -83,7 +96,7 @@ function openTab(evt, TabName) {
 	document.getElementById(TabName).style.display = "block";
 	evt.currentTarget.className += " active";
 }
-function showNetidTable(jsondata){
+function showTable(jsondata){
     thHtml='<tr><th>NetId</th><th>Course title</th><th>Site id</th><th>Tool(s)</th>'
     $('#display-results').append(thHtml);
 
