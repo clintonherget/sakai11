@@ -57,6 +57,17 @@ $(document).ready(function(){
 		}
 		// })
 	})
+	$('#grant-permission-form').submit(function(event){
+		event.preventDefault();
+		var payload = $('#grant-permission-form').serialize();
+		$.post('http://localhost:8080/direct/stealth-admin/handleAddForm/'),
+		payload,
+		function(data,status){
+			alert('tool permission granted');//showNetidTable(data);
+		}
+		// })
+	})
+
 });
 
 function openTab(evt, TabName) {
@@ -75,4 +86,14 @@ function openTab(evt, TabName) {
 function showNetidTable(jsondata){
     thHtml='<tr><th>NetId</th><th>Course title</th><th>Site id</th><th>Tool(s)</th>'
     $('#display-results').append(thHtml);
+
+    $('#display-results').DataTable( {
+        "ajax" : jsondata,
+        "columns": [
+            { "data": "NetId" },
+            { "data": "Course Tilte" },
+            { "data": "SiteId" },
+            { "data": "Tool Name" }
+        ]
+    } );
 }
