@@ -34,7 +34,7 @@ public class StealthRulesStorage implements ToolService{
                             @Override
                             public List<StealthRules> call(DBConnection db) throws SQLException {
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
-                                String query ="SELECT X.netid,X.coursetitle,X.siteid,Y.tool_name from ";
+                                String query ="SELECT X.netid as netid,X.coursetitle as coursetitle,X.siteid as siteid,Y.tool_name as toolname from ";
                                 query += "(SELECT A.netid as netid, A.tool_id as tool_id, B.siteid as siteid, B.coursetitle as coursetitle from ";
                                 query += "(SELECT netid,tool_id from " + stealthByUserTable + " where netid like '" + netId + "%') as A, ";
                                 query += "(SELECT U.EID as netid, S.SITE_ID as siteid, S.Title as coursetitle from sakai_site S, sakai_user_id_map U where S.CREATEDBY=U.USER_ID) as B ";
@@ -44,9 +44,10 @@ public class StealthRulesStorage implements ToolService{
                                 System.out.print(query);
                                 try (DBResults results = db.run(query).executeQuery()) {
                                     for (ResultSet result : results) {
-                                        tools.add(new StealthRules(result.getString("netid"),null,
-                                                result.getString("term"),
-                                                result.getString("toolid")));
+                                        tools.add(new StealthRules(result.getString("netid"),
+                                                result.getString("coursetitle"),
+                                                result.getString("siteid"),
+                                                result.getString("toolname")));
                                     }
                                     return tools;
                                 }
@@ -62,7 +63,7 @@ public class StealthRulesStorage implements ToolService{
                             @Override
                             public List<StealthRules> call(DBConnection db) throws SQLException {
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
-                                String query = "SELECT X.netid,X.coursetitle,X.siteid,Y.tool_name from ";
+                                String query = "SELECT X.netid as netid,X.coursetitle as coursetitle,X.siteid as siteid,Y.tool_name as toolname from ";
                                 query += "(SELECT B.netid, A.siteid, A.toolid, B.coursetitle from ";
                                 query += "(SELECT site_id as siteid ,tool_id as toolid from " + stealthBySiteTable + " where siteid like '" + siteId + "%') as A, ";
                                 query += "(SELECT S.SITE_ID as siteid ,S.TITLE as coursetitle,U.EID as netid from sakai_site S, sakai_user_id_map U where S.CREATEDBY=U.USER_ID) as B ";
@@ -72,8 +73,10 @@ public class StealthRulesStorage implements ToolService{
                                 System.out.print(query);
                                 try (DBResults results = db.run(query).executeQuery()) {
                                     for (ResultSet result : results) {
-                                        tools.add(new StealthRules(null,result.getString("siteid"),null,
-                                                result.getString("toolid")));
+                                        tools.add(new StealthRules(result.getString("netid"),
+                                            result.getString("coursetitle"),
+                                            result.getString("siteid"),
+                                            result.getString("toolname")));
                                     }
                                     return tools;
                                 }
