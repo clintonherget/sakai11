@@ -4,63 +4,55 @@
 </section>
 {{/unless}}
 
-	<div class="portletBody unstealth">
-		<h2 class="unstealth-header">Add Tool Permissions</h2><br/>
+<div class="portletBody unstealth">
+  <h2 class="unstealth-header">Add Tool Permissions</h2><br/>
 
-		<div>
+    <form action="http://localhost:8080/direct/stealth-admin/handleAddForm/" method="post">
 			<h3 class="unstealth-section-head">User/Site Selection</h3>
+    	<p>
+        Add User(s):
+    		<select class="unstealth-multiple-netid" name="netid[]" multiple="multiple" style="width: 200px;"></select>
+      </p>
+      <p>And/Or</p>
+      <p>
+        Add Site ID(s)
+    		<select class="unstealth-multiple-siteid" name="siteid[]" multiple="multiple" style="width: 200px;"></select>
+      </p>
+      <h3 class="unstealth-section-head">Restrict By Term</h3>
+  		<p>
+        Term Availability
+        <select id="select-term" name="term" style="width: 200px;"></select>
+      </p>
+			<h3 class="unstealth-section-head">Tool Selection</h3>
+			<p>
+        Tool Name
+        <select id="select-tool" name="tool" style="width: 200px;"></select>
+      </p>
+		  <button type="submit" class="btn btn-primary">Grant tool Permissions</button>
+      <input type="button" value="Cancel">
+    </form>
 
-			Add User(s)
-			<select class="unstealth-multiple-netid" name="NetIDs[]" multiple="multiple">
-			</select>
-		</br></br>
+    <br><br>
 
-			And/Or</br></br>
+	<h2 class="unstealth-header">Search Existing Permissions</h2><br/>
 
-			Add Site ID(s)
-			<select class="unstealth-multiple-siteid" name="SiteIDs[]" multiple="multiple">
-			</select>
-		</div>
-		</br>
-		<div>
-			<h3 class="unstealth-section-head">Restrict By Term</h3>
-			Term Availability
-			<select id="select-term" name="" style="width: 115px;">
-				<option value="Value for Item 1" title="Title for Item 1">Item 1</option>
-				<option value="Value for Item 2" title="Title for Item 2">Item 2</option>
-				<option value="Value for Item 3" title="Title for Item 3">Item 3</option>
-			</select>
-		</div>
-
-		<div>
-			<h3 class="unstealth-section-head">Tool Selection</h3></br>
-			Tool Name
-			<select id="select-tool" name="" style="width: 115px;">
-			</select>
-		</div>
-	</br></br>
-		<input type="button" value="Grant tool Permissions"> <input type="button" value="Cancel"> </br>
-		</br>
-
-		<h2 class="unstealth-header">Search Existing Permissions</h2><br/>
-
-		<div class="tab">
-			<button class="tablinks" onclick="openTab(event, 'NetID')">Search By NetId</button>
-			<button class="tablinks" onclick="openTab(event, 'SiteID')">Search By Site Id</button>
-		</div>
+    <ul class="navIntraTool actionToolBar">
+      <li><span><a href="#" onclick="openTab(event, 'NetID'); return false">Search By User</a></span></li>
+      <li><span><a href="#" onclick="openTab(event, 'SiteID'); return false">Search By Site</a></span></li>
+    </ul>
 
 		<div id="NetID" class="tabcontent">
 	  		</br>Search
 	  		<form id="search-netid-form">
-	  			<select class="unstealth-multiple-netid" multiple="multiple" name="search-by-netid[]" placeholder="NetID"></select>
+	  			<select class="unstealth-multiple-netid" name="rule-by-netid" placeholder="NetID" style="width: 200px;"></select>
 	  			<button type="submit" id="search-permissions-by-netid" class="btn btn-primary">Search</button>
 	  		</form>
 		</div>
 
 		<div id="SiteID" class="tabcontent">
   			</br>Search
-  			<form action="http://localhost:8080/direct/stealth-admin/testPost/" method="post">
-  				<select class="unstealth-multiple-siteid" multiple="multiple" name="search-by-siteid[]" placeholder="SiteID"></select>
+  			<form>
+  				<select class="unstealth-multiple-siteid" name="rule-by-siteid" placeholder="SiteID" style="width: 200px;"></select>
   				<button type="submit" class="btn btn-primary">Search</button>
   			</form>
 		</div>

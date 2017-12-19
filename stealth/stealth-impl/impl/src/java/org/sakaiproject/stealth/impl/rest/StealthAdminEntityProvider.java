@@ -124,8 +124,8 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             String siteID = view.getPathSegment(2);
 
             if (siteID != null) {
-                if(siteID.length() > 1){
-                    list_sites = stealth().getSites().getSiteIdList(siteID);
+                if(siteID.length() > 10){
+                    List<Site> list_sites = stealth().getSites().getSiteIdList(siteID);
                     JSONArray data = new JSONArray();
                     for (Site s : list_sites) {
                         JSONObject row = new JSONObject();
@@ -264,6 +264,32 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
         }
     }
 
+    @EntityCustomAction(action = "handleAddForm", viewKey = EntityView.VIEW_NEW)
+    public String handleAddForm(EntityView view, Map<String, Object> params) {
+        try {
+            assertPermission();
+            JSONObject result = new JSONObject();
+            WrappedParams wp = new WrappedParams(params);
+            String[] netid = wp.getList("netid[]");
+            String[] siteid = wp.getList("siteid[]");
+
+            JSONArray data = new JSONArray();
+            for (String s : netid) {
+                data.add(s);
+            }
+            result.put("netid[]", data);
+            data = new JSONArray();
+            for (String s : siteid) {
+                data.add(s);
+            }
+            result.put("siteid[]", data);
+
+            return result.toJSONString();
+        } catch (Exception e) {
+            return respondWithError(e);
+        }
+    }
+
     @EntityCustomAction(action = "testPost", viewKey = EntityView.VIEW_NEW)
     public String testPost(EntityView view, Map<String, Object> params) {
         try {
@@ -342,6 +368,15 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             this.params = params;
         }
 
+        public String[] getList(String name){
+            try{
+                String[] result = (String[])params.get(name);
+                return result;
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Error converting argument " + name + " to array.");
+            }
+        }
+
         public String getString(String name) {
             String result = (String)params.get(name);
 
@@ -358,10 +393,6 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             } else {
                 return defaultValue;
             }
-        }
-
-        public long getEpochMS(String name) {
-            return Long.valueOf(getString(name));
         }
 
         public boolean getBoolean(String name) {
