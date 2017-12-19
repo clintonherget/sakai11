@@ -50,7 +50,7 @@ $(document).ready(function(){
 		var payload = $('#search-netid-form').serialize();
 		// $('#search-permissions-by-netid').click(function(){
 		showNetidTable();
-		$.post('http://localhost:8080/direct/stealth-admin/getRuleByUser'),
+		$.post('≈'),
 		payload,
 		function(data,status){
 			showNetidTable(data);
