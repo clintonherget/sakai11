@@ -31,7 +31,7 @@ public class StealthRules implements Comparable<StealthRules> {
     private final String siteid;
     private final String toolname;
 
-    public StealthRules(String netid, String coursetitle,String siteid, String toolname) {
+    public StealthRules(String netid, String coursetitle, String siteid, String toolname) {
         this.netid  = netid;
         this.coursetitle = coursetitle;
         this.siteid   = siteid;

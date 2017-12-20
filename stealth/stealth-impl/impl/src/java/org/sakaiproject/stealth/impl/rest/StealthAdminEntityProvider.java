@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 import java.lang.reflect.Array;
 import org.json.simple.JSONObject;
@@ -71,6 +72,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
     private static final String ADMIN_SITE_REALM = "/site/!admin";
     private static final String SAKAI_SESSION_TOKEN_PROPERTY = "sakai.stealth-admin.token";
     private static final String REQUEST_SESSION_PARAMETER = "session";
+    private static final String[] EMPTY_ARRAY = new String[0];
 
     protected DeveloperHelperService developerHelperService;
     private EntityProviderManager entityProviderManager;
@@ -217,15 +219,26 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             JSONArray data = new JSONArray();
             String netID = wp.getString("rule-by-netid");
             List<StealthRules> list_rules;
+            Map<String, StealthRules> list_unique = new HashMap<>();
 
             if (netID != null) {
                 list_rules = stealth().getRules().searchByNetId(netID);
                 for (StealthRules rule : list_rules) {
+                    if(list_unique.containsKey(rule.getSiteId())){
+                        list_unique.put(rule.getSiteId(),
+                        new StealthRules(rule.getNetId(), rule.getCourseTitle(), rule.getSiteId(), rule.getToolName()
+                        + "," + list_unique.get(rule.getSiteId()).getToolName()));
+                    }else{
+                        list_unique.put(rule.getSiteId(),
+                        new StealthRules(rule.getNetId(), rule.getCourseTitle(), rule.getSiteId(), rule.getToolName()));
+                    }
+                }
+                for (Map.Entry<String, StealthRules> entry : list_unique.entrySet()) {
                     JSONArray row = new JSONArray();
-                    row.add(rule.getNetId());
-                    row.add(rule.getCourseTitle());
-                    row.add(rule.getSiteId());
-                    row.add(rule.getToolName());
+                    row.add(entry.getValue().getNetId());
+                    row.add(entry.getValue().getCourseTitle());
+                    row.add(entry.getValue().getSiteId());
+                    row.add(entry.getValue().getToolName());
                     data.add(row);
                 }
             } else {
@@ -245,15 +258,26 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             JSONArray data = new JSONArray();
             String siteID = wp.getString("rule-by-siteid");
             List<StealthRules> list_rules;
+            Map<String, StealthRules> list_unique = new HashMap<>();
 
             if (siteID != null) {
                 list_rules = stealth().getRules().searchBySiteId(siteID);
                 for (StealthRules rule : list_rules) {
+                    if(list_unique.containsKey(rule.getSiteId())){
+                        list_unique.put(rule.getSiteId(),
+                        new StealthRules(rule.getNetId(), rule.getCourseTitle(), rule.getSiteId(), rule.getToolName()
+                        + "," + list_unique.get(rule.getSiteId()).getToolName()));
+                    }else{
+                        list_unique.put(rule.getSiteId(),
+                        new StealthRules(rule.getNetId(), rule.getCourseTitle(), rule.getSiteId(), rule.getToolName()));
+                    }
+                }
+                for (Map.Entry<String, StealthRules> entry : list_unique.entrySet()) {
                     JSONArray row = new JSONArray();
-                    row.add(rule.getNetId());
-                    row.add(rule.getCourseTitle());
-                    row.add(rule.getSiteId());
-                    row.add(rule.getToolName());
+                    row.add(entry.getValue().getNetId());
+                    row.add(entry.getValue().getCourseTitle());
+                    row.add(entry.getValue().getSiteId());
+                    row.add(entry.getValue().getToolName());
                     data.add(row);
                 }
             } else {
@@ -273,18 +297,48 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             WrappedParams wp = new WrappedParams(params);
             String[] netid = wp.getList("netid");
             String[] siteid = wp.getList("siteid");
+            String[] term = wp.getList("term");
+            String[] tool = wp.getList("tool");
+
+            if(netid.length == 0 && siteid.length == 0) {
+                result.put("error", "No netid or siteid provided");
+                return result.toJSONString();
+            }
 
             JSONArray data = new JSONArray();
-            for (String s : netid) {
-                data.add(s);
+            for (String n : netid) {
+                if(term.length > 0) {
+                    for (String tm : term) {
+                        for (String t : tool) {
+                            JSONObject entry = new JSONObject();
+                            entry.put("netid", n);
+                            entry.put("term", tm);
+                            entry.put("tool", t);
+                            stealth().getRules().addPermissionByUser(n, tm, t);
+                            data.add(entry);
+                        }
+                    }
+                } else {
+                    for (String t : tool) {
+                        JSONObject entry = new JSONObject();
+                        entry.put("netid", n);
+                        entry.put("term", "NULL");
+                        entry.put("tool", t);
+                        stealth().getRules().addPermissionByUser(n, "NULL", t);
+                        data.add(entry);
+                    }
+                }
             }
-            result.put("netid", data);
-            data = new JSONArray();
-            for (String s : siteid) {
-                data.add(s);
-            }
-            result.put("siteid", data);
 
+            for (String s : siteid) {
+                for (String t : tool) {
+                    JSONObject entry = new JSONObject();
+                    entry.put("siteid", s);
+                    entry.put("tool", t);
+                    stealth().getRules().addPermissionBySite(s, t);
+                    data.add(entry);
+                }
+            }
             return result.toJSONString();
         } catch (Exception e) {
             return respondWithError(e);
@@ -371,20 +425,25 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
 
         public String[] getList(String name){
             try{
-                String[] result = (String[]) params.get(name);
-                return result;
+                if(!params.containsKey(name)){
+                    return EMPTY_ARRAY;
+                }else if(params.get(name).getClass().isArray()){
+                    return (String[]) params.get(name);
+                }else{
+                    String[] result = new String[1];
+                    result[0] = (String) params.get(name);
+                    return result;
+                }
             } catch (Exception e) {
                 throw new IllegalArgumentException("Error converting argument " + name + " to array.");
             }
         }
 
         public String getString(String name) {
-            String result = (String)params.get(name);
-
+            String result = (String) params.get(name);
             if (result == null) {
                 throw new IllegalArgumentException("Parameter " + name + " cannot be null.");
             }
-
             return result;
         }
 
