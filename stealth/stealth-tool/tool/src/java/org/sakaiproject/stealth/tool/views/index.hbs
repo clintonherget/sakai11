@@ -8,25 +8,25 @@
   <h2 class="unstealth-header">Add Tool Permissions</h2><br/>
 
     <form id="grant-permission-form">
-			<h3 class="unstealth-section-head">User/Site Selection</h3>
-    	<p>
+	  <h3 class="unstealth-section-head">User/Site Selection</h3>
+      <p>
         Add User(s):
-    		<select class="unstealth-multiple-netid" name="netid" multiple="multiple" style="width: 200px;"></select>
+    	<select id="select-multiple-netid" name="netid" multiple="multiple" style="width: 200px;"></select>
       </p>
       <p>And/Or</p>
       <p>
         Add Site ID(s)
-    		<select class="unstealth-multiple-siteid" name="siteid" multiple="multiple" style="width: 200px;"></select>
+    	<select id="select-multiple-siteid" name="siteid" multiple="multiple" style="width: 200px;"></select>
       </p>
       <h3 class="unstealth-section-head">Restrict By Term</h3>
   		<p>
         Term Availability
-        <select id="select-term" name="term" style="width: 200px;"></select>
+        <select id="select-term" name="term" multiple="multiple" style="width: 200px;"></select>
       </p>
 			<h3 class="unstealth-section-head">Tool Selection</h3>
 			<p>
         Tool Name
-        <select id="select-tool" name="tool" style="width: 200px;"></select>
+        <select id="select-tool" name="tool" multiple="multiple" style="width: 200px;"></select>
       </p>
 		  <button type="submit" class="btn btn-primary">Grant tool Permissions</button>
       <input type="button" value="Cancel">
@@ -44,7 +44,7 @@
 		<div id="NetID" class="tabcontent">
 	  		</br>Search
 	  		<form id="search-netid-form">
-	  			<select class="unstealth-multiple-netid" name="rule-by-netid" placeholder="NetID" style="width: 200px;"></select>
+	  			<select id="search-table-netid" name="rule-by-netid" placeholder="NetID" style="width: 200px;"></select>
 	  			<button type="submit" id="search-permissions-by-netid" class="btn btn-primary">Search</button>
 	  		</form>
 		</div>
@@ -52,7 +52,7 @@
 		<div id="SiteID" class="tabcontent">
   			</br>Search
   			<form id="search-siteid-form">
-  				<select class="unstealth-multiple-siteid" name="rule-by-siteid" placeholder="SiteID" style="width: 200px;"></select>
+  				<select id="search-table-siteid" name="rule-by-siteid" placeholder="SiteID" style="width: 200px;"></select>
   				<button type="submit" class="btn btn-primary">Search</button>
   			</form>
 		</div>
