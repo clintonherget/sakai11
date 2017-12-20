@@ -247,7 +247,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             List<StealthRules> list_rules;
 
             if (siteID != null) {
-                list_rules = stealth().getRules().searchByNetId(siteID);
+                list_rules = stealth().getRules().searchBySiteId(siteID);
                 for (StealthRules rule : list_rules) {
                     JSONArray row = new JSONArray();
                     row.add(rule.getNetId());
