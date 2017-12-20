@@ -83,6 +83,14 @@ $(document).ready(function(){
 		return false;
 		// })
 	});
+	$('#display-results tbody').on('click', '[id*=btnEdit]', function () {
+            var data = table.row($(this).parents('tr')).data();
+            var netid = data[0];
+            var coursetitle = data[1];
+            var siteid = data[2];
+            var tool = data[3];
+            alert("Implementing a light box");
+    });
 
 });
 
@@ -108,6 +116,7 @@ function showTable(jsondata){
             { title: "Course Title" },
             { title: "Site ID" },
             { title: "Tool Name" }
-        ]
+        ],
+        "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<input id='btnEdit' data-lightbox-target='#modal' data-lightbox-modal='true'  class='btn btn-success' value='Edit'/>"}]
     });
 }
