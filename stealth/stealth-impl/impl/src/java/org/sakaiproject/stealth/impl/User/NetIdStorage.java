@@ -19,7 +19,7 @@ public class NetIdStorage implements UserService {
     private final String NetIdTable;
 
     public NetIdStorage() {
-        NetIdTable = ("nyu_t_users").toLowerCase(Locale.ROOT);
+        NetIdTable = ("sakai_user_id_map").toLowerCase(Locale.ROOT);
     }
 
     public List<User> getNetIdList(final String searchPattern) {
@@ -29,10 +29,10 @@ public class NetIdStorage implements UserService {
                             @Override
                             public List<User> call(DBConnection db) throws SQLException {
                                 List<User> netids = new ArrayList<User>();
-                                try (DBResults results = db.run("SELECT * from " + NetIdTable + " where netid like '" + searchPattern + "%'")
+                                try (DBResults results = db.run("SELECT * from " + NetIdTable + " where eid like '" + searchPattern + "%'")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
-                                        netids.add(new User(result.getString("netid")));
+                                        netids.add(new User(result.getString("eid")));
                                     }
                                     return netids;
                                 }

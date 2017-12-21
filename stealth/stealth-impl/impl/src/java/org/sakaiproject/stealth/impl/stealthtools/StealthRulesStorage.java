@@ -156,9 +156,15 @@ public class StealthRulesStorage implements ToolService{
                         new DBAction<Void>() {
                             @Override
                             public Void call(DBConnection db) throws SQLException {
-                                db.run("Insert into " + stealthByUserTable + " (netid,term,toolid) values('"+netId+"','"+term+"','"+toolId+"')")
-                                        .executeUpdate();
-                                db.commit();
+                                if(term.equalsIgnoreCase("NULL")){
+                                    db.run("Insert into " + stealthByUserTable + " (netid,toolid) values('"+netId+"','"+toolId+"')")
+                                            .executeUpdate();
+                                    db.commit();
+                                }else{
+                                    db.run("Insert into " + stealthByUserTable + " (netid,term,toolid) values('"+netId+"','"+term+"','"+toolId+"')")
+                                            .executeUpdate();
+                                    db.commit();
+                                }
                                 return null;
 
                             }

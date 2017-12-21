@@ -34,7 +34,7 @@ $(document).ready(function(){
   });
 	$("#select-multiple-siteid").select2({
 		placeholder:"SiteID",
-		minimumInputLength: 10,
+		minimumInputLength: 5,
 		ajax: {
 			url: function (params) {
 				return "http://localhost:8080/direct/stealth-admin/searchSiteid/" + params.term;
@@ -56,7 +56,7 @@ $(document).ready(function(){
     });
   	$("#search-table-siteid").select2({
   		placeholder:"SiteID",
-  		minimumInputLength: 10,
+  		minimumInputLength: 5,
   		ajax: {
   			url: function (params) {
   				return "http://localhost:8080/direct/stealth-admin/searchSiteid/" + params.term;
@@ -68,6 +68,10 @@ $(document).ready(function(){
   // action="http://localhost:8080/direct/stealth-admin/searchNetid/"
 	$('#search-netid-form').submit(function(event){
 		event.preventDefault();
+		if($('#search-table-netid').select2('data').length === 0){
+			alert('NetID is required for search');
+			return;
+		}
 		document.getElementById('display-results').innerHTML="";
 		var payload = $('#search-netid-form').serialize();
 		// $('#search-permissions-by-netid').click(function(){
@@ -80,6 +84,10 @@ $(document).ready(function(){
 	});
 	$('#search-siteid-form').submit(function(event){
 		event.preventDefault();
+		if($('#search-table-siteid').select2('data').length === 0){
+			alert('SiteID is required for search');
+			return;
+		}
 		document.getElementById('display-results').innerHTML="";
 		var payload = $('#search-siteid-form').serialize();
 		// $('#search-permissions-by-netid').click(function(){

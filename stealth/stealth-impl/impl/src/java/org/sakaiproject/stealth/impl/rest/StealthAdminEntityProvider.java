@@ -126,7 +126,7 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             String siteID = view.getPathSegment(2);
 
             if (siteID != null) {
-                if(siteID.length() > 10){
+                if(siteID.length() > 4){
                     List<Site> list_sites = stealth().getSites().getSiteIdList(siteID);
                     JSONArray data = new JSONArray();
                     for (Site s : list_sites) {
@@ -156,31 +156,96 @@ public class StealthAdminEntityProvider implements EntityProvider, AutoRegisterE
             assertPermission();
             JSONObject result = new JSONObject();
             int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+            int currentMonth = Calendar.getInstance().get(Calendar.MONTH);
             JSONArray data = new JSONArray();
+            JSONObject row = new JSONObject();
 
-            // Generate two years worth of terms
-            for (int i = -2; i <= 2; i ++){
-                JSONObject row = new JSONObject();
-                row.put("id", "Winter " + (currentYear + i));
-                row.put("text", "Winter " + (currentYear + i));
-                data.add(row);
-
-                row = new JSONObject();
-                row.put("id", "Spring " + (currentYear + i));
-                row.put("text", "Spring " + (currentYear + i));
-                data.add(row);
-
-                row = new JSONObject();
-                row.put("id", "Summer " + (currentYear + i));
-                row.put("text", "Summer " + (currentYear + i));
-                data.add(row);
-
-                row = new JSONObject();
-                row.put("id", "Fall " + (currentYear + i));
-                row.put("text", "Fall " + (currentYear + i));
-                data.add(row);
+            switch(currentMonth){
+                case 1:
+                    row.put("id", "Summner " + (currentYear - 1));
+                    row.put("text", "Summner " + (currentYear - 1));
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Fall " + (currentYear - 1));
+                    row.put("text", "Fall " + (currentYear - 1));
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Winter " + currentYear);
+                    row.put("text", "Winter " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Spring " + currentYear);
+                    row.put("text", "Spring " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Summer " + currentYear);
+                    row.put("text", "Summer " + currentYear);
+                    data.add(row);
+                    break;
+                case 2: case 3: case 4: case 5:
+                    row.put("id", "Fall " + (currentYear - 1));
+                    row.put("text", "Fall " + (currentYear - 1));
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Winter " + currentYear);
+                    row.put("text", "Winter " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Spring " + currentYear);
+                    row.put("text", "Spring " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Summer " + currentYear);
+                    row.put("text", "Summer " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Fall " + currentYear);
+                    row.put("text", "Fall " + currentYear);
+                    data.add(row);
+                    break;
+                case 6: case 7: case 8:
+                    row.put("id", "Winter " + currentYear);
+                    row.put("text", "Winter " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Spring " + currentYear);
+                    row.put("text", "Spring " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Summer " + currentYear);
+                    row.put("text", "Summer " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Fall " + currentYear);
+                    row.put("text", "Fall " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Winter " + (currentYear + 1));
+                    row.put("text", "Winter " + (currentYear + 1));
+                    data.add(row);
+                    break;
+                default:
+                    row.put("id", "Spring " + currentYear);
+                    row.put("text", "Spring " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Summer " + currentYear);
+                    row.put("text", "Summer " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Fall " + currentYear);
+                    row.put("text", "Fall " + currentYear);
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Winter " + (currentYear + 1));
+                    row.put("text", "Winter " + (currentYear + 1));
+                    data.add(row);
+                    row = new JSONObject();
+                    row.put("id", "Spring " + (currentYear + 1));
+                    row.put("text", "Spring " + (currentYear + 1));
+                    data.add(row);
+                    break;
             }
-
             result.put("results", data);
 
             return result.toJSONString();
