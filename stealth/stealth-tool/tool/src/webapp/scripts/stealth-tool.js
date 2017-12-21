@@ -120,23 +120,43 @@ $(document).ready(function(){
 		return false;
 		// })
 	});
-
+	openTab("start");
 });
 
-function openTab(evt, TabName) {
-	var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-	   tabcontent[i].style.display = "none";
+function openTab(tabName) {
+	switch(tabName){
+		case 'NetID':
+			$('#SiteID').hide();
+			$('#NetID').show();
+			$('#searchsite').removeClass('current');
+			$('#searchuser').addClass('current');
+			$('#searchuser-link').hide();
+			$('#searchuser-link-label').show();
+			$('#searchsite-link').show();
+			$('#searchsite-link-label').hide();
+			break;
+		case 'SiteID':
+			$('#NetID').hide();
+			$('#SiteID').show();
+			$('#searchuser').removeClass('current');
+			$('#searchsite').addClass('current');
+			$('#searchsite-link').hide();
+			$('#searchsite-link-label').show();
+			$('#searchuser-link').show();
+			$('#searchuser-link-label').hide();
+			break;
+		default:
+			$('#NetID').show();
+			$('#searchuser').addClass('current');
+			$('#searchuser-link').hide();
+			$('#searchuser-link-label').show();
+			$('#searchsite-link').show();
+			$('#searchsite-link-label').hide();
+			break;
 	}
-	tablinks = document.getElementsByClassName("tablinks");
-	for (i = 0; i < tablinks.length; i++) {
-	   tablinks[i].className = tablinks[i].className.replace(" active", "");
-	}
-	document.getElementById(TabName).style.display = "block";
-	evt.currentTarget.className += " active";
 	$('#display-results').hide();
 }
+
 function showTable(jsondata){
 	$('#display-results').show();
     table = $('#display-results').DataTable( {

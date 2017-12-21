@@ -37,8 +37,18 @@
 	<h2 class="unstealth-header">Search Existing Permissions</h2><br/>
 
     <ul class="navIntraTool actionToolBar">
-      <li><span><a href="#" onclick="openTab(event, 'NetID'); return false">Search By User</a></span></li>
-      <li><span><a href="#" onclick="openTab(event, 'SiteID'); return false">Search By Site</a></span></li>
+      <li class="firstToolBarItem">
+          <span id="searchuser">
+              <a id="searchuser-link" href="#" onclick="openTab('NetID'); return false">Search By User</a>
+              <div id="searchuser-link-label">Search By User</div>
+          </span>
+      </li>
+      <li>
+          <span id="searchsite">
+              <a id="searchsite-link" href="#" onclick="openTab('SiteID'); return false">Search By Site</a>
+              <div id="searchsite-link-label">Search By Site</div>
+          </span>
+      </li>
     </ul>
 
 		<div id="NetID" class="tabcontent">
