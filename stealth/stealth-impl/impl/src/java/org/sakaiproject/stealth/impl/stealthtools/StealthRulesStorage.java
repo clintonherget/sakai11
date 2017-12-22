@@ -36,7 +36,7 @@ public class StealthRulesStorage implements ToolService{
                                 List<StealthRules> tools = new ArrayList<StealthRules>();
                                 String query ="SELECT X.netid,X.coursetitle,X.siteid,Y.toolname from ";
                                 query +="(SELECT A.netid as netid, A.toolid as toolid, B.siteid as siteid, B.coursetitle as coursetitle from ";
-                                query +="(SELECT netid,toolid from stealth_byuser where netid like 'sl5268%') as A, ";
+                                query +="(SELECT netid,toolid from stealth_byuser where netid like '"+netId+"%') as A, ";
                                 query +="(select  ss.site_id as siteid, ss.title as coursetitle,suim.EID as netid ";
                                 query +="from ";
                                 query +=" sakai_site ss ";

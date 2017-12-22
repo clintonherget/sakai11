@@ -146,8 +146,9 @@ function showTable(jsondata){
             { title: "Net ID" },
             { title: "Course Title" },
             { title: "Site ID" },
-            { title: "Tool Name" }
+            { title: "Tool Name" },
+            { title: "Edit"}
         ],
-        "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<input id='btnEdit' data-lightbox-target='#modal' data-lightbox-modal='true'  class='btn btn-success' value='Edit'/>"}]
+         "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<a href = '#' data-lightbox-target='#modal' data-lightbox-title='Edit Existing Permission'><input id='btnEdit' class='btn btn-success' value='Edit'/></a>"}]
     });
 }
