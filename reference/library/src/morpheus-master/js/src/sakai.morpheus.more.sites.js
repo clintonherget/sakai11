@@ -171,7 +171,7 @@ function showToolMenu(jqObj){
 
           // And its icon
           li.find('a span')
-            .addClass('icon-' + item.tools[0].toolId.replace(/\./gi, '-'))
+            .addClass('icon-sakai--' + item.tools[0].toolId.replace(/\./gi, '-'))
             .addClass('otherSiteToolIcon');
 
           if (item.toolpopup) {
