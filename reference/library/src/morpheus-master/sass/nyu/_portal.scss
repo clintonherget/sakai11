@@ -294,7 +294,7 @@ body {
 
     ul {
       li.#{$namespace}sitesNav__menuitem {
-        > a {
+        > a.link-container {
           font-size: $nyu-favorite-sites-button-text-size;
 
           i.fa {
@@ -312,12 +312,12 @@ body {
           }
         }
 
-        &:not(.dropdown-is-visible) > a:hover, &:not(.dropdown-is-visible) > a:active {
+        &:not(.dropdown-is-visible) > a.link-container:hover, &:not(.dropdown-is-visible) > a.link-container:active {
           box-shadow: none !important;
         }
 
         &.is-selected {
-          > a {
+          > a.link-container {
             font-size: $nyu-favorite-sites-button-current-text-size;
 
             i.fa {
@@ -339,21 +339,22 @@ body {
         &.dropdown-is-visible {
           position: relative;
 
-          > a {
+          > a.link-container {
             border-color: $nyu-favorite-sites-tool-menu-border-color !important;
 
             &:after {
               border-bottom: 1px solid #FFF;
               content: "";
-              width: 100%;
+              width: calc(100% - 2px);
               position: absolute;
-              bottom: -1px;
-              left: 0;
+              bottom: 0px;
+              left: 1px;
+              z-index: 100;
             }
           }
         }
         &.is-selected.dropdown-is-visible {
-          > a {
+          > a.link-container {
             border-color: $nyu-favorite-sites-tool-menu-active-border-color !important;
 
             &:after {
@@ -412,9 +413,44 @@ body {
           }
         }
 
+        .#{$namespace}sitesNav__drop,
+        .#{$namespace}sitesNav__dropdown{
+          color: $nyu-favorite-sites-button-icon-color !important;
+          border: none !important;
+          background: none !important;
+          box-shadow: none !important;
+          text-align: center !important;
+
+          &.is-clicked {
+            top: 32% !important;
+          }
+
+          &:hover {
+            color: $nyu-favorite-sites-button-hover-icon-color !important;
+            border: none !important;
+            background: none !important;
+            box-shadow: none !important;
+          }
+        }
+
         &.is-selected {
           ul {
             border-color: $nyu-favorite-sites-tool-menu-active-border-color !important;
+          }
+
+          .#{$namespace}sitesNav__drop,
+          .#{$namespace}sitesNav__dropdown{
+            color: $nyu-favorite-sites-button-current-icon-color !important;
+            border: none !important;
+            background: none !important;
+            box-shadow: none !important;
+
+            &:hover {
+              color: $nyu-favorite-sites-button-current-hover-icon-color !important;
+              border: none !important;
+              background: none !important;
+              box-shadow: none !important;
+            }
           }
         }
       }
@@ -852,10 +888,10 @@ body {
 //  Sites navigation
 // -------------------------------------------------------------------------------------------------------------------
 #topnav_container {
-  .#{$namespace}sitesNav__menuitem.is-selected > a:hover {
+  .#{$namespace}sitesNav__menuitem.is-selected > a.link-container:hover {
     color: $sites-nav-menu-item-selected-color !important;
   }
-  .#{$namespace}sitesNav__menuitem > a:hover {
+  .#{$namespace}sitesNav__menuitem > a.link-container:hover {
     border-color: #7F7F7F;
   }
 }
