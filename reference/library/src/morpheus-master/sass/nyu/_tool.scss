@@ -51,10 +51,10 @@
       }
     }
     .#{$namespace}multipleTools {
-      .#{$namespace}toolTitleNav__button_container {
-        top: -4px !important;
-        right: -11px !important;
-      }
+      //.#{$namespace}toolTitleNav__button_container {
+      //  top: -4px !important;
+      //  right: -11px !important;
+      //}
       .#{$namespace}pageColumns--single {
         .#{$namespace}toolTitleNav__button_container {
           top: 5px !important;
@@ -287,7 +287,13 @@ form[name^='announcementListForm'] .instruction {
     }
   }
   &.nyu-synoptic-announcements {
-    margin: -14px -14px 10px -14px;
+    // Fix alignment freak out on large screens (small widths as this refers to width of iframe)
+    @media only screen and (max-width: 770px) {
+      margin: -14px -14px 10px -14px;
+    }
+    @media only screen and (min-width: 771px) {
+      margin: -4px -14px 10px -14px;
+    }
 
     .#{$namespace}toolTitleNav.#{$namespace}container.#{$namespace}container--toolTitleNav {
       background-color: $nyu-overview-portlet-title-background-color;
