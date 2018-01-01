@@ -349,7 +349,7 @@ body {
             border-color: $nyu-favorite-sites-tool-menu-border-color !important;
 
             &:after {
-              border-bottom: 1px solid #FFF;
+              border-bottom: 2px solid #FFF; //2px hides box shadow
               content: "";
               width: calc(100% - 2px);
               position: absolute;
