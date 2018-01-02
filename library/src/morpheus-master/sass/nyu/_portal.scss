@@ -571,6 +571,10 @@ body a[href] {
             padding: 0 6px;
             color: $nyu-all-sites-button-drag-color !important;
 
+            i {
+              display: none;
+            }
+
             &:before {
               font-family: 'nyu-classes-icons' !important;
               content: '\f1c5' !important;
