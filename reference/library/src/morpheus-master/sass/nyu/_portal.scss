@@ -728,6 +728,10 @@ body {
             color: $nyu-all-sites-button-drag-color !important;
             border-left: 1px dotted #DDD;
 
+            i {
+              display: none;
+            }
+
             &:before {
               font-family: 'nyu-classes-icons' !important;
               content: '\f1c5' !important;
