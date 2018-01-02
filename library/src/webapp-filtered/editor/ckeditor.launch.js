@@ -228,8 +228,8 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             "countSpacesAsCharsHTML" : true,
             "countHTML" : true,
             "showParagraphs" : false,
-            "showWordCount" : true,
-            "showCharCount" : true,
+            "showWordCount" : false,
+            "showCharCount" : false,
         },
 
         //SAK-29598 - Add more templates to CK Editor
