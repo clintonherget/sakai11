@@ -296,6 +296,7 @@ body {
       li.#{$namespace}sitesNav__menuitem {
         > a.link-container {
           font-size: $nyu-favorite-sites-button-text-size;
+          padding: 0.5em 28px 0.5em 0.5em !important;
 
           i.fa {
             color: $nyu-favorite-sites-button-icon-color !important;
