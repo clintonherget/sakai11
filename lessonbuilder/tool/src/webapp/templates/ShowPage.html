@@ -342,12 +342,23 @@
 					    <span rsf:id="msg=simplepage.question-descrip"></span>
 				    </li>
 				    <li rsf:id="student-li">
-					    <a href="#" role="menuitem" rsf:id="add-comments" class="add-before-param"><span rsf:id="msg.simplepage.comments"></span></a> -
-					    <span rsf:id="msg=simplepage.comments-descrip"></span>
+					    <a id="add-comments-link" rsf:id="add-comments-link" href="#" role="menuitem button"><span rsf:id="msg=simplepage.comments"></span></a>
+					     - <span rsf:id="msg=simplepage.comments-descrip"></span>
+					    <form rsf:id="add-comments-form" style="display:none" action="#" id="add-comments-form" method="post" enctype="multipart/form-data">
+						    <input type="hidden" rsf:id="comments-addBefore" id="comments-addBefore" />
+						    <input type="hidden" rsf:id="csrf25" />
+						    <input type="submit" rsf:id="add-comments" id="add-comments"/>
+					    </form>
 				    </li>
 				    <li rsf:id="studentcontent-li">
-					    <a href="#" role="menuitem" rsf:id="add-content" class="add-before-param"><span rsf:id="msg.simplepage.add-student-content"></span></a> -
-					    <span rsf:id="msg=simplepage.student-descrip"></span>
+					    <a id="add-student-link" rsf:id="add-student-link" href="#" role="menuitem button"><span rsf:id="msg=simplepage.add-student-content"></span></a>
+					     - <span rsf:id="msg=simplepage.student-descrip"></span>
+					    <form rsf:id="add-student-form" style="display:none" action="#" id="add-student-form" method="post" enctype="multipart/form-data">
+						    <input type="hidden" rsf:id="add-student-addBefore" id="add-student-addBefore" />
+						    <input type="hidden" rsf:id="csrf26" />
+						    <input type="submit" rsf:id="add-student" id="add-student"/>
+					    </form>
+
 				    </li>
 				    <li rsf:id="blti-tool:">
 					    <a href="#" role="menuitem" rsf:id="add-blti-tool" class="add-before-param"><span rsf:id="msg.simplepage.blti"></span></a> -
