@@ -2036,6 +2036,11 @@ nav.Mrphs-container--toolTitleNav .Mrphs-directUrl__dropDown .active {
         padding-bottom: 0 !important;
         margin-bottom: 1em !important;
 }
+/* menu off user icon, site menu in narrow, site menu in  wide mode */
+.Mrphs-mainHeader, .Mrphs-skipNav__menu, #selectSiteModal {
+        z-index: 100002 !important;
+	position:relative;
+}
 /* chat open button */
 #Mrphs-footerApp__chat {
         z-index: 100003 !important;
