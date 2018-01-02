@@ -76,11 +76,12 @@
  
  			<h:panelGrid columns="2" styleClass="jsfFormTable">
  				<h:panelGroup styleClass="shorttext required">
- 					<h:outputText value="*" styleClass="reqStar"/>
- 					
- 					<h:outputLabel for="title">
- 						<h:outputText value="#{msgs.syllabus_title}"/>
- 					</h:outputLabel>
+ 					<h:panelGroup styleClass="syllabusLabel">
+ 						<h:outputText value="*" styleClass="reqStar"/>
+ 						<h:outputLabel for="title">
+ 							<h:outputText value="#{msgs.syllabus_title}"/>
+ 						</h:outputLabel>
+ 					</h:panelGroup>
  					<h:inputText value="#{SyllabusTool.syllabusDataTitle}" id="title"/>
  				</h:panelGroup>
  			</h:panelGrid>
@@ -159,16 +160,20 @@
 					</h4>
 					<h:panelGrid columns="1" styleClass="jsfFormTable">
 						<h:panelGroup styleClass="shorttext">
-							<h:outputLabel for="dataStartDate">
-								<h:outputText value="#{msgs.startdatetitle}"/>
-							</h:outputLabel>
+							<h:panelGroup styleClass="syllabusLabel">
+								<h:outputLabel for="dataStartDate">
+									<h:outputText value="#{msgs.startdatetitle}"/>
+								</h:outputLabel>
+							</h:panelGroup>
 							<h:inputText styleClass="dateInput datInputStart" value="#{SyllabusTool.syllabusDataStartDate}" id="dataStartDate"/>
 							<f:verbatim><img src="/library/image/silk/calendar_view_month.png" onclick="$('.datInputStart').focus();"/></f:verbatim>
 						</h:panelGroup>
 						<h:panelGroup styleClass="shorttext">
-							<h:outputLabel for="dataEndDate">
-								<h:outputText value="#{msgs.enddatetitle}"/>
-							</h:outputLabel>
+							<h:panelGroup styleClass="syllabusLabel">
+								<h:outputLabel for="dataEndDate">
+									<h:outputText value="#{msgs.enddatetitle}"/>
+								</h:outputLabel>
+							</h:panelGroup>
 							<h:inputText styleClass="dateInput datInputEnd" value="#{SyllabusTool.syllabusDataEndDate}" id="dataEndDate"/>
 							<f:verbatim><img src="/library/image/silk/calendar_view_month.png" onclick="$('.datInputEnd').focus();"/></f:verbatim>
 						</h:panelGroup>
@@ -179,9 +184,11 @@
 				</h4>
 				<h:panelGrid columns="1" styleClass="jsfFormTable">
 					<h:panelGroup styleClass="shorttext">
-						<h:outputLabel for="list1">
-							<h:outputText value="#{msgs.email_notify}"/>
-						</h:outputLabel>
+						<h:panelGroup styleClass="syllabusLabel">
+							<h:outputLabel for="list1">
+								<h:outputText value="#{msgs.email_notify}"/>
+							</h:outputLabel>
+						</h:panelGroup>
 						<h:selectOneListbox size = "1"  id = "list1" value="#{SyllabusTool.syllabusDataEmailNotification}">
 							<f:selectItem itemLabel="#{msgs.notifyNone}" itemValue="none"/>
 							<f:selectItem itemLabel="#{msgs.notifyHigh}" itemValue="high"/>
