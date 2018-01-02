@@ -175,22 +175,6 @@
 				<f:verbatim>
 				<li>
 					<span>
-							<a href="javascript:void(0)" id="expandLink" onclick="expandAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>')">
-					   <span class="fa fa-expand" aria-hidden="true"></span>&nbsp;&nbsp;
-								</f:verbatim>
-									<h:outputText value="#{msgs.expandAll}"/>
-								<f:verbatim>
-							</a>
-							<a href="javascript:void(0)" id="collapseLink" style="display:none" onclick="collapseAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>')">
-					      <span class="fa fa-compress" aria-hidden="true"></span>&nbsp;&nbsp;
-								</f:verbatim>
-									<h:outputText value="#{msgs.collapseAll}"/>
-								<f:verbatim>
-							</a>
-					</span>
-				</li>
-				<li>
-					<span>
 					</f:verbatim>
 						<h:outputLink id="print" value="javascript:printFriendly('#{SyllabusTool.printFriendlyUrl}');">
 							<h:outputText value="#{msgs.printView}"/>
