@@ -108,7 +108,7 @@ body {
         li.is-selected {
           display: block;
 
-          > a { 
+          > a.link-container { 
             color: $nyu-tablet-header-site-text-color !important;
             font-size: $nyu-tablet-header-site-text-size !important;
             border: none !important;
@@ -117,10 +117,6 @@ body {
   
             > i, > i:before {
               color: $nyu-tablet-header-site-icon-color !important;
-            }
-
-            .#{$namespace}sitesNav__dropdown {
-              display: none !important;
             }
 
             &:hover {
@@ -133,6 +129,9 @@ body {
                 color: $nyu-tablet-header-site-icon-color !important;
               }
             }
+          }
+          .#{$namespace}sitesNav__dropdown {
+            display: none !important;
           }
         }
       }
@@ -330,6 +329,7 @@ body {
         display: block !important;
         width: 100% !important;
         flex-basis: 100% !important;
+        z-index: 1001;
       }
       .#{$namespace}pagebody {
         display: none !important;
@@ -345,6 +345,7 @@ body {
   body {
     .portletBody {
       margin-top: 16px !important;
+      min-height: auto !important;
     }
     #content {
       min-height: auto !important;
