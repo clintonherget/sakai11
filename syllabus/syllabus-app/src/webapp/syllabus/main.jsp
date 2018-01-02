@@ -178,22 +178,6 @@
 				<f:verbatim>
 				<li>
 					<span>
-							<a href="javascript:void(0)" id="expandLink" onclick="expandAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>')">
-								<img src="/library/image/silk/arrow_out.png" alt=""/>&nbsp;&nbsp;
-								</f:verbatim>
-									<h:outputText value="#{msgs.expandAll}"/>
-								<f:verbatim>
-							</a>
-							<a href="javascript:void(0)" id="collapseLink" style="display:none" onclick="collapseAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>')">
-								<img src="/library/image/silk/arrow_in.png" alt=""/>&nbsp;&nbsp;
-								</f:verbatim>
-									<h:outputText value="#{msgs.collapseAll}"/>
-								<f:verbatim>
-							</a>
-					</span>
-				</li>
-				<li>
-					<span>
 					</f:verbatim>
 						<h:outputLink id="print" value="javascript:printFriendly('#{SyllabusTool.printFriendlyUrl}');">
 							<h:outputText value="#{msgs.printView}"/>
