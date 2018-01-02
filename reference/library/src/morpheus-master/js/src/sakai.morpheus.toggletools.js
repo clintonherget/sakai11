@@ -7,19 +7,20 @@ function toggleMinimizeNav(){
 
   var isCollapsed = $PBJQ('body').hasClass('Mrphs-toolMenu-collapsed');
 
-  if (label.text() == el.data("title-expand") || collapsed) {
-	document.cookie = "sakai_nav_minimized=false; path=/";
-	collapsed = false;
-	label.text(el.data("text-original"));
-    el.attr('title', (el.data("text-original")));
-    el.attr('aria-pressed', true);
-  } else {
-	document.cookie = "sakai_nav_minimized=true; path=/";
-	collapsed = true;
-	el.data("text-original", label.text());
-    label.text(el.data("title-expand"));
+  var el = $PBJQ(this);
+
+  el.toggleClass('min max');
+
+  if (isCollapsed) {
     el.attr('title', (el.data("title-expand")));
+    el.attr('aria-pressed', true);
+    document.cookie = "sakai_nav_minimized=true; path=/";
+    collapsed = true;
+  } else {
+    el.attr('title', (el.data("text-original")));
     el.attr('aria-pressed', false);
+    document.cookie = "sakai_nav_minimized=false; path=/";
+    collapsed = false;
   }
 }
 
@@ -96,6 +97,3 @@ function getNumPart(val) {
 		}
 	}
 }
-
-$PBJQ(".js-toggle-nav").on("click", toggleMinimizeNav);
-
