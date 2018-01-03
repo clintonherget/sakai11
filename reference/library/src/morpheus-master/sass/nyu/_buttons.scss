@@ -43,6 +43,9 @@
     }
   }
 
+  &:focus {
+    outline-color: $nyu-active-button-outline-color !important;
+  }
 }
 
 @mixin nyu_primary_button() {
