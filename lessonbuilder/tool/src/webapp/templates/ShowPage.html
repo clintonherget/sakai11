@@ -143,7 +143,7 @@
 		 <span rsf:id="gradingSpan" class="gradingarea">
 		     <a role="button" href="#" rsf:id="gradingBack" style="margin-right:2px;background:none" class="usebutton grading-nextprev">&#60;</a><img class="statusImg" src="$context/images/no-status.png" id="statusImg" height="16px" width="16px" alt=""></img><span style="*vertical-align:13%"  rsf:id="msg=simplepage.comments-points"></span><span style="display:none" class="uuidBox" rsf:id="commentsUUID"></span><span style="display:none" class="pointsSpan" rsf:id="commentPoints"></span> <input rsf:id="studentPointsBox"  id="studentPointsBox" type="text" style="font-size:100%"  size="3"></input> / <span rsf:id="topmaxpoints"></span> <a role="button" class="usebutton" href="#" rsf:id="msg=simplepage.submit" style="background:none; width:auto; *vertical-align:13%;margin-right:.5em" id="submit-grading"></a> <a role="button" style="background:none" href="#" rsf:id="gradingForward" class="usebutton grading-nextprev">&#62;</a>
 		 </span>
-		 <span class=""> <a role="button" style="" href="#" rsf:id="prev" class="nexprev menuitem button">next</a> <a role="button" href="#" rsf:id="next" class="nextprev menuitem button">next</a> </span>
+		 <span class="next-prev-nav"> <a role="button" style="" href="#" rsf:id="prev" class="nexprev menuitem button">next</a> <a role="button" href="#" rsf:id="next" class="nextprev menuitem button">next</a> </span>
 		   <a role="button" aria-haspopup="dialog" aria-controls="direct-dialog" href="#" rsf:id="directurl" id="directurl" class="title-tools tool-directurl Mrphs-toolTitleNav__link Mrphs-toolTitleNav__link--directurl">
 		       <img rsf:id="directimage" src="/library/image/transparent.gif"/>
 		   </a>
@@ -911,14 +911,14 @@
 		   scrolling="auto"
 		   id="iframe"
 		   ></iframe>
-		   <ul class="navIntraTool">
-		   <li class="bottomButtons contentButton">
-		   <span>
-		   <a role="button" href="#" rsf:id="prev1">next</a> 
-		   <a role="button" class="bottomRight" href="#" rsf:id="next1">next</a> 
-		   </span>
-		   </li>
-		   </ul>
+		   <div class="navIntraTool">
+		   <div class="bottomButtons contentButton">
+			   <div class="next-prev-nav">
+				   <a role="button" class="button" href="#" rsf:id="prev1">next</a>
+				   <a role="button" class="button bottomRight" href="#" rsf:id="next1">next</a>
+			   </div>
+		   </div>
+		   </div>
 
 		<div style="display:none;">
 			<p rsf:id="msg=simplepage.add-comment" id="simplepage.add-comment"></p>

@@ -1008,6 +1008,50 @@ body {
       margin-top: 20px;
       border-color: #CCC;
     }
+    .navIntraTool {
+      position: relative;
+
+      .topaction {
+        a {
+          padding-top: 0.4em !important;
+        }
+      }
+      li.contentButton {
+        a {
+          padding-top: 0 !important;
+        }
+      }
+
+      .next-prev-nav {
+        position: absolute;
+        left: 0;
+        width: 100%;
+
+        a {
+          font-size: 12px !important;
+          padding: 3px 8px !important;
+        }
+
+        .nexprev {
+          float: left;
+          margin-left: 2px;
+        }
+        .nextprev {
+          float: right;
+          margin-right: 3px !important;
+        }
+      }
+      .bottomButtons {
+        .bottomRight {
+          margin-right: 3px !important;
+        }
+      }
+    }
+  }
+  @media #{$desktop} {
+    #pageBody div.Mrphs-pagebody .Mrphs-toolTitleNav .Mrphs-toolTitleNav__button_container {
+      top: 18px !important;
+    }
   }
 }
 
