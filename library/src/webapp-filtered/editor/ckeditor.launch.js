@@ -228,7 +228,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             "countSpacesAsCharsHTML" : true,
             "countHTML" : true,
             "showParagraphs" : false,
-            "showWordCount" : false,
+            "showWordCount" : true,
             "showCharCount" : false,
         },
 
