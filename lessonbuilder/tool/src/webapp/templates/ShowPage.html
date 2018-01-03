@@ -146,9 +146,9 @@
                    <a href="#" role="button" id="expandAllSections" class="button menuitem"><span class="fa fa-toggle-down" aria-hidden="true" style="padding-right:5px;"></span><span rsf:id="msg=simplepage.expand.all"></span></a>
                    <a href="#" role="button" id="collapseAllSections" style="display:none;" class="button menuitem"><span class="fa fa-toggle-up" aria-hidden="true" style="padding-right:5px;"></span><span rsf:id="msg=simplepage.collapse.all"></span></a>
 		 </span>
-		 <span>
+		 <span class="next-prev-nav">
 		   <a role="button" href="#" rsf:id="prev" class="nexprev prev menuitem button">prev</a>
-		   <a role="button" href="#" rsf:id="next" class="nexprev prev menuitem button">next</a>
+		   <a role="button" href="#" rsf:id="next" class="nexprev next menuitem button">next</a>
 		 </span>
 		 <a role="button"  href="#" rsf:id="print-view" id="print-view" onclick="window.open(printView(window.location.href));return false" class="Mrphs-toolTitleNav__link top-icon fa fa-print"><span rsf:id="msg=simplepage.print_view" class="Mrphs-itemTitle"></span></a>
 		 <a role="button" href="#" rsf:id="show-pages" id="show-pages" class="Mrphs-toolTitleNav__link top-icon fa fa-list-ul"><span rsf:id="msg=simplepage.showallpages" class="Mrphs-itemTitle"></span></a>
@@ -276,10 +276,11 @@
 		 }
 
 		 repositionBreadcrumbs();
-		 if (jQuery(".navIntraTool").size() > 0)
-  			 jQuery(".navIntraTool").append(jQuery(".action"));
-		 else
+		 if (jQuery(".navIntraTool").size() > 0) {
+  			 jQuery(".navIntraTool").append(jQuery(".action .next-prev-nav"));
+		 } else {
 			 jQuery(".neoPortletTitleWrap").before(jQuery(".action"));
+		 }
 
 	jQuery(".Mrphs-toolTitleNav__button_container").after(jQuery(".action"));
 
@@ -1013,12 +1014,14 @@
 		   allow="camera; microphone"
 		   id="iframe"
 		   ></iframe>
-		   <ul class="navIntraTool">
-		   <li class="bottomButtons contentButton">
+		   <div class="navIntraTool">
+		   <div class="bottomButtons contentButton">
+		   <div class="next-prev-nav">
 		   <a role="button" class="nexprev prev menuitem button" href="#" rsf:id="prev1">next</a> 
-		   <a role="button" class="bottomRight nexprev prev menuitem button" href="#" rsf:id="next1">next</a>
-		   </li>
-		   </ul>
+		   <a role="button" class="bottomRight nexprev next menuitem button" href="#" rsf:id="next1">next</a>
+		   </div>
+		   </div>
+		   </div>
 
 		<div style="display:none;">
 			<p rsf:id="msg=simplepage.announcements-no-message" id="simplepage.announcements-no-message"></p>

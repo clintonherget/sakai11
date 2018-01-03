@@ -997,9 +997,41 @@ body {
       text-transform: $tool-tab-text-transform !important;
     }
 
+    .Mrphs-toolTitleNav.Mrphs-container--toolTitleNav {
+      float: none;
+    }
+
+    #toolbar {
+      margin-top: 0;
+    }
+
     .canEdit span.fa-plus.fa-edit-icon.plus-edit-icon:before {
       font-family: "nyu-classes-icons" !important;
       content: "\f1c7" !important;
+    }
+
+    .next-prev-nav {
+      width: 100%;
+
+      a {
+        font-size: 12px !important;
+        padding: 4px 8px !important;
+      }
+
+      .nexprev.prev {
+        float: left;
+      }
+      .nexprev.next {
+        float: right;
+      }
+    }
+
+    .bottomButtons {
+      overflow: hidden;
+    }
+
+    .navIntraTool ~ div.itemclass {
+      margin-top: 0 !important;
     }
   }
 
@@ -1014,7 +1046,7 @@ body {
     }
     @media #{$phone}{
       position: absolute;
-      top: -40px !important;
+      top: -12px !important;
     }
   }
 }
