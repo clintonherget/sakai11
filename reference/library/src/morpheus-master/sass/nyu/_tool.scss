@@ -1049,7 +1049,7 @@ body {
     }
   }
   @media #{$desktop} {
-    #pageBody div.Mrphs-pagebody .Mrphs-toolTitleNav .Mrphs-toolTitleNav__button_container {
+    #pageBody div.Mrphs-pagebody .#{$namespace}sakai-lessonbuildertool .Mrphs-toolTitleNav .Mrphs-toolTitleNav__button_container {
       top: 18px !important;
     }
   }
