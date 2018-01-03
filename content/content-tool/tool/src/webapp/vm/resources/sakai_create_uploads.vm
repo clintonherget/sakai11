@@ -18,7 +18,7 @@
         <input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
         <div class="dz-default dz-message">$tlang.getString("label.dragZoneMessage")</div>
     </form>
-    <div>
+    <div style="display: none"> <!-- NYU HIDDEN FOR 11.4 UPGRADE -->
         <input type="checkbox" name="overwrite" id="overwrite" checked="checked" value="true">$tlang.getString("overwrite.text")
     </div>
     <div id="fileUploaderDesc" class="instruction">
