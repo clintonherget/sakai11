@@ -315,7 +315,7 @@ body {
 
         &.#{$namespace}sitesNav__menuitem--myworkspace {
           > a.link-container {
-            padding-right: 0.5em;
+            padding-right: 0.5em !important;
           }
         }
 
