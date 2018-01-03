@@ -1023,9 +1023,9 @@ body {
       }
 
       .next-prev-nav {
-        position: absolute;
-        left: 0;
         width: 100%;
+        display: block;
+        padding: 10px 0 0;
 
         a {
           font-size: 12px !important;
@@ -1038,12 +1038,12 @@ body {
         }
         .nextprev {
           float: right;
-          margin-right: 3px !important;
+          margin-right: -10px !important;
         }
       }
       .bottomButtons {
         .bottomRight {
-          margin-right: 3px !important;
+          margin-right: -10px !important;
         }
       }
     }

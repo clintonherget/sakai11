@@ -263,11 +263,12 @@
 		 }
 
 		 ohGod();
-		 if (jQuery(".navIntraTool").size() > 0)
+		 if (jQuery(".navIntraTool").size() > 0) {
   			 jQuery(".navIntraTool").append(jQuery(".action"));
-		 else
+  			 jQuery(".navIntraTool").append(jQuery(".action .next-prev-nav"));
+		 } else {
 			 jQuery(".neoPortletTitleWrap").before(jQuery(".action"));
-
+		 }
 
 		</script>
 
