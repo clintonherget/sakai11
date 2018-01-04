@@ -1047,6 +1047,10 @@ body {
         }
       }
     }
+    a[href].columnopen,
+    a[href].add-bottom {
+      text-decoration: none;
+    }
   }
   @media #{$desktop} {
     #pageBody div.Mrphs-pagebody .#{$namespace}sakai-lessonbuildertool .Mrphs-toolTitleNav .Mrphs-toolTitleNav__button_container {
