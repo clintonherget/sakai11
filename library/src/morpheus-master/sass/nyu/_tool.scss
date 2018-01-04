@@ -886,6 +886,11 @@ body {
       display: none;
     }
   }
+  ##{$namespace}sakai-roster {
+    .roster-table {
+      width: 100%;
+    }
+  }
 }
 
 
