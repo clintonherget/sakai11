@@ -864,6 +864,7 @@ body {
       color: $nyu-reset-button-text-color !important;
       font-size: $nyu-reset-button-text-size !important;
       border-bottom: 1px solid transparent;
+      text-decoration: none !important;
 
       &:hover {
         text-decoration: none !important;
