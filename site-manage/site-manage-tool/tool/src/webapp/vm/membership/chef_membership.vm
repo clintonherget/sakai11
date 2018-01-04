@@ -127,14 +127,7 @@
 							<input title="$tlang.getString("mb.selectalltitle")" type="checkbox" name="selunselall" id="selunselallid"/>
 						</th>
 						<th id="worksite" scope="col" class="attach">
-							<a href="#toolLink("$action" "doToggle_sort")" title ="$tlang.getString('list.sortbytitle')">
-								$tlang.getString("gen.worksite")
-								#if ($currentSortAsc) 
-									<img src="#imageLink("sakai/sortascending.gif")" title="$tlang.getString('list.stasc')" alt="$tlang.getString('list.stasc')" /> 
-								#else 
-									<img src="#imageLink("sakai/sortdescending.gif")" title="$tlang.getString('list.stdesc')" alt="$tlang.getString('list.stdesc')" /> 
-								#end	
-							</a>
+							$tlang.getString("gen.worksite")
 						</th>
 
 						<th id="instructor">$tlang.getString("gen.instructor")</th>
