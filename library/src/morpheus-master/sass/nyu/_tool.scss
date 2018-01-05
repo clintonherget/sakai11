@@ -890,6 +890,22 @@ body {
     .roster-table {
       width: 100%;
     }
+    .roster-table-row {
+      .roster-table-cell {
+        vertical-align: middle;
+
+        .roster-group-cell {
+          width: 120px !important;
+          max-width: 120px !important;
+          overflow: hidden;
+
+          .roster-group-link {
+            white-space: normal !important;
+            display: block;
+          }
+        }
+      }
+    }
   }
 }
 
