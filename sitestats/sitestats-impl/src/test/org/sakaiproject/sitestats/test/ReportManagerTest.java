@@ -34,6 +34,7 @@ import java.util.List;
 import org.easymock.IAnswer;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.event.api.Event;
@@ -352,7 +353,7 @@ public class ReportManagerTest extends AbstractJUnit4SpringContextTests {
 		Assert.assertEquals(1, M_rm.getReportRowCount(rd, false));
 	}
 	
-	@Test
+	@Ignore("SAK-29226") @Test
 	public void testGetMoreReports() {
 		M_sum.collectEvents(getSampleData());
 		String siteId = null;
