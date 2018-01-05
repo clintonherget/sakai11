@@ -7,14 +7,14 @@
   <name>Sakai Pages</name>
   <groupId>org.sakaiproject.pages</groupId>
   <artifactId>pages-base</artifactId>
-  <version>11.2</version>
+  <version>11.4</version>
 
   <packaging>pom</packaging>
 
   <parent>
     <artifactId>master</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>11.2</version>
+    <version>11.4</version>
     <relativePath>../master/pom.xml</relativePath>
   </parent>
 
