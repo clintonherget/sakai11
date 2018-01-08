@@ -8753,6 +8753,7 @@ public class SimplePageBean {
 		item.setPrerequisite(prerequisite);
 		item.setAttribute("scormGraded", String.valueOf(graded));
 
+		saveItem(item);
 		update(item);
 
 		try {
