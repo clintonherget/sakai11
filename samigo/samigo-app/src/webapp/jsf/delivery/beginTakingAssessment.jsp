@@ -66,7 +66,14 @@
 
   <h:messages styleClass="messageSamigo" rendered="#{! empty facesContext.maximumSeverity}" layout="table"/>
 
-  <div class="bs-callout-warn"><b>Note:</b> to prevent issues while taking assessments, it is <u><b>highly</b></u> recommended that you limit your NYU Classes session to <b><u>1</u></b> browser window / tab.</div>
+  <div class="bs-callout-warn">
+
+    <b>Note:</b> to prevent issues while taking assessments, it is <u><b>highly</b></u> recommended that you limit your
+    NYU Classes session to <b><u>1</u></b> browser window / tab. If you need to access other pages in NYU Classes while
+    taking this assessment, you can do so via another browser or a private/incognito window in your current browser.
+    <a href="http://www.nyu.edu/servicelink/KB0016487">Learn more</a>.
+
+  </div>
 
   <div class="bs-callout-primary">
     <!-- ASSESSMENT INTRODUCTION -->
