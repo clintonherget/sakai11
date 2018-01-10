@@ -1472,7 +1472,7 @@
 	  <category name="project" />
 	  <category name="portfolio" />
 	  <configuration name="functions.require" />
-	  <configuration name="sakai:menuClass" value="icon-sakai-bbb"/>
+	  <configuration name="sakai:menuClass" value="icon-sakai--sakai-bbb"/>
 	  <configuration name="imsti.launch" />
 	  <configuration name="imsti.xml" />
 	  <configuration name="imsti.secret" />
