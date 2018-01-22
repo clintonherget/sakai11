@@ -46,6 +46,10 @@ import org.springframework.orm.hibernate4.HibernateTemplate;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.site.api.Site;
+
 @Slf4j
 public class GradebookFrameworkServiceImpl extends BaseHibernateManager implements GradebookFrameworkService {
 
@@ -61,6 +65,8 @@ public class GradebookFrameworkServiceImpl extends BaseHibernateManager implemen
             throw new GradebookExistsException("You can not add a gradebook with uid=" + uid + ".  That gradebook already exists.");
         }
         if (log.isDebugEnabled()) log.debug("Adding gradebook uid=" + uid + " by userUid=" + getUserUid());
+
+	final boolean enableCourseAverageByDefault = !isNYUCoreSite(uid);
 
         createDefaultLetterGradeMapping(getHardDefaultLetterMapping());
         
@@ -135,7 +141,9 @@ public class GradebookFrameworkServiceImpl extends BaseHibernateManager implemen
             //SAK-29740 make backwards compatible
             gradebook.setCourseLetterGradeDisplayed(true);
 
-            gradebook.setCourseAverageDisplayed(true);
+	    if (enableCourseAverageByDefault) {
+		gradebook.setCourseAverageDisplayed(true);
+	    }
 
             // Update the gradebook with the new selected grade mapping
             session.update(gradebook);
@@ -143,6 +151,22 @@ public class GradebookFrameworkServiceImpl extends BaseHibernateManager implemen
             return null;
 
         });
+	}
+
+	private boolean isNYUCoreSite(String uid) {
+		try {
+		    Site s = SiteService.getSite(uid);
+		    ResourceProperties props = s.getProperties();
+
+		    String department = (String) props.get("Department");
+
+		    if (department != null && department.endsWith("CORE")) {
+			return true;
+		    }
+		} catch (Exception e) {
+		}
+
+		return false;
 	}
 
     private List addDefaultGradingScales(Session session) throws HibernateException {
