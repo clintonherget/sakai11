@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -135,6 +136,24 @@ public class SettingsGradingSchemaPanel extends BasePanel implements IFormModelU
 
 		// grading scale type chooser
 		final List<String> gradingSchemaList = new ArrayList<String>(gradeMappingMap.keySet());
+
+		// CLASSES-3157: Place school-specific grading schemes lower down in the list
+		Collections.sort(gradingSchemaList, new Comparator<String>() {
+			public int compare(String s1, String s2) {
+				String label1 = gradeMappingMap.get(s1);
+				String label2 = gradeMappingMap.get(s2);
+
+				// School-specific labels contain a colon
+				if (label1.indexOf(":") >= 0 && label2.indexOf(":") < 0) {
+					return 1;
+				} else if (label1.indexOf(":") < 0 && label2.indexOf(":") >= 0) {
+					return -1;
+				}
+
+				return label1.compareTo(label2);
+			}
+		});
+
 		final DropDownChoice<String> typeChooser = new DropDownChoice<String>("type",
 				new PropertyModel<String>(this.model, "gradebookInformation.selectedGradeMappingId"), gradingSchemaList,
 				new ChoiceRenderer<String>() {
