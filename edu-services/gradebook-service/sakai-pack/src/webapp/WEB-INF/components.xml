@@ -189,7 +189,7 @@
 			<list>
 				<bean class="org.sakaiproject.service.gradebook.shared.GradingScaleDefinition">
 					<property name="uid" value="LetterGradePlusMinusMapping"/>
-					<property name="name" value="Official: Letter Grades with +/-"/>
+					<property name="name" value="Letter Grades with +/-"/>
 					<property name="grades">
 						<list>
 							<value>A</value>
