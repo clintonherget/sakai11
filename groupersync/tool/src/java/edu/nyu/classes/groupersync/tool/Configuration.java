@@ -13,7 +13,9 @@ class Configuration {
     }
 
     public static int getMaxDescriptionLength() {
-        return 70;
+        // Description gets passed as "name" when creating the Google Group, and
+        // there's an API limit of 60 characters here.
+        return 60;
     }
 
     public static int getMaxAddressLength() {
