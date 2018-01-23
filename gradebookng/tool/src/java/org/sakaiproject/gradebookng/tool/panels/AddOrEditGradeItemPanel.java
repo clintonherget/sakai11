@@ -4,9 +4,12 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
@@ -15,6 +18,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.sakaiproject.gradebookng.tool.component.GbAjaxButton;
 import org.sakaiproject.gradebookng.tool.component.GbFeedbackPanel;
+import org.sakaiproject.gradebookng.tool.model.GbModalWindow;
 import org.sakaiproject.gradebookng.tool.pages.GradebookPage;
 import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.service.gradebook.shared.AssignmentHasIllegalPointsException;
@@ -39,6 +43,7 @@ public class AddOrEditGradeItemPanel extends BasePanel {
 	private static String HIDDEN_DUEDATE_ISO8601 = "duedate_iso8601";
 
 	private Date dueDate;
+	private GbModalWindow window;
 
 	IModel<Long> model;
 
@@ -52,9 +57,10 @@ public class AddOrEditGradeItemPanel extends BasePanel {
 
 	Mode mode;
 
-	public AddOrEditGradeItemPanel(final String id, final ModalWindow window, final IModel<Long> model) {
+	public AddOrEditGradeItemPanel(final String id, final GbModalWindow window, final IModel<Long> model) {
 		super(id);
 		this.model = model;
+		this.window = window;
 
 		// determine mode
 		if (model != null) {
@@ -93,97 +99,7 @@ public class AddOrEditGradeItemPanel extends BasePanel {
 
 			@Override
 			public void onSubmit(final AjaxRequestTarget target, final Form<?> form) {
-				final Assignment assignment = (Assignment) form.getModelObject();
-
-				setISODates();
-				if (dueDate != null) {
-					assignment.setDueDate(dueDate);
-				}
-
-				boolean validated = true;
-
-				// PRE VALIDATION
-				// 1. if category selected and drop/keep highest/lowest selected for that category,
-				// ensure points match the already established maximum for the category.
-				if (assignment.getCategoryId() != null) {
-					final List<CategoryDefinition> categories = AddOrEditGradeItemPanel.this.businessService.getGradebookCategories();
-					final CategoryDefinition category = categories
-							.stream()
-							.filter(c -> (c.getId().equals(assignment.getCategoryId()))
-									&& (c.getDropHighest() > 0 || c.getKeepHighest() > 0 || c.getDrop_lowest() > 0))
-							.findFirst()
-							.orElse(null);
-
-					if (category != null) {
-						final Assignment mismatched = category.getAssignmentList()
-								.stream()
-								.filter(a -> Double.compare(a.getPoints().doubleValue(), assignment.getPoints().doubleValue()) != 0)
-								.findFirst()
-								.orElse(null);
-						if (mismatched != null) {
-							validated = false;
-							error(MessageFormat.format(getString("error.addeditgradeitem.categorypoints"), mismatched.getPoints()));
-							target.addChildren(form, FeedbackPanel.class);
-						}
-					}
-				}
-
-				// 2. names cannot contain these special chars
-				if (validated) {
-					try {
-						GradebookHelper.validateGradeItemName(assignment.getName());
-					} catch (InvalidGradeItemNameException e) {
-						validated = false;
-						error(getString("error.addeditgradeitem.titlecharacters"));
-						target.addChildren(form, FeedbackPanel.class);
-					}
-				}
-
-				// OK
-				if (validated) {
-					if (AddOrEditGradeItemPanel.this.mode == Mode.EDIT) {
-
-						final boolean success = AddOrEditGradeItemPanel.this.businessService.updateAssignment(assignment);
-
-						if (success) {
-							getSession().success(MessageFormat.format(getString("message.edititem.success"), assignment.getName()));
-							setResponsePage(getPage().getPageClass(),
-								new PageParameters().add(GradebookPage.FOCUS_ASSIGNMENT_ID_PARAM, assignment.getId()));
-						} else {
-							error(new ResourceModel("message.edititem.error").getObject());
-							target.addChildren(form, FeedbackPanel.class);
-						}
-
-					} else {
-
-						Long assignmentId = null;
-
-						boolean success = true;
-						try {
-							assignmentId = AddOrEditGradeItemPanel.this.businessService.addAssignment(assignment);
-						} catch (final AssignmentHasIllegalPointsException e) {
-							error(new ResourceModel("error.addgradeitem.points").getObject());
-							success = false;
-						} catch (final ConflictingAssignmentNameException e) {
-							error(new ResourceModel("error.addgradeitem.title").getObject());
-							success = false;
-						} catch (final ConflictingExternalIdException e) {
-							error(new ResourceModel("error.addgradeitem.exception").getObject());
-							success = false;
-						} catch (final Exception e) {
-							error(new ResourceModel("error.addgradeitem.exception").getObject());
-							success = false;
-						}
-						if (success) {
-							getSession()
-									.success(MessageFormat.format(getString("notification.addgradeitem.success"), assignment.getName()));
-							setResponsePage(getPage().getPageClass(),
-									new PageParameters().add(GradebookPage.FOCUS_ASSIGNMENT_ID_PARAM, assignmentId));
-						} else {
-							target.addChildren(form, FeedbackPanel.class);
-						}
-					}
-				}
+				createGradeItem(target, form, false);
 			}
 
 			@Override
@@ -195,6 +111,42 @@ public class AddOrEditGradeItemPanel extends BasePanel {
 		// submit button label
 		submit.add(new Label("submitLabel", getSubmitButtonLabel()));
 		form.add(submit);
+
+		final GbAjaxButton createAnother = new GbAjaxButton("createAnother", form) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void onSubmit(final AjaxRequestTarget target, final Form<?> form) {
+				createGradeItem(target, form, true);
+			}
+
+			@Override
+			protected void onError(final AjaxRequestTarget target, final Form<?> form) {
+				target.addChildren(form, FeedbackPanel.class);
+			}
+
+			@Override
+			public boolean isVisible() {
+				return AddOrEditGradeItemPanel.this.mode == Mode.ADD;
+			}
+		};
+		form.add(createAnother);
+
+//		// create another checkbox
+//		createAnother = false;
+//		form.add(new AjaxCheckBox("createAnother", Model.of(this.createAnother)) {
+//			private static final long serialVersionUID = 1L;
+//
+//			@Override
+//			protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
+//				AddOrEditGradeItemPanel.this.createAnother = getModelObject();
+//			}
+//
+//			@Override
+//			public boolean isVisible() {
+//				return AddOrEditGradeItemPanel.this.mode == Mode.ADD;
+//			}
+//		});
 
 		// add the common components
 		form.add(new AddOrEditGradeItemPanelContent("subComponents", formModel));
@@ -234,6 +186,117 @@ public class AddOrEditGradeItemPanel extends BasePanel {
 		String dueDateString = getRequest().getRequestParameters().getParameterValue(HIDDEN_DUEDATE_ISO8601).toString("");
 		if(DateFormatterUtil.isValidISODate(dueDateString)){
 			dueDate = DateFormatterUtil.parseISODate(dueDateString);
+		}
+	}
+
+	private void createGradeItem(final AjaxRequestTarget target, final Form<?> form, final boolean createAnother) {
+		final Assignment assignment = (Assignment) form.getModelObject();
+
+		setISODates();
+		if (dueDate != null) {
+			assignment.setDueDate(dueDate);
+		}
+
+		boolean validated = true;
+
+		// PRE VALIDATION
+		// 1. if category selected and drop/keep highest/lowest selected for that category,
+		// ensure points match the already established maximum for the category.
+		if (assignment.getCategoryId() != null) {
+			final List<CategoryDefinition> categories = AddOrEditGradeItemPanel.this.businessService.getGradebookCategories();
+			final CategoryDefinition category = categories
+				.stream()
+				.filter(c -> (c.getId().equals(assignment.getCategoryId()))
+					&& (c.getDropHighest() > 0 || c.getKeepHighest() > 0 || c.getDrop_lowest() > 0))
+				.findFirst()
+				.orElse(null);
+
+			if (category != null) {
+				final Assignment mismatched = category.getAssignmentList()
+					.stream()
+					.filter(a -> Double.compare(a.getPoints().doubleValue(), assignment.getPoints().doubleValue()) != 0)
+					.findFirst()
+					.orElse(null);
+				if (mismatched != null) {
+					validated = false;
+					error(MessageFormat.format(getString("error.addeditgradeitem.categorypoints"), mismatched.getPoints()));
+					target.addChildren(form, FeedbackPanel.class);
+				}
+			}
+		}
+
+		// 2. names cannot contain these special chars
+		if (validated) {
+			try {
+				GradebookHelper.validateGradeItemName(assignment.getName());
+			} catch (InvalidGradeItemNameException e) {
+				validated = false;
+				error(getString("error.addeditgradeitem.titlecharacters"));
+				target.addChildren(form, FeedbackPanel.class);
+			}
+		}
+
+		// OK
+		if (validated) {
+			if (AddOrEditGradeItemPanel.this.mode == Mode.EDIT) {
+
+				final boolean success = AddOrEditGradeItemPanel.this.businessService.updateAssignment(assignment);
+
+				if (success) {
+					getSession().success(MessageFormat.format(getString("message.edititem.success"), assignment.getName()));
+					setResponsePage(getPage().getPageClass(),
+						new PageParameters().add(GradebookPage.FOCUS_ASSIGNMENT_ID_PARAM, assignment.getId()));
+				} else {
+					error(new ResourceModel("message.edititem.error").getObject());
+					target.addChildren(form, FeedbackPanel.class);
+				}
+
+			} else {
+
+				Long assignmentId = null;
+
+				boolean success = true;
+				try {
+					assignmentId = AddOrEditGradeItemPanel.this.businessService.addAssignment(assignment);
+				} catch (final AssignmentHasIllegalPointsException e) {
+					error(new ResourceModel("error.addgradeitem.points").getObject());
+					success = false;
+				} catch (final ConflictingAssignmentNameException e) {
+					error(new ResourceModel("error.addgradeitem.title").getObject());
+					success = false;
+				} catch (final ConflictingExternalIdException e) {
+					error(new ResourceModel("error.addgradeitem.exception").getObject());
+					success = false;
+				} catch (final Exception e) {
+					error(new ResourceModel("error.addgradeitem.exception").getObject());
+					success = false;
+				}
+				if (success) {
+					final String successMessage = MessageFormat.format(getString("notification.addgradeitem.success"), assignment.getName());
+					getSession()
+						.success(successMessage);
+
+					if (createAnother) {
+						Component newFormPanel = new AddOrEditGradeItemPanel(window.getContentId(), window, null);
+						AddOrEditGradeItemPanel.this.replaceWith(newFormPanel);
+						window.setAssignmentToReturnFocusTo(String.valueOf(assignmentId));
+						window.clearWindowClosedCallbacks();
+						window.addWindowClosedCallback(new ModalWindow.WindowClosedCallback() {
+							@Override
+							public void onClose(AjaxRequestTarget ajaxRequestTarget) {
+								setResponsePage(window.getPage().getPageClass(),
+									new PageParameters().add(GradebookPage.FOCUS_ASSIGNMENT_ID_PARAM, window.getAssignmentToReturnFocusTo()));
+							}
+						});
+						target.add(newFormPanel);
+					} else {
+						setResponsePage(getPage().getPageClass(),
+							new PageParameters().add(GradebookPage.FOCUS_ASSIGNMENT_ID_PARAM, assignmentId));
+					}
+				} else {
+					target.addChildren(form, FeedbackPanel.class);
+				}
+			}
 		}
 	}
 }
