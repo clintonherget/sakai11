@@ -2050,7 +2050,8 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 	// and also when complex numbers are provided e.g. "1+9i" should also throw an exception
 	private BigDecimal parseDecimal(final String value) throws NumberFormatException, ParseException {
 		// Strip and collapse any whitespace
-		final String trimmedValue = value.replaceAll("\\s+", "");
+		// CLASSES-3183 And fix lowercase 'e' not recognised by formatter as exponential double
+		final String trimmedValue = value.replaceAll("\\s+", "").toUpperCase();
 
 		if ("".equals(trimmedValue)) {
 			throw new ParseException("parseDecimal given an empty string", 0);
