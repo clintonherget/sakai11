@@ -1601,8 +1601,13 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							SimplePage sPage = simplePageBean.getPage(Long.parseLong(i.getSakaiId()));
 							Date rDate = sPage.getReleaseDate();
 							String rDateString = "";
-							if(rDate != null)
-								rDateString = rDate.toString();
+							if(rDate != null) {
+								try {
+									rDateString = isoDateFormat.format(rDate);
+								} catch (Exception e) {
+									log.info(e + "bad format releasedate " + rDate);
+								}
+							}
 							UIOutput.make(tableRow, "subpagereleasedate", rDateString);
 						} else if (i.getType() == SimplePageItem.RESOURCE) {
 						        try {
