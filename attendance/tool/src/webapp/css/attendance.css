@@ -541,7 +541,7 @@ form.addRuleForm div {
 }
 
 form.gradeSettingsForm {
-    border-bottom: 1px solid #ccc;
+    /* border-bottom: 1px solid #ccc; NYU hide auto grade options */
     padding-bottom: 1em;
 }
 
