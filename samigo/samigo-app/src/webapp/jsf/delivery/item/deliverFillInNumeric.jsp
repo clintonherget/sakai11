@@ -34,7 +34,7 @@ should be included in file importing DeliveryMessages
 	<h:outputText value="#{deliveryMessages.fin_accepted_instruction} " escape="false" />
 	<f:verbatim><br /></f:verbatim>
 	<h:outputText value="#{deliveryMessages.fin_complex_note} " escape="false" />
-	<f:verbatim><br /></f:verbatim>
+	<f:verbatim> </f:verbatim>
 	<h:outputText value="#{deliveryMessages.fin_complex_example} " escape="false" />
 	<f:verbatim><br /></f:verbatim>
 </h:panelGroup>
