@@ -176,7 +176,7 @@ public class PagesServlet extends HttpServlet {
     }
 
     private boolean canEdit() {
-        return SecurityService.unlock(UserDirectoryService.getCurrentUser().getId(), "site.upd");
+        return SecurityService.unlock("site.upd", String.format("/site/%s", ToolManager.getCurrentPlacement().getContext()));
     }
 
     private boolean isPageVisible() {
