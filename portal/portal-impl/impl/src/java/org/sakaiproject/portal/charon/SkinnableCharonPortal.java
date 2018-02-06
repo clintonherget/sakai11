@@ -1387,6 +1387,17 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 	{
 		Properties retval = new Properties();
 
+		// CLASSES-3190 attempt to find siteId even when placement is null (on site homepages)
+		String siteId = null;
+		if (placement != null) {
+			siteId = placement.getContext();
+		} else {
+			String[] parts = getParts(req);
+			if (parts.length >= 3) {
+				siteId = parts[2];
+			}
+		}
+
 		String headCss = CSSUtils.getCssHead(skin,ToolUtils.isInlineRequest(req));
 		
 		Editor editor = portalService.getActiveEditor(placement);
@@ -1411,51 +1422,47 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
         
         // SAK-22384
         boolean mathJaxIncluded = false;
-        if (placement != null && MATHJAX_ENABLED_AT_SYSTEM_LEVEL)
-        {  
-            ToolConfiguration toolConfig = SiteService.findTool(placement.getId());
-            if (toolConfig != null) {
-                String siteId = toolConfig.getSiteId();
-                Site site;
-                try {
-                    site = SiteService.getSiteVisit(siteId);
-                }
-                catch (IdUnusedException e) {
-                    site = null;
-                }
-                catch (PermissionException e) {
-                    site = null;
-                }
+        if (siteId != null && MATHJAX_ENABLED_AT_SYSTEM_LEVEL)
+        {
+            Site site;
+            try {
+                site = SiteService.getSiteVisit(siteId);
+            }
+            catch (IdUnusedException e) {
+                site = null;
+            }
+            catch (PermissionException e) {
+                site = null;
+            }
 
-                if (site != null)
-                {                           
-                    String strMathJaxAllowed = site.getProperties().getProperty(MATHJAX_ALLOWED);
-                    if (!StringUtils.isBlank(strMathJaxAllowed))
+            if (site != null)
+            {
+                String strMathJaxAllowed = site.getProperties().getProperty(MATHJAX_ALLOWED);
+                if (!StringUtils.isBlank(strMathJaxAllowed))
+                {
+                    //String[] mathJaxTools = strMathJaxEnabled.split(",");
+
+                    //String toolId = toolConfig.getTool().getId();
+                    //if (toolId != null && ArrayUtils.contains(mathJaxTools, toolId))
+                    // NYU add MathJax for all tools if allowed for site
+                    if (Boolean.valueOf(strMathJaxAllowed))
                     {
-                        //String[] mathJaxTools = strMathJaxEnabled.split(",");
-                        
-                        //String toolId = toolConfig.getTool().getId();
-                        //if (toolId != null && ArrayUtils.contains(mathJaxTools, toolId))
-                        // NYU add MathJax for all tools if allowed for site
-                        if (Boolean.valueOf(strMathJaxAllowed))
-                        {
-                            // this call to MathJax.Hub.Config seems to be needed for MathJax to work in IE
-                            headJs.append("<script type=\"text/x-mathjax-config\">\n"+
-                                "MathJax.Hub.Config({\n" +
-                                "    tex2jax: {\n" +
-                                "        inlineMath:  [['$','$'], ['\\\\(','\\\\)']],\n" +
-                                "        displayMath: [['$$','$$'], ['\\\\[','\\\\]']]\n" +
-                                "    },\n"+
-                                "    asciimath2jax: {\n" +
-                                "        delimiters: [['`','`']]\n" +
-                                "    }\n" +
-                                "});\n" +
-                            "</script>\n");
-                            headJs.append("<script src=\"").append(MATHJAX_SRC_PATH).append("\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
-                            headJs.append("<script src=\"/library/js/mathjax/extensions/asciimath2jax.js\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
-                            headJs.append("<script src=\"/library/js/mathjax/extensions/mml2jax.js\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
-                            mathJaxIncluded = true;
-                        }                     
+                        // this call to MathJax.Hub.Config seems to be needed for MathJax to work in IE
+                        headJs.append("<script type=\"text/x-mathjax-config\">\n"+
+                            "MathJax.Hub.Config({\n" +
+                            "    tex2jax: {\n" +
+                            "        inlineMath:  [['$','$'], ['\\\\(','\\\\)']],\n" +
+                            "        displayMath: [['$$','$$'], ['\\\\[','\\\\]']]\n" +
+                            "    },\n"+
+                            "    asciimath2jax: {\n" +
+                            "        delimiters: [['`','`']]\n" +
+                            "    }\n" +
+                            "});\n" +
+                        "</script>\n");
+                        headJs.append("<script src=\"").append(MATHJAX_SRC_PATH).append("\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
+                        headJs.append("<script src=\"/library/js/mathjax/extensions/asciimath2jax.js\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
+                        headJs.append("<script src=\"/library/js/mathjax/extensions/mml2jax.js\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
+                        mathJaxIncluded = true;
                     }
                 }
             }
@@ -1485,11 +1492,11 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		headJs.append("</script>\n");
 
 		// CLASSES-1937, CLASSES-2093 poke the site's CKEditor templates and plugins into the page if configured
-		if (placement != null) {
+		if (siteId != null) {
 			headJs.append("<script type=\"text/javascript\">\n");
-			headJs.append("sakai.editor.siteId = '" + placement.getContext() + "';\n");
+			headJs.append("sakai.editor.siteId = '" + siteId + "';\n");
 			try {
-				Site site = siteHelper.getSiteVisit(placement.getContext());
+				Site site = siteHelper.getSiteVisit(siteId);
 				if (site != null) {
 					ResourceProperties rp = site.getProperties();
 					String ckeditorTemplates = (String) rp.getProperty("ckeditor_templates");
@@ -1502,9 +1509,9 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 					}
 				}
 			} catch (IdUnusedException e) {
-				M_log.debug("Site doesn't exist: " + placement.getContext());
+				M_log.debug("Site doesn't exist: " + siteId);
 			} catch (PermissionException e) {
-				M_log.debug("User not able to access site: " + placement.getContext());
+				M_log.debug("User not able to access site: " + siteId);
 			}
 			headJs.append("</script>\n");
 		}
