@@ -85,6 +85,7 @@ public class SaveHandler implements Handler {
             for (SitePage sitePage : site.getPages()) {
                 if (sitePage.getTool((String) context.get("toolID")) != null) {
                     sitePage.setTitle(toUpdate.getTitle());
+                    sitePage.setTitleCustom(true);
                 }
             }
             SiteService.save(site);
