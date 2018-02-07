@@ -160,7 +160,7 @@ public class GradebookFrameworkServiceImpl extends BaseHibernateManager implemen
 
 		    String department = (String) props.get("Department");
 
-		    if (department != null && department.endsWith("CORE")) {
+		    if (department != null && ("UACORE".equals(department) || "UAGLOB".equals(department))) {
 			return true;
 		    }
 		} catch (Exception e) {
