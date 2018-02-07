@@ -24,6 +24,8 @@
 body {
   // NYUPreview plugin
   #ckeditorPreview.modal {
+    z-index: 100011; // so it goes on top of Lessons things
+
     .modal-dialog {
       width: 94%;
       max-width: 1200px;
@@ -34,6 +36,9 @@ body {
         content: '\f02f';
       }
     }
+  }
+  #ckeditorPreview.modal + .modal-backdrop {
+    z-index: 100010; // so it goes on top of Lessons things, but behind modal
   }
 
   // CKEditor context
