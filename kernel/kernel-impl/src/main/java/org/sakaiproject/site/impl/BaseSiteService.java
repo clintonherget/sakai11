@@ -1262,7 +1262,11 @@ public abstract class BaseSiteService implements SiteService, Observer
 	/**
 	 * @inheritDoc
 	 */
-	public Site addSite(String id, Site other) throws IdInvalidException, IdUsedException, PermissionException
+	public Site addSite(String id, Site other) throws IdInvalidException, IdUsedException, PermissionException {
+		return addSite(id, other, null);
+	}
+
+	public Site addSite(String id, Site other, ResourceProperties properties) throws IdInvalidException, IdUsedException, PermissionException
 	{
 		// check for a valid site id
 		if (!Validator.checkResourceId(id)) {
@@ -1305,6 +1309,13 @@ public abstract class BaseSiteService implements SiteService, Observer
 
 		// make this site a copy of other, but with new ids (not an exact copy)
 		((BaseSite) site).set((BaseSite) other, false);
+
+		// CLASS-3158 Set properties early on in the process so we can
+		// dispatch on them during tool setup.  For example, applying
+		// defaults to Gradebook based on Department.
+		if (properties != null) {
+			site.getPropertiesEdit().addAll(properties);
+		}
 
 		// copy the realm (to get permissions settings)
 		try
