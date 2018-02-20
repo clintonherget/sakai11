@@ -12337,7 +12337,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				// if create based on template,
 				Site templateSite = (Site) state.getAttribute(STATE_TEMPLATE_SITE);
 				if (templateSite != null) {
-					site = SiteService.addSite(id, templateSite);
+					site = SiteService.addSite(id, templateSite, siteInfo.getProperties());
 					// set site type
 					site.setType(SiteTypeUtil.getTargetSiteType(templateSite.getType()));
 

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.sakaiproject.entity.api.ResourceProperties;
+
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.EntityProducer;
 import org.sakaiproject.exception.IdInvalidException;
@@ -593,6 +595,10 @@ public interface SiteService extends EntityProducer
 	 *            if the current user does not have permission to add a site.
 	 */
 	Site addSite(String id, Site other) throws IdInvalidException, IdUsedException, PermissionException;
+
+	// CLASSES-3158
+	Site addSite(String id, Site other, ResourceProperties properties) throws IdInvalidException, IdUsedException, PermissionException;
+
 
 	/**
 	 * check permissions for removeSite().
