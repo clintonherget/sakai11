@@ -44,6 +44,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
 import org.json.simple.JSONArray;
@@ -558,10 +559,11 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 
 	public SimplePageItem findNextPageItemOnPage(long pageId, int sequence) {
 	        DetachedCriteria d = DetachedCriteria.forClass(SimplePageItem.class).add(Restrictions.eq("pageId", pageId)).
-		    add(Restrictions.eq("sequence", sequence+1)).
-		    add(Restrictions.eq("type",SimplePageItem.PAGE));
+		    add(Restrictions.gt("sequence", sequence)).
+		    add(Restrictions.eq("type",SimplePageItem.PAGE)).
+		    addOrder(Order.asc("sequence"));
 
-		List<SimplePageItem> list = (List<SimplePageItem>) getHibernateTemplate().findByCriteria(d);
+		List<SimplePageItem> list = (List<SimplePageItem>) getHibernateTemplate().findByCriteria(d, 0, 1);
 
 		if (list == null || list.size() < 1)
 		    return null;
@@ -571,9 +573,10 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 
 	public SimplePageItem findNextItemOnPage(long pageId, int sequence) {
 	        DetachedCriteria d = DetachedCriteria.forClass(SimplePageItem.class).add(Restrictions.eq("pageId", pageId)).
-		    add(Restrictions.eq("sequence", sequence+1));
+		    add(Restrictions.gt("sequence", sequence)).
+		    addOrder(Order.asc("sequence"));
 
-		List<SimplePageItem> list = (List<SimplePageItem>) getHibernateTemplate().findByCriteria(d);
+		List<SimplePageItem> list = (List<SimplePageItem>) getHibernateTemplate().findByCriteria(d, 0, 1);
 
 		if (list == null || list.size() < 1)
 		    return null;
