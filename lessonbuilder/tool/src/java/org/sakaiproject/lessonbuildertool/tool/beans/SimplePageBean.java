@@ -70,6 +70,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import org.sakaiproject.service.gradebook.shared.GradebookHelper;
+import org.sakaiproject.service.gradebook.shared.InvalidGradeItemNameException;
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.authz.api.Member;
@@ -4282,11 +4284,14 @@ public class SimplePageBean {
 			}
 			// adjust gradebook entry
 			boolean add = false;
+
+			String gradebookFriendlyTitle = sanitizeTitleForGradebook(pageTitle);
+
 			if (newPoints == null && currentPoints != null) {
 				add = gradebookIfc.removeExternalAssessment(site.getId(), "lesson-builder:" + page.getPageId());
 			} else if (newPoints != null && currentPoints == null) {
 				add = gradebookIfc.addExternalAssessment(site.getId(), "lesson-builder:" + page.getPageId(), null,
-						       	pageTitle, newPoints, null, "Lesson Builder");
+						       	gradebookFriendlyTitle, newPoints, null, "Lesson Builder");
 				
 				if(!add) {
 					setErrMessage(messageLocator.getMessage("simplepage.no-gradebook"));
@@ -4295,7 +4300,7 @@ public class SimplePageBean {
 			} else if (currentPoints != null && 
 					(!currentPoints.equals(newPoints) || !pageTitle.equals(page.getTitle()))) {
 				add = gradebookIfc.updateExternalAssessment(site.getId(), "lesson-builder:" + page.getPageId(), null,
-							  	pageTitle, newPoints, null);
+							  	gradebookFriendlyTitle, newPoints, null);
 				if(!add) {
 					setErrMessage(messageLocator.getMessage("simplepage.no-gradebook"));
 				} else if (!currentPoints.equals(newPoints))
@@ -7023,14 +7028,15 @@ public class SimplePageBean {
 					
 					if(comment.getPageId() >= 0) {
 						pageTitle = getPage(comment.getPageId()).getTitle();
+						String gradebookFriendlyTitle = sanitizeTitleForGradebook(pageTitle);
 						gradebookId = "lesson-builder:comment:" + comment.getId();
 						
 						if(comment.getGradebookId() != null && !comment.getGradebookPoints().equals(points))
 						    add = gradebookIfc.updateExternalAssessment(getCurrentSiteId(), "lesson-builder:comment:" + comment.getId(), null,
-							      pageTitle + " Comments (item:" + comment.getId() + ")", Integer.valueOf(maxPoints), null);
+							      gradebookFriendlyTitle + " Comments (item:" + comment.getId() + ")", Integer.valueOf(maxPoints), null);
 						else
 						    add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), "lesson-builder:comment:" + comment.getId(), null,
-								pageTitle + " Comments (item:" + comment.getId() + ")", Integer.valueOf(maxPoints), null, "Lesson Builder");
+								gradebookFriendlyTitle + " Comments (item:" + comment.getId() + ")", Integer.valueOf(maxPoints), null, "Lesson Builder");
 						if(!add) {
 							setErrMessage(messageLocator.getMessage("simplepage.no-gradebook"));
 						}else {
@@ -7428,9 +7434,11 @@ public class SimplePageBean {
 			String title = gradebookTitle;
 			if(title == null || title.equals("")) {
 				title = questionText;
-			}	
-			
-			boolean add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), gradebookId, null, title, pointsInt, null, "Lesson Builder");
+			}
+
+			String gradebookFriendlyTitle = sanitizeTitleForGradebook(title);
+
+			boolean add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), gradebookId, null, gradebookFriendlyTitle, pointsInt, null, "Lesson Builder");
 			
 			if(!add) {
 				setErrMessage(messageLocator.getMessage("simplepage.no-gradebook"));
@@ -7440,8 +7448,8 @@ public class SimplePageBean {
 			}
 		}else if(gradebookTitle != null) {
 			// Updating an old gradebook entry
-			
-			gradebookIfc.updateExternalAssessment(getCurrentSiteId(), item.getGradebookId(), null, gradebookTitle, pointsInt, null);
+			String gradebookFriendlyTitle = sanitizeTitleForGradebook(gradebookTitle);
+			gradebookIfc.updateExternalAssessment(getCurrentSiteId(), item.getGradebookId(), null, gradebookFriendlyTitle, pointsInt, null);
 			
 			item.setGradebookTitle(gradebookTitle);
 		}else if(gradebookTitle == null && (item.getGradebookId() != null && !item.getGradebookId().equals(""))) {
@@ -7702,10 +7710,11 @@ public class SimplePageBean {
 				
 				if(page.getGradebookId() == null || !page.getGradebookPoints().equals(points)) {
 				 	boolean add;
+					String gradebookFriendlyTitle = sanitizeTitleForGradebook(getPage(page.getPageId()).getTitle() + " Student Pages (item:" + page.getId() + ")");
 					if (page.getGradebookId() != null && !page.getGradebookPoints().equals(points))
-					    add = gradebookIfc.updateExternalAssessment(getCurrentSiteId(), "lesson-builder:page:" + page.getId(), null, getPage(page.getPageId()).getTitle() + " Student Pages (item:" + page.getId() + ")", Integer.valueOf(maxPoints), null);
+					    add = gradebookIfc.updateExternalAssessment(getCurrentSiteId(), "lesson-builder:page:" + page.getId(), null, gradebookFriendlyTitle, Integer.valueOf(maxPoints), null);
 					else 
-					    add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), "lesson-builder:page:" + page.getId(), null, getPage(page.getPageId()).getTitle() + " Student Pages (item:" + page.getId() + ")", Integer.valueOf(maxPoints), null, "Lesson Builder");
+					    add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), "lesson-builder:page:" + page.getId(), null, gradebookFriendlyTitle, Integer.valueOf(maxPoints), null, "Lesson Builder");
 					
 					if(!add) {
 						setErrMessage(messageLocator.getMessage("simplepage.no-gradebook"));
@@ -7735,12 +7744,13 @@ public class SimplePageBean {
 				if(page.getAltGradebook() == null || !page.getAltPoints().equals(points)) {
 					String title = getPage(page.getPageId()).getTitle() + " Student Page Comments (item:" + page.getId() + ")";
 					boolean add;
+					String gradebookFriendlyTitle = sanitizeTitleForGradebook(title);
 					if(page.getAltGradebook() != null && !page.getAltPoints().equals(points))
 					    add = gradebookIfc.updateExternalAssessment(getCurrentSiteId(), "lesson-builder:page-comment:" + page.getId(), null,
-											title, points, null);
+											gradebookFriendlyTitle, points, null);
 					else
 					    add = gradebookIfc.addExternalAssessment(getCurrentSiteId(), "lesson-builder:page-comment:" + page.getId(), null,
-							title, points, null, "Lesson Builder");
+							gradebookFriendlyTitle, points, null, "Lesson Builder");
 					// The assessment couldn't be added
 					if(!add) {
 						setErrMessage(messageLocator.getMessage("simplepage.no-gradebook"));
@@ -8943,5 +8953,15 @@ public class SimplePageBean {
 			status = "cancel";
 		}
 		return status;
+	}
+
+	// CLASSES-3205
+	private String sanitizeTitleForGradebook(String pageTitle) {
+		try {
+			GradebookHelper.validateGradeItemName(pageTitle);
+			return pageTitle;
+		} catch (InvalidGradeItemNameException e) {
+			return GradebookHelper.sanitizeGradeItemName(pageTitle);
+		}
 	}
 }
