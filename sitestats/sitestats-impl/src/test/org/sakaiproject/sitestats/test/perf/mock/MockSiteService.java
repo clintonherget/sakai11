@@ -211,6 +211,14 @@ public class MockSiteService implements SiteService {
 		return null;
 	}
 
+	// CLASSES-3158
+	@Override
+	public Site addSite(String id, Site other, ResourceProperties properties) throws IdInvalidException,
+			IdUsedException, PermissionException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	@Override
 	public boolean allowRemoveSite(String id) {
 		// TODO Auto-generated method stub
