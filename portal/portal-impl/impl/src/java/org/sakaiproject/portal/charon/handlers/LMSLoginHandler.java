@@ -61,7 +61,7 @@ public class LMSLoginHandler extends BasePortalHandler
 	public int doPost(String[] parts, HttpServletRequest req, HttpServletResponse res,
 		Session session) throws PortalHandlerException
 	{
-		if ((parts.length == 2) && (parts[1].equals(getUrlFragment())))
+		if ((parts.length == 2) && (parts[1].equals(getUrlFragment())) && isIPAcceptable(req))
 		{
 			String eid = req.getParameter("eid");
 
@@ -88,7 +88,7 @@ public class LMSLoginHandler extends BasePortalHandler
 	public int doGet(String[] parts, HttpServletRequest req, HttpServletResponse res,
 		Session session) throws PortalHandlerException
 	{
-		if ((parts.length == 2) && (parts[1].equals(getUrlFragment())))
+		if ((parts.length == 2) && (parts[1].equals(getUrlFragment())) && isIPAcceptable(req))
 		{
 			try
 			{
@@ -112,6 +112,15 @@ public class LMSLoginHandler extends BasePortalHandler
 		}
 	}
 
+	private boolean isIPAcceptable(HttpServletRequest req) {
+		String allowedIPs = HotReloadConfigurationService.getString("lms-login.ip-whitelist-regex", "");
+		String ip = req.getRemoteAddr();
+
+		log.info("LMSLogin from IP {} not accepted", ip);
+
+		return (!allowedIPs.isEmpty() && ip.matches(allowedIPs));
+	}
+
 	private boolean isAcceptable(HttpServletRequest req, String eid) {
 		if (eid == null || "".equals(eid)) {
 			return false;
@@ -121,7 +130,8 @@ public class LMSLoginHandler extends BasePortalHandler
 		String allowedIPs = HotReloadConfigurationService.getString("lms-login.ip-whitelist-regex", "");
 
 		String ip = req.getRemoteAddr();
-		if (allowedIPs.isEmpty() || !ip.matches(allowedIPs)) {
+
+		if (!isIPAcceptable(req)) {
 			log.info("Blocking LMSLogin attempt from IP {} for user: {} (IP mismatch)", ip, eid);
 			return false;
 		}
