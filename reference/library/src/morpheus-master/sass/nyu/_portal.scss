@@ -58,6 +58,10 @@ body a[href] {
   display: table-cell !important;
   vertical-align: middle;
 
+  .Mrphs-loginUser {
+    padding: 0 !important;
+  }
+
   a, .all-sites-label {
     text-decoration: none !important;
   }

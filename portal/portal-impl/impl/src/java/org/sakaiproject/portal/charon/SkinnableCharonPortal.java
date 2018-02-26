@@ -872,7 +872,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		    path = "/";
 		}
 
-		Pattern toplevelPaths = Pattern.compile("(^/$|^/site/|^/tool/)");
+		Pattern toplevelPaths = Pattern.compile("(^/$|^/site/|^/tool/|^/login)");
 
 		if (toplevelPaths.matcher(path).find() &&
 		    ssoURL != null && !"".equals(ssoURL) &&
