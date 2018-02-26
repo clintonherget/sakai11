@@ -29,6 +29,8 @@ import org.sakaiproject.portal.api.PortalHandlerException;
 import org.sakaiproject.portal.charon.LoginHelper;
 import org.sakaiproject.tool.api.Session;
 
+import org.sakaiproject.component.cover.ServerConfigurationService;
+
 /**
  * 
  * @author ieb
@@ -56,6 +58,10 @@ public class XLoginHandler extends BasePortalHandler
 	public int doGet(String[] parts, HttpServletRequest req, HttpServletResponse res,
 			Session session) throws PortalHandlerException
 	{
+		if (ServerConfigurationService.getString("edu.nyu.classes.saml.ssoURL", null) != null) {
+			return NEXT;
+		}
+
 		if ((parts.length == 2) && ((parts[1].equals(XLoginHandler.URL_FRAGMENT))))
 		{
 			try
