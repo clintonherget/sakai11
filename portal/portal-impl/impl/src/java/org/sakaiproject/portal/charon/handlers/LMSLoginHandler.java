@@ -116,9 +116,15 @@ public class LMSLoginHandler extends BasePortalHandler
 		String allowedIPs = HotReloadConfigurationService.getString("lms-login.ip-whitelist-regex", "");
 		String ip = req.getRemoteAddr();
 
-		log.info("LMSLogin from IP {} not accepted", ip);
+		boolean result = (!allowedIPs.isEmpty() && ip.matches(allowedIPs));
 
-		return (!allowedIPs.isEmpty() && ip.matches(allowedIPs));
+		if (result) {
+			log.info("LMSLogin from IP {} accepted", ip);
+		} else {
+			log.info("LMSLogin from IP {} not accepted", ip);
+		}
+
+		return result;
 	}
 
 	private boolean isAcceptable(HttpServletRequest req, String eid) {
