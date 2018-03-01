@@ -84,6 +84,8 @@ import org.sakaiproject.util.Validator;
 
 import org.sakaiproject.site.api.Group;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
 /**
  * @author ieb
  * @since Sakai 2.4
@@ -704,6 +706,12 @@ public class SiteHandler extends WorksiteHandler
 			boolean loggedIn = session.getUserId() != null;
 			boolean topLogin = ServerConfigurationService.getBoolean("top.login", true);
 
+			// NYU: if we're not forcing people to use Shibboleth, give them a top login
+			if ("true".equals(HotReloadConfigurationService.getString("edu.nyu.classes.saml.force-shibboleth-login", ""))) {
+			    topLogin = false;
+			} else {
+			    topLogin = true;
+			}
 
 			String accessibilityURL = ServerConfigurationService
 					.getString("accessibility.url");

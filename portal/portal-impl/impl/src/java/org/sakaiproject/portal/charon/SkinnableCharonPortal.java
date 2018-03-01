@@ -144,6 +144,7 @@ import org.sakaiproject.util.Web;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 
 /**
  * <p/> Charon is the Sakai Site based portal.
@@ -872,7 +873,9 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		    path = "/";
 		}
 
-		Pattern toplevelPaths = Pattern.compile("(^/$|^/site/|^/tool/|^/login)");
+		Pattern toplevelPaths = ("true".equals(HotReloadConfigurationService.getString("edu.nyu.classes.saml.force-shibboleth-login", ""))) ?
+		    Pattern.compile("(^/$|^/site/|^/tool/|^/login)") :
+		    Pattern.compile("(^/$|^/site/|^/tool/)");
 
 		if (toplevelPaths.matcher(path).find() &&
 		    ssoURL != null && !"".equals(ssoURL) &&
@@ -1971,6 +1974,14 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			// instead
 			// of a login link, but ignore it if container.login is set
 			boolean topLogin = ServerConfigurationService.getBoolean("top.login", true);
+
+			// NYU: if we're not forcing people to use Shibboleth, give them a top login
+			if ("true".equals(HotReloadConfigurationService.getString("edu.nyu.classes.saml.force-shibboleth-login", ""))) {
+			    topLogin = false;
+			} else {
+			    topLogin = true;
+			}
+
 			boolean containerLogin = ServerConfigurationService.getBoolean("container.login", false);
 			if (containerLogin) topLogin = false;
 

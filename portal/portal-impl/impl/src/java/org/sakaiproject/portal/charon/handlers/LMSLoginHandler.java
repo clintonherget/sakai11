@@ -43,7 +43,13 @@ public class LMSLoginHandler extends BasePortalHandler
 	private static final String defaultUrlFragment = String.format("<LMSLoginHandlerFragmentUnset:%s>", UUID.randomUUID());
 
 	public static String lmsUrlFragment() {
-		return HotReloadConfigurationService.getString("lms-login.fragment", defaultUrlFragment);
+		String fragment = HotReloadConfigurationService.getString("lms-login.fragment", "");
+
+		if (fragment == null || "".equals(fragment)) {
+			return defaultUrlFragment;
+		}
+
+		return fragment;
 	}
 
 	@Override
