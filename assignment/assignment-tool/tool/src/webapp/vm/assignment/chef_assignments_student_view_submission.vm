@@ -23,6 +23,12 @@ $(document).ready(function(){
     });
     
 });
+
+function showSubmissionWarning() {
+	 $('#submissionInProgress').show();
+}
+
+
 </script>
 ## Include other javascript specific to this page
 #javascript("/sakai-assignment-tool/js/studentViewSubmission.js")
@@ -1100,13 +1106,15 @@ $(document).ready(function(){
 						<input type="button" name="cancel" accesskey="x" id="cancel" value="$tlang.getString("gen.don")" onclick="ASN_SVS.confirmDiscardOrSubmit( '$name_submission_text', $!new_attachments ); return false;" />
 					#else
 					 class="act">
+					<span class="messageError" id="submissionInProgress" style="display: none;">Submitting your work. <strong>Please do not refresh your browser</strong>.</span>
+
 								#if ($submitted && $!timeSubmitted)
 									#set($name=$tlang.getString("resubmit"))
 								#else
 									#set($name=$tlang.getString("gen.subm3"))
 								#end
 								<input type="button" class="active" name="post" accesskey="s" id="post" value="$!name"
-									onclick="SPNR.disableControlsAndSpin( this, null ); ASN.submitForm( 'addSubmissionForm', 'post', null, null ); return false;" 
+									onclick="showSubmissionWarning(); SPNR.disableControlsAndSpin( this, null ); ASN.submitForm( 'addSubmissionForm', 'post', null, null ); return false;" 
 								#if ($submitted && ($submissionType == 2 || $submissionType == 5) && !$!new_attachments && !$!newSingleUploadedFile && (!$!newSingleAttachmentList || $!newSingleAttachmentList.isEmpty()))
 									disabled="disabled"
 								#end
@@ -1119,7 +1127,7 @@ $(document).ready(function(){
 								onclick="SPNR.disableControlsAndSpin( this, null ); ASN.submitForm( 'addSubmissionForm', 'save', null, null ); return false;" />
 							#end
 							#if ($!linkInvoked)
-								<input class="disableme" type="submit" accesskey="x" onClick="SPNR.disableControlsAndSpin( this, null ); window.close();" name="eventSubmit_doConfirm_assignment_submission" value="$tlang.getString("gen.closeexit")" />
+								<input class="disableme" type="submit" accesskey="x" onClick="showSubmissionWarning(); SPNR.disableControlsAndSpin( this, null ); window.close();" name="eventSubmit_doConfirm_assignment_submission" value="$tlang.getString("gen.closeexit")" />
 							#else
 								<input class="disableme" type="button" name="cancel" accesskey="x" id="cancel" value="$tlang.getString("gen.can")"
 									onclick="ASN_SVS.confirmDiscardOrSubmit( '$name_submission_text', $!new_attachments ); return false;" />
@@ -1264,7 +1272,7 @@ $(document).ready(function(){
 					#end
 					
 		#if ($!linkInvoked)
-			<input type="submit" accesskey="x" onClick="SPNR.disableControlsAndSpin( this, null ); window.close();" name="eventSubmit_doConfirm_assignment_submission" value="$tlang.getString("gen.closeexit")" class="disableme"/>
+			<input type="submit" accesskey="x" onClick="showSubmissionWarning(); SPNR.disableControlsAndSpin( this, null ); window.close();" name="eventSubmit_doConfirm_assignment_submission" value="$tlang.getString("gen.closeexit")" class="disableme"/>
 		#else
 			<p class="act">
 				<input type="button" name="cancel" accesskey="x" id="cancel" value="$tlang.getString("gen.don")" onclick="ASN_SVS.confirmDiscardOrSubmit( '$name_submission_text', $!new_attachments ); return false;" />
