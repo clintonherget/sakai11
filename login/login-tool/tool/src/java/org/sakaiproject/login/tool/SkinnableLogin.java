@@ -138,6 +138,9 @@ public class SkinnableLogin extends HttpServlet implements Login {
 	}
 
 	private boolean forceSaml() {
+		if (!"true".equals(HotReloadConfigurationService.getString("edu.nyu.classes.saml.force-shibboleth-login", ""))) {
+			return false;
+		}
 		String ssoURL = serverConfigurationService.getString("edu.nyu.classes.saml.ssoURL");
 		return ssoURL != null && !"".equals(ssoURL);
 	}

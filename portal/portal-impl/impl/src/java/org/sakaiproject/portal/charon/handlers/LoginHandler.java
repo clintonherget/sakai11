@@ -28,6 +28,7 @@ import org.sakaiproject.portal.api.PortalHandlerException;
 import org.sakaiproject.tool.api.Session;
 
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 
 /**
  * 
@@ -38,7 +39,6 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
  */
 public class LoginHandler extends BasePortalHandler
 {
-
 	private static final String URL_FRAGMENT = "login";
 
 	public LoginHandler()
@@ -50,7 +50,8 @@ public class LoginHandler extends BasePortalHandler
 	public int doGet(String[] parts, HttpServletRequest req, HttpServletResponse res,
 			Session session) throws PortalHandlerException
 	{
-		if (ServerConfigurationService.getString("edu.nyu.classes.saml.ssoURL", null) != null) {
+		if ("true".equals(HotReloadConfigurationService.getString("edu.nyu.classes.saml.force-shibboleth-login", "")) &&
+		    ServerConfigurationService.getString("edu.nyu.classes.saml.ssoURL", null) != null) {
 			return NEXT;
 		}
 
