@@ -92,6 +92,7 @@
                 <module>memory</module>
                 <module>message</module>
                 <module>msgcntr</module>
+                <module>myconnections</module>
                 <module>oauth</module>
                 <module>pasystem</module>
                 <module>nyugrades</module>
