@@ -163,7 +163,10 @@ public class WidgetPage extends WebPage {
 		// render jQuery and the Wicket event library
 		// Both must be priority so they are emitted into the head
 		final String cdnQuery = PortalUtils.getCDNQuery();
-		response.render(new PriorityHeaderItem(JavaScriptHeaderItem.forUrl(String.format(PortalUtils.getLatestJQueryPath()+ "?version=%s", cdnQuery))));
+//		response.render(new PriorityHeaderItem(JavaScriptHeaderItem.forUrl(String.format(PortalUtils.getLatestJQueryPath()+ "?version=%s", cdnQuery))));
+		// NYU backport 13.x version -- build jquery path manually
+		String jQueryPath = PortalUtils.getWebjarsPath() + "jquery/1.11.3/jquery.min.js" + cdnQuery;
+		response.render(new PriorityHeaderItem(JavaScriptHeaderItem.forUrl(jQueryPath)));
 		response.render(new PriorityHeaderItem(JavaScriptHeaderItem.forUrl(String.format("/my-calendar/scripts/wicket/wicket-event-jquery.min.js?version=%s", cdnQuery))));
 	
 		// NOTE: All libraries apart from jQuery and Wicket Event must be rendered inline with the application. See WidgetPage.html.
