@@ -18,10 +18,8 @@
  */
 package org.sakaiproject.sitestats.test.mocks;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Locale;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import org.sakaiproject.component.api.ServerConfigurationService;
 
@@ -61,6 +59,14 @@ public class FakeServerConfigurationService implements ServerConfigurationServic
 
 	public boolean getBoolean(String key, boolean defaultValue) {
 		return Boolean.parseBoolean(getString(key, Boolean.toString(defaultValue)));
+	}
+
+	public List<String> getStringList(String name, List<String> dflt) {
+		return new ArrayList<String>();
+	}
+
+	public List<Pattern> getPatternList(String name, List<String> dflt) {
+		return new ArrayList<Pattern>();
 	}
 
 	public List getDefaultTools(String arg0) {

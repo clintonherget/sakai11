@@ -68,6 +68,12 @@
         </jaxrs:serviceBeans>
     </jaxrs:server>
 
+    <jaxrs:server id="SakaiI18nRS" address="/rest/i18n">
+      <jaxrs:serviceBeans>
+        <ref bean="org.sakaiproject.webservices.SakaiI18n"/>
+      </jaxrs:serviceBeans>
+    </jaxrs:server>
+
     <jaxrs:server id="SakaiReportRS" address="/rest/report">
         <jaxrs:serviceBeans>
             <ref bean="org.sakaiproject.webservices.SakaiReport"/>
@@ -159,6 +165,10 @@
                     implementor="#org.sakaiproject.webservices.WSLongsight"
                     address="/soap/longsight"/>
 
+    <jaxws:endpoint id="SakaiI18n"
+                    implementor="#org.sakaiproject.webservices.SakaiI18n"
+                    address="/soap/i18n"/>
+
     <bean id="org.sakaiproject.webservices.AbstractWebService" class="org.sakaiproject.webservices.AbstractWebService" init-method="init">
         <property name="serverConfigurationService" ref="org.sakaiproject.component.api.ServerConfigurationService"/>
         <property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager"/>
@@ -218,5 +228,6 @@
         <property name="gradebookFrameworkService" ref="org.sakaiproject.service.gradebook.GradebookFrameworkService"/>
     </bean>
     <bean id="org.sakaiproject.webservices.WSLongsight" class="org.sakaiproject.webservices.WSLongsight" init-method="init" parent="org.sakaiproject.webservices.AbstractWebService" />
+    <bean id="org.sakaiproject.webservices.SakaiI18n" class="org.sakaiproject.webservices.SakaiI18n" init-method="init" parent="org.sakaiproject.webservices.AbstractWebService" />
 
 </beans>
