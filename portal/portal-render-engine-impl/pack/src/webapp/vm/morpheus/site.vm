@@ -128,6 +128,13 @@
             <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script>
 <![endif]-->
 
+        <script>
+            if (typeof Handlebars == 'undefined') {
+                document.write('\x3Cscript src="${pageWebjarsPath}handlebars/4.0.6/handlebars.runtime.min.js$!{portalCDNQuery}">\x3C/script>');
+            }
+        </script>
+        <script src="/library/templates.js$!{portalCDNQuery}"></script>
+
         <script src="${pageScriptPath}trimpath-template-latest.js$!{portalCDNQuery}"></script>
         <script src="${pageScriptPath}jquery/bgiframe/jquery.bgiframe.min.js$!{portalCDNQuery}"></script>
         <script src="${pageScriptPath}jquery/cluetip/1.2.10/jquery.cluetip.min.js$!{portalCDNQuery}"></script>

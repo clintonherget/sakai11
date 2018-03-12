@@ -70,6 +70,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
+			<artifactId>handlebars</artifactId>
+			<version>${handlebars4.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
 			<artifactId>momentjs</artifactId>
 			<version>2.11.1</version>
 			<scope>runtime</scope>
@@ -366,6 +372,25 @@
 								<configuration>
 									<sourceFile>${sakai.skin.customization.file}</sourceFile>
 									<destinationFile>${basedir}/src/${sakai.skin.source}/sass/_customization.scss</destinationFile>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>com.github.jknack</groupId>
+						<artifactId>handlebars-maven-plugin</artifactId>
+						<version>4.0.5</version>
+						<executions>
+							<execution>
+								<id>templates</id>
+								<phase>prepare-package</phase>
+								<goals>
+									<goal>precompile</goal>
+								</goals>
+								<configuration>
+									<output>${basedir}/src/webapp/templates.js</output>
+									<prefix>${basedir}/src/templates</prefix>
+									<amd>false</amd>
 								</configuration>
 							</execution>
 						</executions>
