@@ -216,6 +216,8 @@
 
         #parse("/vm/morpheus/includeGoogleTagManager.vm")
 
+        #parse("/vm/morpheus/connection-manager.vm")
+
         ${includeExtraHead}
     </body>
 </html>

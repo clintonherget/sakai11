@@ -136,11 +136,7 @@ import org.sakaiproject.user.api.PreferencesService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.user.cover.UserDirectoryService;
-import org.sakaiproject.util.BasicAuth;
-import org.sakaiproject.util.EditorConfiguration;
-import org.sakaiproject.util.ResourceLoader;
-import org.sakaiproject.util.Validator;
-import org.sakaiproject.util.Web;
+import org.sakaiproject.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,6 +167,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 	 * messages.
 	 */
 	private static ResourceLoader rloader = new ResourceLoader("sitenav");
+	private static ResourceLoader cmLoader = new Resource().getLoader("org.sakaiproject.portal.api.PortalService", "connection-manager");
 
 	/**
 	 * Parameter value to indicate to look up a tool ID within a site
@@ -1127,6 +1124,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		rcontext.put("includeLatestJQuery", PortalUtils.includeLatestJQuery("Portal"));
 		rcontext.put("pageTop", Boolean.valueOf(true));
 		rcontext.put("rloader", rloader);
+		rcontext.put("cmLoader", cmLoader);
 		//rcontext.put("browser", new BrowserDetector(request));
 		// Allow for inclusion of extra header code via property
 		String includeExtraHead = ServerConfigurationService.getString("portal.include.extrahead", "");
