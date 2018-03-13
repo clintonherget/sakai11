@@ -241,10 +241,21 @@
         padding-left: 3px;
         padding-right: 3px;
     }
+
+    #commons-edit-form #commons-title {
+        width: 100%;
+        max-width: 450px;
+    }
 }
 
 #commons-imagefile-instruction {
     font-weight: bold;
     font-size: larger;
     margin-bottom: 5px;
+}
+
+.#{$namespace}multipleTools {
+    .#{$namespace}toolBody.#{$namespace}toolBody--sakai-commons {
+        padding: 10px;
+    }
 }

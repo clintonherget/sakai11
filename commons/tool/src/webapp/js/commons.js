@@ -19,7 +19,8 @@ commons.states = {
         POSTS: 'posts',
         POST: 'post',
         PERMISSIONS: 'permissions',
-        PERMISSIONS_NOT_SET: 'permissions_not_set'
+        PERMISSIONS_NOT_SET: 'permissions_not_set',
+        EDIT: 'edit',
     };
 
 commons.getSelection = function () {
@@ -259,6 +260,25 @@ commons.switchState = function (state, arg) {
                     // XSS protection will block this call.
                 }
             }
+
+            // Add button to edit tool (multi-tools view only)
+            if (commons.currentUserPermissions.updateSite) {
+                var buttonContainer = $('.Mrphs-multipleTools .Mrphs-container.Mrphs-sakai-commons .Mrphs-toolTitleNav.Mrphs-container--toolTitleNav .Mrphs-toolTitleNav__button_container');
+                if (buttonContainer.length == 1 && buttonContainer.find('#commons-edit').length == 0) {
+                    var editButton = $('<a>')
+                        .addClass('Mrphs-toolTitleNav__link')
+                        .addClass('Mrphs-toolTitleNav__link--edit')
+                        .attr('id', 'commons-edit')
+                        .attr('href', 'javascript:void(0);')
+                        .attr('title', 'Edit');
+                    editButton.append($('<span>').addClass('Mrphs-itemTitle').html(' Edit'));
+                    editButton.appendTo(buttonContainer);
+                    editButton.on('click', function(event) {
+                        event.preventDefault();
+                        commons.switchState(commons.states.EDIT);
+                    });
+                }
+            }
         });
     } else if (commons.states.POST === state) {
         var url = "/direct/commons/post.json?postId=" + arg.postId;
@@ -289,6 +309,27 @@ commons.switchState = function (state, arg) {
             };
 
         commons.utils.getSitePermissionMatrix(permissionsCallback);
+
+    } else if (commons.states.EDIT === state) {
+        commons.utils.renderTemplate('edit', {}, 'commons-content');
+        $(document).ready(function () {
+            var currentTitle = $('#commons-title').closest('.Mrphs-sakai-commons').find('.Mrphs-toolTitleNav__title .Mrphs-toolTitleNav__text').text();
+            $('#commons-title').val(currentTitle);
+            $('#commons-edit-cancel-button').on('click', function() {
+                commons.switchState(commons.states.POSTS);
+            });
+            $("form#commons-edit-form").on('submit', function(event){
+                event.preventDefault();
+                var newTitle = $("#commons-title").val();
+
+                commons.utils.saveDetails({
+                    title: newTitle
+                }, function() {
+                    $('#commons-title').closest('.Mrphs-sakai-commons').find('.Mrphs-toolTitleNav__title .Mrphs-toolTitleNav__text').html(newTitle);
+                    commons.switchState(commons.states.POSTS);
+                });
+            });
+        });
     } else if (commons.states.PERMISSIONS_NOT_SET === state) {
         commons.utils.renderTemplate('permissions_not_set', {}, 'commons-content');
     }
