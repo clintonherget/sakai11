@@ -13,6 +13,11 @@ import org.sakaiproject.commons.api.CommonsConstants;
 import org.sakaiproject.commons.api.CommonsManager;
 import org.sakaiproject.commons.api.SakaiProxy;
 import org.sakaiproject.component.api.ComponentManager;
+import org.sakaiproject.entitybroker.exception.EntityException;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.api.ToolConfiguration;
+import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.util.RequestFilter;
 import org.sakaiproject.util.ResourceLoader;
@@ -96,6 +101,15 @@ public class CommonsTool extends HttpServlet {
         request.setAttribute("isUserSite", isUserSite);
         request.setAttribute("embedder", isUserSite ? CommonsConstants.SOCIAL : CommonsConstants.SITE);
         request.setAttribute("commonsId", isUserSite ? CommonsConstants.SOCIAL : siteId);
+
+        try {
+            // FIXME what do we do if there are more than two commons tools in a site? EEEEEEP
+            Site site = SiteService.getSite(siteId);
+            ToolConfiguration commonsTool = site.getToolForCommonId("sakai.commons");
+            request.setAttribute("commonsToolTitle", commonsTool.getTitle());
+        } catch(IdUnusedException e) {
+            throw new ServletException("Failed to find site");
+        }
 
         String pathInfo = request.getPathInfo();
 
