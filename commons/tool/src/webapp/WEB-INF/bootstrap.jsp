@@ -40,15 +40,27 @@
         <script type="text/javascript" src="/commons-tool/js/commons_permissions.js"></script>
         <script type="text/javascript" src="/profile2-tool/javascript/profile2-eb.js"></script>
 
-        <div class="portletBody commons-portletBody">
-
-            <ul id="commons-toolbar" class="navIntraTool actionToolBar" role="menu"></ul>
-
-            <div id="commons-main-container">
-                <div id="commons-content"></div>
+        <nav class="Mrphs-toolTitleNav Mrphs-container--toolTitleNav">
+            <h2 class="Mrphs-toolTitleNav__title">
+              <span class="Mrphs-toolTitleNav__text">${commonsToolTitle}</span>
+              <span class="Mrphs-toolTitleNav__addLeft"></span>
+            </h2>
+            <!-- FIXME only show if instructors -->
+            <div class="Mrphs-toolTitleNav__button_container">
+                <a class="Mrphs-toolTitleNav__link Mrphs-toolTitleNav__link--edit" id="commons-edit" href="#" title="Edit">
+                    <span class="Mrphs-itemTitle">Edit</span>
+                </a>
+                <span class="Mrphs-toolTitleNav__addRight"></span>
             </div>
-
-        </div> <!-- /portletBody-->
+        </nav> 
+        <div class="Mrphs-toolBody Mrphs-toolBody--sakai-iframe-site">
+            <div class="portletBody commons-portletBody">
+                <ul id="commons-toolbar" class="navIntraTool actionToolBar" role="menu"></ul>
+                <div id="commons-main-container">
+                    <div id="commons-content"></div>
+                </div>
+            </div>
+        </div>
 
         <script type="text/javascript" src="/commons-tool/js/commons.js"></script>
 

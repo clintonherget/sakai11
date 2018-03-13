@@ -22,7 +22,8 @@ commons.states = {
         POSTS: 'posts',
         POST: 'post',
         PERMISSIONS: 'permissions',
-        PERMISSIONS_NOT_SET: 'permissions_not_set'
+        PERMISSIONS_NOT_SET: 'permissions_not_set',
+        EDIT: 'edit',
     };
 
 commons.getSelection = function () {
@@ -101,6 +102,7 @@ commons.switchState = function (state, arg) {
             var editorCancelButton = $('#commons-editor-cancel-button');
             var editorLinkButton = $('#commons-editor-link-button');
             var editorImageButton = $('#commons-editor-image-button');
+            var editButton = $('#commons-edit');
 
             if (commons.isUserSite) {
                 editorImageButton.hide();
@@ -258,6 +260,11 @@ commons.switchState = function (state, arg) {
                     // XSS protection will block this call.
                 }
             }
+
+            editButton.on('click', function(event) {
+                event.preventDefault();
+                commons.switchState(commons.states.EDIT);
+            });
         });
     } else if (commons.states.POST === state) {
         var url = "/direct/commons/post.json?postId=" + arg.postId;
@@ -288,6 +295,27 @@ commons.switchState = function (state, arg) {
             };
 
         commons.utils.getSitePermissionMatrix(permissionsCallback);
+
+    } else if (commons.states.EDIT === state) {
+        commons.utils.renderTemplate('edit', {}, 'commons-content');
+        $(document).ready(function () {
+            var currentTitle = $('#commons-title').closest('.Mrphs-toolBody--sakai-commons').find('.Mrphs-toolTitleNav__text').text();
+            $('#commons-title').val(currentTitle);
+            $('#commons-edit-cancel-button').on('click', function() {
+                commons.switchState(commons.states.POSTS);
+            });
+            $("form#commons-edit-form").on('submit', function(event){
+                event.preventDefault();
+                var newTitle = $("#commons-title").val();
+
+                commons.utils.saveDetails({
+                    title: newTitle
+                }, function() {
+                    $('#commons-title').closest('.Mrphs-toolBody--sakai-commons').find('.Mrphs-toolTitleNav__text').html(newTitle);
+                    commons.switchState(commons.states.POSTS);
+                });
+            });
+        });
     } else if (commons.states.PERMISSIONS_NOT_SET === state) {
         commons.utils.renderTemplate('permissions_not_set', {}, 'commons-content');
     }
