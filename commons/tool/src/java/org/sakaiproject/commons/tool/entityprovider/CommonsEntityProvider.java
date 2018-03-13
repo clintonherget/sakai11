@@ -35,8 +35,12 @@ import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.entitybroker.entityprovider.extension.RequestGetter;
 import org.sakaiproject.entitybroker.exception.EntityException;
 import org.sakaiproject.entitybroker.util.AbstractEntityProvider;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.ToolConfiguration;
+import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.tool.api.Session;
 
 import lombok.Setter;
@@ -354,6 +358,36 @@ public class CommonsEntityProvider extends AbstractEntityProvider implements Req
         } else {
             throw new EntityException("Failed to set perms", "", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @EntityCustomAction(action = "saveDetails", viewKey = EntityView.VIEW_NEW)
+    public String handleSaveDetails(EntityView view, Map<String, Object> params) {
+
+        String userId = getCheckedUser();
+
+        String siteId = (String) params.get("siteId");
+        String commonsId = (String) params.get("commonsId");
+        String title = (String) params.get("title");
+
+        if (StringUtils.isBlank(title)) {
+            throw new EntityException("Failed to save details as title is required", "", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+
+        try {
+            // FIXME what do we do if there are more than two commons tools in a site? EEEEEEP
+            Site site = SiteService.getSite(siteId);
+            ToolConfiguration commonsTool = site.getToolForCommonId("sakai.commons");
+            commonsTool.setTitle(title);
+            SitePage page = commonsTool.getContainingPage();
+            page.setHomeToolsTitleCustom(commonsTool.getId());
+            SiteService.save(site);
+        } catch(IdUnusedException e) {
+            throw new EntityException("Failed to save details as site does not exist", "", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch(PermissionException e) {
+            throw new EntityException("Failed to save details", "", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+
+        return "success";
     }
 
     @EntityCustomAction(action = "getUrlMarkup", viewKey = EntityView.VIEW_LIST)

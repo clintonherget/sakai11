@@ -439,6 +439,28 @@ commons.utils = {
         c.canEdit = commons.currentUserPermissions.commentUpdateAny
                         || (commons.currentUserPermissions.commentUpdateOwn && c.creatorId === commons.userId);
     },
+    saveDetails: function (formData, callback) {
+
+        var data = {
+                'commonsId': commons.commonsId,
+                'siteId': commons.siteId,
+            };
+
+        data = $.extend({}, data, formData);
+
+        $.ajax( {
+            url: "/direct/commons/saveDetails",
+            type: 'POST',
+            data: data,
+            timeout: commons.AJAX_TIMEOUT
+        }).done(function (comment) {
+            callback();
+        }).fail(function (xmlHttpRequest, textStatus, error) {
+            alert("Failed to save defails. Status: " + textStatus + '. Error: ' + error);
+        });
+
+        return false;
+    },
     renderTemplate: function (name, data, output) {
 
         var template = Handlebars.templates[name];
