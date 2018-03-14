@@ -29,6 +29,12 @@
   .icon-sakai--sakai-iframe-site:before {
     content: '\f0ca' !important;
   }
+  // Force dot point list for commons when positioned first on homepage
+  .Mrphs-toolsNav__menu ul li:first-child .icon-sakai--sakai-commons:before,
+  .Mrphs-sitesNav__submenu .Mrphs-sitesNav__submenuitem:first-child .icon-sakai--sakai-commons:before,
+  .tool_list #sort1 li:first-child .icon-sakai--sakai-commons:before {
+    content: '\f0ca' !important;
+  }
 
   .icon-sakai--nyu-ls-music-resources          { @extend .fa-music; }
   .icon-sakai--nyu-mediasite-poly              { @extend .fa-film; }
