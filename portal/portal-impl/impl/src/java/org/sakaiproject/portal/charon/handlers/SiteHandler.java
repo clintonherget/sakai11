@@ -869,6 +869,11 @@ public class SiteHandler extends WorksiteHandler
 		            }
 		            else
 		            {
+				if (userRole != null) {
+				    // CLASSES-3233 Don't give the user the option of switching to their own role
+				    svRolesFinal.remove(userRole.getId());
+				}
+
 		            	if (svRolesFinal.size()>1)
 		            	{
 		            		rcontext.put("roleswapdropdown", true);
