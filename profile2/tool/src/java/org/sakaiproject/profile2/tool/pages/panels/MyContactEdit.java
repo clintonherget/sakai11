@@ -166,6 +166,14 @@ public class MyContactEdit extends Panel {
         homepageContainer.add(homepageFeedback);
         homepage.add(new ComponentVisualErrorBehaviour("onblur", homepageFeedback));
 		form.add(homepageContainer);
+
+		
+		// CLASSES-3209 Don't want homepage
+		if ("".equals(homepage.getValue())) {
+			homepageContainer.setVisible(false);
+		}
+
+
 		
 		//workphone
 		WebMarkupContainer workphoneContainer = new WebMarkupContainer("workphoneContainer");
@@ -235,6 +243,11 @@ public class MyContactEdit extends Panel {
         facsimile.add(new ComponentVisualErrorBehaviour("onblur", facsimileFeedback));
 		form.add(facsimileContainer);
 		
+		// CLASSES-3209 Don't want fax
+		if ("".equals(facsimile.getValue())) {
+			facsimileContainer.setVisible(false);
+		}
+
 		//submit button
 		AjaxFallbackButton submitButton = new AjaxFallbackButton("submit", new ResourceModel("button.save.changes"), form) {
 			protected void onSubmit(AjaxRequestTarget target, Form form) {

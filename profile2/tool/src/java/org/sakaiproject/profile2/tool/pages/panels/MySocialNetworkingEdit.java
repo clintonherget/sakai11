@@ -170,6 +170,11 @@ public class MySocialNetworkingEdit extends Panel {
 		
 		form.add(myspaceContainer);
 		
+		// CLASSES-3209 Don't want Myspace
+		if ("".equals(myspaceUrl.getValue())) {
+			myspaceContainer.setVisible(false);
+		}
+
 		//twitter
 		WebMarkupContainer twitterContainer = new WebMarkupContainer("twitterContainer");
 		twitterContainer.add(new Label("twitterLabel", new ResourceModel("profile.socialnetworking.twitter.edit")));
@@ -204,6 +209,12 @@ public class MySocialNetworkingEdit extends Panel {
 		skypeUsername.setOutputMarkupId(true);
 		skypeContainer.add(skypeUsername);
 		form.add(skypeContainer);
+
+		// CLASSES-3209 Don't want Skype
+		if ("".equals(skypeUsername.getValue())) {
+			skypeContainer.setVisible(false);
+		}
+
 			
 		//submit button
 		AjaxFallbackButton submitButton = new AjaxFallbackButton("submit", new ResourceModel("button.save.changes"), form) {
