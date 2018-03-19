@@ -28,6 +28,7 @@ import org.sakaiproject.profile2.model.BasicPerson;
 import org.sakaiproject.profile2.model.CompanyProfile;
 import org.sakaiproject.profile2.model.Person;
 import org.sakaiproject.profile2.model.SocialNetworkingInfo;
+import org.sakaiproject.profile2.model.TypeInputEntry;
 import org.sakaiproject.profile2.model.UserProfile;
 import org.sakaiproject.profile2.types.PrivacyType;
 import org.sakaiproject.profile2.util.ProfileConstants;
@@ -295,6 +296,21 @@ public class ProfileLogicImpl implements ProfileLogic {
 		return false;
 	}
 	
+	public List<TypeInputEntry> getPhoneNumbers(UserProfile userProfile) {
+		return dao.getPhoneNumbers(userProfile);
+	}
+
+
+	public boolean savePhoneNumbers(UserProfile userProfile) {
+		if(dao.savePhoneNumbers(userProfile)) {
+			log.info("Updated phone numbers for user: " + userProfile.getUserUuid());
+			return true;
+		}
+
+		return false;
+	}
+
+
 	/**
  	 * {@inheritDoc}
  	 */
