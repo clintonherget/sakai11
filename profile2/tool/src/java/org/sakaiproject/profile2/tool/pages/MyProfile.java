@@ -204,6 +204,8 @@ public class MyProfile extends BasePage {
 		userProfile.setFavouriteQuotes(sakaiPerson.getFavouriteQuotes());
 		userProfile.setPersonalSummary(sakaiPerson.getNotes());
 		
+		userProfile.setPhoneNumbers(profileLogic.getPhoneNumbers(userProfile));
+
 		// social networking fields
 		SocialNetworkingInfo socialInfo = profileLogic.getSocialNetworkingInfo(userProfile.getUserUuid());
 		if(socialInfo == null){
