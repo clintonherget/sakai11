@@ -462,6 +462,9 @@ public class MyProfile extends BasePage {
 		//status panel
 		Panel myStatusPanel = new MyStatusPanel("myStatusPanel", userProfile);
 		add(myStatusPanel);
+
+		// CLASSES-3236 Don't want this
+		myStatusPanel.setVisible(false);
 		
 		List<ITab> tabs = new ArrayList<ITab>();
 
