@@ -29,6 +29,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import org.sakaiproject.profile2.logic.SakaiProxy;
 import org.sakaiproject.profile2.model.UserProfile;
+import org.sakaiproject.profile2.model.TypeInputEntry;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.form.TextField;
+
 
 @Slf4j
 public class MyContactDisplay extends Panel {
@@ -78,7 +84,19 @@ public class MyContactDisplay extends Panel {
 		} else {
 			visibleFieldCount++;
 		}
-		
+
+		ListView<TypeInputEntry> phoneNumberContainer =
+			new ListView<TypeInputEntry>("phoneNumber", userProfile.getPhoneNumbers()) {
+				public void populateItem(final ListItem<TypeInputEntry> item) {
+					final TypeInputEntry entry = (TypeInputEntry)item.getDefaultModelObject();
+					item.add(new Label("phoneLabel", Model.of(entry.formatType())));
+					item.add(new Label("phoneNumber", Model.of(entry.getValue())));
+				}
+			};
+
+		visibleFieldCount += userProfile.getPhoneNumbers().size();
+		add(phoneNumberContainer);
+
 		//work phone
 		WebMarkupContainer workphoneContainer = new WebMarkupContainer("workphoneContainer");
 		workphoneContainer.add(new Label("workphoneLabel", new ResourceModel("profile.phone.work")));
@@ -87,7 +105,7 @@ public class MyContactDisplay extends Panel {
 		if(StringUtils.isBlank(workphone)) {
 			workphoneContainer.setVisible(false);
 		} else {
-			visibleFieldCount++;
+			// visibleFieldCount++;
 		}
 		
 		//home phone
@@ -98,7 +116,7 @@ public class MyContactDisplay extends Panel {
 		if(StringUtils.isBlank(homephone)) {
 			homephoneContainer.setVisible(false);
 		} else {
-			visibleFieldCount++;
+			// visibleFieldCount++;
 		}
 		
 		//mobile phone
@@ -109,7 +127,7 @@ public class MyContactDisplay extends Panel {
 		if(StringUtils.isBlank(mobilephone)) {
 			mobilephoneContainer.setVisible(false);
 		} else {
-			visibleFieldCount++;
+			// visibleFieldCount++;
 		}
 		
 		//facsimile
@@ -120,9 +138,15 @@ public class MyContactDisplay extends Panel {
 		if(StringUtils.isBlank(facsimile)) {
 			facsimileContainer.setVisible(false);
 		} else {
-			visibleFieldCount++;
+			// visibleFieldCount++;
 		}
-		
+
+		// Now obsolete...
+		mobilephoneContainer.setVisible(false);
+		homephoneContainer.setVisible(false);
+		workphoneContainer.setVisible(false);
+		facsimileContainer.setVisible(false);
+
 		//edit button
 		AjaxFallbackLink editButton = new AjaxFallbackLink("editButton") {
 			

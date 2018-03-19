@@ -45,6 +45,7 @@ import org.sakaiproject.profile2.hbm.model.ProfileImageExternal;
 import org.sakaiproject.profile2.hbm.model.ProfileImageOfficial;
 import org.sakaiproject.profile2.hbm.model.ProfileImageUploaded;
 import org.sakaiproject.profile2.hbm.model.ProfileKudos;
+import org.sakaiproject.profile2.model.ProfileTypedValues;
 import org.sakaiproject.profile2.model.CompanyProfile;
 import org.sakaiproject.profile2.model.ExternalIntegrationInfo;
 import org.sakaiproject.profile2.model.GalleryImage;
@@ -55,6 +56,7 @@ import org.sakaiproject.profile2.model.ProfilePreferences;
 import org.sakaiproject.profile2.model.ProfilePrivacy;
 import org.sakaiproject.profile2.model.ProfileStatus;
 import org.sakaiproject.profile2.model.SocialNetworkingInfo;
+import org.sakaiproject.profile2.model.TypeInputEntry;
 import org.sakaiproject.profile2.model.UserProfile;
 import org.sakaiproject.profile2.model.WallItem;
 import org.sakaiproject.profile2.model.WallItemComment;
@@ -575,7 +577,69 @@ public class ProfileDaoImpl extends HibernateDaoSupport implements ProfileDao {
 			return false;
 		}
 	}
-	
+
+	public List<TypeInputEntry> getPhoneNumbers(UserProfile userProfile) {
+		final String uuid = userProfile.getUserUuid();
+
+		if (uuid == null) {
+			return null;
+		}
+
+		HibernateCallback hcb = new HibernateCallback() {
+	  		public Object doInHibernate(Session session) throws HibernateException, SQLException {
+	  			Query q = session.getNamedQuery("getTypedValuesForUserByGroup");
+	  			q.setParameter(USER_UUID, uuid, Hibernate.STRING);
+	  			q.setParameter("group", "phoneNumbers", Hibernate.STRING);
+	  			return q.list();
+			}
+		};
+
+		List<ProfileTypedValues> rows = (List<ProfileTypedValues>) getHibernateTemplate().execute(hcb);
+
+		List<TypeInputEntry> result = new ArrayList<>();
+
+		for (ProfileTypedValues entry : rows) {
+			result.add(new TypeInputEntry(entry.getType(), entry.getTypeQualifier(), entry.getValue()));
+		}
+
+		return result;
+	}
+
+	public boolean savePhoneNumbers(final UserProfile userProfile) {
+		try {
+			getHibernateTemplate().execute(new HibernateCallback() {
+				public Object doInHibernate(Session session) {
+					Query q = session.createQuery("delete from " + ProfileTypedValues.class.getName() + " t where t.valueGroup = :group AND t.userUuid = :user");
+					q.setParameter("group", "phoneNumbers");
+					q.setParameter("user", userProfile.getUserUuid());
+					q.executeUpdate();
+
+					// FIXME: constant for phoneNumbers
+					for (TypeInputEntry entry : userProfile.getPhoneNumbers()) {
+						if (entry.getType() == null || entry.getValue() == null) {
+							continue;
+						}
+
+						session.save(new ProfileTypedValues(
+								     userProfile.getUserUuid(),
+								     "phoneNumbers",
+								     entry.getType(),
+								     entry.getTypeQualifier(),
+								     entry.getValue()));
+					}
+
+					session.flush();
+					return Boolean.TRUE;
+				}
+			});
+
+			return true;
+		} catch (Exception e) {
+			log.error("savePhoneNumbers failed. "+ e.getClass() + ": " + e.getMessage());
+			return false;
+		}
+	}
+
 	/**
  	 * {@inheritDoc}
  	 */
