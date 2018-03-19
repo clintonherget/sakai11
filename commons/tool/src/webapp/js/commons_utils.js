@@ -551,6 +551,20 @@ commons.utils = {
                 showCommentsLink.hide();
             }
 
+            // popups for images
+            $('#commons-post-' + post.id + ' .commons-image').each(function() {
+                var $img = $(this);
+                var $a = $('<a>')
+                    .attr('href', $img.attr('src'))
+                    .attr('title', 'Show full size image')
+                    .attr('target', '_blank')
+                    .attr('data-featherlight', 'image')
+                    .attr('data-featherlight-variant', 'commons-fullwidth')
+                    .addClass('commons-image-popup-link');
+
+                $img.wrap($a);
+            });
+
             post.comments.forEach(function (c) { self.addHandlersToComment(c); });
         });
     },
