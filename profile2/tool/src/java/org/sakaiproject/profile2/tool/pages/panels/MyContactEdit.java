@@ -50,6 +50,10 @@ import org.sakaiproject.profile2.tool.components.FeedbackLabel;
 import org.sakaiproject.profile2.tool.components.PhoneNumberValidator;
 import org.sakaiproject.profile2.util.ProfileConstants;
 
+import java.util.Arrays;
+import java.util.ArrayList;
+import org.sakaiproject.profile2.model.TypeInputEntry;
+
 public class MyContactEdit extends Panel {
 	
 	private static final long serialVersionUID = 1L;
@@ -134,7 +138,25 @@ public class MyContactEdit extends Panel {
         emailContainer.add(emailFeedback);
         email.add(new ComponentVisualErrorBehaviour("onblur", emailFeedback));
 		form.add(emailContainer);
-		
+
+	WebMarkupContainer phoneNumbersContainer = new WebMarkupContainer("phoneNumbersContainer");
+	Panel phoneNumbersEdit = new PhoneNumbersEdit("phoneNumbers");
+
+	final RepeatableTypedInput repeatableTypedInput = new RepeatableTypedInput("repeatableTypedInput",
+										   new Model(new ArrayList<TypeInputEntry>(userProfile.getPhoneNumbers())),
+										   "Number",
+										   "Type of number",
+										   Arrays.asList(new RepeatableTypedInput.Type[] {
+												   new RepeatableTypedInput.Type("Home"),
+												   new RepeatableTypedInput.Type("Mobile"),
+												   new RepeatableTypedInput.Type("Work"),
+												   new RepeatableTypedInput.Type("Other").qualified(true),
+											   }));
+	phoneNumbersEdit.add(repeatableTypedInput);
+
+	phoneNumbersContainer.add(phoneNumbersEdit);
+	form.add(phoneNumbersContainer);
+
 		//homepage
 		WebMarkupContainer homepageContainer = new WebMarkupContainer("homepageContainer");
 		homepageContainer.add(new Label("homepageLabel", new ResourceModel("profile.homepage")));
@@ -243,6 +265,13 @@ public class MyContactEdit extends Panel {
         facsimile.add(new ComponentVisualErrorBehaviour("onblur", facsimileFeedback));
 		form.add(facsimileContainer);
 		
+		mobilephoneContainer.setVisible(false);
+		homephoneContainer.setVisible(false);
+		workphoneContainer.setVisible(false);
+		facsimileContainer.setVisible(false);
+
+
+
 		// CLASSES-3209 Don't want fax
 		if ("".equals(facsimile.getValue())) {
 			facsimileContainer.setVisible(false);
@@ -253,7 +282,9 @@ public class MyContactEdit extends Panel {
 			protected void onSubmit(AjaxRequestTarget target, Form form) {
 				//save() form, show message, then load display panel
 
-				
+				// Apply our phone number changes
+				userProfile.setPhoneNumbers(repeatableTypedInput.entries());
+
 				if(save(form)) {
 					
 					//post update event
@@ -390,6 +421,8 @@ public class MyContactEdit extends Panel {
 		sakaiPerson.setFacsimileTelephoneNumber(userProfile.getFacsimile()); //facsimile
 
 		if(profileLogic.saveUserProfile(sakaiPerson)) {
+			profileLogic.savePhoneNumbers(userProfile);
+
 			log.info("Saved SakaiPerson for: " + userId );
 			
 			//update their email address in their account if allowed

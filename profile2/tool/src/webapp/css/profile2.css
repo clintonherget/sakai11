@@ -1379,3 +1379,8 @@ img.ui-datepicker-trigger {
 input[type="submit"].secondary {
     color: #555 !important
 }
+
+ul.repeatable-typed-input {
+	list-style: none;
+	padding: 0;
+}

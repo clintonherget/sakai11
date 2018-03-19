@@ -33,6 +33,7 @@ import org.sakaiproject.profile2.model.ProfilePreferences;
 import org.sakaiproject.profile2.model.ProfilePrivacy;
 import org.sakaiproject.profile2.model.ProfileStatus;
 import org.sakaiproject.profile2.model.SocialNetworkingInfo;
+import org.sakaiproject.profile2.model.TypeInputEntry;
 import org.sakaiproject.profile2.model.UserProfile;
 import org.sakaiproject.profile2.model.WallItem;
 import org.sakaiproject.profile2.model.WallItemComment;
@@ -299,6 +300,10 @@ public interface ProfileDao {
 	 */
 	public boolean saveSocialNetworkingInfo(final SocialNetworkingInfo socialNetworkingInfo);
 	
+	public List<TypeInputEntry> getPhoneNumbers(UserProfile userProfile);
+
+	public boolean savePhoneNumbers(UserProfile userProfile);
+
 	/**
 	 * Add a new profile image record to the database. Invalidates others before it adds itself.
 	 *
