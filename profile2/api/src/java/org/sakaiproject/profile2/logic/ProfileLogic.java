@@ -23,6 +23,7 @@ import org.sakaiproject.profile2.model.CompanyProfile;
 import org.sakaiproject.profile2.model.Person;
 import org.sakaiproject.profile2.model.SocialNetworkingInfo;
 import org.sakaiproject.profile2.model.UserProfile;
+import org.sakaiproject.profile2.model.TypeInputEntry;
 import org.sakaiproject.user.api.User;
 
 /**
@@ -124,7 +125,12 @@ public interface ProfileLogic {
 	 * @return
 	 */
 	public boolean saveSocialNetworkingInfo(SocialNetworkingInfo socialNetworkingInfo);
-		
+
+	public List<TypeInputEntry> getPhoneNumbers(UserProfile userProfile);
+
+	public boolean savePhoneNumbers(UserProfile userProfile);
+
+
 	/**
 	 * Get a BasicPerson
 	 * @param userUuid

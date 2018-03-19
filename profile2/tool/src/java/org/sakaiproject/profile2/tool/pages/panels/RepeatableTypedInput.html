@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.3-strict.dtd"
+      xml:lang="en"
+      lang="en">
+    <body>
+        <wicket:panel>
+            <form wicket:id="form">
+                <ul class="repeatable-typed-input">
+                    <li wicket:id="item">
+                        <select wicket:id="choices"></select>
+                        <input wicket:id="typeQualifier"></input>
+                        <input wicket:id="value"></input>
+                        <button wicket:id="removeItem">Remove</button>
+                    </li>
+                </ul>
+
+                <button wicket:id="addAnother">Add an entry</button>
+            </form>
+        </wicket:panel>
+    </body>
+</html>

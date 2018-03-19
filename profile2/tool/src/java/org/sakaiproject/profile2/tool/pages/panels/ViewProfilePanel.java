@@ -16,6 +16,7 @@
 package org.sakaiproject.profile2.tool.pages.panels;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -37,6 +38,13 @@ import org.sakaiproject.profile2.model.SocialNetworkingInfo;
 import org.sakaiproject.profile2.types.PrivacyType;
 import org.sakaiproject.profile2.util.ProfileConstants;
 import org.sakaiproject.profile2.util.ProfileUtils;
+
+import org.sakaiproject.profile2.model.TypeInputEntry;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.form.TextField;
+
 
 /**
  * Container for viewing the profile of someone else.
@@ -191,7 +199,22 @@ public class ViewProfilePanel extends Panel {
 		} else {
 			visibleFieldCount_contact++;
 		}
-		
+
+		List<TypeInputEntry> phoneNumbers = profileLogic.getPhoneNumbers(profileLogic.getUserProfile(userUuid));
+
+		ListView<TypeInputEntry> phoneNumberContainer =
+			new ListView<TypeInputEntry>("phoneNumber", phoneNumbers) {
+				public void populateItem(final ListItem<TypeInputEntry> item) {
+					final TypeInputEntry entry = (TypeInputEntry)item.getDefaultModelObject();
+
+					item.add(new Label("phoneLabel", Model.of(entry.formatType())));
+					item.add(new Label("phoneNumber", Model.of(entry.getValue())));
+				}
+			};
+
+		visibleFieldCount_contact += phoneNumbers.size();
+		contactInfoContainer.add(phoneNumberContainer);
+
 		//work phone
 		WebMarkupContainer workphoneContainer = new WebMarkupContainer("workphoneContainer");
 		workphoneContainer.add(new Label("workphoneLabel", new ResourceModel("profile.phone.work")));

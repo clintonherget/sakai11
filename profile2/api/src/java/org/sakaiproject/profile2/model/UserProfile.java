@@ -16,6 +16,7 @@
 package org.sakaiproject.profile2.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -66,6 +67,8 @@ public class UserProfile implements Serializable {
 	private String publications;
 	private String businessBiography;
 	
+	private List<TypeInputEntry> phoneNumbers;
+
 	private boolean locked;
 	
 	private ProfileStatus status;
@@ -87,7 +90,21 @@ public class UserProfile implements Serializable {
 	public void removeCompanyProfile(CompanyProfile companyProfile) {
 		companyProfiles.remove(companyProfile);
 	}
-	
+
+	public List<TypeInputEntry> getPhoneNumbers() {
+		if (phoneNumbers == null) {
+		    phoneNumbers = new ArrayList<TypeInputEntry>();
+		}
+
+		return phoneNumbers;
+	}
+
+	public void setPhoneNumbers(List<TypeInputEntry> entries) {
+		if (entries != null) {
+		    phoneNumbers = entries;
+		}
+	}
+
 	/* Additional methods for setting/getting properties in the map */
 	public void setProperty(String key, String value) {
         if (props == null) {
