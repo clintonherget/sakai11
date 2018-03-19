@@ -138,8 +138,11 @@ public class MyInterestsDisplay extends Panel {
 		add(noFieldsMessage);
 		if(visibleFieldCount > 0) {
 			noFieldsMessage.setVisible(false);
+		} else {
+			// NYU CLASSES-3209 Don't want personal info if they haven't already made use of it...
+			setVisible(false);
+			noFieldsMessage.setVisible(false);
 		}
-		
 	}
 	
 }
