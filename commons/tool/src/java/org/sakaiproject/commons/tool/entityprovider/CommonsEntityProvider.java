@@ -124,7 +124,12 @@ public class CommonsEntityProvider extends AbstractEntityProvider implements Req
                 }
                 data.posts = posts;
             } else {
+                // NYU page 0 size is 10 and all other pages are 20
                 int pageSize = 20;
+                if (page == 0) {
+                    pageSize = 10;
+                }
+
                 int start  = page * pageSize;
 
                 if (start >= data.postsTotal) {
