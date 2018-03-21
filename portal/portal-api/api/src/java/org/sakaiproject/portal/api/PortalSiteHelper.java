@@ -60,6 +60,9 @@ public interface PortalSiteHelper
 	boolean allowTool(Site site, Placement placement);
 
 
+	boolean nyuAllowToolOnPage(Site site, Placement placement, SitePage page);
+
+
 	/**
 	 * @return
 	 */
