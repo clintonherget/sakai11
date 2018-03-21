@@ -39,6 +39,7 @@ import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
+import org.sakaiproject.email.api.Attachment;
 import org.sakaiproject.entitybroker.util.PageTitleHelper;
 import org.sakaiproject.alias.api.Alias;
 import org.sakaiproject.alias.api.AliasService;
@@ -1393,6 +1394,24 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 	public boolean allowTool(Site site, Placement placement)
 	{
 		return getToolManager().allowTool(site, placement);
+	}
+
+	public boolean nyuAllowToolOnPage(Site site, Placement placement, SitePage page) {
+		ResourceProperties pageProperties = page.getProperties();
+
+		String whitelistRaw = pageProperties.getProperty("tool_whitelist");
+		if (StringUtils.isBlank(whitelistRaw)) {
+			return true;
+		}
+
+		List<String> whitelist = Arrays.asList(whitelistRaw.split(","));
+		for (String whitelistedToolId : whitelist) {
+			if (whitelistedToolId.equals(placement.getToolId())) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
