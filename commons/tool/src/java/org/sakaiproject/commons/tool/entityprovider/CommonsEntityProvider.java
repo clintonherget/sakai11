@@ -378,6 +378,10 @@ public class CommonsEntityProvider extends AbstractEntityProvider implements Req
             throw new EntityException("Failed to save details as title is required", "", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
 
+        if (!sakaiProxy.isAllowedFunction(SiteService.SECURE_UPDATE_SITE, siteId)) {
+            throw new EntityException("Permission denied", "", HttpServletResponse.SC_FORBIDDEN);
+        }
+
         try {
             // FIXME what do we do if there are more than two commons tools in a site? EEEEEEP
             Site site = SiteService.getSite(siteId);

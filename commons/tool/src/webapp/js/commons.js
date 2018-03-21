@@ -102,7 +102,6 @@ commons.switchState = function (state, arg) {
             var editorCancelButton = $('#commons-editor-cancel-button');
             var editorLinkButton = $('#commons-editor-link-button');
             var editorImageButton = $('#commons-editor-image-button');
-            var editButton = $('#commons-edit');
 
             if (commons.isUserSite) {
                 editorImageButton.hide();
@@ -261,10 +260,24 @@ commons.switchState = function (state, arg) {
                 }
             }
 
-            editButton.on('click', function(event) {
-                event.preventDefault();
-                commons.switchState(commons.states.EDIT);
-            });
+            // Add button to edit tool
+            if (commons.currentUserPermissions.updateSite) {
+                var buttonContainer = $('.Mrphs-container.Mrphs-sakai-commons .Mrphs-toolTitleNav.Mrphs-container--toolTitleNav .Mrphs-toolTitleNav__button_container');
+                if (buttonContainer.length == 1 && buttonContainer.find('#commons-edit').length == 0) {
+                    var editButton = $('<a>')
+                        .addClass('Mrphs-toolTitleNav__link')
+                        .addClass('Mrphs-toolTitleNav__link--edit')
+                        .attr('id', 'commons-edit')
+                        .attr('href', 'javascript:void(0);')
+                        .attr('title', 'Edit');
+                    editButton.append($('<span>').addClass('Mrphs-itemTitle').html(' Edit'));
+                    editButton.appendTo(buttonContainer);
+                    editButton.on('click', function(event) {
+                        event.preventDefault();
+                        commons.switchState(commons.states.EDIT);
+                    });
+                }
+            }
         });
     } else if (commons.states.POST === state) {
         var url = "/direct/commons/post.json?postId=" + arg.postId;
@@ -299,7 +312,7 @@ commons.switchState = function (state, arg) {
     } else if (commons.states.EDIT === state) {
         commons.utils.renderTemplate('edit', {}, 'commons-content');
         $(document).ready(function () {
-            var currentTitle = $('#commons-title').closest('.Mrphs-toolBody--sakai-commons').find('.Mrphs-toolTitleNav__text').text();
+            var currentTitle = $('#commons-title').closest('.Mrphs-sakai-commons').find('.Mrphs-toolTitleNav__title .Mrphs-toolTitleNav__text').text();
             $('#commons-title').val(currentTitle);
             $('#commons-edit-cancel-button').on('click', function() {
                 commons.switchState(commons.states.POSTS);
@@ -311,7 +324,7 @@ commons.switchState = function (state, arg) {
                 commons.utils.saveDetails({
                     title: newTitle
                 }, function() {
-                    $('#commons-title').closest('.Mrphs-toolBody--sakai-commons').find('.Mrphs-toolTitleNav__text').html(newTitle);
+                    $('#commons-title').closest('.Mrphs-sakai-commons').find('.Mrphs-toolTitleNav__title .Mrphs-toolTitleNav__text').html(newTitle);
                     commons.switchState(commons.states.POSTS);
                 });
             });

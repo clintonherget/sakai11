@@ -2,6 +2,11 @@
     margin-top: 0px !important;
     margin-bottom: 10px !important;
 }
+#col1of2 #commons-toolbar,
+#col2of2 #commons-toolbar {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
     .commons-photo-text-wrapper {
         border: solid #E0E0E0 1px;
         padding: 8px;
