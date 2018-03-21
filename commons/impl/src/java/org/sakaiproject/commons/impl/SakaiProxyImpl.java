@@ -255,6 +255,7 @@ public class SakaiProxyImpl implements SakaiProxy {
         if (securityService.isSuperUser(userId)) {
             // Special case for the super admin
             filteredFunctions.addAll(functionManager.getRegisteredFunctions("commons"));
+            filteredFunctions.add(SiteService.SECURE_UPDATE_SITE);
             return filteredFunctions;
         }
 
