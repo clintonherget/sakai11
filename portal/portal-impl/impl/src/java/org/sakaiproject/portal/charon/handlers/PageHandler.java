@@ -227,7 +227,8 @@ public class PageHandler extends BasePortalHandler
 
 					if (site != null)
 					{
-						boolean thisTool = portal.getSiteHelper().allowTool(site,placement);
+						boolean thisTool = portal.getSiteHelper().allowTool(site,placement)
+								&& portal.getSiteHelper().nyuAllowToolOnPage(site, placement, page);
 						if (!thisTool) continue; // Skip this tool if not allowed
 					}
 
@@ -253,8 +254,8 @@ public class PageHandler extends BasePortalHandler
 				for (Iterator i = tools.iterator(); i.hasNext();)
 				{
 					ToolConfiguration placement = (ToolConfiguration) i.next();
-					boolean thisTool = portal.getSiteHelper().allowTool(site,
-								placement);
+					boolean thisTool = portal.getSiteHelper().allowTool(site, placement)
+							&& portal.getSiteHelper().nyuAllowToolOnPage(site, placement, page);;
 					if (!thisTool) continue; // Skip this tool if not allowed
 					
 					//Get the tool data map.
