@@ -107,7 +107,7 @@ commons.switchState = function (state, arg) {
                 editorImageButton.hide();
             }
 
-            editor.click(function (e) {
+            editor.on('click focus',  function (e) {
 
                 if (this.innerHTML == commons.i18n.post_editor_initial_text) {
                     this.innerHTML = '';
@@ -124,9 +124,15 @@ commons.switchState = function (state, arg) {
                 e.preventDefault();
             }).blur(function (e) {
 
-                var sel = commons.getSelection();
-                commons.selectedText = (document.selection) ? sel.createRange().htmlText : sel.toString();
-                commons.currentRange = sel.getRangeAt(0);
+                if (editor.html() == '') {
+                    editor.html(commons.i18n.post_editor_initial_text);
+                    editorPostButton.prop('disabled', true);
+                    editorCancelButton.prop('disabled', true);
+                } else {
+                    var sel = commons.getSelection();
+                    commons.selectedText = (document.selection) ? sel.createRange().htmlText : sel.toString();
+                    commons.currentRange = sel.getRangeAt(0);
+                }
             });
 
             editorPostButton.click(function (e) {
@@ -144,6 +150,7 @@ commons.switchState = function (state, arg) {
                             '<div id=\"' + newPlaceholderId + '\" class=\"commons-post\"></div>');
                         commons.utils.addFormattedDateToPost(post);
                         commons.utils.renderPost(post, newPlaceholderId);
+                        editor.focus();
                     });
             });
 
@@ -278,6 +285,13 @@ commons.switchState = function (state, arg) {
                     });
                 }
             }
+
+            // Add CTRL+Return to submit post
+            editor.on('keydown', function(event) {
+                if (event.keyCode == 13 && (event.metaKey || event.ctrlKey)) {
+                    editorPostButton.trigger('click');
+                }
+            });
         });
     } else if (commons.states.POST === state) {
         var url = "/direct/commons/post.json?postId=" + arg.postId;
