@@ -477,7 +477,7 @@ commons.utils = {
 
         $(document).ready(function () {
 
-            self.attachProfilePopup(post.id, post.creatorId);
+//            self.attachProfilePopup(post.id, post.creatorId);
 
             $('#commons-post-edit-link-' + post.id).click(self.editPostHandler);
             $('#commons-post-delete-link-' + post.id).click(self.deletePostHandler);
@@ -620,6 +620,8 @@ commons.utils = {
                         // This is likely under an LTI provision scenario.
                         // XSS protection will block this call.
                     }
+
+                    ProfileHelper.registerPopupLinks($('#commons-posts'));
                 });
                 commons.page += 1;
             }).fail(function (xmlHttpRequest, textStatus, errorThrown) {
