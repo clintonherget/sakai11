@@ -1,6 +1,7 @@
 .profile-popup.nyu {
   display: table;
   background-color: #FFF;
+  width: 280px;
 
   .profile-popup-top,
   .profile-popup-bottom {
@@ -16,6 +17,7 @@
   }
   .profile-popup-details {
     padding-left: 0;
+    word-break: break-word;
   }
 
   .profile-popup-picture span {
@@ -33,6 +35,26 @@
     background-color: $nyu-purple;
   }
   .profile-popup-actions {
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+
+    ul {
+      margin: 0;
+      list-style: none;
+
+      li {
+        display: inline-block;
+      }
+    }
+
+    a {
+      color: #FFF;
+
+      .fa {
+        font-size: 24px !important;
+      }
+    }
   }
 }
 .qtip-profile-popup {

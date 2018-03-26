@@ -129,7 +129,7 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 	}
 
 	@EntityCustomAction(action="formatted",viewKey=EntityView.VIEW_SHOW)
-	public ActionReturn getFormattedProfile(EntityReference ref) {
+	public ActionReturn getFormattedProfile(EntityReference ref, Map<String, Object> params) {
 
 		String currentUserId = developerHelperService.getCurrentUserId();
 
@@ -165,7 +165,12 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		} catch (UserNotDefinedException e) {
 			context.put("eid", "");
 		}
-		context.put("sections", "TODO"); // if context provided, find sections 
+		String siteId = (String)params.get("siteId");
+		if (StringUtils.isBlank(siteId)) {
+			context.put("sections", "");
+		} else {
+			context.put("sections", "TODO");
+		}
 
 		boolean connectionsEnabled = serverConfigurationService.getBoolean("profile2.connections.enabled",
 					ProfileConstants.SAKAI_PROP_PROFILE2_CONNECTIONS_ENABLED);

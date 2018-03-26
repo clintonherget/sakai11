@@ -1,10 +1,16 @@
-function ProfilePopup($link, userUuid) {
+function ProfilePopup($link, userUuid, siteId) {
     this.$link = $PBJQ($link);
 
     if (userUuid) {
       this.userUuid = userUuid;
     } else { 
       this.userUuid = this.$link.data('userUuid') || this.$link.data('useruuid');
+    }
+
+    if (siteId) {
+      this.siteId = siteId;
+    } else { 
+      this.siteId = this.$link.data('siteId') || this.$link.data('siteid');
     }
 
     if (!this.userUuid) {
@@ -39,7 +45,14 @@ ProfilePopup.prototype.show = function() {
         hide: { event: 'click unfocus' },
         content: {
             text: function (event, api) {
-                return $.ajax( { url: "/direct/portal/" + self.userUuid + "/formatted", cache: false })
+                return $.ajax({ 
+                        method: 'GET',
+                        url: "/direct/portal/" + self.userUuid + "/formatted",
+                        data: {
+                          siteId: self.siteId,
+                        },
+                        cache: false
+                    })
                     .then(function (html) {
                         return html;
                     }, function (xhr, status, error) {
