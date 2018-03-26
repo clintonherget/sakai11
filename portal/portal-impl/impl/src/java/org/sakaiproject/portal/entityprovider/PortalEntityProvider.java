@@ -31,13 +31,18 @@ import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.entitybroker.exception.EntityException;
 
 import org.sakaiproject.profile2.logic.ProfileConnectionsLogic;
+import org.sakaiproject.profile2.logic.ProfileImageLogic;
 import org.sakaiproject.profile2.logic.ProfileLogic;
 import org.sakaiproject.profile2.logic.ProfileLinkLogic;
+import org.sakaiproject.profile2.model.BasicPerson;
+import org.sakaiproject.profile2.model.ProfileImage;
 import org.sakaiproject.profile2.model.UserProfile;
 import org.sakaiproject.profile2.util.ProfileConstants;
 
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionManager;
+import org.sakaiproject.user.api.UserDirectoryService;
+import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.util.ResourceLoader;
 
 import org.sakaiproject.portal.beans.PortalNotifications;
@@ -70,6 +75,9 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 	@Setter
 	private SessionManager sessionManager;
 
+	@Setter
+	private UserDirectoryService userDirectoryService;
+
 	private Template formattedProfileTemplate = null;
 
 	public void init() {
@@ -83,7 +91,7 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		ve.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.NullLogSystem");
 		try {
 			ve.init();
-			formattedProfileTemplate = ve.getTemplate("org/sakaiproject/portal/entityprovider/profile-popup.vm");
+			formattedProfileTemplate = ve.getTemplate("org/sakaiproject/portal/entityprovider/nyu-profile-popup.vm");
 		} catch (Exception e) {
 			log.error("Failed to load profile-popup.vm", e);
 		}
@@ -148,6 +156,16 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		context.put("acceptLabel", rl.getString("connection.accept"));
 		context.put("rejectLabel", rl.getString("connection.reject"));
 		context.put("addConnectionLabel", rl.getString("connection.add"));
+
+		// NYU things!
+		BasicPerson person = profileLogic.getBasicPerson(connectionUserId);
+		context.put("pictureUrl", "/direct/profile/" + connectionUserId + "/image/thumb");
+		try {
+			context.put("eid", userDirectoryService.getUserEid(connectionUserId));
+		} catch (UserNotDefinedException e) {
+			context.put("eid", "");
+		}
+		context.put("sections", "TODO"); // if context provided, find sections 
 
 		boolean connectionsEnabled = serverConfigurationService.getBoolean("profile2.connections.enabled",
 					ProfileConstants.SAKAI_PROP_PROFILE2_CONNECTIONS_ENABLED);
