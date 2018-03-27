@@ -1,0 +1,15 @@
+<div class="profile-drawer nyu">
+    <div class="profile-drawer-header">
+        <a class="close" title="Close the Profile Drawer"><span class="fa-inverse fa fa-times"></span></a>
+        <div class="profile-drawer-pretty-background"></div>
+        <div class="profile-drawer-picture">
+            <span style="background-image:url(${pictureUrl})"></span>
+        </div>
+        <div class="profile-drawer-details">
+            <div class="profile-drawer-name">${displayName}</div>
+        </div>
+    </div>
+    <div class="profile-drawer-content">
+        <p>Stuff goes in here!</p>
+    </div>
+</div>

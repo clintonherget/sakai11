@@ -79,6 +79,7 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 	private UserDirectoryService userDirectoryService;
 
 	private Template formattedProfileTemplate = null;
+	private Template profileDrawerTemplate = null;
 
 	public void init() {
 
@@ -92,6 +93,7 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		try {
 			ve.init();
 			formattedProfileTemplate = ve.getTemplate("org/sakaiproject/portal/entityprovider/nyu-profile-popup.vm");
+			profileDrawerTemplate = ve.getTemplate("org/sakaiproject/portal/entityprovider/nyu-profile-drawer.vm");
 		} catch (Exception e) {
 			log.error("Failed to load profile-popup.vm", e);
 		}
@@ -144,7 +146,7 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		context.put("profileUrl", profileLinkLogic.getInternalDirectUrlToUserProfile(connectionUserId));
 
 		String email = userProfile.getEmail();
-        if (StringUtils.isEmpty(email)) email = "";
+		if (StringUtils.isEmpty(email)) email = "";
 		context.put("email", email);
 
 		context.put("currentUserId", currentUserId);
@@ -168,12 +170,14 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		String siteId = (String)params.get("siteId");
 		if (StringUtils.isBlank(siteId)) {
 			context.put("sections", "");
+			context.put("siteId", "");
 		} else {
 			context.put("sections", "TODO");
+			context.put("siteId", siteId);
 		}
 
 		boolean connectionsEnabled = serverConfigurationService.getBoolean("profile2.connections.enabled",
-					ProfileConstants.SAKAI_PROP_PROFILE2_CONNECTIONS_ENABLED);
+			ProfileConstants.SAKAI_PROP_PROFILE2_CONNECTIONS_ENABLED);
 
 		if (connectionsEnabled && !currentUserId.equals(connectionUserId)) {
 
@@ -194,6 +198,44 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 
 		try {
 			formattedProfileTemplate.merge(context, writer);
+			return new ActionReturn(Formats.UTF_8, Formats.HTML_MIME_TYPE, writer.toString());
+		} catch (IOException ioe) {
+			throw new EntityException("Failed to format profile.", ref.getReference());
+		}
+	}
+
+	@EntityCustomAction(action="drawer",viewKey=EntityView.VIEW_SHOW)
+	public ActionReturn getProfileDrawer(EntityReference ref, Map<String, Object> params) {
+
+		String currentUserId = developerHelperService.getCurrentUserId();
+
+		ResourceLoader rl = new ResourceLoader(currentUserId, "profile-popup");
+
+		UserProfile userProfile = (UserProfile) profileLogic.getUserProfile(ref.getId());
+
+		String connectionUserId = userProfile.getUserUuid();
+
+		VelocityContext context = new VelocityContext();
+		context.put("displayName", userProfile.getDisplayName());
+		context.put("profileUrl", profileLinkLogic.getInternalDirectUrlToUserProfile(connectionUserId));
+
+		context.put("pictureUrl", "/direct/profile/" + connectionUserId + "/image");
+		try {
+			context.put("eid", userDirectoryService.getUserEid(connectionUserId));
+		} catch (UserNotDefinedException e) {
+			context.put("eid", "");
+		}
+		String siteId = (String)params.get("siteId");
+		if (StringUtils.isBlank(siteId)) {
+			context.put("sections", "");
+		} else {
+			context.put("sections", "TODO");
+		}
+
+		StringWriter writer = new StringWriter();
+
+		try {
+			profileDrawerTemplate.merge(context, writer);
 			return new ActionReturn(Formats.UTF_8, Formats.HTML_MIME_TYPE, writer.toString());
 		} catch (IOException ioe) {
 			throw new EntityException("Failed to format profile.", ref.getReference());

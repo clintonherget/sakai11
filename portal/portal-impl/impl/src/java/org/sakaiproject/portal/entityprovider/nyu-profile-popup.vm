@@ -16,7 +16,7 @@
                 <ul>
                     <!-- Profile Link -->
                     <li>
-                        <a href="${profileUrl}">
+                        <a href="${profileUrl}" class="profile-link" data-useruuid="${connectionUserId}" data-siteid="${siteId}">
                             <span class="fa fa-user"></span>
                         </a>
                     </li>
