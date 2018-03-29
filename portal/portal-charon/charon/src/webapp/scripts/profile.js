@@ -195,6 +195,11 @@ ProfileDrawer.prototype.attachEvents = function() {
           ProfileHelper.ignoreFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
               self.rerender();
           });
+      })
+      .on('click', '#profile-drawer .profile-remove-connection-button', function(event) {
+          ProfileHelper.removeFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+              self.rerender();
+          });
       });
 };
 
