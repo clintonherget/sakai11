@@ -107,6 +107,12 @@ function ProfileDrawer(userUuid, siteId) {
     this.userUuid = userUuid;
     this.siteId = siteId;
 
+    if ($('#profile-drawer').length == 0) {
+        $(document.body).append($("<div id='profile-drawer'>").hide());
+    }
+
+    this.$drawer = $('#profile-drawer');
+
     if (!this.userUuid) {
         throw 'No userUuid provided';
     }
@@ -135,20 +141,15 @@ ProfileDrawer.prototype.show = function() {
 ProfileDrawer.prototype.render = function(html) {
     var self = this;
 
-    var $wrapper = $('#profile-drawer');
-    if ($wrapper.length == 0) {
-        $wrapper = $('<div>').attr('id', 'profile-drawer').hide();
-        $(document.body).append($wrapper);
-    }
-    $wrapper.html(html);
+    self.$drawer.html(html);
 
-    if (!$wrapper.is(':visible')) {
-        $wrapper.css('visibility', 'hidden');
-        $wrapper.show();
+    if (!self.$drawer.is(':visible')) {
+        self.$drawer.css('visibility', 'hidden');
+        self.$drawer.show();
         self.reposition();
-        $wrapper.css('right', -$wrapper.width() + 'px');
-        $wrapper.css('visibility', 'visible');
-        $wrapper.animate({
+        self.$drawer.css('right', -self.$drawer.width() + 'px');
+        self.$drawer.css('visibility', 'visible');
+        self.$drawer.animate({
             right: 0
         }, 500);
     }
@@ -157,46 +158,41 @@ ProfileDrawer.prototype.render = function(html) {
 ProfileDrawer.prototype.attachEvents = function() {
     var self = this;
 
-    $(document.body).on('click', '#profile-drawer .close', function() {
-        var $wrapper = $('#profile-drawer');
-        $wrapper.animate({
-            right: -$wrapper.width() + 'px'
+    self.$drawer.find('.close').off('click').on('click', function() {
+        self.$drawer.animate({
+            right: -self.$drawer.width() + 'px'
         }, 500, function() {
-            $wrapper.hide();
+            self.$drawer.hide();
         });
     });
 
     function redraw() {
-        var $wrapper = $('#profile-drawer');
-        if ($wrapper.is(':visible')) {
+        if (self.$drawer.is(':visible')) {
             self.reposition();
         }
     };
-    $(document).on('scroll', function(event) {
-        redraw();
-    });
-    $(window).on('resize', function(event) {
-        redraw();
-    });
+    $(document).off('scroll', redraw).on('scroll', redraw);
+    $(window).off('resize', redraw).on('resize', redraw);
 
 
-    $(document.body)
-      .on('click', '#profile-drawer .profile-connect-button', function(event) {
+    self.$drawer
+      .off('click')
+      .on('click', '.profile-connect-button', function(event) {
           ProfileHelper.requestFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
               self.rerender();
           });
       })
-      .on('click', '#profile-drawer .profile-accept-button', function(event) {
+      .on('click', '.profile-accept-button', function(event) {
           ProfileHelper.confirmFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
               self.rerender();
           });
       })
-      .on('click', '#profile-drawer .profile-ignore-button', function(event) {
+      .on('click', '.profile-ignore-button', function(event) {
           ProfileHelper.ignoreFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
               self.rerender();
           });
       })
-      .on('click', '#profile-drawer .profile-remove-connection-button', function(event) {
+      .on('click', '.profile-remove-connection-button', function(event) {
           ProfileHelper.removeFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
               self.rerender();
           });
@@ -210,16 +206,16 @@ ProfileDrawer.prototype.rerender = function() {
 };
 
 ProfileDrawer.prototype.reposition = function() {
-    var $wrapper = $('#profile-drawer');
+    var self = this;
     var offset = $('.Mrphs-mainHeader').height() + $('.Mrphs-mainHeader').offset().top;
     var topScroll = $(document).scrollTop();
     if ($(document).scrollTop() < offset) {
         var magicNumber = offset - topScroll;
-        $wrapper.css('height', $(window).height() - magicNumber);
-        $wrapper.css('top', magicNumber);
+        self.$drawer.css('height', $(window).height() - magicNumber);
+        self.$drawer.css('top', magicNumber);
     } else {
-        $wrapper.css('height', '100%');
-        $wrapper.css('top', '0');
+        self.$drawer.css('height', '100%');
+        self.$drawer.css('top', '0');
     }
 };
 
