@@ -1,12 +1,13 @@
 <div class="profile-drawer nyu">
     <div class="profile-drawer-header">
         <a class="close" title="Close the Profile Drawer"><span class="fa-inverse fa fa-times"></span></a>
+
         <div class="profile-drawer-pretty-background"></div>
         <div class="profile-drawer-picture">
             <span style="background-image:url(${pictureUrl})"></span>
         </div>
         <div class="profile-drawer-details">
-            <div class="profile-drawer-name">${displayName}</div>
+            <h2 class="profile-drawer-name">${displayName}</h2>
             <div class="profile-connection-actions">
                 #if (${unconnected})
                     <button class="profile-connect-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
@@ -30,6 +31,69 @@
         </div>
     </div>
     <div class="profile-drawer-content">
-        <p>Stuff goes in here!</p>
+        <h3>Basic Information</h3>
+        <div class="row">
+            <div class="col-xs-4">Preferred Name</div>
+            <div class="col-xs-8">${preferredName}</div>
+        </div>
+        #if (${age})
+          <div class="row">
+              <div class="col-xs-4">Age</div>
+              <div class="col-xs-8">${age}</div>
+          </div>
+        #end
+
+        <h3>Academic Information</h3>
+        #if (${position})
+          <div class="row">
+              <div class="col-xs-4">Position</div>
+              <div class="col-xs-8">${position}</div>
+          </div>
+        #end
+        #if (${department})
+          <div class="row">
+              <div class="col-xs-4">Department</div>
+              <div class="col-xs-8">${department}</div>
+          </div>
+        #end
+        #if (${school})
+          <div class="row">
+              <div class="col-xs-4">School</div>
+              <div class="col-xs-8">${school}</div>
+          </div>
+        #end
+        #if (${degree})
+          <div class="row">
+              <div class="col-xs-4">Degree</div>
+              <div class="col-xs-8">${degree}</div>
+          </div>
+        #end
+        #if (${subjects})
+          <div class="row">
+              <div class="col-xs-4">Subjects</div>
+              <div class="col-xs-8">${subjects}</div>
+          </div>
+        #end
+
+        <h3>Biography</h3>
+        #if (${personalSummary})
+            <div>Personal Summary</div>
+            ${personalSummary}
+        #end
+        #if (${staffProfile})
+            <div>Staff Profile</div>
+            ${staffProfile}
+        #end
+
+        <h3>Contact Information</h3>
+        #if (${email})
+          <div class="row">
+              <div class="col-xs-4">Email</div>
+              <div class="col-xs-8">${email}</div>
+          </div>
+        #end
+    </div>
+    <div class="profile-drawer-footer">
+        <a class="gotoprofile" href="${profileUrl}">View in Profile Tool</a>
     </div>
 </div>

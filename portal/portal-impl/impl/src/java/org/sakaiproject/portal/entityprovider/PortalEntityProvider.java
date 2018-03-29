@@ -2,6 +2,8 @@ package org.sakaiproject.portal.entityprovider;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -215,14 +217,18 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 
 		context.put("displayName", userProfile.getDisplayName());
 		context.put("profileUrl", profileLinkLogic.getInternalDirectUrlToUserProfile(connectionUserId));
-
 		context.put("pictureUrl", "/direct/profile/" + connectionUserId + "/image");
+
 		try {
 			context.put("eid", userDirectoryService.getUserEid(connectionUserId));
 		} catch (UserNotDefinedException e) {
 			context.put("eid", "");
 		}
 
+		addBasicInfoToContext(context, userProfile);
+		addAcademicInfoToContext(context, userProfile);
+		addBiographyToContext(context, userProfile);
+		addContactInfoToContext(context, userProfile);
 		addSectionAndRoleToContext(context, siteId, connectionUserId);
 		addConnectionDataToContext(context, currentUserId, connectionUserId);
 
@@ -285,5 +291,41 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 				context.put("unconnected", true);
 			}
 		}
+	}
+
+	private void addBasicInfoToContext(VelocityContext context, UserProfile profile) {
+		if (StringUtils.isBlank(profile.getNickname())) {
+			context.put("preferredName", profile.getDisplayName());
+		} else {
+			context.put("preferredName", profile.getNickname());
+		}
+
+		Date dob = profile.getDateOfBirth();
+		if (dob != null) {
+			Calendar birthday = new GregorianCalendar();
+			birthday.setTime(dob);
+			Calendar today = new GregorianCalendar();
+			today.setTime(new Date());
+			int age = today.get(Calendar.YEAR) - birthday.get(Calendar.YEAR);
+
+			context.put("age", String.valueOf(age));
+		}
+	}
+
+	private void addAcademicInfoToContext(VelocityContext context, UserProfile profile) {
+		context.put("position", profile.getPosition());
+		context.put("department", profile.getDepartment());
+		context.put("school", profile.getSchool());
+		context.put("degree", profile.getCourse());
+		context.put("subjects", profile.getSubjects());
+	}
+
+	private void addBiographyToContext(VelocityContext context, UserProfile profile) {
+		context.put("personalSummary", profile.getPersonalSummary());
+		context.put("staffProfile", profile.getStaffProfile());
+	}
+
+	private void addContactInfoToContext(VelocityContext context, UserProfile profile) {
+		context.put("email", profile.getEmail());
 	}
 }
