@@ -13,6 +13,7 @@
 	        <property name="profileLinkLogic" ref="org.sakaiproject.profile2.logic.ProfileLinkLogic" />
 	        <property name="userDirectoryService" ref="org.sakaiproject.user.api.UserDirectoryService" />
 	        <property name="cms" ref="org.sakaiproject.coursemanagement.api.CourseManagementService" />
+	        <property name="siteService" ref="org.sakaiproject.site.api.SiteService" />
 	</bean>
 	<!-- ENTITY PROVIDERS END -->
        

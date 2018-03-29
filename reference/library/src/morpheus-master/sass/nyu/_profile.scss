@@ -18,6 +18,7 @@
   .profile-popup-details {
     padding-left: 0;
     word-break: break-word;
+    width: 100%;
   }
 
   .profile-popup-picture span {
@@ -30,7 +31,11 @@
     display: block;
     border: 1px solid #000;
   }
-
+  .profile-popup-display-role {
+    margin-top: 5px;
+    border-top: 1px solid #EEE;
+    padding-top: 5px;
+  }
   .profile-popup-bottom {
     background-color: $nyu-purple;
   }

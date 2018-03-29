@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.Template;
@@ -12,6 +13,8 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.runtime.RuntimeConstants;
 
+import org.sakaiproject.authz.api.Member;
+import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 import org.sakaiproject.coursemanagement.api.EnrollmentSet;
@@ -29,6 +32,7 @@ import org.sakaiproject.entitybroker.entityprovider.extension.ActionReturn;
 import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.entitybroker.exception.EntityException;
 
+import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.profile2.logic.ProfileConnectionsLogic;
 import org.sakaiproject.profile2.logic.ProfileImageLogic;
 import org.sakaiproject.profile2.logic.ProfileLogic;
@@ -38,6 +42,9 @@ import org.sakaiproject.profile2.model.ProfileImage;
 import org.sakaiproject.profile2.model.UserProfile;
 import org.sakaiproject.profile2.util.ProfileConstants;
 
+import org.sakaiproject.site.api.Group;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.user.api.UserDirectoryService;
@@ -76,6 +83,9 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 
 	@Setter
 	private UserDirectoryService userDirectoryService;
+
+	@Setter
+	private SiteService siteService;
 
 	@Setter
 	private CourseManagementService cms;
@@ -174,16 +184,7 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 			throw new RuntimeException("User is not real");
 		}
 		String siteId = (String)params.get("siteId");
-		if (StringUtils.isBlank(siteId)) {
-			context.put("sections", "");
-			context.put("siteId", "");
-		} else {
-			Map<String, String> enrolment = cms.findCourseOfferingRoles(eid);
-			Set<Section> sections = cms.findEnrolledSections(eid);
-			Set<EnrollmentSet> sets = cms.findCurrentlyEnrolledEnrollmentSets(eid);
-			context.put("sections", "TODO");
-			context.put("siteId", siteId);
-		}
+		addSectionAndRoleToContext(context, siteId, connectionUserId);
 
 		StringWriter writer = new StringWriter();
 
@@ -197,6 +198,8 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 
 	@EntityCustomAction(action="drawer",viewKey=EntityView.VIEW_SHOW)
 	public ActionReturn getProfileDrawer(EntityReference ref, Map<String, Object> params) {
+
+		String siteId = (String)params.get("siteId");
 
 		String currentUserId = developerHelperService.getCurrentUserId();
 
@@ -220,6 +223,51 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 			context.put("eid", "");
 		}
 
+		addSectionAndRoleToContext(context, siteId, connectionUserId);
+		addConnectionDataToContext(context, currentUserId, connectionUserId);
+
+		StringWriter writer = new StringWriter();
+
+		try {
+			profileDrawerTemplate.merge(context, writer);
+			return new ActionReturn(Formats.UTF_8, Formats.HTML_MIME_TYPE, writer.toString());
+		} catch (IOException ioe) {
+			throw new EntityException("Failed to format profile.", ref.getReference());
+		}
+	}
+
+	private void addSectionAndRoleToContext(VelocityContext context, String siteId, String connectionUserId) {
+		String sections = "";
+		String role = "";
+
+		if (!StringUtils.isBlank(siteId)) {
+			try {
+				Site site = siteService.getSite(siteId);
+				Member member = site.getMember(connectionUserId);
+				if (member != null) {
+					Role memberRole = member.getRole();
+					if (memberRole != null) {
+						role = memberRole.getId();
+					}
+					List<String> groups = new ArrayList<>();
+					Collection<Group> siteGroups = site.getGroups();
+					for (Group group : siteGroups) {
+						if (group.getMember(connectionUserId) != null) {
+							groups.add(group.getTitle());
+						}
+					}
+					sections = groups.stream().collect(Collectors.joining(", "));
+				}
+			} catch (IdUnusedException e) {
+			}
+		}
+
+		context.put("siteId", siteId);
+		context.put("sections", sections);
+		context.put("role", role);
+	}
+
+	private void addConnectionDataToContext(VelocityContext context, String currentUserId, String connectionUserId) {
 		boolean connectionsEnabled = serverConfigurationService.getBoolean("profile2.connections.enabled",
 			ProfileConstants.SAKAI_PROP_PROFILE2_CONNECTIONS_ENABLED);
 
@@ -236,15 +284,6 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 			} else {
 				context.put("unconnected", true);
 			}
-		}
-
-			StringWriter writer = new StringWriter();
-
-		try {
-			profileDrawerTemplate.merge(context, writer);
-			return new ActionReturn(Formats.UTF_8, Formats.HTML_MIME_TYPE, writer.toString());
-		} catch (IOException ioe) {
-			throw new EntityException("Failed to format profile.", ref.getReference());
 		}
 	}
 }
