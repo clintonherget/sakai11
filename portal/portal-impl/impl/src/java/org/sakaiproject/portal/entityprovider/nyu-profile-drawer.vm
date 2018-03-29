@@ -7,7 +7,12 @@
             <span style="background-image:url(${pictureUrl})"></span>
         </div>
         <div class="profile-drawer-details">
-            <h2 class="profile-drawer-name">${displayName}</h2>
+            <h2 class="profile-drawer-name">
+                ${displayName}
+                #if (${you})
+                     (You)
+                #end
+            </h2>
             <div class="profile-connection-actions">
                 #if (${unconnected})
                     <button class="profile-connect-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
@@ -23,9 +28,7 @@
                 #elseif (${requested})
                     Awaiting Reply
                 #elseif (${connected})
-                    <button class="profile-remove-connection-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
-                        Remove Connection
-                    </button>
+                    <span class="label label-success">Connected</span>
                 #end
             </div>
         </div>
@@ -94,6 +97,16 @@
         #end
     </div>
     <div class="profile-drawer-footer">
-        <a class="gotoprofile" href="${profileUrl}">View in Profile Tool</a>
+        <div>
+            <a class="gotoprofile" href="${profileUrl}">View in Profile Tool</a>
+        </div>
+        #if (${connected})
+            <hr>
+            <div>
+                <button class="profile-remove-connection-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
+                    Remove Connection
+                </button>
+            </div>
+        #end
     </div>
 </div>

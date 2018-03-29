@@ -214,6 +214,7 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		VelocityContext context = new VelocityContext();
 		context.put("currentUserId", currentUserId);
 		context.put("connectionUserId", connectionUserId);
+		context.put("you", currentUserId.equals(connectionUserId));
 
 		context.put("displayName", userProfile.getDisplayName());
 		context.put("profileUrl", profileLinkLogic.getInternalDirectUrlToUserProfile(connectionUserId));
