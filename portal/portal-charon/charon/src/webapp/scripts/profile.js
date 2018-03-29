@@ -158,14 +158,6 @@ ProfileDrawer.prototype.render = function(html) {
 ProfileDrawer.prototype.attachEvents = function() {
     var self = this;
 
-    self.$drawer.find('.close').off('click').on('click', function() {
-        self.$drawer.animate({
-            right: -self.$drawer.width() + 'px'
-        }, 500, function() {
-            self.$drawer.hide();
-        });
-    });
-
     function redraw() {
         if (self.$drawer.is(':visible')) {
             self.reposition();
@@ -176,27 +168,34 @@ ProfileDrawer.prototype.attachEvents = function() {
 
 
     self.$drawer
-      .off('click')
-      .on('click', '.profile-connect-button', function(event) {
-          ProfileHelper.requestFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
-              self.rerender();
-          });
-      })
-      .on('click', '.profile-accept-button', function(event) {
-          ProfileHelper.confirmFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
-              self.rerender();
-          });
-      })
-      .on('click', '.profile-ignore-button', function(event) {
-          ProfileHelper.ignoreFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
-              self.rerender();
-          });
-      })
-      .on('click', '.profile-remove-connection-button', function(event) {
-          ProfileHelper.removeFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
-              self.rerender();
-          });
-      });
+        .off('click')
+        .on('click', '.profile-connect-button', function(event) {
+            ProfileHelper.requestFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+                self.rerender();
+            });
+        })
+        .on('click', '.profile-accept-button', function(event) {
+            ProfileHelper.confirmFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+                self.rerender();
+            });
+        })
+        .on('click', '.profile-ignore-button', function(event) {
+            ProfileHelper.ignoreFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+                self.rerender();
+            });
+        })
+        .on('click', '.profile-remove-connection-button', function(event) {
+            ProfileHelper.removeFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+                self.rerender();
+            });
+        })
+        .on('click', '.close', function(event) {
+            self.$drawer.animate({
+               right: -self.$drawer.width() + 'px'
+            }, 500, function() {
+               self.$drawer.hide();
+            });
+        });
 };
 
 ProfileDrawer.prototype.rerender = function() {
