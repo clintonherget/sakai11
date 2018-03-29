@@ -7,6 +7,25 @@
         </div>
         <div class="profile-drawer-details">
             <div class="profile-drawer-name">${displayName}</div>
+            #if (!${connected})
+                <div class="profile-connection-actions"> 
+                    #if (${unconnected})
+                        <button class="profile-connect-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
+                            Connect
+                        </button>
+                    #elseif (${incoming})
+                        <button class="profile-accept-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
+                            Accept Connection
+                        </button>
+                        <button class="profile-ignore-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
+                            Ignore
+                        </button>
+                    #elseif (${requested})
+                        Awaiting Reply
+                    #else
+                    #end
+                </div>
+            #end
         </div>
     </div>
     <div class="profile-drawer-content">

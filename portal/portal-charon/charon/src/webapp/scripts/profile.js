@@ -90,23 +90,6 @@ ProfilePopup.prototype.show = function() {
 
 ProfilePopup.prototype.addHandlers = function($popup) {
     var self = this;
-
-    $popup
-      .on('click', '.profile-connect-button', function(event) {
-          ProfileHelper.requestFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
-              self.rerender();
-          });
-      })
-      .on('click', '.profile-accept-button', function(event) {
-          ProfileHelper.confirmFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
-              self.rerender();
-          });
-      })
-      .on('click', '.profile-ignore-button', function(event) {
-          ProfileHelper.ignoreFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
-              self.rerender();
-          });
-      });
 };
 
 ProfilePopup.prototype.rerender = function() {
@@ -183,17 +166,47 @@ ProfileDrawer.prototype.attachEvents = function() {
         });
     });
 
-    $(document).on('scroll', function(event) {
+    function redraw() {
         var $wrapper = $('#profile-drawer');
         if ($wrapper.is(':visible')) {
             self.reposition();
         }
+    };
+    $(document).on('scroll', function(event) {
+        redraw();
     });
+    $(window).on('resize', function(event) {
+        redraw();
+    });
+
+
+    $(document.body)
+      .on('click', '#profile-drawer .profile-connect-button', function(event) {
+          ProfileHelper.requestFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+              self.rerender();
+          });
+      })
+      .on('click', '#profile-drawer .profile-accept-button', function(event) {
+          ProfileHelper.confirmFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+              self.rerender();
+          });
+      })
+      .on('click', '#profile-drawer .profile-ignore-button', function(event) {
+          ProfileHelper.ignoreFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+              self.rerender();
+          });
+      });
+};
+
+ProfileDrawer.prototype.rerender = function() {
+    var self = this;
+
+    self.show();
 };
 
 ProfileDrawer.prototype.reposition = function() {
     var $wrapper = $('#profile-drawer');
-    var offset = $('.Mrphs-mainHeader').height();
+    var offset = $('.Mrphs-mainHeader').height() + $('.Mrphs-mainHeader').offset().top;
     var topScroll = $(document).scrollTop();
     if ($(document).scrollTop() < offset) {
         var magicNumber = offset - topScroll;

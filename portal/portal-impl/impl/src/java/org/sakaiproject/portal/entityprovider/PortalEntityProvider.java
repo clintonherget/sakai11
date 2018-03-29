@@ -185,24 +185,6 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 			context.put("siteId", siteId);
 		}
 
-		boolean connectionsEnabled = serverConfigurationService.getBoolean("profile2.connections.enabled",
-			ProfileConstants.SAKAI_PROP_PROFILE2_CONNECTIONS_ENABLED);
-
-		if (connectionsEnabled && !currentUserId.equals(connectionUserId)) {
-
-			int connectionStatus = profileConnectionsLogic.getConnectionStatus(currentUserId, connectionUserId);
-
-			if (connectionStatus == ProfileConstants.CONNECTION_CONFIRMED) {
-				context.put("connected" , true);
-			} else if (connectionStatus == ProfileConstants.CONNECTION_REQUESTED) {
-				context.put("requested" , true);
-			} else if (connectionStatus == ProfileConstants.CONNECTION_INCOMING) {
-				context.put("incoming" , true);
-			} else {
-				context.put("unconnected" , true);
-			}
-		}
-
 		StringWriter writer = new StringWriter();
 
 		try {
@@ -225,6 +207,9 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		String connectionUserId = userProfile.getUserUuid();
 
 		VelocityContext context = new VelocityContext();
+		context.put("currentUserId", currentUserId);
+		context.put("connectionUserId", connectionUserId);
+
 		context.put("displayName", userProfile.getDisplayName());
 		context.put("profileUrl", profileLinkLogic.getInternalDirectUrlToUserProfile(connectionUserId));
 
@@ -234,14 +219,26 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		} catch (UserNotDefinedException e) {
 			context.put("eid", "");
 		}
-		String siteId = (String)params.get("siteId");
-		if (StringUtils.isBlank(siteId)) {
-			context.put("sections", "");
-		} else {
-			context.put("sections", "TODO");
+
+		boolean connectionsEnabled = serverConfigurationService.getBoolean("profile2.connections.enabled",
+			ProfileConstants.SAKAI_PROP_PROFILE2_CONNECTIONS_ENABLED);
+
+		if (connectionsEnabled && !currentUserId.equals(connectionUserId)) {
+
+			int connectionStatus = profileConnectionsLogic.getConnectionStatus(currentUserId, connectionUserId);
+
+			if (connectionStatus == ProfileConstants.CONNECTION_CONFIRMED) {
+				context.put("connected", true);
+			} else if (connectionStatus == ProfileConstants.CONNECTION_REQUESTED) {
+				context.put("requested", true);
+			} else if (connectionStatus == ProfileConstants.CONNECTION_INCOMING) {
+				context.put("incoming", true);
+			} else {
+				context.put("unconnected", true);
+			}
 		}
 
-		StringWriter writer = new StringWriter();
+			StringWriter writer = new StringWriter();
 
 		try {
 			profileDrawerTemplate.merge(context, writer);

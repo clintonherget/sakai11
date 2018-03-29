@@ -11,47 +11,18 @@
     </div>
     <div class="profile-popup-bottom">
         <div class="profile-popup-actions">
-            #if (${you})
-                <ul>
-                    <!-- Profile Link -->
-                    <li>
-                        <a href="${profileUrl}" class="profile-link" data-useruuid="${connectionUserId}" data-siteid="${siteId}">
-                            <span class="fa fa-user"></span>
-                        </a>
-                    </li>
-                </ul>
-            #elseif (${connected})
-                <ul>
-                    <!-- Profile Link -->
-                    <li>
-                        <a href="${profileUrl}" class="profile-link" data-useruuid="${connectionUserId}" data-siteid="${siteId}">
-                            <span class="fa fa-user"></span>
-                        </a>
-                    </li>
-                    <!-- Message -->
-                    <li></li>
-                    <!-- Chat -->
-                    <li></li>
-                </ul>
-            #else
-                <div class="profile-connection-actions">
-                    #if (${unconnected})
-                        <button class="profile-connect-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
-                            Connect
-                        </button>
-                    #elseif (${incoming})
-                        <button class="profile-accept-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
-                            Accept Connection
-                        </button>
-                        <button class="profile-ignore-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
-                            Ignore
-                        </button>
-                    #elseif (${requested})
-                        Awaiting Reply
-                    #else
-                    #end
-                </div>
-            #end
+            <ul>
+                <!-- Profile Link -->
+                <li>
+                    <a href="${profileUrl}" class="profile-link" data-useruuid="${connectionUserId}" data-siteid="${siteId}">
+                        <span class="fa fa-user"></span>
+                    </a>
+                </li>
+                <!-- Message -->
+                <li></li>
+                <!-- Chat -->
+                <li></li>
+            </ul>
         </div>
     </div>
 </div>
