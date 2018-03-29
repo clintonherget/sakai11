@@ -44,28 +44,79 @@ ProfilePopup.prototype.show = function() {
         },
         hide: { event: 'click unfocus' },
         content: {
-            text: function (event, api) {
-                return $.ajax({ 
-                        method: 'GET',
-                        url: "/direct/portal/" + self.userUuid + "/formatted",
-                        data: {
-                          siteId: self.siteId,
-                        },
-                        cache: false
-                    })
-                    .then(function (html) {
-                        return html;
-                    }, function (xhr, status, error) {
-                        console.error('ProfilePopup.show', status + ': ' + error);
-                    });
-            }
+            ajax: {
+                method: 'GET',
+                url: "/direct/portal/" + self.userUuid + "/formatted",
+                data: {
+                  siteId: self.siteId,
+                },
+                dataType: 'html',
+                once: false,
+                accepts: {html: 'application/javascript'},
+                cache: false,
+                success: function(data, status) {
+                    this.set('content.text', data);
+                }
+            },
+            text: 'Loading...',
         },
+//            
+//            text: function (event, api) {
+//                return $.ajax({ 
+//                        method: 'GET',
+//                        url: "/direct/portal/" + self.userUuid + "/formatted",
+//                        data: {
+//                          siteId: self.siteId,
+//                        },
+//                        cache: false
+//                    })
+//                    .then(function (html) {
+//                        return html;
+//                    }, function (xhr, status, error) {
+//                        console.error('ProfilePopup.show', status + ': ' + error);
+//                    });
+//            }
+//        },
         events: {
             hidden: function(event, api) {
-                $(event.target).remove();
-            }
+                self.$link.qtip('destroy', true);
+            },
+            render: function(event, api) {
+                self.addHandlers($(event.target));
+            },
         }
     });
+};
+
+ProfilePopup.prototype.addHandlers = function($popup) {
+    var self = this;
+
+    $popup
+      .on('click', '.profile-connect-button', function(event) {
+          ProfileHelper.requestFriend($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+              self.rerender();
+          });
+      })
+      .on('click', '.profile-accept-button', function(event) {
+          ProfileHelper.confirmFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+              self.rerender();
+          });
+      })
+      .on('click', '.profile-ignore-button', function(event) {
+          ProfileHelper.ignoreFriendRequest($(this).data('currentuserid'), $(this).data('connectionuserid'), function(text, status) {
+              self.rerender();
+          });
+      });
+};
+
+ProfilePopup.prototype.rerender = function() {
+    var self = this;
+
+    if (self.$link.data('qtip') && !self.$link.data('qtip').destroyed) {
+        self.$link.qtip('api').destroy();
+    }
+
+    self.show();
 };
 
 
@@ -183,6 +234,102 @@ ProfileHelper.registerDrawerLinks = function() {
 
     $PBJQ(document.body).on('click', '.profile-link[data-useruuid]', callback);
 };
+
+ProfileHelper.CONNECTION_NONE = 0;
+ProfileHelper.CONNECTION_REQUESTED = 1;
+ProfileHelper.CONNECTION_INCOMING = 2;
+ProfileHelper.CONNECTION_CONFIRMED = 3;
+
+ProfileHelper.friendStatus = function(requestorId, friendId) {
+    var status = null;
+
+    $PBJQ.ajax({
+        url : "/direct/profile/" + requestorId + "/friendStatus.json?friendId=" + friendId,
+          dataType : "json",
+          async : false,
+      cache: false,
+      success : function(data) {
+          status = data.data;
+      },
+      error : function() {
+          status = -1;
+      }
+    });
+
+    return status;
+};
+
+ProfileHelper.requestFriend = function(requestorId, friendId, callback) {
+
+    if (callback == null) {
+        callback = $PBJQ.noop;
+    }
+
+    jQuery.ajax( {
+        url : "/direct/profile/" + requestorId + "/requestFriend?friendId=" + friendId,
+        dataType : "text",
+        cache: false,
+        success : function(text,status) {
+            callback(text, status);
+        }
+    });
+
+    return false;
+};
+
+ProfileHelper.confirmFriendRequest = function(requestorId, friendId, callback) {
+
+    if (callback == null) {
+        callback = $PBJQ.noop;
+    }
+
+    jQuery.ajax( {
+        url : "/direct/profile/" + requestorId + "/confirmFriendRequest?friendId=" + friendId,
+        dataType : "text",
+        cache: false,
+        success : function(text,status) {
+            callback(text, status);
+        }
+    });
+
+    return false;
+}
+
+ProfileHelper.removeFriend = function(removerId, friendId, callback) {
+
+    if (callback == null) {
+        callback = $PBJQ.noop;
+    }
+
+    jQuery.ajax( {
+        url : "/direct/profile/" + removerId + "/removeFriend?friendId=" + friendId,
+        dataType : "text",
+        cache: false,
+        success : function(text,status) {
+            callback(text, status);
+        }
+    });
+
+    return false;
+};
+
+ProfileHelper.ignoreFriendRequest = function(removerId, friendId, callback) {
+
+    if (callback == null) {
+        callback = $PBJQ.noop;
+    }
+
+    jQuery.ajax( {
+        url : "/direct/profile/" + removerId + "/ignoreFriendRequest?friendId=" + friendId,
+        dataType : "text",
+        cache: false,
+        success : function(text,status) {
+            callback(text, status);
+        }
+    });
+
+    return false;
+}
 
 $PBJQ(document).ready(function() {
   ProfileHelper.registerPopupLinks();

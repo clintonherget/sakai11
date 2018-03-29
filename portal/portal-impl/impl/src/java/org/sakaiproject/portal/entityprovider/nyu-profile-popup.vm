@@ -1,4 +1,3 @@
-<script type="text/javascript" src="/profile2-tool/javascript/profile2-eb.js"></script>
 <div class="profile-popup nyu">
     <div class="profile-popup-top">
         <div class="profile-popup-picture">
@@ -12,7 +11,16 @@
     </div>
     <div class="profile-popup-bottom">
         <div class="profile-popup-actions">
-            #if (!${connected})
+            #if (${you})
+                <ul>
+                    <!-- Profile Link -->
+                    <li>
+                        <a href="${profileUrl}" class="profile-link" data-useruuid="${connectionUserId}" data-siteid="${siteId}">
+                            <span class="fa fa-user"></span>
+                        </a>
+                    </li>
+                </ul>
+            #elseif (${connected})
                 <ul>
                     <!-- Profile Link -->
                     <li>
@@ -25,12 +33,23 @@
                     <!-- Chat -->
                     <li></li>
                 </ul>
-            #else                                    
-                <div id="profile-popup-unconnected-block-${connectionUserId}">
-                    <button class="profile-connection-button" onclick="return profile.requestFriend('${currentUserId}','${connectionUserId}');">
-                        <span class="fa fa-plus"><span>
-                        <span class="profile-popup-action-label">${addConnectionLabel}</span>
-                    </button>
+            #else
+                <div class="profile-connection-actions">
+                    #if (${unconnected})
+                        <button class="profile-connect-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
+                            Connect
+                        </button>
+                    #elseif (${incoming})
+                        <button class="profile-accept-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
+                            Accept Connection
+                        </button>
+                        <button class="profile-ignore-button" data-currentUserId="${currentUserId}" data-connectionUserId="${connectionUserId}">
+                            Ignore
+                        </button>
+                    #elseif (${requested})
+                        Awaiting Reply
+                    #else
+                    #end
                 </div>
             #end
         </div>

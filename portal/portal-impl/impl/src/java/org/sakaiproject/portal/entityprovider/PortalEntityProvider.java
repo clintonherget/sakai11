@@ -2,12 +2,8 @@ package org.sakaiproject.portal.entityprovider;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Locale;
+import java.util.*;
 import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.Template;
@@ -17,6 +13,9 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.runtime.RuntimeConstants;
 
 import org.sakaiproject.component.api.ServerConfigurationService;
+import org.sakaiproject.coursemanagement.api.CourseManagementService;
+import org.sakaiproject.coursemanagement.api.EnrollmentSet;
+import org.sakaiproject.coursemanagement.api.Section;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.AutoRegisterEntityProvider;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.Describeable;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.Outputable;
@@ -77,6 +76,9 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 
 	@Setter
 	private UserDirectoryService userDirectoryService;
+
+	@Setter
+	private CourseManagementService cms;
 
 	private Template formattedProfileTemplate = null;
 	private Template profileDrawerTemplate = null;
@@ -158,20 +160,27 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		context.put("acceptLabel", rl.getString("connection.accept"));
 		context.put("rejectLabel", rl.getString("connection.reject"));
 		context.put("addConnectionLabel", rl.getString("connection.add"));
+		context.put("you", currentUserId.equals(connectionUserId));
 
 		// NYU things!
 		BasicPerson person = profileLogic.getBasicPerson(connectionUserId);
 		context.put("pictureUrl", "/direct/profile/" + connectionUserId + "/image/thumb");
+		String eid;
 		try {
-			context.put("eid", userDirectoryService.getUserEid(connectionUserId));
+			eid = userDirectoryService.getUserEid(connectionUserId);
+			context.put("eid", eid);
 		} catch (UserNotDefinedException e) {
-			context.put("eid", "");
+			// FIXME do something else?
+			throw new RuntimeException("User is not real");
 		}
 		String siteId = (String)params.get("siteId");
 		if (StringUtils.isBlank(siteId)) {
 			context.put("sections", "");
 			context.put("siteId", "");
 		} else {
+			Map<String, String> enrolment = cms.findCourseOfferingRoles(eid);
+			Set<Section> sections = cms.findEnrolledSections(eid);
+			Set<EnrollmentSet> sets = cms.findCurrentlyEnrolledEnrollmentSets(eid);
 			context.put("sections", "TODO");
 			context.put("siteId", siteId);
 		}
