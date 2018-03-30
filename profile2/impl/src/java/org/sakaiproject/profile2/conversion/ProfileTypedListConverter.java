@@ -13,12 +13,20 @@ import org.slf4j.LoggerFactory;
 public class ProfileTypedListConverter {
     private static final Logger log = LoggerFactory.getLogger(ProfileTypedListConverter.class);
 
-    String[] UPDATES = new String[] {
+    String[] UPDATES_MYSQL = new String[] {
         "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', null, 'Home', HOME_PHONE from SAKAI_PERSON_T where HOME_PHONE is not null",
         "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', null, 'Work', TELEPHONE_NUMBER from SAKAI_PERSON_T where TELEPHONE_NUMBER is not null",
         "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', null, 'Mobile', MOBILE from SAKAI_PERSON_T where MOBILE is not null",
         "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', 'Fax', 'Other', FAX_NUMBER from SAKAI_PERSON_T where FAX_NUMBER is not null",
     };
+
+    String[] UPDATES_ORACLE = new String[] {
+        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', null, 'Home', HOME_PHONE from SAKAI_PERSON_T where HOME_PHONE is not null",
+        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', null, 'Work', TELEPHONE_NUMBER from SAKAI_PERSON_T where TELEPHONE_NUMBER is not null",
+        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', null, 'Mobile', MOBILE from SAKAI_PERSON_T where MOBILE is not null",
+        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', 'Fax', 'Other', FAX_NUMBER from SAKAI_PERSON_T where FAX_NUMBER is not null",
+    };
+
 
     public void runConversion() {
         log.info("Running conversion to map profile properties to typed lists");
@@ -28,8 +36,10 @@ public class ProfileTypedListConverter {
             boolean oldAutoCommit = db.getAutoCommit();
             db.setAutoCommit(false);
 
+            String[] updates = SqlService.getVendor().equals("oracle") ? UPDATES_ORACLE : UPDATES_MYSQL;
+
             try {
-                for (String sql : UPDATES) {
+                for (String sql : updates) {
                     PreparedStatement ps = db.prepareStatement(sql);
                     ps.executeUpdate();
                     ps.close();
