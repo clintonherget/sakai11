@@ -14,17 +14,17 @@ public class ProfileTypedListConverter {
     private static final Logger log = LoggerFactory.getLogger(ProfileTypedListConverter.class);
 
     String[] UPDATES_MYSQL = new String[] {
-        "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', null, 'Home', HOME_PHONE from SAKAI_PERSON_T where HOME_PHONE is not null",
-        "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', null, 'Work', TELEPHONE_NUMBER from SAKAI_PERSON_T where TELEPHONE_NUMBER is not null",
-        "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', null, 'Mobile', MOBILE from SAKAI_PERSON_T where MOBILE is not null",
-        "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', 'Fax', 'Other', FAX_NUMBER from SAKAI_PERSON_T where FAX_NUMBER is not null",
+        "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', 'Home', null, HOME_PHONE from SAKAI_PERSON_T where HOME_PHONE is not null",
+        "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', 'Work', null, TELEPHONE_NUMBER from SAKAI_PERSON_T where TELEPHONE_NUMBER is not null",
+        "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', 'Mobile', null, MOBILE from SAKAI_PERSON_T where MOBILE is not null",
+        "insert into PROFILE_TYPED_VALUES_T (USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select agent_uuid, 'phoneNumbers', 'Other', 'Fax', FAX_NUMBER from SAKAI_PERSON_T where FAX_NUMBER is not null",
     };
 
     String[] UPDATES_ORACLE = new String[] {
-        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', null, 'Home', HOME_PHONE from SAKAI_PERSON_T where HOME_PHONE is not null",
-        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', null, 'Work', TELEPHONE_NUMBER from SAKAI_PERSON_T where TELEPHONE_NUMBER is not null",
-        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', null, 'Mobile', MOBILE from SAKAI_PERSON_T where MOBILE is not null",
-        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', 'Fax', 'Other', FAX_NUMBER from SAKAI_PERSON_T where FAX_NUMBER is not null",
+        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', 'Home', null, HOME_PHONE from SAKAI_PERSON_T where HOME_PHONE is not null",
+        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', 'Work', null, TELEPHONE_NUMBER from SAKAI_PERSON_T where TELEPHONE_NUMBER is not null",
+        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', 'Mobile', null, MOBILE from SAKAI_PERSON_T where MOBILE is not null",
+        "insert into PROFILE_TYPED_VALUES_T (ID, USER_UUID, VALUE_GROUP, TYPE, TYPE_QUALIFIER, VALUE) select PROFILE_TYPED_VALUES_S.nextval, agent_uuid, 'phoneNumbers', 'Other', 'Fax', FAX_NUMBER from SAKAI_PERSON_T where FAX_NUMBER is not null",
     };
 
 
