@@ -13,7 +13,7 @@
     <title>${pageTitle}</title>
     ${sakai_html_head_css}
 
-    <meta http-equiv="refresh" content="10; url=/portal/login">
+    <meta http-equiv="refresh" content="10; url=/portal/login?samlfailed=true">
   </head>
 
   <body class="portalBody">
@@ -40,7 +40,7 @@
             your <strong>NetID</strong>
             and <strong>password</strong>.</p>
 
-          <p>Alternatively, <a href="/portal/login">click here to be redirected immediately.</a></p>
+          <p>Alternatively, <a href="/portal/login?samlfailed=true">click here to be redirected immediately.</a></p>
         </div>
 
       </div>
