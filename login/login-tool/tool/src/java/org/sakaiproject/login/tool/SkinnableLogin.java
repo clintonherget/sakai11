@@ -362,6 +362,10 @@ public class SkinnableLogin extends HttpServlet implements Login {
 	 */
 	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
 	{
+		if ("true".equals(req.getParameter("samlfailed"))) {
+			log.warn(String.format("*** WARNING: User %s logging in directly after SAML failure", req.getParameter("eid")));
+		}
+
 		// Present the xlogin template
 		LoginRenderContext rcontext = startPageContext(null, req, res);
 
@@ -530,6 +534,8 @@ public class SkinnableLogin extends HttpServlet implements Login {
 		rcontext.put("cancelWording", cancelWording);
 		rcontext.put("passwordResetUrl", passwordResetUrl);
 		rcontext.put("passwordResetWording", passwordResetWording);
+
+		rcontext.put("samlfailed", request.getParameter("samlfailed") == null ? "false" : request.getParameter("samlfailed"));
 
 		String eid = StringEscapeUtils.escapeHtml(request.getParameter("eid"));
 		String pw = StringEscapeUtils.escapeHtml(request.getParameter("pw"));
