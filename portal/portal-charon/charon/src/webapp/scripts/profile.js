@@ -216,7 +216,7 @@ ProfileHelper.registerPopupLinks = function($container) {
         pp.show();
     };
 
-    $container.on('click', '.profile-popup[data-userUuid],.profile-popup[data-useruuid]', callback);
+    $container.on('click', '.profile-popup-link[data-userUuid],.profile-popup-link[data-useruuid]', callback);
 };
 
 ProfileHelper.registerDrawerLinks = function() {

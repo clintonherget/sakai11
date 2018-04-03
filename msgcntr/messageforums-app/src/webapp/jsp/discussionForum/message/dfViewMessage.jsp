@@ -260,12 +260,20 @@
 						<h:outputText 	rendered="#{ForumTool.allowedToApproveMsg && ForumTool.allowedToDenyMsg}" value="#{msgs.cdfm_msg_pending_label}" styleClass="messagePending"/>
 						<h:outputText value="#{ForumTool.selectedMessage.message.title}"  styleClass="title" />
 						<h:outputText value="<br />" escape="false" />
-						<h:outputText value="#{ForumTool.selectedMessage.anonAwareAuthor}" styleClass="textPanelFooter #{ForumTool.selectedMessage.useAnonymousId ? 'anonymousAuthor' : ''}" rendered="#{!ForumTool.instructor || ForumTool.selectedMessage.useAnonymousId}"/>
-						<h:outputText value=" #{msgs.cdfm_me}" styleClass="textPanelFooter" rendered="#{ForumTool.selectedMessage.currentUserAndAnonymous}" />
-						<h:commandLink action="#{mfStatisticsBean.processActionStatisticsUser}" immediate="true" title=" #{ForumTool.selectedMessage.anonAwareAuthor }" styleClass="textPanelFooter #{ForumTool.selectedMessage.useAnonymousId ? 'anonymousAuthor' : ''}" rendered="#{ForumTool.instructor && !ForumTool.selectedMessage.useAnonymousId}">
-                        	<f:param value="#{ForumTool.selectedMessage.authorEid}" name="siteUserId"/>
-                        	<h:outputText value="#{ForumTool.selectedMessage.anonAwareAuthor}"/>
-                        </h:commandLink>
+
+            <h:outputText escape="false" value="<a href='javascript:void(0);' class='profile-popup-link textPanelFooter #{ForumTool.selectedMessage.useAnonymousId ? 'anonymousAuthor' : ''}' data-useruuid='#{ForumTool.selectedMessage.authorEid}' data-siteid='#{ForumTool.siteId}'>" rendered="#{ForumTool.instructor || !ForumTool.selectedMessage.useAnonymousId}" />
+            <h:outputText value="#{ForumTool.selectedMessage.anonAwareAuthor}" rendered="#{ForumTool.instructor || !ForumTool.selectedMessage.useAnonymousId}" />
+            <h:outputText escape="false" value="</a>" rendered="#{ForumTool.instructor || !ForumTool.selectedMessage.useAnonymousId}"/>
+
+            <h:outputText value="#{ForumTool.selectedMessage.anonAwareAuthor}" rendered="#{ForumTool.selectedMessage.useAnonymousId}" styleClass="textPanelFooter #{ForumTool.selectedMessage.useAnonymousId ? 'anonymousAuthor' : ''}" />
+            <h:outputText value=" #{msgs.cdfm_me}" rendered="#{ForumTool.selectedMessage.currentUserAndAnonymous}" styleClass="textPanelFooter" />
+
+            <h:outputText escape="false" value="&nbsp;&nbsp;" rendered="#{ForumTool.instructor}" />
+            <h:commandLink action="#{mfStatisticsBean.processActionStatisticsUser}" immediate="true" title=" #{ForumTool.selectedMessage.anonAwareAuthor} Stats" rendered="#{ForumTool.instructor}" styleClass="textPanelFooter #{ForumTool.selectedMessage.useAnonymousId ? 'anonymousAuthor' : ''}">
+                <f:param value="#{ForumTool.selectedMessage.authorEid}" name="siteUserId"/>
+                <h:outputText escape="false" value="<span class='fa fa-bar-chart'></span>" />
+            </h:commandLink>
+
 						<h:outputText value=" #{msgs.cdfm_openb} "  styleClass="textPanelFooter" />
 						<h:outputText value="#{ForumTool.selectedMessage.message.created}"  styleClass="textPanelFooter" >
 							<f:convertDateTime pattern="#{msgs.date_format}" timeZone="#{ForumTool.userTimeZone}" locale="#{ForumTool.userLocale}"/>  

@@ -509,7 +509,9 @@ function msgcntr_word_count(forumHtml) {
 }
   
  function fckeditor_word_count_fromMessage(msgStr, countSpan){
+  if (document.getElementById(countSpan)) {
  	document.getElementById(countSpan).innerHTML = "<span class='highlight'>(" + getWordCount(msgStr) + ")</span>";
+  }
  }
  
  function getWordCount(msgStr) {
