@@ -353,5 +353,8 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		if (!StringUtils.isBlank(profile.getEmail())) {
 			context.put("email", profile.getEmail());
 		}
+		if (!profile.getPhoneNumbers().isEmpty()) {
+			context.put("phoneNumbers", profile.getPhoneNumbers());
+		}
 	}
 }
