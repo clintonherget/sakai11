@@ -98,6 +98,7 @@ public class ProfileLogicImpl implements ProfileLogic {
 		//add the additional information and return
 		if(StringUtils.equals(userUuid, currentUserUuid) || sakaiProxy.isSuperUser()) {
 			p.setEmail(u.getEmail());
+			p.setPhoneNumbers(getPhoneNumbers(p));
 			p.setStatus(statusLogic.getUserStatus(userUuid));
 			p.setSocialInfo(getSocialNetworkingInfo(userUuid));
 			p.setCompanyProfiles(getCompanyProfiles(userUuid));
@@ -124,6 +125,7 @@ public class ProfileLogicImpl implements ProfileLogic {
 		//ADD email if allowed, REMOVE contact info if not
 		if(privacyLogic.isActionAllowed(userUuid, currentUserUuid, PrivacyType.PRIVACY_OPTION_CONTACTINFO)) {
 			p.setEmail(u.getEmail());
+			p.setPhoneNumbers(getPhoneNumbers(p));
         } else if(siteId != null && sakaiProxy.isUserAllowedInSite(currentUserUuid, ProfileConstants.ROSTER_VIEW_EMAIL, siteId)) {
 			p.setEmail(u.getEmail());
         } else {
