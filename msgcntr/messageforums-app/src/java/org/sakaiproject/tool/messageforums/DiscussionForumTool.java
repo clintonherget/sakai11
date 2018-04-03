@@ -8394,7 +8394,7 @@ public class DiscussionForumTool
 		return "";
 	}
 
-	private String getSiteId() {
+	public String getSiteId() {
 		return ToolManager.getCurrentPlacement().getContext();
 	}
 

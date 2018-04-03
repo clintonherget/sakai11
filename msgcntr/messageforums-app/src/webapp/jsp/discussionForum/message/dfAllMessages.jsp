@@ -415,11 +415,17 @@
 				   </h:outputLink>
 				</f:facet>
 				<h:panelGroup rendered="#{!message.deleted}" >
-                    <h:outputText value="#{message.anonAwareAuthor}" rendered="#{!ForumTool.instructor || message.useAnonymousId}" styleClass="#{message.useAnonymousId ? 'anonymousAuthor' : ''}" />
+                    <h:outputText escape="false" value="<a href='javascript:void(0);' class='profile-popup-link' data-useruuid='#{message.authorEid}' data-siteid='#{ForumTool.siteId}'>" rendered="#{ForumTool.instructor || !message.useAnonymousId}" />
+                    <h:outputText value="#{message.anonAwareAuthor}" rendered="#{ForumTool.instructor || !message.useAnonymousId}" />
+                    <h:outputText escape="false" value="</a>" rendered="#{ForumTool.instructor || !message.useAnonymousId}"/>
+
+                    <h:outputText value="#{message.anonAwareAuthor}" rendered="#{message.useAnonymousId}" styleClass="#{message.useAnonymousId ? 'anonymousAuthor' : ''}" />
                     <h:outputText value=" #{msgs.cdfm_me}" rendered="#{message.currentUserAndAnonymous}" />
-                    <h:commandLink action="#{mfStatisticsBean.processActionStatisticsUser}" immediate="true" title=" #{message.anonAwareAuthor}" rendered="#{ForumTool.instructor && !message.useAnonymousId}" styleClass="#{message.useAnonymousId ? 'anonymousAuthor' : ''}">
+
+                    <h:outputText escape="false" value="&nbsp;&nbsp;" rendered="#{ForumTool.instructor}" />
+                    <h:commandLink action="#{mfStatisticsBean.processActionStatisticsUser}" immediate="true" title=" #{message.anonAwareAuthor} Stats" rendered="#{ForumTool.instructor}" styleClass="#{message.useAnonymousId ? 'anonymousAuthor' : ''}">
                         <f:param value="#{message.authorEid}" name="siteUserId"/>
-                        <h:outputText value="#{message.anonAwareAuthor}" />
+                        <h:outputText escape="false" value="<span class='fa fa-bar-chart'></span>" />
                     </h:commandLink>
 				</h:panelGroup>
 			</h:column>
