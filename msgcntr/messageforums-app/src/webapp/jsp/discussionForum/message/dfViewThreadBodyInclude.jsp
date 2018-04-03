@@ -58,16 +58,18 @@
 				<h:outputText value="<br /><div class=\"messageMetadata\">" escape="false" />
 				<%--author --%>
 				
-                <h:outputText value="#{message.anonAwareAuthor}" rendered="#{!ForumTool.instructor || message.useAnonymousId}" styleClass="textPanelFooter #{message.read ? '' : 'unreadMsg'} md #{message.useAnonymousId ? 'anonymousAuthor' : ''}"/>
-                
-                <f:verbatim><span class="md"></f:verbatim>
-                <h:commandLink action="#{mfStatisticsBean.processActionStatisticsUser}" immediate="true" title=" #{message.anonAwareAuthor }" rendered="#{ForumTool.instructor && !message.useAnonymousId}" styleClass="textPanelFooter md #{message.read ? '' : 'unreadMsg'} #{message.useAnonymousId ? 'anonymousAuthor' : ''}">
-                    <f:param value="#{message.authorEid}" name="siteUserId"/>
-                    <h:outputText value="  #{message.anonAwareAuthor}"/>
-                </h:commandLink>
+                <h:outputText escape="false" value="<a href='javascript:void(0);' class='profile-popup-link textPanelFooter #{message.read ? '' : 'unreadMsg'} md #{message.useAnonymousId ? 'anonymousAuthor' : ''}' data-useruuid='#{message.authorEid}' data-siteid='#{ForumTool.siteId}'>" rendered="#{ForumTool.instructor || !message.useAnonymousId}" />
+                <h:outputText value="#{message.anonAwareAuthor}" rendered="#{ForumTool.instructor || !message.useAnonymousId}" />
+                <h:outputText escape="false" value="</a>" rendered="#{ForumTool.instructor || !message.useAnonymousId}"/>
 
-                <f:verbatim></span></f:verbatim>
+                <h:outputText value="#{message.anonAwareAuthor}" rendered="#{message.useAnonymousId}" styleClass="textPanelFooter #{message.read ? '' : 'unreadMsg'} md #{message.useAnonymousId ? 'anonymousAuthor' : ''}" />
                 <h:outputText value=" #{msgs.cdfm_me}" rendered="#{message.currentUserAndAnonymous}" styleClass="textPanelFooter md #{message.read ? '' : 'unreadMsg'}" />
+
+                <h:outputText escape="false" value="&nbsp;&nbsp;" rendered="#{ForumTool.instructor}" />
+                <h:commandLink action="#{mfStatisticsBean.processActionStatisticsUser}" immediate="true" title=" #{message.anonAwareAuthor} Stats" rendered="#{ForumTool.instructor}" styleClass="textPanelFooter md #{message.read ? '' : 'unreadMsg'} #{message.useAnonymousId ? 'anonymousAuthor' : ''}">
+                    <f:param value="#{message.authorEid}" name="siteUserId"/>
+                    <h:outputText escape="false" value="<span class='fa fa-bar-chart'></span>" />
+                </h:commandLink>
 
 				<%--date --%>
 				<h:outputText value="#{message.message.created}" rendered="#{message.read}" styleClass="textPanelFooter md">
