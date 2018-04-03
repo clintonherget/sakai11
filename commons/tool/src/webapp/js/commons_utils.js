@@ -73,7 +73,7 @@ commons.utils = {
 
         $('#commons-comment-edit-link-' + comment.id).click(commons.utils.editCommentHandler);
         $('#commons-comment-delete-link-' + comment.id).click(commons.utils.deleteCommentHandler);
-        commons.utils.attachProfilePopup(comment.id, comment.creatorId);
+//        commons.utils.attachProfilePopup(comment.id, comment.creatorId);
     },
     editPostHandler: function (e) {
 
@@ -455,7 +455,7 @@ commons.utils = {
 
         $(document).ready(function () {
 
-            self.attachProfilePopup(post.id, post.creatorId);
+//            self.attachProfilePopup(post.id, post.creatorId);
 
             $('#commons-post-edit-link-' + post.id).click(self.editPostHandler);
             $('#commons-post-delete-link-' + post.id).click(self.deletePostHandler);
