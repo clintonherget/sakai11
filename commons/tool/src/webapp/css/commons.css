@@ -265,3 +265,7 @@
     height: auto !important;
     max-width: 100% !important;
 }
+#commons-edit-form #commons-title {
+    width: 100%;
+    max-width: 450px;
+}
