@@ -178,6 +178,10 @@
         $expandedMenuPlaceholder.classList.add('lessons-top-level-placeholder');
         $expandedMenuPlaceholder.style.display = 'none';
 
+        if ($menu.classList.contains('is-invisible')) {
+            $expandedMenuPlaceholder.classList.add('is-invisible');
+        }
+
         // create a link to close an expanded menu
         var $collapseToggle = document.createElement('a');
         $collapseToggle.setAttribute('href', 'javascript:void(0);');
