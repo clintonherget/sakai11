@@ -17,8 +17,8 @@
 <registration>
 
     <tool id="sakai.commons"
-        title="Commons"
-        description="A social networking style tool allowing posts with url to thumbnail expansion, and unthreaded replies.">
+        title="Course Wall"
+        description="Course Wall">
 
         <category name="course" />
         <category name="project" />
