@@ -276,6 +276,7 @@ public class EventRegistryServiceImpl implements EventRegistry, EventRegistrySer
 			toolIdIconMap.put("sakai.assignment.grades", StatsManager.SILK_ICONS_DIR + "page_edit.png");
 			toolIdIconMap.put("sakai.forums", StatsManager.SILK_ICONS_DIR + "comments.png");
 			toolIdIconMap.put("sakai.gradebook.tool", StatsManager.SILK_ICONS_DIR + "report.png");
+			toolIdIconMap.put("sakai.gradebookng", StatsManager.SILK_ICONS_DIR + "report.png");
 			toolIdIconMap.put("sakai.mailtool", StatsManager.SILK_ICONS_DIR + "email_go.png");
 			toolIdIconMap.put("sakai.poll", StatsManager.SILK_ICONS_DIR + "chart_bar.png");
 			toolIdIconMap.put("sakai.sitestats", StatsManager.SILK_ICONS_DIR + "chart_bar.png");
