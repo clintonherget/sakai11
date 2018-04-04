@@ -17,8 +17,8 @@
 <registration>
 
  	<tool id="sakai.commons"
-       	title="Commons"
-       	description="The commons">
+       	title="Course Wall"
+       	description="Course Wall">
 
        	<category name="course" />
         <category name="project" />
