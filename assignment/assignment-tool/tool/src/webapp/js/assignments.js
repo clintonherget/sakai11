@@ -281,6 +281,26 @@ ASN.setupAssignNew = function(){
     });
     
     ASN.setupTIIBehaviours();
+
+    // CLASSES-3240
+    if ($('#newAssignmentForm :hidden[name=assignmentId]').val() != "") {
+        var currentGradeType = $('#new_assignment_grade_type').val();
+        var currentPoints = $('#new_assignment_grade_points').val();
+        $('#new_assignment_grade_type').on('change', function() {
+            if ($('#new_assignment_grade_type').val() != currentGradeType) {
+                if ($('#new_assignment_grade_type_warning').length == 0) {
+                    var $message = $('<span>').attr('id', 'new_assignment_grade_type_warning').addClass('text-danger');
+                    $message.html(' Alert: Modifying the grade type will <strong><u>permanently delete</u></strong> existing grades entered for student submissions in this assignment.')
+                    $('#new_assignment_grade_type').after($message);
+                }
+            } else {
+                $('#new_assignment_grade_type_warning').remove();
+                if (currentGradeType == '3') {
+                    $('#new_assignment_grade_points').val(currentPoints);
+                }
+            }
+        });
+    }
 };
 
 ASN.resizeFrame = function(updown)
