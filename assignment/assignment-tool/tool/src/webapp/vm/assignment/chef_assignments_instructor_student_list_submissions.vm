@@ -153,7 +153,7 @@
 											#if (!$isAnon)
 											<h5>
 												<a href="#toolLinkParam("AssignmentAction" "doGrade_submission" "assignmentId=$validator.escapeUrl($assignment.Reference)&submissionId=$validator.escapeUrl($submission.Reference)&option=lisofass2")" title="$validator.limit($validator.escapeHtml($assignment.Title), 40)">$validator.limit($validator.escapeHtml($assignment.Title), 40)</a>
-												#if ($allowAddAssignment && $allowSubmitByInstructor)
+												#if ($allowAddAssignment && $allowSubmitByInstructor && !$assignment.getContent().AllowReviewService)
 												#set( $submitSpinnerID = "submitFor_" + $member.Id + "_" + $validator.escapeUrl($assignment.Reference) )
 												<div class="itemAction spinnerBesideContainer">
 													<a onclick="SPNR.insertSpinnerInPreallocated( this, null, '$submitSpinnerID' );" href="#toolLinkParam("AssignmentAction" "doView_submission" "assignmentReference=$validator.escapeUrl($assignment.Reference)&submitterId=$validator.escapeUrl($member.id)")">
