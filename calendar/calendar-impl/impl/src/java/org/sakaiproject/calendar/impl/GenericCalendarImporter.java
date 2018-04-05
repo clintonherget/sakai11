@@ -909,7 +909,7 @@ public class GenericCalendarImporter implements CalendarImporterService
                         throw new ImportException( msg );
 							}
 						}
-						else if (ITEM_TYPE_PROPERTY_NAME.equals(column.getColumnHeader())){
+						else if (ITEM_TYPE_DEFAULT_COLUMN_HEADER.equals(column.getColumnHeader())){
 							String cellValue = column.getCellValue();
 							if (cellValue!=null){
 								if (cellValue.equals("event.activity")){
@@ -988,7 +988,7 @@ public class GenericCalendarImporter implements CalendarImporterService
 			prototypeEvent.setDescription((String) eventProperties.get(columnMap.get(DESCRIPTION_DEFAULT_COLUMN_HEADER)));
 			prototypeEvent.setDisplayName((String) eventProperties.get(columnMap.get(TITLE_DEFAULT_COLUMN_HEADER)));
 			prototypeEvent.setLocation((String) eventProperties.get(columnMap.get(LOCATION_DEFAULT_COLUMN_HEADER)));
-			prototypeEvent.setType((String) eventProperties.get(ITEM_TYPE_PROPERTY_NAME));
+			prototypeEvent.setType((String) eventProperties.get(ITEM_TYPE_DEFAULT_COLUMN_HEADER));
 
 			if (prototypeEvent.getType() == null || prototypeEvent.getType().length() == 0)
 			{
