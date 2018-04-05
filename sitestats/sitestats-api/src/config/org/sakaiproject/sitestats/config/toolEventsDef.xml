@@ -121,6 +121,7 @@
 	<event eventId="gradebook.export" selected="true"/>
 	<event eventId="gradebook.overrideCourseGrade" selected="true"/>
 	<event eventId="gradebook.updateSettings" selected="true"/>
+	<event eventId="gradebook.studentView" selected="true"/>
 </tool>
 
 
