@@ -144,7 +144,7 @@
 										<td headers="assignment">
 											#if (!$isAnon)
 												<a href="#toolLinkParam("AssignmentAction" "doGrade_submission" "assignmentId=$validator.escapeUrl($assignmentReference)&submissionId=$validator.escapeUrl($submissionReference)&option=lisofass2")" title="$validator.escapeHtml($assignment.Title)">$validator.escapeHtml($assignment.Title)</a>
-												#if ($allowAddAssignment && $allowSubmitByInstructor)
+												#if ($allowAddAssignment && $allowSubmitByInstructor && !$allowReviewService)
 												#set( $submitSpinnerID = "submitFor_" + $member.Id + "_" + $validator.escapeUrl($assignmentReference) )
 												<div class="itemAction spinnerBesideContainer">
 													#if ($assignment.DueDate.isAfter($currentTime))
