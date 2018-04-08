@@ -68,6 +68,7 @@ public class UserProfile implements Serializable {
 	private String businessBiography;
 	
 	private List<TypeInputEntry> phoneNumbers;
+	private List<TypeInputEntry> socialMedia;
 
 	private boolean locked;
 	
@@ -102,6 +103,20 @@ public class UserProfile implements Serializable {
 	public void setPhoneNumbers(List<TypeInputEntry> entries) {
 		if (entries != null) {
 		    phoneNumbers = entries;
+		}
+	}
+
+	public List<TypeInputEntry> getSocialMedia() {
+		if (socialMedia == null) {
+		    socialMedia = new ArrayList<TypeInputEntry>();
+		}
+
+		return socialMedia;
+	}
+
+	public void setSocialMedia(List<TypeInputEntry> entries) {
+		if (entries != null) {
+		    socialMedia = entries;
 		}
 	}
 

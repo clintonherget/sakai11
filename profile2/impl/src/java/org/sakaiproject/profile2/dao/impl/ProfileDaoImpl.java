@@ -565,13 +565,11 @@ public class ProfileDaoImpl extends HibernateDaoSupport implements ProfileDao {
 			return null;
 		}
 
-		HibernateCallback hcb = new HibernateCallback() {
-	  		public Object doInHibernate(Session session) throws HibernateException, SQLException {
+		HibernateCallback hcb = session -> {
 	  			Query q = session.getNamedQuery("getTypedValuesForUserByGroup");
-	  			q.setParameter(USER_UUID, uuid, Hibernate.STRING);
-	  			q.setParameter("group", "phoneNumbers", Hibernate.STRING);
+	  			q.setParameter(USER_UUID, uuid, StringType.INSTANCE);
+	  			q.setParameter("group", "phoneNumbers", StringType.INSTANCE);
 	  			return q.list();
-			}
 		};
 
 		List<ProfileTypedValues> rows = (List<ProfileTypedValues>) getHibernateTemplate().execute(hcb);
@@ -616,6 +614,66 @@ public class ProfileDaoImpl extends HibernateDaoSupport implements ProfileDao {
 			return true;
 		} catch (Exception e) {
 			log.error("savePhoneNumbers failed. "+ e.getClass() + ": " + e.getMessage());
+			return false;
+		}
+	}
+
+	public List<TypeInputEntry> getSocialMedia(UserProfile userProfile) {
+		final String uuid = userProfile.getUserUuid();
+
+		if (uuid == null) {
+			return null;
+		}
+
+		HibernateCallback hcb = session -> {
+	  			Query q = session.getNamedQuery("getTypedValuesForUserByGroup");
+	  			q.setParameter(USER_UUID, uuid, StringType.INSTANCE);
+	  			q.setParameter("group", "socialMedia", StringType.INSTANCE);
+	  			return q.list();
+		};
+
+		List<ProfileTypedValues> rows = (List<ProfileTypedValues>) getHibernateTemplate().execute(hcb);
+
+		List<TypeInputEntry> result = new ArrayList<>();
+
+		for (ProfileTypedValues entry : rows) {
+			result.add(new TypeInputEntry(entry.getType(), entry.getTypeQualifier(), entry.getValue()));
+		}
+
+		return result;
+	}
+
+	public boolean saveSocialMedia(final UserProfile userProfile) {
+		try {
+			getHibernateTemplate().execute(new HibernateCallback() {
+				public Object doInHibernate(Session session) {
+					Query q = session.createQuery("delete from " + ProfileTypedValues.class.getName() + " t where t.valueGroup = :group AND t.userUuid = :user");
+					q.setParameter("group", "socialMedia");
+					q.setParameter("user", userProfile.getUserUuid());
+					q.executeUpdate();
+
+					// FIXME: constant for socialMedia
+					for (TypeInputEntry entry : userProfile.getSocialMedia()) {
+						if (entry.getType() == null || entry.getValue() == null) {
+							continue;
+						}
+
+						session.save(new ProfileTypedValues(
+								     userProfile.getUserUuid(),
+								     "socialMedia",
+								     entry.getType(),
+								     entry.getTypeQualifier(),
+								     entry.getValue()));
+					}
+
+					session.flush();
+					return Boolean.TRUE;
+				}
+			});
+
+			return true;
+		} catch (Exception e) {
+			log.error("saveSocialMedia failed. "+ e.getClass() + ": " + e.getMessage());
 			return false;
 		}
 	}

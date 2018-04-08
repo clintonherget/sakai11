@@ -213,6 +213,7 @@ public class MyProfile extends BasePage {
 		userProfile.setFavouriteQuotes(sakaiPerson.getFavouriteQuotes());
 		userProfile.setPersonalSummary(sakaiPerson.getNotes());
 		userProfile.setPhoneNumbers(profileLogic.getPhoneNumbers(userProfile));
+		userProfile.setSocialMedia(profileLogic.getSocialMedia(userProfile));
 
 		// social networking fields
 		SocialNetworkingInfo socialInfo = profileLogic.getSocialNetworkingInfo(userProfile.getUserUuid());
