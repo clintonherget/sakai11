@@ -301,8 +301,11 @@ public interface ProfileDao {
 	public boolean saveSocialNetworkingInfo(final SocialNetworkingInfo socialNetworkingInfo);
 	
 	public List<TypeInputEntry> getPhoneNumbers(UserProfile userProfile);
-
 	public boolean savePhoneNumbers(UserProfile userProfile);
+
+	public List<TypeInputEntry> getSocialMedia(UserProfile userProfile);
+	public boolean saveSocialMedia(UserProfile userProfile);
+
 
 	/**
 	 * Add a new profile image record to the database. Invalidates others before it adds itself.

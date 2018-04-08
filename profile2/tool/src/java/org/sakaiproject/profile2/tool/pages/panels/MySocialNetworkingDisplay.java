@@ -30,6 +30,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.sakaiproject.profile2.logic.SakaiProxy;
 import org.sakaiproject.profile2.model.UserProfile;
 import org.sakaiproject.profile2.util.ProfileUtils;
+import org.sakaiproject.profile2.model.TypeInputEntry;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.Model;
 
 /**
  * Panel for displaying social networking profile data.
@@ -58,6 +62,19 @@ public class MySocialNetworkingDisplay extends Panel {
 		
 		int visibleFieldCount = 0;
 		
+		ListView<TypeInputEntry> socialMediaContainer =
+			new ListView<TypeInputEntry>("socialMedia", userProfile.getSocialMedia()) {
+				public void populateItem(final ListItem<TypeInputEntry> item) {
+					final TypeInputEntry entry = (TypeInputEntry)item.getDefaultModelObject();
+					item.add(new Label("socialMediaLabel", Model.of(entry.formatType())));
+					item.add(new Label("socialMedia", Model.of(entry.getValue())));
+				}
+			};
+
+		visibleFieldCount += userProfile.getSocialMedia().size();
+		add(socialMediaContainer);
+
+
 		//facebook
 		WebMarkupContainer facebookContainer = new WebMarkupContainer("facebookContainer");
 		facebookContainer.add(new Label("facebookLabel", new ResourceModel("profile.socialnetworking.facebook")));

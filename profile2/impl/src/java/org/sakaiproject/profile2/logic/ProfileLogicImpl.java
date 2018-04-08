@@ -313,6 +313,20 @@ public class ProfileLogicImpl implements ProfileLogic {
 		return false;
 	}
 
+	public List<TypeInputEntry> getSocialMedia(UserProfile userProfile) {
+		return dao.getSocialMedia(userProfile);
+	}
+
+
+	public boolean saveSocialMedia(UserProfile userProfile) {
+		if(dao.saveSocialMedia(userProfile)) {
+			log.info("Updated phone numbers for user: " + userProfile.getUserUuid());
+			return true;
+		}
+
+		return false;
+	}
+
 
 	/**
  	 * {@inheritDoc}
