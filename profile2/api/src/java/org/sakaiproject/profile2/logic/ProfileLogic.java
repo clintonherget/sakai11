@@ -127,8 +127,10 @@ public interface ProfileLogic {
 	public boolean saveSocialNetworkingInfo(SocialNetworkingInfo socialNetworkingInfo);
 
 	public List<TypeInputEntry> getPhoneNumbers(UserProfile userProfile);
-
 	public boolean savePhoneNumbers(UserProfile userProfile);
+
+	public List<TypeInputEntry> getSocialMedia(UserProfile userProfile);
+	public boolean saveSocialMedia(UserProfile userProfile);
 
 
 	/**

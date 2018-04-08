@@ -45,6 +45,10 @@ import org.sakaiproject.profile2.tool.components.IconWithClueTip;
 import org.sakaiproject.profile2.util.ProfileConstants;
 import org.sakaiproject.profile2.util.ProfileUtils;
 
+import org.sakaiproject.profile2.model.TypeInputEntry;
+import java.util.Arrays;
+import java.util.ArrayList;
+
 /**
  * Panel for editing social networking profile data.
  */
@@ -118,6 +122,10 @@ public class MySocialNetworkingEdit extends Panel {
 		
 		form.add(facebookContainer);
 		
+		// CLASSES-3236 Replacing hard-coded list of networks with our dynamic dropdown
+		facebookContainer.setVisible(false);
+
+
 		//linkedin
 		WebMarkupContainer linkedinContainer = new WebMarkupContainer("linkedinContainer");
 		linkedinContainer.add(new Label("linkedinLabel", new ResourceModel("profile.socialnetworking.linkedin.edit")));
@@ -143,6 +151,9 @@ public class MySocialNetworkingEdit extends Panel {
 		linkedinUrl.add(new ComponentVisualErrorBehaviour("onblur", linkedinUrlFeedback));
 		
 		form.add(linkedinContainer);
+		// CLASSES-3236 Replacing hard-coded list of networks with our dynamic dropdown
+		linkedinContainer.setVisible(false);
+
 		
 		//myspace
 		WebMarkupContainer myspaceContainer = new WebMarkupContainer("myspaceContainer");
@@ -200,7 +211,10 @@ public class MySocialNetworkingEdit extends Panel {
 		twitterUrl.add(new ComponentVisualErrorBehaviour("onblur", twitterUrlFeedback));
 		
 		form.add(twitterContainer);
-		
+		// CLASSES-3236 Replacing hard-coded list of networks with our dynamic dropdown
+		twitterContainer.setVisible(false);
+
+
 		//skype
 		WebMarkupContainer skypeContainer = new WebMarkupContainer("skypeContainer");
 		skypeContainer.add(new Label("skypeLabel", new ResourceModel("profile.socialnetworking.skype.edit")));
@@ -215,15 +229,40 @@ public class MySocialNetworkingEdit extends Panel {
 			skypeContainer.setVisible(false);
 		}
 
-			
+		WebMarkupContainer socialMediaContainer = new WebMarkupContainer("socialMediaContainer");
+		Panel socialMediaEdit = new SocialMediaEdit("socialMedia");
+
+		final RepeatableTypedInput repeatableTypedInput = new RepeatableTypedInput("repeatableTypedInput",
+											   new Model(new ArrayList<TypeInputEntry>(userProfile.getSocialMedia())),
+											   "Account/Address",
+											   "Social Media Network",
+											   Arrays.asList(new RepeatableTypedInput.Type[] {
+													   new RepeatableTypedInput.Type("Facebook"),
+													   new RepeatableTypedInput.Type("Twitter"),
+													   new RepeatableTypedInput.Type("Blog"),
+													   new RepeatableTypedInput.Type("Portfolio"),
+													   new RepeatableTypedInput.Type("WeChat"),
+													   new RepeatableTypedInput.Type("Instagram"),
+													   new RepeatableTypedInput.Type("LinkedIn"),
+													   new RepeatableTypedInput.Type("Skype"),
+													   new RepeatableTypedInput.Type("MySpace"),
+													   new RepeatableTypedInput.Type("Other").qualified(true),
+												   }));
+		socialMediaEdit.add(repeatableTypedInput);
+
+		socialMediaContainer.add(socialMediaEdit);
+		form.add(socialMediaContainer);
+
 		//submit button
 		AjaxFallbackButton submitButton = new AjaxFallbackButton("submit", new ResourceModel("button.save.changes"), form) {
 			private static final long serialVersionUID = 1L;
 
 			protected void onSubmit(AjaxRequestTarget target, Form form) {
 
-				if (save(form)) {
+				// Apply our social media changes
+				userProfile.setSocialMedia(repeatableTypedInput.entries());
 
+				if (save(form)) {
 					// post update event
 					sakaiProxy.postEvent(ProfileConstants.EVENT_PROFILE_SOCIAL_NETWORKING_UPDATE,"/profile/" + userProfile.getUserUuid(), true);
 
@@ -323,6 +362,8 @@ public class MySocialNetworkingEdit extends Panel {
 		// get the backing model
 		UserProfile userProfile = (UserProfile) form.getModelObject();
 		
+		profileLogic.saveSocialMedia(userProfile);
+
 		// save social networking information
 		SocialNetworkingInfo socialNetworkingInfo = new SocialNetworkingInfo(userProfile.getUserUuid());
 		

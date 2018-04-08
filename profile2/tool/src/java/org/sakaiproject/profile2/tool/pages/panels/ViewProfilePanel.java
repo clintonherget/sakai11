@@ -465,6 +465,21 @@ public class ViewProfilePanel extends Panel {
 				
 		int visibleFieldCount_socialNetworking = 0;
 		
+		List<TypeInputEntry> socialMedia = profileLogic.getSocialMedia(profileLogic.getUserProfile(userUuid));
+
+		ListView<TypeInputEntry> socialMediaContainer =
+			new ListView<TypeInputEntry>("socialMedia", socialMedia) {
+				public void populateItem(final ListItem<TypeInputEntry> item) {
+					final TypeInputEntry entry = (TypeInputEntry)item.getDefaultModelObject();
+
+					item.add(new Label("socialMediaLabel", Model.of(entry.formatType())));
+					item.add(new Label("socialMedia", Model.of(entry.getValue())));
+				}
+			};
+
+		visibleFieldCount_socialNetworking += socialMedia.size();
+		socialNetworkingInfoContainer.add(socialMediaContainer);
+
 		//facebook
 		WebMarkupContainer facebookContainer = new WebMarkupContainer("facebookContainer");
 		facebookContainer.add(new Label("facebookLabel", new ResourceModel("profile.socialnetworking.facebook")));
