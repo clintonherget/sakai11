@@ -99,6 +99,7 @@ public class ProfileLogicImpl implements ProfileLogic {
 		if(StringUtils.equals(userUuid, currentUserUuid) || sakaiProxy.isSuperUser()) {
 			p.setEmail(u.getEmail());
 			p.setPhoneNumbers(getPhoneNumbers(p));
+			p.setSocialMedia(getSocialMedia(p));
 			p.setStatus(statusLogic.getUserStatus(userUuid));
 			p.setSocialInfo(getSocialNetworkingInfo(userUuid));
 			p.setCompanyProfiles(getCompanyProfiles(userUuid));
@@ -166,6 +167,7 @@ public class ProfileLogicImpl implements ProfileLogic {
 		//ADD social networking info if allowed
 		if(privacyLogic.isActionAllowed(userUuid, currentUserUuid, PrivacyType.PRIVACY_OPTION_SOCIALINFO)) {
 			p.setSocialInfo(getSocialNetworkingInfo(userUuid));
+			p.setSocialMedia(getSocialMedia(p));
 		}
 		
 		//ADD company info if activated and allowed, REMOVE business bio if not
