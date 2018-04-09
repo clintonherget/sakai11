@@ -111,6 +111,18 @@
                 #end
             #end
         #end
+
+        #if (${showSocialInfo})
+            <h3>Social Media</h3>
+            #if (${socialMediaAccounts})
+                #foreach ($socialMediaAccount in $socialMediaAccounts)
+                    <div class="row">
+                        <div class="col-xs-4">${socialMediaAccount.formatType()}</div>
+                        <div class="col-xs-8">${socialMediaAccount.getValue()}</div>
+                    </div>
+                #end
+            #end
+        #end
     </div>
     <div class="profile-drawer-footer">
         <div>
