@@ -243,6 +243,9 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		if (privacyLogic.isActionAllowed(connectionUserId, currentUserId, PrivacyType.PRIVACY_OPTION_CONTACTINFO)) {
 			addContactInfoToContext(context, userProfile);
 		}
+		if (privacyLogic.isActionAllowed(connectionUserId, currentUserId, PrivacyType.PRIVACY_OPTION_SOCIALINFO)) {
+			addSocialInfoToContext(context, userProfile);
+		}
 		addSectionAndRoleToContext(context, siteId, connectionUserId);
 		addConnectionDataToContext(context, currentUserId, connectionUserId);
 
@@ -355,6 +358,15 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		}
 		if (!profile.getPhoneNumbers().isEmpty()) {
 			context.put("phoneNumbers", profile.getPhoneNumbers());
+		}
+	}
+
+	private void addSocialInfoToContext(VelocityContext context, UserProfile profile) {
+		context.put("showSocialInfo", true);
+		if (profile.getSocialMedia().isEmpty()) {
+			context.put("showSocialInfo", false);
+		} else {
+			context.put("socialMediaAccounts", profile.getSocialMedia());
 		}
 	}
 }
