@@ -109,7 +109,11 @@ public class OverviewPage extends BasePage {
 		}else{
 			add(new WebMarkupContainer("resourcesWidget").setRenderBodyOnly(true));
 		}
-        add(new LessonsWidget("lessonsWidget", siteId));
+
+		// CLASSES-3244 Hidden as Lessons stats are broken in Sakai 11.  Can revisit this when we merge Sakai 12.
+		LessonsWidget lessonsWidget = new LessonsWidget("lessonsWidget", siteId);
+		lessonsWidget.setVisible(false);
+		add(lessonsWidget);
 	}
 }
 
