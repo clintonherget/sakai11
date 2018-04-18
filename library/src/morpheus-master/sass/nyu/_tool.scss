@@ -910,6 +910,125 @@ body {
       border-color: #CCC;
     }
   }
+
+    // CLASSES-3249 Kyle's sweet new styles
+    .right-col {
+      width: 100%;
+    }
+    .question .right-col {
+      padding-right: 50px;
+      width: 100%;
+    }
+    .column .commentDiv,
+    .column .studentContentTable,
+    .column .questionDiv .contentCol,
+    .column .checklistDiv {
+      background-color: #ffffff;
+      border: 1px solid #3674A1;
+      border-radius: 3px;
+      -webkit-box-shadow: 0px 0px 10px 0px rgba(204,204,204,0.5);
+      -moz-box-shadow: 0px 0px 10px 0px rgba(204,204,204,0.5);
+      box-shadow: 0px 0px 10px 0px rgba(204,204,204,0.5);
+    }
+    .questionDiv .contentCol,
+    .checklistDiv {
+      width:100%;
+      margin-left: 26px;
+      margin-right:26px;
+      margin-top:-16px;
+    }
+    .studentContentTitle,
+    .mainList li.question .questionText,
+    h3.author {
+      font-size: 1em;
+      font-weight: 500;
+      padding-bottom: 15px;
+      border-bottom:1px solid #CCCCCC;
+      margin-bottom:15px;
+      line-height:1.6;
+    }
+    .multipleChoiceAnswer {
+      color: #212121;
+    }
+    .multipleChoiceAnswer label {
+      font-weight: normal;
+    }
+    .questionPollResult .questionPollResultBar {
+      background-color: #3674A1;
+      border: 1px solid #275678;
+      border-top-left-radius: 1px;
+      border-top-right-radius: 5px;
+      border-bottom-left-radius: 1px;
+      border-bottom-right-radius: 5px;
+      -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+      -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+      box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+    }
+    .questionPollResult .questionPollResultLabel {
+      padding-left: 10px;
+      color: #212121;
+    }
+    input[type="submit"].question-submit,
+    .addStudentContent {
+      color: #ffffff !important;
+    }
+    input[type="checkbox"][disabled]+label,
+    input[type="checkbox"][disabled="disabled"]+label,
+    input[type="checkbox"][disabled="true"]+label,
+    input[type="radio"][disabled]+label,
+    input[type="radio"][disabled="disabled"]+label,
+    input[type="radio"][disabled="true"]+label {
+      color: #212121;
+      font-weight:normal;
+    }
+     div.commentDiv h3 {
+      border-bottom:none;
+    }
+    div.commentBody {
+      margin-left:20px;
+    }
+    @media only screen and (min-width:771px) {
+      .questionInstructorMessage {
+        padding-left: 38px;
+      }
+    }
+    @media only screen and (max-width:770px) {
+      .questionInstructorMessage {
+        padding-left: 10px;
+      }
+    }
+    @media only screen and (min-width:771px) {
+      .questionDiv .contentCol,
+      .checklistDiv {
+        padding-left:36px;
+      }
+    }
+    @media only screen and (max-width:770px) {
+      .shortanswerDiv .ui-wrapper {
+        width: 100% !important;
+        min-height:150px !important;
+        padding: 0 !important;
+      }
+      .shortanswerDiv textarea {
+        min-height: 150px !important;
+        height: 100%;
+        width: 100% !important;
+      }
+    }
+    @media only screen and (min-width:771px)  {
+      .shortanswerDiv .ui-wrapper {
+        width: 95% !important;
+        min-height:150px !important;
+        padding: 0 !important;
+      }
+      .shortanswerDiv textarea {
+        min-height: 150px !important;
+        height: 100%;
+        width: 100% !important;
+      }
+    }
+
+
 }
 
 
