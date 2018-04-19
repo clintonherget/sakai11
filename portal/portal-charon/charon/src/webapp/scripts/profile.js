@@ -1,3 +1,4 @@
+// FIXME move to libary/src/morpheus-master/js/
 function ProfilePopup($link, userUuid, siteId) {
     this.$link = $PBJQ($link);
 
