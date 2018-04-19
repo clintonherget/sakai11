@@ -21,4 +21,12 @@
             border-radius: 50%;
         }
     }
+
+    @media #{$tablet} {
+        display: none !important;
+    }
+
+    @media #{$phone} {
+        display: none !important;
+    }
 }
