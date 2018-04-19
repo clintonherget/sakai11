@@ -63,7 +63,7 @@
         if (scrollOffset == 0) {
             self.hide();
         } else {
-            var opacity = Math.min(1, scrollOffset / containerHeight);
+            var opacity = Math.min(1, scrollOffset / (containerHeight / 2)); // fade in for the duration of half-portal height
             self.show(opacity);
         }
     };
