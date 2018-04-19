@@ -22,26 +22,16 @@
         $(document.body).append(this.$link);
 
         this.bindEvents();
+
+        // just in case we're scrolled, assume it is
+        this.onScroll();
     };
 
     JumpToTop.prototype.bindEvents = function() {
         var self = this;
 
-        $(window).on('scroll', function() {
-            var magicOffset = $('.Mrphs-mainHeader').height();
-            var containerHeight = $(window).height();
-            var scrollHeight = $(document.body).height();
-            var scrollOffset = Math.max(0, window.scrollY - magicOffset);
-
-            if (scrollOffset == 0) {
-                self.hide();
-            } else {
-                var opacity = Math.min(1, scrollOffset / containerHeight);
-                self.show(opacity)
-            }
-        });
-
-        self.$link.on('click', self.onClick);
+        $(window).on('scroll', $.proxy(self.onScroll, self));
+        self.$link.on('click', $.proxy(self.onClick, self));
     };
 
     JumpToTop.prototype.show = function(opacity) {
@@ -63,6 +53,20 @@
         $('html, body').animate({scrollTop : 0}, 500);
     };
 
+    JumpToTop.prototype.onScroll = function(event) {
+        var self = this;
+        var magicOffset = $('.Mrphs-mainHeader').height();
+        var containerHeight = $(window).height();
+        var scrollHeight = $(document.body).height();
+        var scrollOffset = Math.max(0, window.scrollY - magicOffset);
+
+        if (scrollOffset == 0) {
+            self.hide();
+        } else {
+            var opacity = Math.min(1, scrollOffset / containerHeight);
+            self.show(opacity);
+        }
+    };
 
     new JumpToTop();
 })($PBJQ);
