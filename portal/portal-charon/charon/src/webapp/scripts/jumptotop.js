@@ -55,7 +55,7 @@
 
     JumpToTop.prototype.onScroll = function(event) {
         var self = this;
-        var magicOffset = $('.Mrphs-mainHeader').height();
+        var magicOffset = $(window).height(); // only show jumpto after a whole window is scrolled
         var containerHeight = $(window).height();
         var scrollHeight = $(document.body).height();
         var scrollOffset = Math.max(0, window.scrollY - magicOffset);
