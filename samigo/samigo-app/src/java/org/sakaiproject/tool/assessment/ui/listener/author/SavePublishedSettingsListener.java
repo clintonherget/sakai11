@@ -126,6 +126,7 @@ implements ActionListener
 			assessmentSettings.setOutcome("editPublishedAssessmentSettings");
 			return;
 		}
+		boolean hasToGradebookTurnedOn = hasToGradebookTurnedOn(assessmentSettings, assessment);
 		boolean isTitleChanged = isTitleChanged(assessmentSettings, assessment);
 		boolean isScoringTypeChanged = isScoringTypeChanged(assessmentSettings, assessment);
 		SaveAssessmentSettings saveAssessmentSettings = new SaveAssessmentSettings();
@@ -137,7 +138,7 @@ implements ActionListener
 			return;
 		}
 
-		boolean gbUpdated = updateGB(assessmentSettings, assessment, isTitleChanged, isScoringTypeChanged, context);
+		boolean gbUpdated = updateGB(assessmentSettings, assessment, isTitleChanged, isScoringTypeChanged, hasToGradebookTurnedOn, context);
 		if (!gbUpdated){
 			assessmentSettings.setOutcome("editPublishedAssessmentSettings");
 			return;
@@ -547,6 +548,18 @@ implements ActionListener
 		return true;
 	}
 	
+	private boolean hasToGradebookTurnedOn(PublishedAssessmentSettingsBean assessmentSettings, PublishedAssessmentFacade assessment) {
+		boolean newGradebookSetting = assessmentSettings.getToDefaultGradebook();
+
+		if (assessment.getEvaluationModel() != null) {
+			boolean oldGradebookSetting = "1".equals(assessment.getEvaluationModel().getToGradeBook()); // on = "1" and off = "2"
+
+			return !oldGradebookSetting && newGradebookSetting;
+		}
+
+		return newGradebookSetting;
+	}
+
 	private void setPublishedSettings(PublishedAssessmentSettingsBean assessmentSettings, PublishedAssessmentFacade assessment, boolean retractNow, SaveAssessmentSettings saveAssessmentSettings) {
 		// Title is set in isTitleChanged()
 		assessment.setDescription(assessmentSettings.getDescription());
@@ -783,7 +796,7 @@ implements ActionListener
 		return gbError;
 	}
 
-	public boolean updateGB(PublishedAssessmentSettingsBean assessmentSettings, PublishedAssessmentFacade assessment, boolean isTitleChanged, boolean isScoringTypeChanged, FacesContext context) {
+	public boolean updateGB(PublishedAssessmentSettingsBean assessmentSettings, PublishedAssessmentFacade assessment, boolean isTitleChanged, boolean isScoringTypeChanged, boolean hasToGradebookTurnedOn, FacesContext context) {
 		//#3 - add or remove external assessment to gradebook
 		// a. if Gradebook does not exists, do nothing, 'cos setting should have been hidden
 		// b. if Gradebook exists, just call addExternal and removeExternal and swallow any exception. The
@@ -809,7 +822,7 @@ implements ActionListener
 			try{
 				assessmentName = TextFormat.convertPlaintextToFormattedTextNoHighUnicode(assessmentSettings.getTitle().trim());
 				gbItemExists = gbsHelper.isAssignmentDefined(assessmentName, g);
-				if (assessmentSettings.getToDefaultGradebook() && gbItemExists && isTitleChanged){
+				if (assessmentSettings.getToDefaultGradebook() && gbItemExists && (isTitleChanged || hasToGradebookTurnedOn)){
 					String gbConflict_error=ContextUtil.getLocalizedString("org.sakaiproject.tool.assessment.bundle.AssessmentSettingsMessages","gbConflict_error");
 					context.addMessage(null,new FacesMessage(gbConflict_error));
 					return false;
