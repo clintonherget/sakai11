@@ -29,6 +29,9 @@ import org.sakaiproject.sitestats.api.StatsUpdateManager;
 import org.sakaiproject.sitestats.tool.facade.Locator;
 import org.sakaiproject.sitestats.tool.wicket.pages.NotAuthorizedPage;
 
+import org.sakaiproject.db.cover.SqlService;
+import org.sakaiproject.time.api.TimeService;
+import java.util.TimeZone;
 
 /**
  * @author Nuno Fernandes
@@ -72,8 +75,22 @@ public class LastJobRun extends Panel {
 		if(lastJobRunVisible) {
 			try{
 				Date d = statsUpdateManager.getEventDateFromLatestJobRun();
-				String dStr = Locator.getFacade().getTimeService().newTime(d.getTime()).toStringLocalFull();
-				lastJobRunDate.setDefaultModel(new Model(dStr));
+
+				long time = d.getTime();
+
+				if ("oracle".equals(SqlService.getVendor())) {
+					// CLASSES-3250 Oracle stores event
+					// times in UTC whereas MySQL seems to
+					// be storing them in server time.  Now
+					// apparently that's my problem.
+
+					time += TimeZone.getDefault().getOffset(time);
+				}
+
+				TimeService timeService = Locator.getFacade().getTimeService();
+				String dStr = timeService.newTime(time).toStringLocalFull();
+				String zoneStr = timeService.getLocalTimeZone().getID().replace("_", " ");
+				lastJobRunDate.setDefaultModel(new Model(String.format("%s (%s)", dStr, zoneStr)));
 			}catch(RuntimeException e) {
 				lastJobRunDate.setDefaultModel(new Model());
 			}catch(Exception e){
