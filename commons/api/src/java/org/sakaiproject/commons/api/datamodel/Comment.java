@@ -17,8 +17,7 @@
 
 package org.sakaiproject.commons.api.datamodel;
 
-import java.util.Date;
-import java.util.Stack;
+import java.util.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -69,8 +68,8 @@ public class Comment implements Entity {
         this.setPostId(rs.getString("POST_ID"));
         this.setContent(rs.getString("CONTENT"));
         this.setCreatorId(rs.getString("CREATOR_ID"));
-        this.setCreatedDate(rs.getTimestamp("CREATED_DATE").getTime());
-        this.setModifiedDate(rs.getTimestamp("MODIFIED_DATE").getTime());
+        this.setCreatedDate(rs.getTimestamp("CREATED_DATE", Calendar.getInstance(TimeZone.getTimeZone("UTC"))).getTime());
+        this.setModifiedDate(rs.getTimestamp("MODIFIED_DATE", Calendar.getInstance(TimeZone.getTimeZone("UTC"))).getTime());
     }
 
     public Comment(String text) {
