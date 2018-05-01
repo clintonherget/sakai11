@@ -380,6 +380,30 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
           }
 
       });
+
+
+      // CLASSES-3179 Dialog info message
+      CKEDITOR.on('dialogDefinition', function(e) {
+          function findAncestor (el, cls) {
+              while ((el = el.parentElement) && !el.classList.contains(cls));
+              return el;
+          }
+
+          // kaltura plugin dialog only
+          if (e.data.name == 'kaltura') {
+              e.data.definition.contents[0].elements[0]['onLoad'] = function(event, e2, e3) {
+                  var iframeDef = event.sender.getContentElement("iframe");
+                  var iframe = document.getElementById(iframeDef.domId);
+                  var dialogBody = findAncestor(iframe, 'cke_dialog_body');
+                  var dialogContents = findAncestor(iframe, 'cke_dialog_contents');
+                  var message = document.createElement('div');
+                  message.classList.add('ckeditor-dialog-info-message');
+                  message.innerHTML = 'NYU Classes now features an improved integration with NYU Stream. <a href="http://www.nyu.edu/servicelink/KB0016650" target="_blank">Click here to learn more</a>.';
+
+                  dialogBody.insertBefore(message, dialogContents);
+              };
+          }
+      });
 }
 
 sakai.editor.launch = sakai.editor.editors.ckeditor.launch;

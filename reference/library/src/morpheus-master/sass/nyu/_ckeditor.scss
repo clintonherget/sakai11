@@ -124,4 +124,14 @@ body {
       }
     }
   }
+  // CLASSES-3179 Info Message
+  .cke_dialog {
+    .cke_dialog_body {
+      .ckeditor-dialog-info-message {
+        background-color: #c7e4f4;
+        padding: 12px;
+        border-bottom: 1px solid rgba(165, 138, 29, 0.1);
+      }
+    }
+  }
 }
