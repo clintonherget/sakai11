@@ -400,6 +400,9 @@ public class PortletIFrame extends GenericPortlet {
                 // TODO: state.setAttribute(TARGETPAGE_URL,config.getProperty(TARGETPAGE_URL));
                 // TODO: state.setAttribute(TARGETPAGE_NAME,config.getProperty(TARGETPAGE_NAME));
 
+				// CLASSES-3265
+				context.put("toolId", placement.getToolId());
+
 				vHelper.doTemplate(vengine, "/vm/main.vm", context, out);
 			} else {
 				out.println("Not yet configured");

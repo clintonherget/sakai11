@@ -11,6 +11,10 @@ window.open('$!source','_blank');
 $tlang.getString("new.page.launch") </p> <p>
 <a href="$source" onclick="window.open('$!source','_blank'); return false;" target="_blank">$tlang.getString("new.page.relaunch")</a>
 </p>
+## CLASSES-3265
+#if ($!toolId == "nyu.briteclass")
+  <p>Note: Briteclass recordings are only available for courses that meet in a lecture capture space or classroom.</p>
+#end
 #else
 <script type="text/javascript" language="JavaScript">
 $(document).ready(function() {
