@@ -97,7 +97,7 @@ public class EventHelper {
             String.valueOf(gradebook.getId()),
             String.valueOf(assignmentId),
             studentUid,
-            String.valueOf(comment.length()),
+            (comment == null ? "0" : String.valueOf(comment.length())),
             currentRole.toEventString()
         };
 
