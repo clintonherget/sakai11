@@ -215,6 +215,9 @@ public class AuthzSectionsImpl implements Authz {
 	
 			return false;
 			
+		// CLASSES-3060 if user role in site has been set as TA, then assume they should be able to grade
+		} else if (isUserAbleToGrade(gradebookUid, userUid)) {
+			return true;
 		} else {
 			// use OOTB permissions based upon TA section membership
 			for (Iterator iter = sectionIds.iterator(); iter.hasNext(); ) {
