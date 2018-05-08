@@ -381,6 +381,7 @@ public class TesolFriendMaker {
                 this.user2 = user2;
             }
 
+            @Override
             public boolean equals(Object other) {
                 if (this == other) {
                     return true;
@@ -391,6 +392,11 @@ public class TesolFriendMaker {
                 } else {
                     return getKey().equals(((Pairing) other).getKey());
                 }
+            }
+
+            @Override
+            public int hashCode() {
+                return getKey().hashCode();
             }
 
             public String getKey() {
