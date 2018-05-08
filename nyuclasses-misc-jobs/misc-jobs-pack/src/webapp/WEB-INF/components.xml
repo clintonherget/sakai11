@@ -7,4 +7,10 @@
         init-method="init"
         destroy-method="destroy">
   </bean>
+
+  <bean id="edu.nyu.classes.jobs.TesolFriendMaker"
+	class="edu.nyu.classes.jobs.TesolFriendMaker"
+        init-method="init"
+        destroy-method="destroy">
+  </bean>
 </beans>
