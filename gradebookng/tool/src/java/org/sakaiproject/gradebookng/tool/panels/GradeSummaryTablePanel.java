@@ -233,7 +233,7 @@ public class GradeSummaryTablePanel extends BasePanel {
 								.add(new AttributeModifier("data-trigger", "focus"))
 								.add(new AttributeModifier("data-container", "#gradeSummaryTable"))
 								.add(new AttributeModifier("class",
-										"gb-external-app-flag " + GradeSummaryTablePanel.this.businessService.getIconClass(assignment)))
+										"gb-flag-external " + GradeSummaryTablePanel.this.businessService.getIconClass(assignment)))
 								.setVisible(assignment.isExternallyMaintained()));
 
 						assignmentItem.add(flags);
