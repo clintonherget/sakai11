@@ -197,7 +197,7 @@ public class GradeSummaryTablePanel extends BasePanel {
 						flags.add(page.buildFlagWithPopover("isExternal", new StringResourceModel("label.gradeitem.externalapplabel",null, new Object[] { assignment.getExternalAppName() }).getString())
 								.add(new AttributeModifier("data-trigger", "focus"))
 								.add(new AttributeModifier("data-container", "#gradeSummaryTable"))
-								.add(new AttributeModifier("class", "gb-external-app-flag " + GradeSummaryTablePanel.this.businessService.getIconClass(assignment)))
+								.add(new AttributeModifier("class", "gb-flag-external " + GradeSummaryTablePanel.this.businessService.getIconClass(assignment)))
 								.setVisible(assignment.isExternallyMaintained()));
 
 						assignmentItem.add(flags);
