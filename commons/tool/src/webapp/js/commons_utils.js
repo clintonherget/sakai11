@@ -84,6 +84,17 @@ commons.utils = {
         var postEditButtons = $('#commons-post-edit-buttons-'+ postId);
         postEditButtons.show();
 
+        // CLASSES-3272 Add CTRL+Return to submit post
+        contentDiv.off('keydown').on('keydown', function(event) {
+            if (event.keyCode == 13 && (event.metaKey || event.ctrlKey)) {
+                $('#commons-inplace-post-editor-post-button-' + postId).trigger('click');
+            }
+        });
+        if (navigator.platform.toUpperCase().indexOf('MAC')>=0) {
+            // show mac-ish specific help message
+            postEditButtons.find('.commons-comment-help-text').addClass('mac')
+        }
+
         $(document).ready(function () {
 
             $('#commons-inplace-post-editor-post-button-' + postId).off('click').click(function (e) {
@@ -146,6 +157,16 @@ commons.utils = {
             var tmp = commons.utils.fromHtml(comment.content);
             textarea.val(commons.utils.fromHtml(comment.content));
             textarea.each(function () { autosize(this); }).focus();
+            // CLASSES-3272 Add CTRL+Return to submit post
+            textarea.on('keydown', function(event) {
+                if (event.keyCode == 13 && (event.metaKey || event.ctrlKey)) {
+                    $('#commons-inplace-comment-editor-post-button-' + commentId).trigger('click');
+                }
+            });
+            if (navigator.platform.toUpperCase().indexOf('MAC')>=0) {
+                // show mac-ish specific help message
+                $('#commons-comment-post-buttons-'+commentId).find('.commons-comment-help-text').addClass('mac')
+            }
 
             $('#commons-inplace-comment-editor-cancel-button-' + comment.id).click(function (e) {
 
@@ -483,6 +504,16 @@ commons.utils = {
             $('#commons-post-delete-link-' + post.id).click(self.deletePostHandler);
             var textarea = $('#commons-comment-textarea-' + post.id);
             textarea.each(function () { autosize(this); });
+            // CLASSES-3272 Add CTRL+Return to submit post
+            textarea.off('keydown').on('keydown', function(event) {
+                if (event.keyCode == 13 && (event.metaKey || event.ctrlKey)) {
+                    $('#commons-inplace-comment-editor-post-button-' + post.id).trigger('click');
+                }
+            });
+            if (navigator.platform.toUpperCase().indexOf('MAC')>=0) {
+                // show mac-ish specific help message
+                $('#commons-comment-creator-'+post.id).find('.commons-comment-help-text').addClass('mac')
+            }
             var creator = $('#commons-comment-creator-' + post.id);
             var commentLink = $('#commons-create-comment-link-' + post.id);
             commentLink.click(function (e) {

@@ -269,3 +269,12 @@
     width: 100%;
     max-width: 450px;
 }
+.commons-comment-help-text .mac-only {
+    display: none;
+}
+.commons-comment-help-text.mac .mac-only {
+    display: inline;
+}
+.commons-comment-help-text.mac .pc-only {
+    display: none;
+}
