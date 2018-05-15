@@ -102,6 +102,7 @@ commons.switchState = function (state, arg) {
             var editorCancelButton = $('#commons-editor-cancel-button');
             var editorLinkButton = $('#commons-editor-link-button');
             var editorImageButton = $('#commons-editor-image-button');
+            var editorHelpText = $('#commons-editor-toolbar .commons-comment-help-text');
 
             if (commons.isUserSite) {
                 editorImageButton.hide();
@@ -114,6 +115,7 @@ commons.switchState = function (state, arg) {
                     $('#commons-editor-post-button').prop('disabled', false);
                     editorPostButton.prop('disabled', false);
                     editorCancelButton.prop('disabled', false);
+                    editorHelpText.show();
                 }
             }).on('paste', function (e) {
 
@@ -128,6 +130,7 @@ commons.switchState = function (state, arg) {
                     editor.html(commons.i18n.post_editor_initial_text);
                     editorPostButton.prop('disabled', true);
                     editorCancelButton.prop('disabled', true);
+                    editorHelpText.hide();
                 } else {
                     var sel = commons.getSelection();
                     commons.selectedText = (document.selection) ? sel.createRange().htmlText : sel.toString();
@@ -142,6 +145,7 @@ commons.switchState = function (state, arg) {
                         editor.html(commons.i18n.post_editor_initial_text);
                         editorPostButton.prop('disabled', true);
                         editorCancelButton.prop('disabled', true);
+                        editorHelpText.hide();
                         fileField.val('');
 
                         var newPlaceholderId = 'commons-post-' + post.id;
@@ -159,6 +163,7 @@ commons.switchState = function (state, arg) {
                 editor.html(commons.i18n.post_editor_initial_text);
                 editorPostButton.prop('disabled', true);
                 editorCancelButton.prop('disabled', true);
+                editorHelpText.hide();
             });
 
             var textField = $('#commons-link-dialog-text');
@@ -286,12 +291,16 @@ commons.switchState = function (state, arg) {
                 }
             }
 
-            // Add CTRL+Return to submit post
+            // CLASSES-3272 Add CTRL+Return to submit post
             editor.on('keydown', function(event) {
                 if (event.keyCode == 13 && (event.metaKey || event.ctrlKey)) {
                     editorPostButton.trigger('click');
                 }
             });
+            if (navigator.platform.toUpperCase().indexOf('MAC')>=0) {
+                // show mac-ish specific help message
+                editorHelpText.addClass('mac')
+            }
         });
     } else if (commons.states.POST === state) {
         var url = "/direct/commons/post.json?postId=" + arg.postId;
