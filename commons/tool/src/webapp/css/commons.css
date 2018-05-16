@@ -278,3 +278,7 @@
 .commons-comment-help-text.mac .pc-only {
     display: none;
 }
+.commons-comment-help-text code {
+    background-color: #F3f3f3;
+    color: #333;
+}
