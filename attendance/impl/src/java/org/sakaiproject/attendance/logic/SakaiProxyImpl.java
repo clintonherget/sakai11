@@ -342,6 +342,10 @@ public class SakaiProxyImpl implements SakaiProxy {
 		List<User> userList = new ArrayList<User>();
 		if(memberSet != null) {
 			for(Member member : memberSet) {
+				// CLASSES-3188 Filter TAs from student list
+				if ("Teaching Assistant".equals(member.getRole().getId())) {
+					continue;
+				}
 				if(maintainRole != null && !maintainRole.equals(member.getRole().getId()) && member.isActive()) {
 					try {
 						User student = userDirectoryService.getUser(member.getUserId());
