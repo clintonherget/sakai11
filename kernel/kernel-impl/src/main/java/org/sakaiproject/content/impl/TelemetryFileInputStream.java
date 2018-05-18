@@ -77,11 +77,17 @@ public class TelemetryFileInputStream extends FileInputStream {
         super(f);
     }
 
+    // Allow a caller to mark an operation as pending/complete.  Since the
+    // constructor of this class actually performs I/O, this lets us capture
+    // that operation too.
+    public static void operationPending() { t.operationPending(); }
+    public static void operationComplete() { t.operationComplete(); }
 
     // NOTE: We implicitly assume here that read(byte[]) doesn't call
     // read(byte[], int, int) to do its work.  That's currently true, but if
     // it changed we would end up double-counting!
     //
+    @Override
     public int read(byte[] b) throws IOException {
         int result;
 
@@ -97,6 +103,7 @@ public class TelemetryFileInputStream extends FileInputStream {
     }
 
 
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         int result;
 
@@ -109,5 +116,16 @@ public class TelemetryFileInputStream extends FileInputStream {
         }
 
         return result;
+    }
+
+
+    @Override
+    public void close() throws IOException {
+        t.operationPending();
+        try {
+            super.close();
+        } finally {
+            t.operationComplete();
+        }
     }
 }

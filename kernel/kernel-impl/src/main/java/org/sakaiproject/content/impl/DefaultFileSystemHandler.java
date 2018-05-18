@@ -56,7 +56,12 @@ public class DefaultFileSystemHandler implements FileSystemHandler {
     public InputStream getInputStream(String id, String root, String filePath) throws IOException {
 
         if ("true".equals(HotReloadConfigurationService.getString("nyu.use-fs-telemetry", "false"))) {
-            return new TelemetryFileInputStream(getFile(id, root, filePath));
+            try {
+                TelemetryFileInputStream.operationPending();
+                return new TelemetryFileInputStream(getFile(id, root, filePath));
+            } finally {
+                TelemetryFileInputStream.operationComplete();
+            }
         } else {
             return new FileInputStream(getFile(id, root, filePath));
         }
@@ -86,7 +91,14 @@ public class DefaultFileSystemHandler implements FileSystemHandler {
 
         // write the file
         if ("true".equals(HotReloadConfigurationService.getString("nyu.use-fs-telemetry", "false"))) {
-            return FileCopyUtils.copy(stream, new TelemetryFileOutputStream(file));
+            try {
+                TelemetryFileOutputStream.operationPending();
+                return FileCopyUtils.copy(stream, new TelemetryFileOutputStream(file));
+            } finally {
+                TelemetryFileOutputStream.operationComplete();
+            }
+
+
         } else {
             return FileCopyUtils.copy(stream, new FileOutputStream(file));
         }
