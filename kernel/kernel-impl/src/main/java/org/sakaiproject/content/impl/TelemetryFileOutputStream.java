@@ -50,10 +50,18 @@ public class TelemetryFileOutputStream extends FileOutputStream {
     }
 
 
+    // Allow a caller to mark an operation as pending/complete.  Since the
+    // constructor of this class actually performs I/O, this lets us capture
+    // that operation too.
+    public static void operationPending() { t.operationPending(); }
+    public static void operationComplete() { t.operationComplete(); }
+
+
     // NOTE: We implicitly assume here that write(byte[]) doesn't call
     // write(byte[], int, int) to do its work.  That's currently true, but if
     // it changed we would end up double-counting!
     //
+    @Override
     public void write(byte[] b) throws IOException {
         t.operationPending();
         try {
@@ -65,11 +73,24 @@ public class TelemetryFileOutputStream extends FileOutputStream {
     }
 
 
+    @Override
     public void write(byte[] b, int off, int len) throws IOException {
         t.operationPending();
         try {
             super.write(b, off, len);
             t.addObservation(len);
+        } finally {
+            t.operationComplete();
+        }
+    }
+
+
+
+    @Override
+    public void close() throws IOException {
+        t.operationPending();
+        try {
+            super.close();
         } finally {
             t.operationComplete();
         }
