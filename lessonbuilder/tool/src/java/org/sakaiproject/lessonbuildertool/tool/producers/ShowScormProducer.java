@@ -81,6 +81,7 @@ import org.sakaiproject.scormcloudservice.api.ScormCloudService;
 import org.sakaiproject.scormcloudservice.api.ScormUploadStatus;
 import org.sakaiproject.scormcloudservice.api.ScormException;
 
+import org.sakaiproject.event.cover.EventTrackingService;
 
 public class ShowScormProducer implements ViewComponentProducer, NavigationCaseReporter, ViewParamsReporter {
 
@@ -265,6 +266,10 @@ public class ShowScormProducer implements ViewComponentProducer, NavigationCaseR
 		String playerUrl = scormService().getScormPlayerUrl(currentSiteId, params.getItemId().toString(), generateBackLink());
 		UIOutput.make(tofill, "scorm-player-launching");
 		UIOutput.make(tofill, "scorm-player-link", playerUrl);
+
+		// DILS-12 Launching a SCORM module fires an event
+		EventTrackingService.post(EventTrackingService.newEvent("lessonbuilder-nyu.scormcloud.launch", "/lessonbuilder/item/" + params.getItemId(), true));
+
 	}
 
 	private String generateBackLink() {
