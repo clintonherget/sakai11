@@ -247,9 +247,9 @@
 			 jQuery('.Mrphs-toolTitleNav__link--help-popup').before(jQuery('.action .Mrphs-toolTitleNav__link').detach().css('display', 'inline-block'));
 		 }
 
-		 function ohGod() {
+		 function repositionBreadcrumbs () {
 			 var breadcrumbs = jQuery(".breadcrumbs span");
-			 // if we're in morpheus, move breadcrums into top bar, and generate an H2 with the title
+			 // if we're in morpheus, move breadcrumbs into top bar, and generate an H2 with the title
 			 if (jQuery(".oldPortal").size() === 0) {
 				 var title = jQuery(".title span:last").text();
 				 if (breadcrumbs.size() > 0) {
@@ -275,7 +275,7 @@
 			 }
 		 }
 
-		 ohGod();
+		 repositionBreadcrumbs();
 		 if (jQuery(".navIntraTool").size() > 0)
   			 jQuery(".navIntraTool").append(jQuery(".action"));
 		 else
