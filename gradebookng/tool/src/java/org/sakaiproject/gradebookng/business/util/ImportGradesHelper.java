@@ -460,10 +460,6 @@ public class ImportGradesHelper {
 
 					log.debug("Comparing data, importedComment: " + importedComment + ", existingComment: " + existingComment);
 
-					if(StringUtils.isBlank(importedComment)) {
-						status = Status.SKIP;
-						continue; //keep checking
-					}
 					// has a value, could be NEW or an UPDATE. Preserve NEW if we already had it
 					if (status != Status.NEW) {
 						boolean importContainsNewComment = (StringUtils.isNotBlank(importedComment) && !StringUtils.equals(importedComment, existingComment));
