@@ -1,4 +1,6 @@
-// FIXME move to libary/src/morpheus-master/js/
+/**
+ * CLASSES-3259 Jump-to-Top Behavior
+ */
 (function($) {
 
     function JumpToTop() {
@@ -12,11 +14,6 @@
         this.$link.addClass('hidden');
         this.$link.attr('title', 'Jump to top');
 
-        var $image = $('<img>');
-        $image.attr('src', '/library/image/jumptotop.png');
-        $image.attr('aria-hidden', 'true');
-
-        this.$link.html($image);
         this.hide();
 
         $(document.body).append(this.$link);
