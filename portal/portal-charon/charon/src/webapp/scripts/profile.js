@@ -21,6 +21,10 @@ function ProfilePopup($link, userUuid, siteId) {
 ProfilePopup.prototype.show = function() {
     var self = this;
 
+    // FIXME remove when only supporting one profile template
+    // destroy any existing qtips
+    self.$link.qtip('destroy', true);
+
     self.$link.qtip({
         position: {
             viewport: $PBJQ(window),
@@ -57,8 +61,7 @@ ProfilePopup.prototype.show = function() {
                 success: function(data, status) {
                     this.set('content.text', data);
                 }
-            },
-            text: 'Loading...',
+            }
         },
         events: {
             hidden: function(event, api) {
