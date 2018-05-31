@@ -35,6 +35,7 @@ import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.entitybroker.exception.EntityException;
 
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.profile2.logic.*;
 import org.sakaiproject.profile2.model.BasicPerson;
 import org.sakaiproject.profile2.model.ProfileImage;
@@ -94,6 +95,8 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 	private CourseManagementService cms;
 
 	private Template formattedProfileTemplate = null;
+	// FIXME remove oldFormattedProfileTemplate once we move to nyu-profile-popup
+	private Template oldFormattedProfileTemplate = null;
 	private Template profileDrawerTemplate = null;
 
 	public void init() {
@@ -107,6 +110,8 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		ve.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.NullLogSystem");
 		try {
 			ve.init();
+			// FIXME remove oldFormattedProfileTemplate once we move to nyu-profile-popup
+			oldFormattedProfileTemplate = ve.getTemplate("org/sakaiproject/portal/entityprovider/profile-popup.vm");
 			formattedProfileTemplate = ve.getTemplate("org/sakaiproject/portal/entityprovider/nyu-profile-popup.vm");
 			profileDrawerTemplate = ve.getTemplate("org/sakaiproject/portal/entityprovider/nyu-profile-drawer.vm");
 		} catch (Exception e) {
@@ -188,11 +193,25 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		}
 		String siteId = (String)params.get("siteId");
 		addSectionAndRoleToContext(context, siteId, connectionUserId);
+		addConnectionDataToContext(context, currentUserId, connectionUserId);
+
 
 		StringWriter writer = new StringWriter();
 
+		// FIXME remove switch when we roll out to all sites
+		Template templateToUse = oldFormattedProfileTemplate;
 		try {
-			formattedProfileTemplate.merge(context, writer);
+			if ("true".equals(siteService.getSiteVisit(siteId).getProperties().getProperty("course_profile_panel"))) {
+				templateToUse = formattedProfileTemplate;
+			}
+		} catch (IdUnusedException e) {
+			// ignore
+		} catch (PermissionException e) {
+			// ignore
+		}
+
+		try {
+			templateToUse.merge(context, writer);
 			return new ActionReturn(Formats.UTF_8, Formats.HTML_MIME_TYPE, writer.toString());
 		} catch (IOException ioe) {
 			throw new EntityException("Failed to format profile.", ref.getReference());

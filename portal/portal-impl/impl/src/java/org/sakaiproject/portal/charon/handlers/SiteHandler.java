@@ -631,6 +631,13 @@ public class SiteHandler extends WorksiteHandler
 				rcontext.put("quickLinks", quickLinks);
 			}
 		}
+
+		// CLASSES-3339 only show new profile fly-out on selected sites
+		// FIXME remove when only rolled out to all sites
+		if ("true".equals(site.getProperties().getProperty("course_profile_panel"))) {
+			rcontext.put("enableCustomProfile", Boolean.TRUE);
+		}
+
 		doSendResponse(rcontext, res, null);
 
 		StoredState ss = portalService.getStoredState();
