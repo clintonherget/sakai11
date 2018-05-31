@@ -202,7 +202,9 @@
         <script src="${pageSkinRepo}/${pageSkin}/js/ie/sakai.portal.ie.js$!{portalCDNQuery}"></script>
 <![endif]-->
  
-        <script src="$!{portalCDNPath}/portal/scripts/profile.js$!{portalCDNQuery}"></script>
+        #if ($enableCustomProfile)
+            <script src="$!{portalCDNPath}/portal/scripts/profile.js$!{portalCDNQuery}"></script>
+        #end
 
         #parse("/vm/morpheus/includeAnalytics.vm")
         #parse("/vm/morpheus/includePASystem.vm")
