@@ -124,6 +124,10 @@ public class StatisticsPanel extends BasePanel {
                 }
             }
         };
+
+        // CLASSES-3135 Don't need a refresh button now that things are loaded dynamically.
+        refreshPage.setVisible(false);
+
         return refreshPage;
     }
 }
