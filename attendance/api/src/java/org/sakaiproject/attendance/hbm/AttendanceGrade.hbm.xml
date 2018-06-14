@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  ~  Copyright (c) 2016, University of Dayton
+  ~  Copyright (c) 2017, University of Dayton
   ~
   ~  Licensed under the Educational Community License, Version 2.0 (the "License");
   ~  you may not use this file except in compliance with the License.
@@ -26,12 +26,13 @@
         <id name="id">
             <column name="A_GRADE_ID" not-null="true" length="19" />
             <generator class="native">
-                <param name="sequence">ATTENDANCE_SITE_S</param>
+                <param name="sequence">ATTENDANCE_GRADE_S</param>
             </generator>
         </id>
 
         <property name="grade"      column="GRADE"      type="java.lang.Double" />
         <property name="userID"     column="USER_ID"    type="java.lang.String" />
+        <property name="override"   column="OVERRIDE"   type="java.lang.Boolean" />
 
         <many-to-one name="attendanceSite" column="A_SITE_ID" unique="false" not-null="true" class="org.sakaiproject.attendance.model.AttendanceSite" lazy="false"/>
 

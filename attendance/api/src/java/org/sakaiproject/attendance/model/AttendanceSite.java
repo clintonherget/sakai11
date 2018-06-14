@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -39,31 +39,72 @@ public class AttendanceSite implements Serializable {
 	@Getter	@Setter	private 				Status 					defaultStatus;
 	@Getter @Setter private					Double					maximumGrade;
 	@Getter @Setter private					Boolean					isGradeShown;
-	@Getter @Setter private					Boolean					sendToGradebook;
+			@Setter private					Boolean					sendToGradebook;
+			@Setter private					Boolean					useAutoGrading;
+			@Setter private					Boolean					autoGradeBySubtraction;
 	@Getter @Setter private					String					gradebookItemName;
 	@Getter @Setter private					Boolean					showCommentsToStudents;
-	@Getter	@Setter	private 				Set<AttendanceStatus>	attendanceStatuses	= new HashSet<AttendanceStatus>(0);
+			@Setter private					Boolean					isSyncing;
+	@Getter @Setter private					Date					syncTime;
+	@Getter	@Setter	private 				Set<AttendanceStatus>	attendanceStatuses	= new HashSet<>(0);
 
 	public AttendanceSite(String siteID){
 		this.siteID 				= siteID;
 		this.defaultStatus 			= Status.UNKNOWN;
 		this.isGradeShown 			= false;
 		this.sendToGradebook 		= false;
+		this.useAutoGrading			= false;
+		this.autoGradeBySubtraction = true;
 		this.gradebookItemName 		= AttendanceConstants.GRADEBOOK_ITEM_NAME;
 		this.showCommentsToStudents = false;
+		this.isSyncing				= false;
+	}
+
+	public Boolean getSendToGradebook() {
+		if(this.sendToGradebook == null) {
+			return false;
+		}
+
+		return this.sendToGradebook;
+	}
+
+	public Boolean getIsSyncing() {
+		if(this.isSyncing == null) {
+			return false;
+		}
+
+		return this.isSyncing;
+	}
+
+	public Boolean getUseAutoGrading() {
+		if(this.useAutoGrading == null) {
+			return false;
+		}
+
+		return this.useAutoGrading;
+	}
+
+	public Boolean getAutoGradeBySubtraction() {
+		if(this.autoGradeBySubtraction == null) {
+			return true;
+		}
+
+		return this.autoGradeBySubtraction;
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		AttendanceSite that = (AttendanceSite) o;
+		final AttendanceSite that = (AttendanceSite) o;
 		return Objects.equals(getId(), that.getId()) &&
 				Objects.equals(getSiteID(), that.getSiteID()) &&
 				getDefaultStatus() == that.getDefaultStatus() &&
 				Objects.equals(getMaximumGrade(), that.getMaximumGrade()) &&
 				Objects.equals(getIsGradeShown(), that.getIsGradeShown()) &&
 				Objects.equals(getSendToGradebook(), that.getSendToGradebook()) &&
+				Objects.equals(getUseAutoGrading(), that.getUseAutoGrading()) &&
+				Objects.equals(getAutoGradeBySubtraction(), that.getAutoGradeBySubtraction()) &&
 				Objects.equals(getGradebookItemName(), that.getGradebookItemName()) &&
 				Objects.equals(getShowCommentsToStudents(), that.getShowCommentsToStudents()) &&
 				Objects.equals(getAttendanceStatuses(), that.getAttendanceStatuses());

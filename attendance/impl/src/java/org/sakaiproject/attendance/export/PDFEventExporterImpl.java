@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -214,7 +214,7 @@ public class PDFEventExporterImpl implements PDFEventExporter {
      * init - perform any actions required here for when this bean starts up
      */
     public void init() {
-        log.info("init");
+        log.debug("PDFEventExporterImpl init()");
     }
 
     // TODO: Internationalize status header abbreviations
