@@ -19,7 +19,6 @@
 
 <body>
 <wicket:extend>
-	
 	<h1 class="overviewHeader indnt1">
 		<span wicket:id="header-overview" class="overHeaderSpan" />
 	</h1>
@@ -29,7 +28,11 @@
 	</p>
 
 	<form wicket:id="add-attendance-item-form" class="addAttendanceItemForm">
-		<button type="submit" wicket:id="add-attendance-item" class="active"><wicket:message key="attendance.add.button"/></button>
+		<input type="submit" wicket:id="add-attendance-item" class="active" wicket:message="value:attendance.add.button" />
+	</form>
+	<form wicket:id="take-attendance-now-form" class="takeAttendanceNowForm">
+		<img id="loadingGif" class="loadingGif" src="images/loading.gif" alt="Loading" style="display: none"/>
+		<button type="submit" wicket:id="take-attendance-now" class="active"><wicket:message key="attendance.now.button" /></button>
 	</form>
 
 	<table id="overviewTable" class="overviewTable">
@@ -68,16 +71,6 @@
 				</tr>
 			</wicket:enclosure>
 		</tbody>
-		<tfoot>
-		<tr>
-			<td colspan="100" style="background-color:#eee;">
-				<form wicket:id="take-attendance-now-form" class="takeAttendanceNowForm">
-					<img id="loadingGif" class="loadingGif" src="images/loading.gif" alt="Loading" style="display: none"/>
-					<input type="submit" wicket:id="take-attendance-now" wicket:message="value:attendance.now.button" class="active"/>
-				</form>
-			</td>
-		</tr>
-		</tfoot>
 	</table>
 
 	<div id="printContainer" class="printContainer" wicket:id="print-container">
@@ -104,7 +97,6 @@
 		});
 	</script>
 	<script type="text/javascript" src="javascript/print.js"></script>
-
 </wicket:extend>
 </body>
 </html>
