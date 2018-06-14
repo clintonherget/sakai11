@@ -276,6 +276,8 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 			regradeForAttendanceRecord(currentSite, aR);
 		}
 
+		dao.updateAttendanceUserStats(new ArrayList(userStats.values()));
+
 		AttendanceItemStats itemStats = getStatsForEvent(aE);
 		itemStats.setPresent(itemStats.getPresent() - present);
 		itemStats.setUnexcused(itemStats.getUnexcused() - unexcused);
