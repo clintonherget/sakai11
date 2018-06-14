@@ -11,6 +11,8 @@ import org.sakaiproject.attendance.logic.SakaiProxy;
 import org.sakaiproject.attendance.model.AttendanceRecord;
 import org.sakaiproject.attendance.model.Status;
 import org.sakaiproject.attendance.tool.pages.BasePage;
+import org.sakaiproject.attendance.tool.pages.EventView;
+import org.sakaiproject.attendance.tool.panels.StatisticsPanel;
 
 import java.io.Serializable;
 
@@ -58,6 +60,7 @@ public class SetAttendanceStatusAction extends InjectableAction implements Actio
         }
 
         target.add(((BasePage)target.getPage()).getFeedbackPanel());
+        target.addChildren(target.getPage(), StatisticsPanel.class);
 
         return new EmptyOkResponse();
     }
