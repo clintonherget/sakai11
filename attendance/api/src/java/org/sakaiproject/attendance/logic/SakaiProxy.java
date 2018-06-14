@@ -18,6 +18,7 @@ package org.sakaiproject.attendance.logic;
 
 import org.sakaiproject.user.api.User;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -242,6 +243,16 @@ public interface SakaiProxy {
 	 * @return their display name
      */
 	String getUserDisplayId(String userId);
+
+
+	/**
+	 * get users
+	 *
+	 * @param userIds, the userIds
+	 * @return the list of users
+     */
+	List<User> getUsers(Collection<String> userIds);
+
 
 	/**
 	 * Get's a Group's Title in Current Site

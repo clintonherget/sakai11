@@ -42,6 +42,9 @@ public class DetachableEventModel extends LoadableDetachableModel<AttendanceEven
      */
     public DetachableEventModel(AttendanceEvent t){
         this.id = t.getId();
+
+        // Skip load()'ing this model if we already have it...
+        setObject(t);
     }
 
     /**

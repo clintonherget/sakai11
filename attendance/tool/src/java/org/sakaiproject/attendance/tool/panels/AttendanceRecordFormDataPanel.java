@@ -16,10 +16,12 @@
 
 package org.sakaiproject.attendance.tool.panels;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
@@ -31,6 +33,7 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.*;
 import org.sakaiproject.attendance.model.AttendanceRecord;
+import org.sakaiproject.attendance.model.AttendanceSite;
 import org.sakaiproject.attendance.model.AttendanceStatus;
 import org.sakaiproject.attendance.model.Status;
 import org.sakaiproject.attendance.tool.dataproviders.AttendanceStatusProvider;
@@ -50,15 +53,13 @@ public class AttendanceRecordFormDataPanel extends BasePanel {
     private                 IModel<AttendanceRecord>    recordIModel;
     private                 boolean                     restricted ;
     private                 boolean                     showCommentsToStudents;
-    private                 List<Component>             ajaxTargets = new ArrayList<Component>();
+    // private                 List<Component>             ajaxTargets = new ArrayList<Component>();
     private                 String                      returnPage;
     private                 Status                      oldStatus;
 
     private                 WebMarkupContainer          commentContainer;
-    private                 WebMarkupContainer          noComment;
-    private                 WebMarkupContainer          yesComment;
 
-    public AttendanceRecordFormDataPanel(String id, IModel<AttendanceRecord> aR,  String rP, FeedbackPanel fP) {
+    public AttendanceRecordFormDataPanel(String id, AttendanceSite attendanceSite, AttendanceStatusProvider attendanceStatusProvider, IModel<AttendanceRecord> aR,  String rP, FeedbackPanel fP) {
         super(id, aR);
         this.recordIModel = aR;
         this.oldStatus = aR.getObject().getStatus();
@@ -66,41 +67,18 @@ public class AttendanceRecordFormDataPanel extends BasePanel {
         this.restricted = this.role != null && this.role.equals("Student");
         this.returnPage = rP;
         enable(fP);
-        this.ajaxTargets.add(this.pageFeedbackPanel);
+        // this.ajaxTargets.add(this.pageFeedbackPanel);
 
-        add(createRecordInputForm());
+        add(createRecordInputForm(attendanceSite, attendanceStatusProvider));
     }
 
-    private Form<AttendanceRecord> createRecordInputForm() {
-        Form<AttendanceRecord> recordForm = new Form<AttendanceRecord>("attendanceRecord", this.recordIModel) {
-            protected void onSubmit() {
-                AttendanceRecord aR = (AttendanceRecord) getDefaultModelObject();
-                if(aR.getStatus() == null) {
-                    aR.setStatus(Status.UNKNOWN);
-                }
-                boolean result = attendanceLogic.updateAttendanceRecord(aR, oldStatus);
-                String[] resultMsgVars = new String[]{sakaiProxy.getUserSortName(aR.getUserID()), aR.getAttendanceEvent().getName(), getStatusString(aR.getStatus())};
-                StringResourceModel temp;
-                if(result){
-                    temp = new StringResourceModel("attendance.record.save.success", null, resultMsgVars);
-                    getSession().info(temp.getString());
-                    oldStatus = aR.getStatus();
-                } else {
-                    temp = new StringResourceModel("attendance.record.save.failure", null, resultMsgVars);
-                    getSession().error(temp.getString());
-                }
-            }
+    private WebMarkupContainer createRecordInputForm(AttendanceSite attendanceSite, AttendanceStatusProvider attendanceStatusProvider) {
+        WebMarkupContainer recordForm = new WebMarkupContainer("attendanceRecord");
 
-            @Override
-            public boolean isEnabled() {
-                return !recordIModel.getObject().getAttendanceEvent().getAttendanceSite().getIsSyncing();
-            }
-        };
-
-        createStatusRadio(recordForm);
+        createStatusRadio(recordForm, attendanceSite, attendanceStatusProvider);
         createCommentBox(recordForm);
 
-        boolean noRecordBool = recordForm.getModelObject().getStatus().equals(Status.UNKNOWN) && restricted;
+        boolean noRecordBool = ((AttendanceRecord) this.recordIModel.getObject()).getStatus().equals(Status.UNKNOWN) && restricted;
         recordForm.setVisibilityAllowed(!noRecordBool);
 
         WebMarkupContainer noRecordContainer = new WebMarkupContainer("no-record");
@@ -110,26 +88,22 @@ public class AttendanceRecordFormDataPanel extends BasePanel {
         return recordForm;
     }
 
-    private void createStatusRadio(final Form<AttendanceRecord> rF) {
-        AttendanceStatusProvider attendanceStatusProvider = new AttendanceStatusProvider(attendanceLogic.getCurrentAttendanceSite(), AttendanceStatusProvider.ACTIVE);
+    private void createStatusRadio(final WebMarkupContainer rF, final AttendanceSite attendanceSite, AttendanceStatusProvider attendanceStatusProvider) {
         DataView<AttendanceStatus> attendanceStatusRadios = new DataView<AttendanceStatus>("status-radios", attendanceStatusProvider) {
             @Override
             protected void populateItem(Item<AttendanceStatus> item) {
                 final Status itemStatus = item.getModelObject().getStatus();
                 Radio statusRadio = new Radio<Status>("record-status", new Model<Status>(itemStatus));
                 item.add(statusRadio);
-                statusRadio.add(new AjaxFormSubmitBehavior(rF, "onclick") {
-                    protected void onSubmit(AjaxRequestTarget target) {
-                        target.appendJavaScript("attendance.recordFormRowSetup("+ this.getAttributes().getFormId() + ");");
-                        for (Component c : ajaxTargets) {
-                            target.add(c);
-                        }
-                    }
-                });
-                ajaxTargets.add(statusRadio);
+                statusRadio.add(new AttributeModifier("data-status", itemStatus.toString()));
+                item.add(new AttributeAppender("class", " " + itemStatus.toString().toLowerCase()));
+                if (itemStatus.equals(AttendanceRecordFormDataPanel.this.recordIModel.getObject().getStatus())) {
+                    item.add(new AttributeAppender("class", " active"));
+                }
                 statusRadio.setLabel(Model.of(getStatusString(itemStatus)));
+                statusRadio.setEnabled(!attendanceSite.getIsSyncing());
+                statusRadio.add(new AttributeModifier("data-recordid", AttendanceRecordFormDataPanel.this.recordIModel.getObject().getId()));
                 item.add(new SimpleFormComponentLabel("record-status-name", statusRadio));
-                item.add(new Label("record-status-name-raw", itemStatus.toString()));
             }
         };
 
@@ -142,60 +116,27 @@ public class AttendanceRecordFormDataPanel extends BasePanel {
         rF.add(group);
     }
 
-    private void createCommentBox(final Form<AttendanceRecord> rF) {
+    private void createCommentBox(final WebMarkupContainer rF) {
 
         commentContainer = new WebMarkupContainer("comment-container");
+        commentContainer.add(new AttributeModifier("data-recordid", this.recordIModel.getObject().getId()));
         commentContainer.setOutputMarkupId(true);
 
-        noComment = new WebMarkupContainer("no-comment");
-        noComment.setOutputMarkupId(true);
+        WebMarkupContainer commentToggle = new WebMarkupContainer("commentToggle");
+        commentToggle.setOutputMarkupId(true);
 
-        yesComment = new WebMarkupContainer("yes-comment");
-        yesComment.setOutputMarkupId(true);
+        boolean hasComment = recordIModel.getObject().getComment() != null && !recordIModel.getObject().getComment().equals("");
 
-        if(recordIModel.getObject().getComment() != null && !recordIModel.getObject().getComment().equals("")) {
-            noComment.setVisible(false);
-        } else {
-            yesComment.setVisible(false);
+        if (hasComment) {
+            commentToggle.add(new AttributeAppender("class", " has-comment"));
         }
-
-        commentContainer.add(noComment);
-        commentContainer.add(yesComment);
-
-        final TextArea<String> commentBox = new TextArea<String>("comment", new PropertyModel<String>(this.recordIModel, "comment"));
-
-        final AjaxSubmitLink saveComment = new AjaxSubmitLink("save-comment") {
-            @Override
-            protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
-                super.onSubmit(target, form);
-                if(recordIModel.getObject().getComment() != null && !recordIModel.getObject().getComment().equals("")) {
-                    noComment.setVisible(false);
-                    yesComment.setVisible(true);
-                } else {
-                    noComment.setVisible(true);
-                    yesComment.setVisible(false);
-                }
-                commentContainer.addOrReplace(noComment);
-                commentContainer.addOrReplace(yesComment);
-                for (Component c : ajaxTargets) {
-                    target.add(c);
-                }
-            }
-        };
-
-        commentContainer.add(saveComment);
-        commentContainer.add(commentBox);
-
-        ajaxTargets.add(commentContainer);
+        commentContainer.add(commentToggle);
 
         if(restricted) {
             commentContainer.setVisible(showCommentsToStudents);
-            saveComment.setVisible(!showCommentsToStudents);
-            commentBox.setEnabled(!showCommentsToStudents);
-            noComment.setVisible(!showCommentsToStudents);
-            commentContainer.add(new Label("add-header", new ResourceModel("attendance.record.form.view.comment")));
-        } else {
-            commentContainer.add(new Label("add-header", new ResourceModel("attendance.record.form.add.comment")));
+            if (!hasComment) {
+                commentToggle.setVisible(false);
+            }
         }
 
         rF.add(commentContainer);

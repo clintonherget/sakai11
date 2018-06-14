@@ -50,7 +50,7 @@
             </h3>
         </div>
 
-        <table id="takeAttendanceTable" class="takeAttendanceTable">
+        <table id="takeAttendanceTable" class="takeAttendanceTable" wicket:id="takeAttendanceTable">
             <thead>
             <tr class="div-table-row">
                 <th class="takeAttendanceNameHeader">
@@ -95,6 +95,8 @@
         </script>
     </div>
     <label wicket:id="student-view-hidden" hidden id="studentView" aria-hidden="true"/>
+
+    <div wicket:id="showCommentWindow" />
 </wicket:extend>
 </body>
 </html>

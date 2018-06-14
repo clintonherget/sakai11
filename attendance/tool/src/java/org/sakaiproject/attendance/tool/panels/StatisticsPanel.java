@@ -106,7 +106,8 @@ public class StatisticsPanel extends BasePanel {
         Link<Void> refreshPage = new Link<Void>("refreshPage") {
             public void onClick() {
                 if(attendanceEvent != null) {
-                    setResponsePage(new EventView(attendanceEvent, fromPage));
+                    // Call EventView with getID to force a full refresh from DB.
+                    setResponsePage(new EventView(attendanceEvent.getId(), fromPage));
                 } else {
                     setResponsePage(new StudentView(userId, previousEventId,fromPage));
                 }

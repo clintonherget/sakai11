@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org">
+<body>
+<wicket:panel>
+    <form wicket:id="commentForm" class="commentForm">
+        <textarea wicket:id="comment" />
+        <div>
+            <input type="submit" wicket:id="save-comment" value="Save" class="saveComment"/>
+            <input type="submit" wicket:id="cancel" wicket:message="value:attendance.record.form.cancel" />
+        </div>
+    </form>
+    <a href="javascript:void(0);" wicket:id="close" class="button"><wicket:message key="attendance.record.form.close" /></a>
+</wicket:panel>
+</body>
+</html>
