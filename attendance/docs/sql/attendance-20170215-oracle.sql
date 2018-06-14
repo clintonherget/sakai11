@@ -116,15 +116,23 @@ REFERENCES "ATTENDANCE_SITE_T" ("A_SITE_ID") ENABLE;
 -- ATTENDANCE_GRADE_S sequence is the name of the sequence made by AUTO.DDL. I see no sequence names
 -- in the attendance-1.0-oracle.sql scripts so your sequence name may be different.
 --------------------------------------------------------
+-- NYU create the missing sequence
+CREATE SEQUENCE "ATTENDANCE_GRADE_S"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 2 CACHE 20 NOORDER  NOCYCLE ;
+
 DECLARE
   actual_sequence_number INTEGER;
   max_number_from_table INTEGER;
   difference INTEGER;
 BEGIN
-  SELECT ATTENDANCE_GRADE_S.CURRVAL INTO actual_sequence_number FROM DUAL;
-  SELECT MAX(A_GRADE_ID) INTO max_number_from_table FROM "ATTENDANCE_GRADE_T";
+  -- SELECT ATTENDANCE_GRADE_S.CURRVAL INTO actual_sequence_number FROM DUAL;
+  -- NYU use NEXTVAL as CURRVAL might not be set for the session
+  SELECT ATTENDANCE_GRADE_S.NEXTVAL INTO actual_sequence_number FROM DUAL;
+  -- NYU and handle if there are no ATTENDANCE_GRADE_T entries when calculating MAX(A_GRADE_ID) with NVL
+  SELECT NVL(MAX(A_GRADE_ID),1) INTO max_number_from_table FROM "ATTENDANCE_GRADE_T";
   SELECT (max_number_from_table-actual_sequence_number)+1 INTO difference FROM DUAL;
   --DBMS_OUTPUT.put_line (actual_sequence_number);
   --DBMS_OUTPUT.put_line (CONCAT('alter sequence sq_cd_tp_taxa_serv increment by ', difference));
-  EXECUTE IMMEDIATE CONCAT('alter sequence ATTENDANCE_GRADE_S increment by ', difference);
+  IF difference > 0 THEN
+    EXECUTE IMMEDIATE CONCAT('alter sequence ATTENDANCE_GRADE_S increment by ', difference);
+  END IF;
 END;
