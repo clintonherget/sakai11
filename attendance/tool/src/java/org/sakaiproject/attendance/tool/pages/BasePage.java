@@ -25,6 +25,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.feedback.FeedbackMessage;
+import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.head.StringHeaderItem;
@@ -43,6 +44,8 @@ import org.sakaiproject.attendance.model.AttendanceEvent;
 import org.sakaiproject.attendance.model.Status;
 import org.sakaiproject.attendance.tool.panels.EventInputPanel;
 import org.sakaiproject.attendance.tool.util.AttendanceFeedbackPanel;
+
+import org.sakaiproject.component.cover.ServerConfigurationService;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -173,6 +176,10 @@ public class BasePage extends WebPage implements IHeaderContributor {
 		
 		//Tool additions (at end so we can override if isRequired)
 		response.render(StringHeaderItem.forString("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"));
+
+		final String version = ServerConfigurationService.getString("portal.cdn.version", "");
+		response.render(CssHeaderItem.forUrl(String.format("css/attendance.css?version=%s", version)));
+
 		//response.renderCSSReference("css/my_tool_styles.css");
 		//response.renderJavascriptReference("js/my_tool_javascript.js");
 	}
