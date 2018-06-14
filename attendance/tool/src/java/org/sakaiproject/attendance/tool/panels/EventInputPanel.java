@@ -33,6 +33,9 @@ import org.sakaiproject.attendance.tool.pages.Overview;
 import org.sakaiproject.attendance.tool.util.AttendanceFeedbackPanel;
 import org.sakaiproject.attendance.tool.util.ConfirmationLink;
 import org.sakaiproject.attendance.tool.util.PlaceholderBehavior;
+import org.sakaiproject.time.cover.TimeService;
+
+import java.util.TimeZone;
 
 
 /**
@@ -139,6 +142,7 @@ public class EventInputPanel extends BasePanel {
 
     private void processSave(AjaxRequestTarget target, Form<?> form, boolean addAnother) {
         AttendanceEvent e = (AttendanceEvent) form.getModelObject();
+
         e.setAttendanceSite(attendanceLogic.getCurrentAttendanceSite());
         boolean result = attendanceLogic.updateAttendanceEvent(e);
 
@@ -209,7 +213,14 @@ public class EventInputPanel extends BasePanel {
                 add(new PlaceholderBehavior(getString("event.placeholder.name")));
             }
         };
-        final DateTimeField startDateTime = new DateTimeField("startDateTime");
+        final DateTimeField startDateTime = new DateTimeField("startDateTime") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected TimeZone getClientTimeZone() {
+                return TimeService.getLocalTimeZone();
+            }
+        };
 
         name.setRequired(true);
 
