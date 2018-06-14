@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~  Copyright (c) 2016, University of Dayton
+  ~  Copyright (c) 2017, University of Dayton
   ~
   ~  Licensed under the Educational Community License, Version 2.0 (the "License");
   ~  you may not use this file except in compliance with the License.
@@ -26,30 +26,37 @@
 		<ul class="navIntraTool actionToolbar">
 			<li class="firstToolBarItem">
 				<span>
-				<a wicket:id="firstLink">
-					<span wicket:id="firstLinkLabel">[firstLinkLabel]</span>
-				</a>
+					<a wicket:id="homepage-link">
+						<span wicket:id="homepage-link-label">[homepage link label]</span>
+					</a>
 				</span>
 			</li>
 			<li>
 				<span>
-				<a wicket:id="student-overview-link">
-					<span wicket:id="student-overview-label">[student overview label]</span>
-				</a>
+					<a wicket:id="student-overview-link">
+						<span wicket:id="student-overview-label">[student overview label]</span>
+					</a>
 				</span>
 			</li>
 			<li>
 				<span>
-				<a wicket:id="addEventLink">
-					<span wicket:id="thirdLinkLabel">[thirdLinkLabel]</span>
-				</a>
+					<a wicket:id="grading-link">
+						<span wicket:id="grading-link-label">[gradingLinkLabel]</span>
+					</a>
 				</span>
 			</li>
 			<li>
 				<span>
-				<a wicket:id="settings-link">
-					<span wicket:id="settings-link-label">[settingsLinkLabel]</span>
-				</a>
+					<a wicket:id="settings-link">
+						<span wicket:id="settings-link-label">[settingsLinkLabel]</span>
+					</a>
+				</span>
+			</li>
+			<li>
+				<span>
+					<a wicket:id="export-link">
+						<span wicket:id="export-link-label">[exportLinkLabel]</span>
+					</a>
 				</span>
 			</li>
 		</ul>
@@ -57,6 +64,8 @@
 		<span wicket:id="feedback">feedbackmessages will be put here</span>
 		
 		<wicket:child />
+
+		<div wicket:id="addOrEditItemWindow" />
 	
 	</div>
 </body>

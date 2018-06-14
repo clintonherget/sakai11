@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class AttendanceRecord implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AttendanceRecord that = (AttendanceRecord) o;
+        final AttendanceRecord that = (AttendanceRecord) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(attendanceEvent, that.attendanceEvent) &&
                 Objects.equals(userID, that.userID) &&

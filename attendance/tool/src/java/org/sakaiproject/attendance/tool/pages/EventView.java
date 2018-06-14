@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,11 +16,10 @@
 
 package org.sakaiproject.attendance.tool.pages;
 
+import lombok.Getter;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
-import org.apache.wicket.datetime.StyleDateConverter;
-import org.apache.wicket.datetime.markup.html.basic.DateLabel;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -38,11 +37,10 @@ import org.sakaiproject.attendance.model.AttendanceRecord;
 import org.sakaiproject.attendance.model.AttendanceStatus;
 import org.sakaiproject.attendance.model.Status;
 import org.sakaiproject.attendance.tool.dataproviders.AttendanceRecordProvider;
-import org.sakaiproject.attendance.tool.pages.panels.AttendanceRecordFormDataPanel;
-import org.sakaiproject.attendance.tool.pages.panels.AttendanceRecordFormHeaderPanel;
-import org.sakaiproject.attendance.tool.pages.panels.PrintPanel;
-import org.sakaiproject.attendance.tool.pages.panels.StatisticsPanel;
-import org.sakaiproject.time.cover.TimeService;
+import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormDataPanel;
+import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormHeaderPanel;
+import org.sakaiproject.attendance.tool.panels.PrintPanel;
+import org.sakaiproject.attendance.tool.panels.StatisticsPanel;
 
 import java.util.*;
 
@@ -58,6 +56,7 @@ public class EventView extends BasePage {
     private                 Long                attendanceID;
     private                 AttendanceEvent     attendanceEvent;
 
+    @Getter
     private                 String                  returnPage;
 
     private                 DropDownChoice<Status>  setAllStatus;
@@ -74,6 +73,17 @@ public class EventView extends BasePage {
         this.attendanceEvent = attendanceLogic.getAttendanceEvent(this.attendanceID);
 
         this.returnPage = fromPage;
+
+        init();
+    }
+
+    public EventView(Long id, String fromPage, String selectedGroup) {
+        super();
+
+        this.attendanceID = id;
+        this.attendanceEvent = attendanceLogic.getAttendanceEvent(this.attendanceID);
+        this.returnPage = fromPage;
+        this.selectedGroup = selectedGroup;
 
         init();
     }
@@ -105,14 +115,7 @@ public class EventView extends BasePage {
         createStatsTable();
 
         add(new Label("event-name", attendanceEvent.getName()));
-        add(new DateLabel("event-date", Model.of(attendanceEvent.getStartDateTime()), new StyleDateConverter("MM", true) {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected TimeZone getClientTimeZone() {
-                return TimeService.getLocalTimeZone();
-            }
-        }));
+        add(new Label("event-date", attendanceEvent.getStartDateTime()));
         add(new Label("take-attendance-header", getString("attendance.event.view.take.attendance")));
 
         final Form<?> setAllForm = new Form<Void>("set-all-form"){
@@ -121,7 +124,12 @@ public class EventView extends BasePage {
                 attendanceLogic.updateAttendanceRecordsForEvent(attendanceEvent, setAllStatus.getModelObject(), selectedGroup);
                 String who = selectedGroup == null?"":" for " + sakaiProxy.getGroupTitleForCurrentSite(selectedGroup);
                 getSession().info("All attendance records " + who + " for " + attendanceEvent.getName() + " set to " + setAllStatus.getModelObject());
-                setResponsePage(new EventView(attendanceEvent, returnPage, selectedGroup));
+                setResponsePage(new EventView(attendanceEvent.getId(), returnPage, selectedGroup));
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return !attendanceEvent.getAttendanceSite().getIsSyncing();
             }
         };
 
@@ -132,12 +140,12 @@ public class EventView extends BasePage {
                 return o1.getSortOrder() - o2.getSortOrder();
             }
         });
-        List<Status> activeStatuses = new ArrayList<Status>();
+        List<Status> activeStatuses = new ArrayList<>();
         for(AttendanceStatus attendanceStatus : activeAttendanceStatuses) {
             activeStatuses.add(attendanceStatus.getStatus());
         }
 
-        setAllForm.add(setAllStatus = new DropDownChoice<Status>("set-all-status", new Model<Status>(), activeStatuses, new EnumChoiceRenderer<Status>(this)));
+        setAllForm.add(setAllStatus = new DropDownChoice<>("set-all-status", new Model<>(), activeStatuses, new EnumChoiceRenderer<>(this)));
         setAllStatus.add(new AjaxFormSubmitBehavior("onchange") {
             @Override
             protected void onSubmit(AjaxRequestTarget target) {
@@ -149,7 +157,7 @@ public class EventView extends BasePage {
         this.printContainer = new WebMarkupContainer("print-container");
         printContainer.setOutputMarkupId(true);
 
-        this.printPanel = new PrintPanel("print-panel", new Model<AttendanceEvent>(attendanceEvent));
+        this.printPanel = new PrintPanel("print-panel", new Model<>(attendanceEvent));
 
         printContainer.add(printPanel);
 
@@ -165,31 +173,16 @@ public class EventView extends BasePage {
     }
 
     private void createHeader() {
-        Link<Void> editLink = new Link<Void>("edit-link") {
-            @Override
-            public void onClick() {
-                setResponsePage(new AddEventPage(attendanceEvent));
-            }
-        };
-
         Link<Void> closeLink = new Link<Void>("close-link") {
             @Override
             public void onClick() {
-                if(returnPage.equals(BasePage.ITEMS_PAGE)) {
-                    setResponsePage(new AddEventPage());
-                } else {
-                    setResponsePage(new Overview());
-                }
+                setResponsePage(new Overview());
             }
         };
 
-        if(returnPage.equals(BasePage.ITEMS_PAGE)) {
-            closeLink.add(new Label("close-link-text", new ResourceModel("attendance.event.view.link.close.items")));
-        } else {
-            closeLink.add(new Label("close-link-text", new ResourceModel("attendance.event.view.link.close.overview")));
-        }
+         closeLink.add(new Label("close-link-text", new ResourceModel("attendance.event.view.link.close.overview")));
 
-        add(editLink);
+        add(getAddEditWindowAjaxLink(attendanceEvent, "edit-link"));
         add(closeLink);
     }
 
@@ -202,17 +195,18 @@ public class EventView extends BasePage {
 
         // Generate records if none exist
         if(records == null || records.isEmpty()) {
-            attendanceLogic.updateAttendanceRecordsForEvent(this.attendanceEvent, this.attendanceEvent.getAttendanceSite().getDefaultStatus());
-            this.attendanceEvent = attendanceLogic.getAttendanceEvent(this.attendanceEvent.getId());
+            List<AttendanceRecord> recordList = attendanceLogic.updateAttendanceRecordsForEvent(this.attendanceEvent, this.attendanceEvent.getAttendanceSite().getDefaultStatus());
+            records = new HashSet<>(recordList);
         } else {
             // Generate records for added students
             List<String> currentStudentIds = sakaiProxy.getCurrentSiteMembershipIds();
             for(AttendanceRecord record : records) {
                 currentStudentIds.remove(record.getUserID());
             }
-            attendanceLogic.updateMissingRecordsForEvent(this.attendanceEvent, this.attendanceEvent.getAttendanceSite().getDefaultStatus(), currentStudentIds);
-            this.attendanceEvent = attendanceLogic.getAttendanceEvent(this.attendanceEvent.getId());
+            List<AttendanceRecord> recordList = attendanceLogic.updateMissingRecordsForEvent(this.attendanceEvent, this.attendanceEvent.getAttendanceSite().getDefaultStatus(), currentStudentIds);
+            records.addAll(recordList);
         }
+        this.attendanceEvent.setRecords(records);
 
         // Add form to filter table
         final Form<?> filterForm = new Form<Void>("filter-table-form"){
@@ -231,7 +225,7 @@ public class EventView extends BasePage {
                 return sakaiProxy.getGroupTitleForCurrentSite(o1).compareTo(sakaiProxy.getGroupTitleForCurrentSite(o2));
             }
         });
-        groupChoice = new DropDownChoice<String>("group-choice", new PropertyModel<String>(this, "selectedGroup"), groupIds, new IChoiceRenderer<String>() {
+        groupChoice = new DropDownChoice<>("group-choice", new PropertyModel<>(this, "selectedGroup"), groupIds, new IChoiceRenderer<String>() {
             @Override
             public Object getDisplayValue(String s) {
                 return sakaiProxy.getGroupTitleForCurrentSite(s);
@@ -269,7 +263,7 @@ public class EventView extends BasePage {
                 };
                 studentLink.add(stuName);
                 item.add(studentLink);
-                item.add(new AttendanceRecordFormDataPanel("record", item.getModel(), true, returnPage, feedbackPanel));
+                item.add(new AttendanceRecordFormDataPanel("record", item.getModel(), returnPage, feedbackPanel));
             }
         });
     }

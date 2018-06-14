@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -162,15 +162,16 @@ public interface AttendanceLogic {
 	 * @param aR, the AttendanceRecord to update (must not be null)
 	 * @return the success of the operation
      */
-	boolean updateAttendanceRecord(AttendanceRecord aR) throws IllegalArgumentException;
+	boolean updateAttendanceRecord(AttendanceRecord aR, Status oldStatus) throws IllegalArgumentException;
 
 	/**
 	 * Update all AttendanceRecords for an AttendanceEvent
 	 *
 	 * @param aE, the AttendanceEvent to update
 	 * @param s, the Status to set the AttendanceRecords (if null, uses the default of the AttendanceSite)
+	 * @return List of Attendance Records
      */
-	void updateAttendanceRecordsForEvent(AttendanceEvent aE, Status s);
+	List<AttendanceRecord> updateAttendanceRecordsForEvent(AttendanceEvent aE, Status s);
 
 	/**
 	 * Update all AttendanceRecords where the user belongs to the supplied group for an AttendanceEvent
@@ -188,33 +189,50 @@ public interface AttendanceLogic {
      * @param attendanceEvent, the AttendanceEvent
      * @param defaultStatus, the status to use (if null use the site default)
      * @param missingStudentIds, a List of UserIDs which need records
+	 * @return
      */
-	void updateMissingRecordsForEvent(AttendanceEvent attendanceEvent, Status defaultStatus, List<String> missingStudentIds);
+	List<AttendanceRecord> updateMissingRecordsForEvent(AttendanceEvent attendanceEvent, Status defaultStatus, List<String> missingStudentIds);
 
 	/**
 	 * Get statistics (total counts for each status) for an event
 	 *
 	 * @param event, the AttendanceEvent
-	 * @return A Map with Status as the key and Integer (number of occurrences) as the value
+	 * @return {@link AttendanceItemStats}
 	 */
-	Map<Status, Integer> getStatsForEvent(AttendanceEvent event);
+	AttendanceItemStats getStatsForEvent(AttendanceEvent event);
 
 	/**
 	 * Get statistics for user in current site
 	 *
 	 * @param userId, the user to get stats for
-	 * @return Map, key: Status enum type. Value: number of occurrences
+	 * @return {@link AttendanceUserStats}
      */
-	Map<Status, Integer> getStatsForUser(String userId);
+	AttendanceUserStats getStatsForUser(String userId);
 
 	/**
 	 * get statistics for user in site
 	 *
 	 * @param userId, the user to get stats for
 	 * @param aS, the AttendanceSite to get the stats for
-     * @return Map, key: Status enum type. Value: number of occurrences
+     * @return {@link AttendanceUserStats}
      */
-	Map<Status, Integer> getStatsForUser(String userId, AttendanceSite aS);
+	AttendanceUserStats getStatsForUser(String userId, AttendanceSite aS);
+
+
+	/**
+	 * get user stats for current attendance site
+	 * @param group, a group to filter for (null if no group)
+	 * @return a List of {@link AttendanceUserStats}
+	 */
+	List<AttendanceUserStats> getUserStatsForCurrentSite(String group);
+
+	/**
+	 * get user stats for attendance site
+	 * @param aS, the attendanceSite to get the stats for
+	 * @param group, a group to filter for (null if no group)
+	 * @return a List of {@link AttendanceUserStats}
+	 */
+	List<AttendanceUserStats> getUserStatsForSite(AttendanceSite aS, String group);
 
 	/**
 	 * get an AttendanceGrade by ID
@@ -247,10 +265,61 @@ public interface AttendanceLogic {
 	Map<String, String> getAttendanceGradeScores();
 
 	/**
-	 * Updates an AttendanceGrade
+	 * Updates an AttendanceGrade. Will send to the Gradebook if AttendanceSite is configured
+	 * as such.
 	 *
 	 * @param aG, the AG to update (must not be null)
 	 * @return the success of the operation
      */
 	boolean updateAttendanceGrade(AttendanceGrade aG) throws IllegalArgumentException;
+
+	/**
+	 * Returns the stats for a specified Status from an AttendanceStats object
+	 * @param stats {@link AttendanceStats}
+	 * @param status {@link Status}
+	 * @return Value of Status in AttendanceStats
+	 */
+	int getStatsForStatus(AttendanceStats stats, Status status);
+
+	/**
+	 * Adds a grading rule.
+	 *
+	 * @param gradingRule, The GradingRule to be added.
+	 * @return the success of the operation
+	 */
+	boolean addGradingRule(GradingRule gradingRule);
+
+	/**
+	 * Deletes a grading rule.
+	 *
+	 * @param gradingRule, The GradingRule to be deleted.
+	 * @return the success of the operation
+	 */
+	boolean deleteGradingRule(GradingRule gradingRule);
+
+	/**
+	 * Get a list of Grading Rules that have been created for a given
+	 * attendance site.
+	 *
+	 * @param attendanceSite, An existing AttendanceSite.
+	 * @return The list of GradingRules for the AttendanceSite
+	 */
+	List<GradingRule> getGradingRulesForSite(AttendanceSite attendanceSite);
+
+	/**
+	 * Regrade all of the members of a provided AttendanceSite
+	 *
+	 * @param attendanceSite, The AttendanceSite for which the members should be regraded
+	 */
+	void regradeAll(AttendanceSite attendanceSite);
+
+	/**
+	 * Regrade a particular AttendanceGrade record with the option to update the grade saved
+	 * in the database.
+	 *
+	 * @param attendanceGrade, The AttendanceGrade to be regraded.
+	 * @param saveGrade, True if the new grade should be saved to the database
+	 * @return The points a student earned after being regraded.
+	 */
+	Double regrade(AttendanceGrade attendanceGrade, boolean saveGrade);
 }

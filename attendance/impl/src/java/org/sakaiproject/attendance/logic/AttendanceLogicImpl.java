@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
+import org.sakaiproject.attendance.api.AttendanceGradebookProvider;
 import org.sakaiproject.attendance.dao.AttendanceDao;
 import org.sakaiproject.attendance.model.*;
 import org.sakaiproject.user.api.User;
@@ -123,6 +124,18 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 			throw new IllegalArgumentException("AttendanceEvent is null");
 		}
 
+		Set<AttendanceRecord> records = aE.getRecords();
+		AttendanceSite site = aE.getAttendanceSite();
+		for(AttendanceRecord record : records) {
+			AttendanceUserStats userStats = dao.getAttendanceUserStats(record.getUserID(), site);
+			if(userStats != null) {
+				Status recordStatus = record.getStatus();
+				removeStatusFromStats(userStats, recordStatus);
+
+				dao.updateAttendanceUserStats(userStats);
+			}
+		}
+
 		return dao.deleteAttendanceEvent(aE);
 	}
 
@@ -182,48 +195,56 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean updateAttendanceRecord(AttendanceRecord aR) throws IllegalArgumentException {
+	public boolean updateAttendanceRecord(AttendanceRecord aR, Status oldStatus) throws IllegalArgumentException {
 		if(aR == null) {
 			throw new IllegalArgumentException("AttendanceRecord cannot be null");
 		}
 
+		updateStats(aR, oldStatus);
+		regradeForAttendanceRecord(aR);
 		return dao.updateAttendanceRecord(aR);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public void updateAttendanceRecordsForEvent(AttendanceEvent aE, Status s) {
+	public List<AttendanceRecord> updateAttendanceRecordsForEvent(AttendanceEvent aE, Status s) {
 		aE = getAttendanceEvent(aE.getId());
-		List<AttendanceRecord> records = new ArrayList<AttendanceRecord>(aE.getRecords());
+		List<AttendanceRecord> records = new ArrayList<>(aE.getRecords());
 
 		if(records.isEmpty()) {
-			records = generateAttendanceRecords(aE, s);
+			return generateAttendanceRecords(aE, s);
 		}
 
+		Status oldStatus;
 		for(AttendanceRecord aR : records) {
+			oldStatus = aR.getStatus();
 			aR.setStatus(s);
+			updateStats(aR, oldStatus);
 		}
 
-		dao.updateAttendanceRecords(records);
+		return records;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public void updateAttendanceRecordsForEvent(AttendanceEvent aE, Status s, String groupId) {
-		if(groupId == null || groupId.isEmpty()) {
-			updateAttendanceRecordsForEvent(aE, s);
+		aE = getAttendanceEvent(aE.getId());
+		List<AttendanceRecord> allRecords = new ArrayList<>(aE.getRecords());
+		List<AttendanceRecord> recordsToUpdate = new ArrayList<>();
+
+		if(allRecords.isEmpty()) {
+			allRecords = generateAttendanceRecords(aE, null);
 		} else {
-			aE = getAttendanceEvent(aE.getId());
-			List<AttendanceRecord> allRecords = new ArrayList<AttendanceRecord>(aE.getRecords());
-			List<AttendanceRecord> recordsToUpdate = new ArrayList<AttendanceRecord>();
+			List<String> ids = sakaiProxy.getCurrentSiteMembershipIds();
+			allRecords.forEach(record -> ids.remove(record.getUserID()));
+			allRecords.addAll(updateMissingRecordsForEvent(aE, null, ids));
+		}
 
-			if(allRecords.isEmpty()) {
-				allRecords = generateAttendanceRecords(aE, s);
-			}
-
-			// We only want to update records where the user is in the group
+		if(groupId == null || groupId.isEmpty()) {
+			recordsToUpdate.addAll(allRecords);
+		} else {
 			List<String> groupMemberIds = sakaiProxy.getGroupMembershipIds(aE.getAttendanceSite().getSiteID(), groupId);
 			for(String userId : groupMemberIds) {
 				for(AttendanceRecord record: allRecords) {
@@ -232,20 +253,61 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 					}
 				}
 			}
-
-			for(AttendanceRecord aR : recordsToUpdate) {
-				aR.setStatus(s);
-			}
-
-			dao.updateAttendanceRecords(recordsToUpdate);
 		}
+
+		Status oldStatus;
+		int present =0, unexcused =0, excused =0, late=0, leftEarly =0;
+		for(AttendanceRecord aR : recordsToUpdate) {
+			oldStatus = aR.getStatus();
+			if (oldStatus == Status.PRESENT) {
+				present++;
+			} else if (oldStatus == Status.UNEXCUSED_ABSENCE) {
+				unexcused++;
+			} else if (oldStatus == Status.EXCUSED_ABSENCE) {
+				excused++;
+			} else if (oldStatus == Status.LATE) {
+				late++;
+			} else if (oldStatus == Status.LEFT_EARLY ) {
+				leftEarly++;
+			}
+			aR.setStatus(s);
+			updateUserStats(aR, oldStatus);
+			regradeForAttendanceRecord(aR);
+		}
+
+		AttendanceItemStats itemStats = getStatsForEvent(aE);
+		itemStats.setPresent(itemStats.getPresent() - present);
+		itemStats.setUnexcused(itemStats.getUnexcused() - unexcused);
+		itemStats.setExcused(itemStats.getExcused() - excused);
+		itemStats.setLate(itemStats.getLate() - late);
+		itemStats.setLeftEarly(itemStats.getLeftEarly() - leftEarly);
+
+		if (s == Status.PRESENT) {
+			itemStats.setPresent(itemStats.getPresent()+ recordsToUpdate.size());
+		} else if (s == Status.UNEXCUSED_ABSENCE) {
+			itemStats.setUnexcused(itemStats.getUnexcused() + recordsToUpdate.size());
+		} else if (s == Status.EXCUSED_ABSENCE) {
+			itemStats.setExcused(itemStats.getExcused() + recordsToUpdate.size());
+		} else if (s == Status.LATE) {
+			itemStats.setLate(itemStats.getLate() + recordsToUpdate.size());
+		} else if (s == Status.LEFT_EARLY) {
+			itemStats.setLeftEarly(itemStats.getLeftEarly() + recordsToUpdate.size());
+		}
+
+		dao.updateAttendanceItemStats(itemStats);
+		dao.updateAttendanceRecords(recordsToUpdate);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public void updateMissingRecordsForEvent(AttendanceEvent attendanceEvent, Status defaultStatus, List<String> missingStudentIds) {
-		List<AttendanceRecord> recordList = new ArrayList<AttendanceRecord>();
+	public List<AttendanceRecord> updateMissingRecordsForEvent(AttendanceEvent attendanceEvent, Status defaultStatus, List<String> missingStudentIds)
+	throws IllegalArgumentException {
+		if(attendanceEvent == null) {
+			throw new IllegalArgumentException("attendanceEvent cannot be null.");
+		}
+
+		List<AttendanceRecord> recordList = new ArrayList<>();
 
 		if(defaultStatus == null) {
 			defaultStatus = attendanceEvent.getAttendanceSite().getDefaultStatus();
@@ -254,68 +316,90 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 		if(missingStudentIds != null && !missingStudentIds.isEmpty()) {
 			for(String studentId : missingStudentIds) {
 				AttendanceRecord attendanceRecord = generateAttendanceRecord(attendanceEvent, studentId, defaultStatus);
-				if(attendanceRecord != null) {
-					recordList.add(attendanceRecord);
-				}
+				recordList.add(attendanceRecord);
 			}
-			dao.updateAttendanceRecords(recordList);
 		}
+
+		return recordList;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Map<Status, Integer> getStatsForEvent(AttendanceEvent event) {
-		Map<Status, Integer> results = new HashMap<Status, Integer>();
-		List<String> currentStudents = sakaiProxy.getCurrentSiteMembershipIds();
+	public AttendanceItemStats getStatsForEvent(AttendanceEvent event) {
+		AttendanceItemStats itemStats = dao.getAttendanceItemStats(event);
 
-		for(Status s : Status.values()){
-			generateStatsHelper(results, s, 0);
+		if(itemStats == null) {
+			itemStats = new AttendanceItemStats(event);
 		}
+		event.setStats(itemStats);
 
-		if(event != null) {
-			for(AttendanceRecord r : event.getRecords()) {
-				if(currentStudents.contains(r.getUserID())) {
-					for(Status s : Status.values()){
-						if(r.getStatus() == s) {
-							generateStatsHelper(results, s, 1);
-						}
-					}
-				}
-			}
-		}
-
-		return results;
+		return itemStats;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Map<Status, Integer> getStatsForUser(String userId) {
+	public AttendanceUserStats getStatsForUser(String userId) {
 		return getStatsForUser(userId, getCurrentAttendanceSite());
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Map<Status, Integer> getStatsForUser(String userId, AttendanceSite aS) {
-		Map<Status, Integer> results = new HashMap<Status, Integer>();
+	public AttendanceUserStats getStatsForUser(String userId, AttendanceSite aS) {
+		AttendanceUserStats userStats = dao.getAttendanceUserStats(userId, aS);
 
-		for(Status s : Status.values()){
-			generateStatsHelper(results, s, 0);
+		if(userStats == null) {
+			userStats = new AttendanceUserStats(userId, aS);
 		}
 
-		List<AttendanceRecord> records = getAttendanceRecordsForUser(userId, aS);
+		return userStats;
+	}
 
-		if(!records.isEmpty()) {
-			for(AttendanceRecord record : records) {
-				if(record.getUserID().equals(userId)){
-					generateStatsHelper(results, record.getStatus(), 1);
+	/**
+	 * {@inheritDoc}
+	 */
+	public List<AttendanceUserStats> getUserStatsForCurrentSite(String group) {
+		return getUserStatsForSite(getCurrentAttendanceSite(), group);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public List<AttendanceUserStats> getUserStatsForSite(AttendanceSite aS, String group) {
+		List<AttendanceUserStats> userStatsList = dao.getAttendanceUserStatsForSite(aS);
+		List<String> users;
+		if(group == null || group.isEmpty()) {
+			users = sakaiProxy.getCurrentSiteMembershipIds();
+		} else {
+			users = sakaiProxy.getGroupMembershipIds(aS.getSiteID(), group);
+		}
+		List<String> missingUsers = new ArrayList<>();
+		List<AttendanceUserStats> returnList = new ArrayList<>(users.size());
+
+		if(userStatsList != null && !userStatsList.isEmpty()) {
+			users.forEach(user -> {
+				boolean found = false;
+				for(AttendanceUserStats userStat : userStatsList) {
+					if(user.equals(userStat.getUserID())) {
+						found = true;
+						returnList.add(userStat);
+					}
 				}
-			}
+				if(!found) {
+					missingUsers.add(user);
+				}
+			});
+		} else {
+			missingUsers.addAll(users);
 		}
 
-		return results;
+		if (!missingUsers.isEmpty()) {
+			missingUsers.forEach(user -> returnList.add(new AttendanceUserStats(user, aS)));
+		}
+
+		return returnList;
 	}
 
 	/**
@@ -337,14 +421,21 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 			throw new IllegalArgumentException("uID must not be null or empty.");
 		}
 
-		return dao.getAttendanceGrade(uID, getCurrentAttendanceSite());
+		final AttendanceSite currentSite = getCurrentAttendanceSite();
+		final AttendanceGrade grade = dao.getAttendanceGrade(uID, currentSite);
+
+		if(grade == null) {
+			return new AttendanceGrade(currentSite, uID);
+		}
+
+		return grade;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Map<String, AttendanceGrade> getAttendanceGrades() {
-		Map<String, AttendanceGrade> aGHashMap = new HashMap<String, AttendanceGrade>();
+		Map<String, AttendanceGrade> aGHashMap = new HashMap<>();
 		AttendanceSite aS = getCurrentAttendanceSite();
 		List<AttendanceGrade> aGs = dao.getAttendanceGrades(aS);
 		if(aGs == null || aGs.isEmpty()) {
@@ -375,7 +466,7 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 	public Map<String, String> getAttendanceGradeScores() {
 		Map<String, AttendanceGrade> gradeMap = getAttendanceGrades();
 
-		Map<String, String> returnMap = new HashMap<String, String>(gradeMap.size());
+		Map<String, String> returnMap = new HashMap<>(gradeMap.size());
 
 		for(Map.Entry<String, AttendanceGrade> entry : gradeMap.entrySet())
 		{
@@ -395,14 +486,90 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 			throw new IllegalArgumentException("AttendanceGrade cannot be null");
 		}
 
-		return dao.updateAttendanceGrade(aG);
+		boolean saved = dao.updateAttendanceGrade(aG);
+
+		if(saved && aG.getAttendanceSite().getSendToGradebook()) {
+			return attendanceGradebookProvider.sendToGradebook(aG);
+		}
+
+		return saved;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public int getStatsForStatus(AttendanceStats stats, Status status) {
+		int stat = 0;
+
+		if (status == Status.PRESENT) {
+			stat = stats.getPresent();
+		} else if (status == Status.UNEXCUSED_ABSENCE) {
+			stat = stats.getUnexcused();
+		} else if (status == Status.EXCUSED_ABSENCE) {
+			stat = stats.getExcused();
+		} else if (status == Status.LATE) {
+			stat = stats.getLate();
+		} else if (status == Status.LEFT_EARLY) {
+			stat = stats.getLeftEarly();
+		}
+
+		return stat;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean addGradingRule(GradingRule gradingRule) {
+		return gradingRule != null && dao.addGradingRule(gradingRule);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean deleteGradingRule(GradingRule gradingRule) {
+		return gradingRule != null && dao.deleteGradingRule(gradingRule);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public List<GradingRule> getGradingRulesForSite(AttendanceSite attendanceSite) {
+		return dao.getGradingRulesForSite(attendanceSite);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void regradeAll(AttendanceSite attendanceSite) {
+		List<String> users = sakaiProxy.getSiteMembershipIds(attendanceSite.getSiteID());
+		if (users != null) {
+			for (String userId : users) {
+				AttendanceGrade grade = getAttendanceGrade(userId);
+				if (grade.getOverride() == null || !grade.getOverride()) {
+					grade.setGrade(grade(userId, attendanceSite));
+					updateAttendanceGrade(grade);
+				}
+			}
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Double regrade(AttendanceGrade attendanceGrade, boolean saveGrade) {
+		Double grade = grade(attendanceGrade.getUserID(), attendanceGrade.getAttendanceSite());
+		if (saveGrade) {
+			attendanceGrade.setGrade(grade);
+			updateAttendanceGrade(attendanceGrade);
+		}
+		return grade;
 	}
 
 	/**
 	 * init - perform any actions required here for when this bean starts up
 	 */
 	public void init() {
-		log.info("init");
+		log.debug("AttendanceLogicImpl init()");
 	}
 
 	private boolean addSite(AttendanceSite s) {
@@ -411,7 +578,7 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 
 	private List<AttendanceGrade> generateAttendanceGrades(AttendanceSite aS) {
 		List<String> userList = sakaiProxy.getCurrentSiteMembershipIds();
-		List<AttendanceGrade> aGList = new ArrayList<AttendanceGrade>(userList.size());
+		List<AttendanceGrade> aGList = new ArrayList<>(userList.size());
 
 		for(String u : userList){
 			aGList.add(generateAttendanceGrade(u, aS));
@@ -425,14 +592,12 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 			aS = getCurrentAttendanceSite();
 		}
 
-		AttendanceGrade grade = new AttendanceGrade(aS, userId);
-		dao.addAttendanceGrade(grade);
-		return grade;
+		return new AttendanceGrade(aS, userId);
 	}
 
 	private List<AttendanceRecord> generateAttendanceRecords(String id, AttendanceSite aS) {
 		List<AttendanceEvent> aEs = getAttendanceEventsForSite(aS);
-		List<AttendanceRecord> records = new ArrayList<AttendanceRecord>(aEs.size());
+		List<AttendanceRecord> records = new ArrayList<>(aEs.size());
 		Status s = getCurrentAttendanceSite().getDefaultStatus();
 		// Is there a faster way to do this? Would querying the DB be faster?
 		for(AttendanceEvent e : aEs) {
@@ -461,11 +626,11 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 			s = aE.getAttendanceSite().getDefaultStatus();
 		}
 
-		List<AttendanceRecord> recordList = new ArrayList<AttendanceRecord>();
+		List<AttendanceRecord> recordList = new ArrayList<>();
 		List<User> userList = sakaiProxy.getCurrentSiteMembership();
 
 		if(userList.isEmpty()){
-			// do something
+			return recordList;
 		}
 
 		for(User user : userList) {
@@ -481,27 +646,16 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 			s = aE.getAttendanceSite().getDefaultStatus();
 		}
 
-		AttendanceRecord record = new AttendanceRecord(aE, id, s);
-		dao.addAttendanceRecord(record);
-
-		return record;
-	}
-
-	private void generateStatsHelper(Map<Status, Integer> m, Status s, int base) {
-		if(m.containsKey(s)) {
-			m.put(s, m.get(s) + 1);
-		} else {
-			m.put(s, base);
-		}
+		return new AttendanceRecord(aE, id, s);
 	}
 
 	private void generateMissingAttendanceStatusesForSite(AttendanceSite attendanceSite) {
 		Set<AttendanceStatus> currentAttendanceStatuses = attendanceSite.getAttendanceStatuses();
-		List<Status> previouslyCreatedStatuses = new ArrayList<Status>();
-		List<AttendanceStatus> statusesToBeAdded = new ArrayList<AttendanceStatus>();
+		List<Status> previouslyCreatedStatuses = new ArrayList<>();
+		List<AttendanceStatus> statusesToBeAdded = new ArrayList<>();
 
 		// Get the max sort order
-		int nextSortOrder = getNextSortOrder(new ArrayList<AttendanceStatus>(currentAttendanceStatuses));
+		int nextSortOrder = getNextSortOrder(new ArrayList<>(currentAttendanceStatuses));
 
 		// Generate the list of statuses that already have a record for the site
 		for (AttendanceStatus attendanceStatus : currentAttendanceStatuses) {
@@ -538,7 +692,7 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 
 	private List<AttendanceEvent> safeAttendanceEventListReturn(List<AttendanceEvent> l) {
 		if(l == null) {
-			return new ArrayList<AttendanceEvent>();
+			return new ArrayList<>();
 		}
 
 		return l;
@@ -546,15 +700,148 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 
 	private List<AttendanceStatus> safeAttendanceStatusListReturn(List<AttendanceStatus> l) {
 		if(l == null) {
-			return new ArrayList<AttendanceStatus>();
+			return new ArrayList<>();
 		}
 
 		return l;
 	}
-	
+
+	private void updateStats(AttendanceRecord aR, Status oldStatus) {
+		if(aR.getStatus() == oldStatus) {
+			return;
+		}
+
+		updateUserStats(aR, oldStatus);
+
+		AttendanceEvent aE = aR.getAttendanceEvent();
+		AttendanceItemStats itemStats = getStatsForEvent(aE);
+		updateStats(null, itemStats, oldStatus, aR.getStatus());
+	}
+
+	private boolean updateUserStats(AttendanceRecord record, Status oldStatus) {
+		AttendanceUserStats userStats = dao.getAttendanceUserStats(record.getUserID(), record.getAttendanceEvent().getAttendanceSite());
+		if(userStats == null) { // assume null userStats means stats haven't been calculated yet
+			userStats = new AttendanceUserStats(record.getUserID(), record.getAttendanceEvent().getAttendanceSite());
+		}
+		return updateStats(userStats, null, oldStatus, record.getStatus());
+	}
+
+	private boolean updateStats(AttendanceUserStats userStats, AttendanceItemStats itemStats, Status oldStatus, Status newStatus) {
+		AttendanceStats stats;
+		if(userStats != null) {
+			stats = userStats;
+		} else {
+			stats = itemStats;
+		}
+
+		if(oldStatus != newStatus) {
+			removeStatusFromStats(stats, oldStatus);
+
+			if (newStatus == Status.PRESENT) {
+				stats.setPresent(stats.getPresent() + 1);
+			} else if (newStatus == Status.UNEXCUSED_ABSENCE) {
+				stats.setUnexcused(stats.getUnexcused() + 1);
+			} else if (newStatus == Status.EXCUSED_ABSENCE) {
+				stats.setExcused(stats.getExcused() + 1);
+			} else if (newStatus == Status.LATE) {
+				stats.setLate(stats.getLate() + 1);
+			} else if (newStatus == Status.LEFT_EARLY) {
+				stats.setLeftEarly(stats.getLeftEarly() + 1);
+			}
+		}
+
+		boolean returnVariable;
+		if(userStats != null) {
+			returnVariable = dao.updateAttendanceUserStats((AttendanceUserStats) stats);
+		} else {
+			returnVariable = dao.updateAttendanceItemStats((AttendanceItemStats) stats);
+		}
+
+		return returnVariable;
+	}
+
+	private void removeStatusFromStats(AttendanceStats stats, Status status) {
+		if (status != Status.UNKNOWN) {
+			if (status == Status.PRESENT) {
+				stats.setPresent(stats.getPresent() - 1);
+			} else if (status == Status.UNEXCUSED_ABSENCE) {
+				stats.setUnexcused(stats.getUnexcused() - 1);
+			} else if (status == Status.EXCUSED_ABSENCE) {
+				stats.setExcused(stats.getExcused() - 1);
+			} else if (status == Status.LATE) {
+				stats.setLate(stats.getLate() - 1);
+			} else if (status == Status.LEFT_EARLY) {
+				stats.setLeftEarly(stats.getLeftEarly() - 1);
+			}
+		}
+	}
+
+	private void regradeForAttendanceRecord(AttendanceRecord attendanceRecord) {
+		final AttendanceSite currentSite = getCurrentAttendanceSite();
+		// Auto grade if valid record, maximum points is set, and auto grade is enabled
+		if (attendanceRecord != null && currentSite.getMaximumGrade() != null && currentSite.getMaximumGrade() > 0 && currentSite.getUseAutoGrading()) {
+			final String userId = attendanceRecord.getUserID();
+			AttendanceGrade attendanceGrade = getAttendanceGrade(userId);
+			// Only update if not overridden
+			if (attendanceGrade.getOverride()== null || !attendanceGrade.getOverride()) {
+				attendanceGrade.setGrade(grade(userId, currentSite));
+				updateAttendanceGrade(attendanceGrade);
+			}
+		}
+	}
+
+	// Must be non-null user and site
+	private Double grade(String userId, AttendanceSite attendanceSite) {
+		final List<GradingRule> rules = getGradingRulesForSite(attendanceSite);
+		final AttendanceUserStats userStats = getStatsForUser(userId);
+
+		Double totalPoints;
+		if (!attendanceSite.getAutoGradeBySubtraction()) {
+			totalPoints = 0D;
+		} else {
+			totalPoints = attendanceSite.getMaximumGrade();
+		}
+
+		if (rules != null) {
+			for (GradingRule rule : rules) {
+				Integer statusTotal = null;
+				switch (rule.getStatus()) {
+					case PRESENT:
+						statusTotal = userStats.getPresent();
+						break;
+					case UNEXCUSED_ABSENCE:
+						statusTotal = userStats.getUnexcused();
+						break;
+					case EXCUSED_ABSENCE:
+						statusTotal = userStats.getExcused();
+						break;
+					case LATE:
+						statusTotal = userStats.getLate();
+						break;
+					case LEFT_EARLY:
+						statusTotal = userStats.getLeftEarly();
+						break;
+				}
+				if (statusTotal != null && (statusTotal >= rule.getStartRange() && (rule.getEndRange() == null || statusTotal <= rule.getEndRange()))) {
+					totalPoints = Double.sum(totalPoints, rule.getPoints());
+				}
+			}
+		}
+
+		// Don't allow negative total points
+		if (totalPoints < 0D) {
+			return 0D;
+		} else {
+			return totalPoints;
+		}
+	}
+
 	@Setter
 	private AttendanceDao dao;
 
 	@Setter
 	private SakaiProxy sakaiProxy;
+
+	@Setter
+	private AttendanceGradebookProvider attendanceGradebookProvider;
 }

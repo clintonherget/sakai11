@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -42,33 +42,32 @@ form {
     color: #0064cd;
 }
 
-h1.overviewHeader, h1.itemsHeader, h1.settingsHeader {
-    /* background: url("../images/attendance_icon_32.png") no-repeat left center; */
-    /* padding-left: 32px; */
+h1.overviewHeader, h1.itemsHeader, h1.settingsHeader, h1.gradingHeader {
     color: #555;
-    /* margin-top: 1.2em; */
-    /* margin-bottom: 1.2em; */
-    margin-bottom: 1em;
-    /* min-height: 32px; */
-    margin-left: 0 !important;
-    font-size: 110%; /* Match to other tool's h3 */
+    margin-top: 1.2em;
+    margin-bottom: 1.2em;
+    min-height: 32px;
 }
 
-span.overHeaderSpan, span.itemsHeaderSpan, span.settingsHeaderSpan {
-    margin: 0 20px;
+h1.tightHeader, h2.tightHeader, h3.tightHeader, h4.tightHeader, h5.tightHeader, h6.tightHeader {
+    margin-bottom: 0;
+}
+
+span.overHeaderSpan, span.itemsHeaderSpan, span.settingsHeaderSpan, span.gradingHeaderSpan {
+    margin: 0 .5em;
 }
 
 p.overviewInstructions, p.addEditInstructions {
-    /* font-size: 1.2em; */
-    /* line-height: 1.5em; */
-    margin-left: 20px;
+    font-size: 1.2em;
+    line-height: 1.5em;
+    margin-left: 35px;
 }
 
 p.addEditInstructions {
     width: 70%;
 }
 
-img.overviewInfo, div.attendanceBreadcrumbs img, th.takeAttendanceDateHeader, .vertAlignMiddle {
+img.overviewInfo, div.attendanceBreadcrumbs img, .div-table-row th.takeAttendanceDateHeader, .vertAlignMiddle {
     vertical-align: middle;
 }
 
@@ -132,7 +131,7 @@ table.overviewTable, table.itemListTable, table.eventViewTable, table.takeAttend
     border: 2px solid #ccc;
     border-collapse: collapse;
     padding: .5em;
-    margin-left: 20px;
+    margin-left: 35px;
 }
 
 table.overviewTable thead tr .header, table.itemListTable thead tr .header, table.takeAttendanceTable thead tr .header  {
@@ -152,16 +151,25 @@ table.itemListTable, table.eventViewTable, table.takeAttendanceTable, div.eventF
     margin: 0;
 }
 
-.overviewTable td, .overviewTable th, .itemListTable td, .itemListTable th, .eventViewTable td, .eventViewTable th, .takeAttendanceTable td, .takeAttendanceTable th {
+.overviewTable td, .overviewTable th, .itemListTable td, .itemListTable th, .eventViewTable td, .eventViewTable th {
     border: 1px solid #ccc;
     padding: .5em;
     text-align: left;
 }
 
+.takeAttendanceTable td, .takeAttendanceTable th {
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+.takeAttendanceTable td:first-child {
+    padding-left: .5em;
+}
+
 .overviewTable th, .itemListTable th, .eventViewTable th, .takeAttendanceTable th {
     text-align: center;
     border-bottom-width: 2px;
-    /* font-size: 1.2em; */
+    font-size: 1.2em;
     vertical-align: bottom;
 }
 
@@ -173,13 +181,76 @@ table.itemListTable, table.eventViewTable, table.takeAttendanceTable, div.eventF
     background-color: #deeeff;
 }
 
-th.overviewDateCol, td.overviewDateCol, td.takeAttendanceDateHeader, th.takeAttendanceDateHeader, td.studentNameCol, th.studentOverviewNameHeader {
+th.overviewDateCol, td.overviewDateCol, td.takeAttendanceDateHeader, th.takeAttendanceDateHeader, td.studentNameCol, th.studentOverviewNameHeader, th.importEventandStudentHeader, th.importNewCommentandStatusHeader,th.importOldCommentandStatusHeader {
     border-right-width: 3px;
+}
+
+.importChangeTable th{
+    text-align: center;
+    border-bottom-width: 2px;
+    font-size: 1.2em;
+    vertical-align: bottom;
+}
+
+.importChangeTable td{
+    border: 1px solid #ccc;
+    padding: .5em;
+    text-align: right;
+}
+
+.importChangeTable th{
+    border: 1px solid #ccc;
+    padding: .5em;
+    text-align: center;
+}
+
+.importChangeTable thead tr{
+    background-color: #eee;
+}
+
+.importChangeTable tbody tr:hover{
+    background-color: #deeeff;
+}
+
+table.importChangeTable{
+    border: 2px solid #ccc;
+    border-collapse: collapse;
+    padding: .5em;
+    margin-left: 35px;
+}
+
+table.importChangeTable thead tr .header{
+    background: url(../images/bg.gif) no-repeat bottom .5em right;
+    cursor: pointer;
+    padding-right: 24px;
+}
+
+table.importChangeTable thead tr .headerSortUp{
+    background-image: url(../images/asc.gif);
+}
+table.importChangeTable thead tr .headerSortDown{
+    background-image: url(../images/desc.gif);
+}
+
+table.importChangeTable thead tr th.importEventandStudentHeader{
+    background-color: lightgray;
+}
+
+table.importChangeTable thead tr th.importNewCommentandStatusHeader{
+    background-color: lightgreen;
+}
+
+table.importChangeTable thead tr th.importOldCommentandStatusHeader{
+    background-color: lightcoral;
+}
+
+td.importColumn{
+    text-align: right;
 }
 
 .eventViewTable td {
     text-align: right;
-    /* font-size: 1.2em; */
+    font-size: 1.2em;
 }
 
 .eventViewTable td, .eventViewTable th {
@@ -189,19 +260,23 @@ th.overviewDateCol, td.overviewDateCol, td.takeAttendanceDateHeader, th.takeAtte
 th.overviewEditCol, td.overviewEditCol, th.itemListEditCol, td.itemListEditCol, td.overviewGradeCol, th.overviewGradeCol {
     border-left-width: 3px;
     text-align: center;
-    width: 42px;
 }
 
-td.overviewGradeCol, th.overviewGradeCol {
-    width: 104px;
+tr td.overviewEditCol a span.fa, tr td.overviewPrintCol a span.fa, .attendanceBreadcrumbs span a span.fa, #event-buttons  {
+    color: #555;
+}
+
+tr td.overviewEditCol a span.fa:hover, tr td.overviewPrintCol a span.fa:hover,
+.attendanceBreadcrumbs span a span.fa:hover, #event-buttons span:hover {
+    color: #999;
+}
+
+#event-buttons span{
+    padding-right: 0;
 }
 
 td.overviewGradeCol {
     vertical-align: middle;
-}
-
-th.overviewStatusCol, td.overviewStatusCol {
-    width: 84px;
 }
 
 td.overviewStatusCol {
@@ -217,7 +292,7 @@ td.itemListRemoveCol, td.overviewPrintCol, p.printAction {
 }
 
 td.itemNameCol, td.studentNameCol {
-    /* font-size: 1.2em; */
+    font-size: 1.2em;
 }
 
 th.takeAttendanceNameHeader {
@@ -225,13 +300,20 @@ th.takeAttendanceNameHeader {
     vertical-align: middle;
 }
 
-div.addEditContainer, div.itemListContainer, div.takeAttendanceContainer, div.itemInfoContainer, div.activeStatusContainer, div.container {
+div.addEditContainer, div.itemListContainer, div.takeAttendanceContainer, div.itemInfoContainer,
+div.activeStatusContainer, div.commentContainer, div.gradingContainer {
     border:1px solid #ccc;
     padding: 2.5em 2em 2em;
     vertical-align: top;
     position:relative;
     display: block;
-    margin: 2em 2em 2em 20px;
+    margin: 2em 2em 2em 35px;
+}
+
+div.rulesContainer {
+    margin: 0 4em 1em 4em;
+    padding: 0 2em;
+    border: 1px solid #ccc;
 }
 
 div.gradeContainer {
@@ -240,7 +322,7 @@ div.gradeContainer {
     vertical-align: top;
     position:relative;
     display: block;
-    margin: 2em 2em 2em 20px;
+    margin: 2em 2em 2em 35px;
 }
 
 div.takeAttendanceContainer, div.itemInfoContainer, div.gradeContainer {
@@ -251,29 +333,34 @@ div.itemInfoContainer {
     display: flex;
 }
 
-div.addEditHeader, div.itemListHeader, div.takeAttendanceHeader, div.itemInfoHeader, div.activeStatusHeader, div.containerHeader {
+div.addEditHeader, div.itemListHeader, div.takeAttendanceHeader, div.itemInfoHeader,
+div.activeStatusHeader, div.commentHeader, div.containerHeader {
     background-color:#fff;
     position:absolute;
     top:-1em;
     left:.5em;
 }
 
-h3.addEditHeader, h3.itemListHeader, h3.takeAttendanceHeader, h3.itemInfoHeader, h3.activeStatusHeader, h3.containerHeading {
+h3.addEditHeader, h3.itemListHeader, h3.takeAttendanceHeader, h3.itemInfoHeader,
+h3.activeStatusHeader, h3.commentHeader, h3.containerHeading {
     margin: 0;
     padding: 0 .5em;
-    /* font-size: 1.4em; */
+    font-size: 1.4em;
     font-weight: normal;
 }
 
 span.addEditReq {
     color: red;
-    /* font-size: 1.2em; */
+    font-size: 1.2em;
+    float: left;
+    margin-left: -.5em;
+    margin-right: -.5em;
 }
 
-td.noEventsCol, td.noStudentsCol {
+td.noEventsCol, td.noStudentsCol{
     text-align: center;
     font-style: italic;
-    /* font-size: 1.4em; */
+    font-size: 1.4em;
     line-height: 1.7em;
     background: #ffffff;
     color: #555;
@@ -285,22 +372,15 @@ table.addEditFormTable, div.info, .addComment textarea {
 
 .addEditFormTable {
     text-align: left;
-    /* font-size: 1.2em; */
+    font-size: 1.2em;
 }
 
 .addEditFormTable td {
     padding-right: 4em;
 }
 
-div.addEditDeleteLinkDiv {
-    background: url("../images/remove.png") no-repeat left center;
-    background-size: 12px;
-    padding-left: 16px;
-    margin-top: 1em;
-}
-
 div.attendanceBreadcrumbs h2 {
-    margin-left: 20px;
+    margin-left: 10px;
 }
 
 div.attendanceBreadcrumbs span {
@@ -312,34 +392,19 @@ div.attendanceBreadcrumbs span {
     clear:both;
 }
 
-.div-table-col {
-    float:left;/*fix for  buggy browsers*/
-    width:80px;
-    text-align: center;
-    padding: 0 .5em;
-}
-
 .div-table{
     display:table;
     width:auto;
     background-color:#fff;
     border:1px solid  #ccc;
-    /* font-size: 1.2em; */
-    margin-left: 20px;
+    font-size: 1.2em;
+    margin-left: 35px;
 }
 
 .div-table-row2 {
     display:table-row;
     width:auto;
     clear:both;
-}
-
-.div-table-col {
-    float:left;/*fix for  buggy browsers*/
-    display:table-cell;
-    width:80px;
-    text-align: center;
-    padding: .5em;
 }
 
 .divHeader {
@@ -352,7 +417,7 @@ div.attendanceBreadcrumbs span {
 }
 
 p.setAll {
-    /* font-size: 1.2em; */
+    font-size: 1.2em;
     color: #555;
     font-weight: bold;
     margin-top: 0;
@@ -419,7 +484,7 @@ div.printMask {
     opacity: 0.75;
 }
 
-div.printMask:hover, img.printImage:hover, .commentToggle:hover, .div-table-col input:hover {
+div.printMask:hover, .printImage:hover, .commentToggle:hover, .div-table-col input:hover {
     cursor: pointer;
 }
 
@@ -457,7 +522,7 @@ ul.statusList {
 li.statusItem, li.statusItemPlaceholder {
     background: url("../images/drag-handle.png") no-repeat right center #e0f7e0;
     border: 1px solid #ccc;
-    /* font-size: 1.2em; */
+    font-size: 1.2em;
     line-height: 1.7em;
     margin: .5em 0;
     padding: .5em;
@@ -482,15 +547,15 @@ li.statusItemDisabled  {
     background-color: #eee;
 }
 
-p.editStatusInfo, p.editGradeInfo {
+p.editStatusInfo, p.editGradeInfo, p.editCommentInfo {
     width: 60%;
-    /* font-size: 1.2em; */
-    /* line-height: 1.5em; */
+    font-size: 1.2em;
+    line-height: 1.5em;
     margin: 0;
 }
 
 form.studentOverviewFilterForm {
-    margin-left: 20px;
+    margin-left: 35px;
 }
 
 th.overviewGradeCol img.settings {
@@ -499,7 +564,7 @@ th.overviewGradeCol img.settings {
 
 ul.gradeSettings {
     list-style: none;
-    margin: 1em 0 1em 0;
+    margin: 1em 0 1em 1em;
     padding: 0;
 }
 
@@ -508,14 +573,342 @@ ul.gradeSettings li {
 }
 
 label.gradeSettingsLabel {
-    /* font-size: 1.2em; */
-    /* line-height: 1.7em; */
+    font-size: 1.2em;
+    line-height: 1.7em;
+}
+
+span.gradingType > div div label {
+    font-size: 1em;
+    margin-left: 4em;
+}
+
+span.totalPointsColHeader {
+    font-size: .75em;
+}
+
+ul.rulesList {
+    list-style: none;
+}
+
+ul.rulesList form {
+    display: inline-block;
+}
+
+div.addRulesContainer {
+    border-bottom:1px solid #ccc;
+}
+
+form.addRuleForm div {
+    display: inline-block;
+    margin-right: 8px;
+}
+
+form.gradeSettingsForm {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 1em;
+}
+
+#rulesExplanation {
+    max-width: 740px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#rulesHowLink {
+    display:block;
+    margin-top: 1em;
 }
 
 .printVisible {
     display: block;
 }
 
-.addEditForm input[type='submit'] {
-    margin-left: 0px !important;
+.status-group-container {
+    float: left;
+}
+
+.PRESENT {
+    background-color: #DFF0D8;
+    border: 1px solid green;
+}
+
+.UNEXCUSED_ABSENCE {
+    background-color: #FFBBBB;
+    border: 1px solid red;
+}
+
+.EXCUSED_ABSENCE {
+    background-color: #CCCCCC;
+    border: 1px solid gray;
+}
+
+.LATE, .LEFT_EARLY {
+    background-color: #fcf8a5;
+    border: 1px solid goldenrod;
+}
+
+div.noRecord {
+    padding: .5em;
+    text-align: center;
+    font-weight: bold;
+    font-style: italic;
+    color: #999;
+}
+
+div.comment-container {
+    position: relative;
+}
+
+#settingsSave {
+    margin-left: 35px;
+}
+
+@media (min-width: 1205px) {
+    .record-status-name {
+        display: none;
+    }
+
+    .div-table-col {
+        float:left;/*fix for  buggy browsers*/
+        display:table-cell;
+        width:90px;
+        text-align: center;
+        padding: .5em;
+        margin-top: 2px;
+    }
+
+    .div-table-col:first-child {
+        margin-left: 1px;
+    }
+
+    .slim-status-header {
+        display: none;
+    }
+
+    .comment-container {
+        float: right;
+        width: auto;
+        margin-right: .5em;
+    }
+}
+
+@media (max-width: 1204px) {
+    .record-status-name {
+        display: inherit;
+        margin-left: .25em;
+        padding-top: .15em;
+    }
+
+    .div-table-col {
+        display: flex;
+        margin-top: .5em;
+        margin-bottom: .5em;
+        padding-left: .5em;
+        padding-right: .5em;
+    }
+
+    .div-table-col input[name="attendance-record-status-group"] {
+        margin-right: .25em;
+    }
+
+    .slim-status-header {
+        display: inherit;
+    }
+
+    .status-header {
+        display: none;
+    }
+}
+
+@media (max-width: 1204px) and (min-width: 500px) {
+    .comment-container {
+        float: right;
+        margin-left: 2em;
+    }
+}
+
+@media (max-width: 500px) {
+    .comment-container {
+        margin-left: 2em;
+    }
+}
+
+div a.delete {
+    color: red;
+}
+
+div a.delete:hover {
+    color: red;
+}
+
+.addAttendanceItemForm {
+    margin-left: 35px;
+}
+
+/* Janked from gradebook-grades.css. Credit goes to steveswinsburg & payten */
+div.wicket-modal div.w_content_3 {
+    border: none; /** don't want border wrapping content inside the modal **/
+}
+
+div.wicket-modal div.w_caption {
+    cursor: move;
+    min-height: 60px;
+    height: auto;
+}
+
+div.wicket-modal h3.w_captionText {
+    padding: 20px;
+    font-size: 1.5em;
+    position: relative;
+    height: auto;
+}
+/* End janking */
+
+div.wicket-modal div.w_content_3 div.messageSuccess, div.wicket-modal div.w_content_3 div.alertMessage {
+    margin-top: 0;
+    margin-bottom: 10px;
+    padding: 7px 30px 7px 30px;
+}
+
+form.takeAttendanceNowForm input {
+    background-color: green;
+}
+
+form.takeAttendanceNowForm input:hover {
+    background: linear-gradient(green, darkgreen);
+}
+
+span.yui-skin-sam img {
+    margin-right: .5em;
+}
+
+.cancel {
+    background: #e54028;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -ms-border-radius: 3px;
+    -o-border-radius: 3px;
+    border-radius: 3px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    -webkit-transition-property: background;
+    -moz-transition-property: background;
+    -o-transition-property: background;
+    transition-property: background;
+    -webkit-transition-duration: 0.3s;
+    -moz-transition-duration: 0.3s;
+    -o-transition-duration: 0.3s;
+    transition-duration: 0.3s;
+    color: #ffffff;
+    text-shadow: none;
+    border: none;
+    height: 32px;
+    line-height: 32px;
+    padding: 0px 25.6px;
+    font-weight: 300;
+    margin: 0;
+    text-decoration: none;
+    text-align: center;
+    display: inline-block;
+}
+
+.cancel:active {
+    background: darkred;
+    -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.03), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+    -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+    box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.03), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+}
+.cancel:hover {
+    background: #FF530D;
+    text-decoration: none;
+    color: #ffffff;
+}
+.cancel:active {
+    background: darkred;
+    -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.03), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+    -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+    box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.03), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+}
+
+.confirm {
+    background: #00B233;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -ms-border-radius: 3px;
+    -o-border-radius: 3px;
+    border-radius: 3px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    -webkit-transition-property: background;
+    -moz-transition-property: background;
+    -o-transition-property: background;
+    transition-property: background;
+    -webkit-transition-duration: 0.3s;
+    -moz-transition-duration: 0.3s;
+    -o-transition-duration: 0.3s;
+    transition-duration: 0.3s;
+    color: #ffffff;
+    text-shadow: none;
+    border: none;
+    height: 32px;
+    line-height: 32px;
+    padding: 0px 25.6px;
+    font-weight: 300;
+    margin: 0;
+    text-decoration: none;
+    text-align: center;
+    display: inline-block;
+}
+
+.confirm:active {
+    background: darkgreen;
+    -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.03), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+    -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+    box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.03), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+}
+.confirm:hover {
+    background: lightgreen;
+    text-decoration: none;
+    color: #ffffff;
+}
+.confirm:active {
+    background: darkgreen;
+    -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.03), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+    -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+    box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.03), inset 0px -1px 1px rgba(255, 255, 255, 0.05), 0px 1px 0px #777777, 0px 3px 3px rgba(0, 0, 0, 0.03);
+}
+
+.iclPage{
+    padding-left: 35px;
+}
+.exportPage{
+    padding-left: 60px;
+}
+.exportPageDouble{
+    padding-left: 120px;
+}
+.exportPageInfoBox{
+
+    overflow: auto;
+    border: solid;
+    border-width: 1px;
+    margin-left: 60px;
+    margin-right: 60px;
+}
+.exportPageUL{
+    list-style-type:none;
+}
+.exportPageLI{
+    padding-left: 10px;
+}
+.boldHeader {
+    font-weight:bold;
+    margin-top: 5px;
+}
+.boldSpace {
+    font-weight:bold;
+    padding-right: 4px;
 }
