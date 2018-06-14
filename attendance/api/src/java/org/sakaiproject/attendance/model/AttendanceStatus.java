@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class AttendanceStatus implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AttendanceStatus that = (AttendanceStatus) o;
+        final AttendanceStatus that = (AttendanceStatus) o;
         return Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getIsActive(), that.getIsActive()) &&
                 getStatus() == that.getStatus() &&

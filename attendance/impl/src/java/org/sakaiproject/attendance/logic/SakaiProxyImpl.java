@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -169,11 +169,16 @@ public class SakaiProxyImpl implements SakaiProxy {
 	 * {@inheritDoc}
 	 */
 	public List<String> getCurrentSiteMembershipIds() {
-		List<User> members = getCurrentSiteMembership();
-		List<String> studentIds = new ArrayList<String>();
-		for(User user : members) {
-			studentIds.add(user.getId());
-		}
+		return getSiteMembershipIds(getCurrentSiteId());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public List<String> getSiteMembershipIds(final String siteId) {
+		List<User> members = getSiteMembership(siteId);
+		List<String> studentIds = new ArrayList<>();
+		members.forEach(user-> studentIds.add(user.getId()));
 		return studentIds;
 	}
 
@@ -181,9 +186,16 @@ public class SakaiProxyImpl implements SakaiProxy {
 	 * {@inheritDoc}
 	 */
 	public List<User> getCurrentSiteMembership() {
-		List<User> returnList = new ArrayList<User>();
+		return getSiteMembership(getCurrentSiteId());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public List<User> getSiteMembership(final String siteId) {
+		List<User> returnList = new ArrayList<>();
 		try {
-			AuthzGroup membership = authzGroupService.getAuthzGroup("/site/" + getCurrentSiteId());
+			AuthzGroup membership = authzGroupService.getAuthzGroup("/site/" + siteId);
 			Set<Member> memberSet = membership.getMembers();
 			String maintainRole = membership.getMaintainRole();
 			returnList = getUserListForMemberSetHelper(memberSet, maintainRole);
@@ -241,6 +253,25 @@ public class SakaiProxyImpl implements SakaiProxy {
 	/**
 	 * {@inheritDoc}
 	 */
+	public List<User> getSectionMembership(String siteId, String groupId) {
+		List<User> returnList = new ArrayList<User>();
+		try {
+			Group group = siteService.getSite(siteId).getGroup(groupId);
+			if(group != null && group.getProviderGroupId() != null) {
+				Set<Member> memberSet = group.getMembers();
+				String maintainRole = group.getMaintainRole();
+				returnList = getUserListForMemberSetHelper(memberSet, maintainRole);
+			}
+		} catch (IdUnusedException e) {
+			log.error("Unable to get group membership " + e);
+			e.printStackTrace();
+		}
+		return returnList;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public List<String> getAvailableGroupsForSite(String siteId) {
 		try {
 			List<String> returnList = new ArrayList<String>();
@@ -279,12 +310,36 @@ public class SakaiProxyImpl implements SakaiProxy {
 	/**
 	 * {@inheritDoc}
 	 */
+	public final User getUserByEID(String userEid) {
+		try {
+			return userDirectoryService.getUserByEid(userEid);
+		} catch (UserNotDefinedException e) {
+			log.error("Unable to get user " + userEid + " " + e);
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public String getUserSortName(String userId) {
 		User u = getUser(userId);
 		if(u != null){
 			return u.getSortName();
 		}
 
+		return "";
+	}
+
+	/*
+	* {@inheritDoc}
+	 */
+	public String getUserSortNameByEID(final String userEid) {
+		User u = getUserByEID(userEid);
+		if(u != null){
+			return u.getSortName();
+		}
 		return "";
 	}
 
@@ -327,7 +382,7 @@ public class SakaiProxyImpl implements SakaiProxy {
 	 * init - perform any actions required here for when this bean starts up
 	 */
 	public void init() {
-		log.info("init");
+		log.debug("SakaiProxyImpl init()");
 	}
 
 	private Preferences getCurrentUserPreferences() {
@@ -342,17 +397,12 @@ public class SakaiProxyImpl implements SakaiProxy {
 		List<User> userList = new ArrayList<User>();
 		if(memberSet != null) {
 			for(Member member : memberSet) {
-				// CLASSES-3188 Filter TAs from student list
-				if ("Teaching Assistant".equals(member.getRole().getId())) {
-					continue;
-				}
 				if(maintainRole != null && !maintainRole.equals(member.getRole().getId()) && member.isActive()) {
 					try {
 						User student = userDirectoryService.getUser(member.getUserId());
 						userList.add(student);
 					} catch (UserNotDefinedException e) {
 						log.error("Unable to get user " + member.getUserId() + " " + e);
-						e.printStackTrace();
 					}
 				}
 			}

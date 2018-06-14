@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, University of Dayton
+ *  Copyright (c) 2017, University of Dayton
  *
  *  Licensed under the Educational Community License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,17 +26,18 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.link.Link;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.sakaiproject.attendance.model.AttendanceGrade;
 import org.sakaiproject.attendance.model.AttendanceStatus;
+import org.sakaiproject.attendance.model.AttendanceUserStats;
 import org.sakaiproject.attendance.model.Status;
 import org.sakaiproject.attendance.tool.dataproviders.AttendanceStatusProvider;
-import org.sakaiproject.attendance.tool.dataproviders.StudentDataProvider;
-import org.sakaiproject.attendance.tool.pages.panels.AttendanceGradePanel;
-import org.sakaiproject.user.api.User;
+import org.sakaiproject.attendance.tool.panels.AttendanceGradePanel;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -109,6 +110,7 @@ public class StudentOverview extends BasePage {
         //headers for the table
         Label               studentName     = new Label("header-student-name",       new ResourceModel("attendance.header.student"));
         Label               grade           = new Label("header-grade",               new ResourceModel("attendance.header.grade"));
+        Label               totalPoints     = new Label("total-points", "Total: " + attendanceLogic.getCurrentAttendanceSite().getMaximumGrade());
 
         DataView<AttendanceStatus> statusHeaders = new DataView<AttendanceStatus>("status-headers", attendanceStatusProvider) {
             @Override
@@ -121,12 +123,13 @@ public class StudentOverview extends BasePage {
             private static final long serialVersionUID = 1L;
 
             public void onClick() {
-                setResponsePage(new SettingsPage());
+                setResponsePage(new GradingPage());
             }
         };
 
         t.add(studentName);
         t.add(grade);
+        t.add(totalPoints);
         t.add(statusHeaders);
         t.add(settings);
     }
@@ -173,25 +176,25 @@ public class StudentOverview extends BasePage {
         filterForm.add(groupChoice);
         filterForm.add(new Label("group-choice-label", new ResourceModel("attendance.event.view.filter")));
 
-        StudentDataProvider     sDP         = new StudentDataProvider(selectedGroup);
-        final DataView<User>    uDataView   = new DataView<User>("students", sDP) {
+        List<AttendanceUserStats> userStatsList = attendanceLogic.getUserStatsForCurrentSite(selectedGroup);
+        final ListView<AttendanceUserStats> uListView = new ListView<AttendanceUserStats>("students", userStatsList) {
             @Override
-            protected void populateItem(Item<User> item) {
-                final String id = item.getModelObject().getId();
-                final Map<Status, Integer> stats = attendanceLogic.getStatsForUser(id);
+            protected void populateItem(ListItem<AttendanceUserStats> item) {
+                final String id = item.getModelObject().getUserID();
                 Link<Void> studentLink = new Link<Void>("student-link") {
                     public void onClick() {
                         setResponsePage(new StudentView(id, BasePage.STUDENT_OVERVIEW_PAGE));
                     }
                 };
-                studentLink.add(new Label("student-name", item.getModelObject().getSortName() + " (" + item.getModelObject().getDisplayId() + ")"));
-
+                studentLink.add(new Label("student-name", sakaiProxy.getUserSortName(id) + " (" + sakaiProxy.getUserDisplayId(id) + ")"));
                 item.add(studentLink);
 
                 DataView<AttendanceStatus> activeStatusStats = new DataView<AttendanceStatus>("active-status-stats", attendanceStatusProvider) {
                     @Override
-                    protected void populateItem(Item<AttendanceStatus> item) {
-                        item.add(new Label("student-stats", stats.get(item.getModelObject().getStatus())));
+                    protected void populateItem(Item<AttendanceStatus> statusItem) {
+                        Status itemStatus = statusItem.getModelObject().getStatus();
+                        int stat = attendanceLogic.getStatsForStatus(item.getModelObject(), itemStatus);
+                        statusItem.add(new Label("student-stats", stat));
                     }
                 };
                 item.add(activeStatusStats);
@@ -202,17 +205,17 @@ public class StudentOverview extends BasePage {
         Label noStudents = new Label("no-students", new ResourceModel("attendance.student.overview.no.students")) {
             @Override
             public boolean isVisible(){
-                return uDataView.size() <= 0;
+                return uListView.size() <= 0;
             }
         };
         Label noStudents2 = new Label("no-students2", new ResourceModel("attendance.student.overview.no.students.2")) {
             @Override
             public boolean isVisible(){
-                return uDataView.size() <= 0;
+                return uListView.size() <= 0;
             }
         };
 
-        t.add(uDataView);
+        t.add(uListView);
         t.add(noStudents);
         t.add(noStudents2);
     }

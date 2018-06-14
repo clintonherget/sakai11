@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~  Copyright (c) 2016, University of Dayton
+  ~  Copyright (c) 2017, University of Dayton
   ~
   ~  Licensed under the Educational Community License, Version 2.0 (the "License");
   ~  you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@
                     <span wicket:id="event-date" />
                 </td>
                 <td>
-                    <span wicket:id="record" />
+                    <wicket:container wicket:id="record" />
                 </td>
             </tr>
             </tbody>
@@ -94,6 +94,7 @@
             });
         </script>
     </div>
+    <label wicket:id="student-view-hidden" hidden id="studentView" aria-hidden="true"/>
 </wicket:extend>
 </body>
 </html>
