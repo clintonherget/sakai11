@@ -43,6 +43,7 @@ public class StatisticsPanel extends BasePanel {
     private                 Long                    previousEventId;
 
     private                 AttendanceStats         stats;
+    private WebMarkupContainer table;
 
     public StatisticsPanel(String id, String fromPage, AttendanceEvent aE) {
         super(id);
@@ -60,7 +61,20 @@ public class StatisticsPanel extends BasePanel {
     private void init(String fromPage) {
         setOutputMarkupPlaceholderTag(true);
         this.fromPage = fromPage;
-        add(createTable());
+    }
+
+    @Override
+    protected void onBeforeRender() {
+        WebMarkupContainer newTable = createTable();
+
+        if (table == null) {
+            table = newTable;
+            add(table);
+        } else {
+            replace(newTable);
+        }
+
+        super.onBeforeRender();
     }
 
     private WebMarkupContainer createTable() {
