@@ -85,6 +85,9 @@ public class EventView extends BasePage {
                             PrintPanel              printPanel;
                             WebMarkupContainer      printContainer;
 
+    @Getter
+    private                 StatisticsPanel         statisticsPanel;
+
     private AttendanceModalWindow showCommentWindow;
 
     public EventView(Long id, String fromPage) {
@@ -132,7 +135,7 @@ public class EventView extends BasePage {
         createHeader();
         createTable();
 
-        createStatsTable();
+        statisticsPanel = createStatsTable();
 
         add(new Label("event-name", attendanceEvent.getName()));
         add(new DateLabel("event-date", Model.of(attendanceEvent.getStartDateTime()), new StyleDateConverter("MM", true) {
@@ -195,10 +198,12 @@ public class EventView extends BasePage {
         add(showCommentWindow);
     }
 
-    private void createStatsTable() {
+    private StatisticsPanel createStatsTable() {
         StatisticsPanel infoContainer = new StatisticsPanel("statistics", returnPage, attendanceEvent);
 
         add(infoContainer);
+
+        return infoContainer;
     }
 
     private void createHeader() {
