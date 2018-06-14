@@ -417,10 +417,14 @@ div.attendanceBreadcrumbs span {
 }
 
 p.setAll {
-    font-size: 1.2em;
-    color: #555;
-    font-weight: bold;
     margin-top: 0;
+    padding: 2px 5px;
+}
+
+.set-all-section {
+    background-color: #e0ebf7;
+    border-left: 5px solid #004b8d;
+    padding: 0px;
 }
 
 div.printContainer {
