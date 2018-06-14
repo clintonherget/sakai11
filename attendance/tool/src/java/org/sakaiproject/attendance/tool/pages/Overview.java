@@ -21,6 +21,8 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.datetime.StyleDateConverter;
+import org.apache.wicket.datetime.markup.html.basic.DateLabel;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -40,8 +42,11 @@ import org.sakaiproject.attendance.tool.dataproviders.AttendanceStatusProvider;
 import org.sakaiproject.attendance.tool.dataproviders.EventDataProvider;
 import org.sakaiproject.attendance.tool.panels.EventInputPanel;
 import org.sakaiproject.attendance.tool.panels.PrintPanel;
+import org.sakaiproject.time.cover.TimeService;
 
+import java.text.DateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * The overview page which lists AttendanceEvents and basic statistics of each
@@ -139,7 +144,13 @@ public class Overview extends BasePage {
 				eventLink.add(new Label("event-name", name));
 
 				item.add(eventLink);
-				item.add(new Label("event-date", modelObject.getStartDateTime()));
+				item.add(new DateLabel("event-date", Model.of(modelObject.getStartDateTime()), new StyleDateConverter("MM", true) {
+					private static final long serialVersionUID = 1L;
+					@Override
+					protected TimeZone getClientTimeZone() {
+						return TimeService.getLocalTimeZone();
+					}
+				}));
 
 				DataView<AttendanceStatus> activeStatusStats = new DataView<AttendanceStatus>("active-status-stats", attendanceStatusProvider) {
 					@Override
