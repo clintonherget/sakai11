@@ -100,7 +100,7 @@ public class AttendanceStatCalc {
                             userStat.setLate(userRecordStats[3]);
                             userStat.setLeftEarly(userRecordStats[4]);
 
-                            dao.updateAttendanceUserStats(userStat);
+                            dao.updateAttendanceUserStats(Arrays.asList(new AttendanceUserStats[] { userStat }));
                         }
                     }
                 } else {

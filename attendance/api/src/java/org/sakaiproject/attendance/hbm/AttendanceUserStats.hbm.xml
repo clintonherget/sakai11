@@ -45,6 +45,10 @@
         <![CDATA[FROM AttendanceUserStats aUS JOIN FETCH aUS.attendanceSite WHERE aUS.attendanceSite = :attendanceSite AND aUS.userID = :userID]]>
     </query>
 
+    <query name="getAllAttendanceUserStats">
+        <![CDATA[FROM AttendanceUserStats aUS JOIN FETCH aUS.attendanceSite WHERE aUS.attendanceSite = :attendanceSite AND aUS.userID in (:userIDs)]]>
+    </query>
+
     <query name="getAttendanceUserStatsForSite">
         <![CDATA[FROM AttendanceUserStats aUS JOIN FETCH aUS.attendanceSite WHERE aUS.attendanceSite = :attendanceSite]]>
     </query>

@@ -23,12 +23,20 @@ import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.ResourceModel;
+import org.sakaiproject.attendance.model.AttendanceEvent;
 import org.sakaiproject.attendance.model.AttendanceRecord;
+import org.sakaiproject.attendance.model.AttendanceSite;
+import org.sakaiproject.attendance.tool.actions.SetAttendanceStatusAction;
 import org.sakaiproject.attendance.tool.dataproviders.AttendanceRecordProvider;
+import org.sakaiproject.attendance.tool.dataproviders.AttendanceStatusProvider;
+import org.sakaiproject.attendance.tool.actions.ViewCommentAction;
+import org.sakaiproject.attendance.tool.component.AttendanceTable;
+import org.sakaiproject.attendance.tool.models.AttendanceModalWindow;
 import org.sakaiproject.attendance.tool.panels.AttendanceGradePanel;
 import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormDataPanel;
 import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormHeaderPanel;
 import org.sakaiproject.attendance.tool.panels.StatisticsPanel;
+import java.util.Arrays;
 
 /**
  * StudentView is the view of a single user (a student)'s AttendanceRecords
@@ -42,6 +50,8 @@ public class StudentView extends BasePage {
     private                 Long        previousEventId;
     private                 boolean     isStudent           = false;
     private                 String      returnPage          = "";
+
+    private AttendanceModalWindow showCommentWindow;
 
     public StudentView() {
         this.studentId = sakaiProxy.getCurrentUserId();
@@ -86,6 +96,9 @@ public class StudentView extends BasePage {
         add(createStatistics());
         add(createStudentViewHeader());
         add(createTable());
+
+        showCommentWindow = new AttendanceModalWindow("showCommentWindow");
+        add(showCommentWindow);
     }
 
     private WebMarkupContainer createHeader() {
@@ -192,15 +205,35 @@ public class StudentView extends BasePage {
         } else {
             studentViewData.add(new Label("take-attendance-header", getString("attendance.student.view.attendance")));
         }
-        studentViewData.add(new AttendanceRecordFormHeaderPanel("header"));
-        studentViewData.add(new Label("event-name-header", new ResourceModel("attendance.record.form.header.event")));
-        studentViewData.add(new Label("event-date-header", new ResourceModel("attendance.record.form.header.date")));
-        studentViewData.add(createData());
+
+        AttendanceTable table = new AttendanceTable("takeAttendanceTable");
+        table.addEventListener("viewComment", new ViewCommentAction());
+
+        if (!isStudent) {
+            table.addEventListener("setStatus", new SetAttendanceStatusAction());
+        }
+
+        table.add(new AttendanceRecordFormHeaderPanel("header"));
+        table.add(new Label("event-name-header", new ResourceModel("attendance.record.form.header.event")));
+        table.add(new Label("event-date-header", new ResourceModel("attendance.record.form.header.date")));
+        table.add(createData());
+
+        studentViewData.add(table);
 
         return studentViewData;
     }
 
     private DataView<AttendanceRecord> createData(){
+        final AttendanceSite attendanceSite = attendanceLogic.getCurrentAttendanceSite();
+
+        // Ensure we don't have any missing DB rows
+        for (AttendanceEvent aE : attendanceLogic.getAttendanceEventsForSite(attendanceSite)) {
+            if (aE.getRecords().stream().noneMatch(record -> record.getUserID().equals(studentId))) {
+                attendanceLogic.updateMissingRecordsForEvent(aE, attendanceSite.getDefaultStatus(), Arrays.asList(new String[] { studentId }));
+            }
+        }
+
+        final AttendanceStatusProvider attendanceStatusProvider = new AttendanceStatusProvider(attendanceSite, AttendanceStatusProvider.ACTIVE);
         DataView<AttendanceRecord> dataView = new DataView<AttendanceRecord>("records", new AttendanceRecordProvider(this.studentId)) {
             @Override
             protected void populateItem(final Item<AttendanceRecord> item) {
@@ -216,10 +249,14 @@ public class StudentView extends BasePage {
                 }
                 item.add(eventLink);
                 item.add(new Label("event-date", item.getModelObject().getAttendanceEvent().getStartDateTime()));
-                item.add(new AttendanceRecordFormDataPanel("record", item.getModel(), returnPage, feedbackPanel));
+                item.add(new AttendanceRecordFormDataPanel("record", attendanceSite, attendanceStatusProvider, item.getModel(), returnPage, feedbackPanel));
             }
         };
 
         return dataView;
+    }
+
+    public AttendanceModalWindow getShowCommentWindow() {
+        return this.showCommentWindow;
     }
 }

@@ -35,6 +35,7 @@ import org.sakaiproject.user.api.*;
 import org.sakaiproject.util.ResourceLoader;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of our SakaiProxy API
@@ -359,6 +360,13 @@ public class SakaiProxyImpl implements SakaiProxy {
 	/**
 	 * {@inheritDoc}
 	 */
+	public List<User> getUsers(Collection<String> userIds) {
+		return userDirectoryService.getUsers(userIds);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public String getGroupTitleForCurrentSite(String groupId) {
 		return getGroupTitle(getCurrentSiteId(), groupId);
 	}
@@ -394,20 +402,25 @@ public class SakaiProxyImpl implements SakaiProxy {
 	}
 
 	private List<User> getUserListForMemberSetHelper(Set<Member> memberSet, String maintainRole) {
-		List<User> userList = new ArrayList<User>();
-		if(memberSet != null) {
-			for(Member member : memberSet) {
-				if(maintainRole != null && !maintainRole.equals(member.getRole().getId()) && member.isActive()) {
-					try {
-						User student = userDirectoryService.getUser(member.getUserId());
-						userList.add(student);
-					} catch (UserNotDefinedException e) {
-						log.error("Unable to get user " + member.getUserId() + " " + e);
-					}
-				}
-			}
+		if (memberSet == null || maintainRole == null) {
+			return Collections.emptyList();
 		}
-		return userList;
+
+		List<String> userIds = memberSet.stream()
+			.filter(member -> member.isActive() && !maintainRole.equals(member.getRole().getId()))
+			.map(member -> member.getUserId())
+			.collect(Collectors.toList());
+
+		List<User> foundUsers = getUsers(userIds);
+
+		// Report any that we didn't manage to get
+		userIds.removeAll(foundUsers.stream().map(user -> user.getId()).collect(Collectors.toList()));
+
+		for (String missedUser : userIds) {
+			log.error("Unable to get user " + missedUser);
+		}
+
+		return foundUsers;
 	}
 
 	@Getter @Setter

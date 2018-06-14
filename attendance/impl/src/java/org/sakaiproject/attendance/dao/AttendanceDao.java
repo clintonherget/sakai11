@@ -21,6 +21,7 @@ import org.sakaiproject.attendance.model.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * DAO interface for the Attendance Tool
@@ -206,6 +207,14 @@ public interface AttendanceDao {
 	boolean updateAttendanceGrade(AttendanceGrade aG);
 
 	/**
+	 * Get the AttendanceUserStats for a set of Users and Site
+	 * @param userIds
+	 * @param aS
+	 * @return
+	 */
+	Map<String, AttendanceUserStats> getAllAttendanceUserStats(AttendanceSite aS, List<String> userIds);
+
+	/**
 	 * Get the AttendanceUserStats for a User and Site
 	 * @param userId
 	 * @param aS
@@ -225,7 +234,7 @@ public interface AttendanceDao {
 	 * @param aUS, the AttendanceUserStats to update
 	 * @return success or failure of the operation
 	 */
-	boolean updateAttendanceUserStats(AttendanceUserStats aUS);
+	boolean updateAttendanceUserStats(List<AttendanceUserStats> attendanceUserStats);
 
 	/**
 	 * Get the AttendanceItemStats for an AttendanceEvent
@@ -304,6 +313,7 @@ public interface AttendanceDao {
 	String QUERY_GET_ATTENDANCE_GRADE = "getAttendanceGrade";
 
 	String QUERY_GET_ATTENDANCE_USER_STATS = "getAttendanceUserStats";
+	String QUERY_GET_ALL_ATTENDANCE_USER_STATS = "getAllAttendanceUserStats";
 	String QUERY_GET_ATTENDANCE_USER_STATS_FOR_SITE = "getAttendanceUserStatsForSite";
 	String QUERY_GET_ATTENDANCE_ITEM_STATS = "getAttendanceItemStats";
 
@@ -318,6 +328,7 @@ public interface AttendanceDao {
 	String ID = "id";
 	String IDS = "ids";
 	String USER_ID = "userID";
+	String USER_IDS = "userIDs";
 	String SITE_ID = "siteID";
 	String ATTENDANCE_SITE = "attendanceSite";
 	String ATTENDANCE_EVENT = "attendanceEvent";

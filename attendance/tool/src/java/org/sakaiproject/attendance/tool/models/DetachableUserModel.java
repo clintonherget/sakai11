@@ -41,6 +41,9 @@ public class DetachableUserModel extends LoadableDetachableModel<User> {
      */
     public DetachableUserModel(User user){
         this.id = user.getId();
+
+        // Skip load()'ing this model if we already have it...
+        setObject(user);
     }
 
     /**

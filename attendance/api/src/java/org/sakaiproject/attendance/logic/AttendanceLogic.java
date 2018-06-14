@@ -109,21 +109,13 @@ public interface AttendanceLogic {
 	AttendanceRecord getAttendanceRecord(Long id);
 
 	/**
-	 * get AttendanceRecords For a User in the current site
+	 * get AttendanceRecords for Users in AttendanceSite
 	 *
-	 * @param id, the ID of the user
-	 * @return a List of AttendanceRecords
-     */
-	List<AttendanceRecord> getAttendanceRecordsForUser(String id);
-
-	/**
-	 * get AttendanceRecords for User in AttendanceSite
-	 *
-	 * @param id, the User ID
+	 * @param userIds, a list of User ID
 	 * @param aS, the AttendanceSite
-	 * @return a List of AttendanceRecords for supplied user
+	 * @return a map of of AttendanceRecords for supplied users
 	 */
-	List<AttendanceRecord> getAttendanceRecordsForUser(String id, AttendanceSite aS);
+	Map<String, List<AttendanceRecord>> getAttendanceRecordsForUsers(List<String> userIds, AttendanceSite aS);
 
 	/**
 	 * get the active statuses for the current site

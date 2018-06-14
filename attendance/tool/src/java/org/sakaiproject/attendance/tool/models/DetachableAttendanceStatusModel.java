@@ -41,6 +41,9 @@ public class DetachableAttendanceStatusModel extends LoadableDetachableModel<Att
      */
     public DetachableAttendanceStatusModel(AttendanceStatus t){
         this.id = t.getId();
+
+        // Skip load()'ing this model if we already have it...
+        setObject(t);
     }
 
     /**

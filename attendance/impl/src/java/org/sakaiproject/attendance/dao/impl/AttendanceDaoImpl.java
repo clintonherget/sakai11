@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.type.LongType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.StringType;
@@ -33,6 +34,8 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -228,12 +231,26 @@ public class AttendanceDaoImpl extends HibernateDaoSupport implements Attendance
 	 * {@inheritDoc}
 	 */
 	public void updateAttendanceRecords(List<AttendanceRecord> aRs) {
-		for(AttendanceRecord aR : aRs) {
-			try {
-				getHibernateTemplate().saveOrUpdate(aR);
-				log.debug("save attendanceRecord id: " + aR.getId());
-			} catch (Exception e) {
-				log.error("update attendanceRecords failed.", e);
+		Session session = null;
+		Transaction transaction = null;
+
+		try {
+			session = getSessionFactory().openSession();
+			transaction = session.beginTransaction();
+
+			for(AttendanceRecord aR : aRs) {
+				try {
+					getHibernateTemplate().saveOrUpdate(aR);
+					log.debug("save attendanceRecord id: " + aR.getId());
+				} catch (Exception e) {
+					log.error("update attendanceRecords failed.", e);
+				}
+			}
+
+			transaction.commit();
+		} finally {
+			if (session != null) {
+				session.close();
 			}
 		}
 	}
@@ -415,6 +432,30 @@ public class AttendanceDaoImpl extends HibernateDaoSupport implements Attendance
 	/**
 	 * {@inheritDoc}
 	 */
+	public Map<String, AttendanceUserStats> getAllAttendanceUserStats(AttendanceSite aS, List<String> userIds) {
+		try{
+			HibernateCallback hcb = new HibernateCallback() {
+				@Override
+				public Object doInHibernate(Session session) throws HibernateException, SQLException {
+					Query q = session.getNamedQuery(QUERY_GET_ALL_ATTENDANCE_USER_STATS);
+					q.setParameter(ATTENDANCE_SITE, aS, new ManyToOneType(null, "org.sakaiproject.attendance.model.AttendanceSite"));
+					q.setParameterList(USER_IDS, userIds);
+					return q.list();
+				}
+			};
+
+			return ((List<AttendanceUserStats>) getHibernateTemplate().execute(hcb))
+				.stream()
+				.collect(Collectors.toMap(AttendanceUserStats::getUserID, stats -> stats));
+		} catch (DataAccessException e) {
+			log.error("DataAccessException getting AttendanceUserStats for Users '" + userIds + "' and Site: '" + aS.getSiteID() + "'.", e);
+			return null;
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public AttendanceUserStats getAttendanceUserStats(final String userId, final AttendanceSite aS) {
 		log.debug("getAttendanceUserStats for User '" + userId + "' and Site: '" + aS.getSiteID() + "'.");
 
@@ -463,16 +504,34 @@ public class AttendanceDaoImpl extends HibernateDaoSupport implements Attendance
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean updateAttendanceUserStats(AttendanceUserStats aUS) {
-		log.debug("updateAttendanceUserStats for User '" + aUS.getUserID() + "' and Site: '" + aUS.getAttendanceSite().getSiteID() + "'.");
+	public boolean updateAttendanceUserStats(List<AttendanceUserStats> attendanceUserStats) {
+		Session session = null;
+		Transaction transaction = null;
 
 		try {
-			getHibernateTemplate().saveOrUpdate(aUS);
-			return true;
-		} catch (DataAccessException e) {
-			log.error("updateAttendanceUserStats, id: '" + aUS.getId() + "' failed.", e);
-			return false;
+			session = getSessionFactory().openSession();
+			transaction = session.beginTransaction();
+
+			for (AttendanceUserStats aUS : attendanceUserStats) {
+				log.debug("updateAttendanceUserStats for User '" + aUS.getUserID() + "' and Site: '" + aUS.getAttendanceSite().getSiteID() + "'.");
+
+				try {
+					getHibernateTemplate().saveOrUpdate(aUS);
+				} catch (DataAccessException e) {
+					transaction.rollback();
+					log.error("updateAttendanceUserStats, id: '" + aUS.getId() + "' failed.", e);
+					return false;
+				}
+			}
+
+			transaction.commit();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
 		}
+
+		return true;
 	}
 
 	/**
