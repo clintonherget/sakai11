@@ -110,9 +110,6 @@ public class StatisticsPanel extends BasePanel {
         };
         infoContainer.add(activeStatusStats);
 
-
-        infoContainer.add(new Label("info", new ResourceModel("attendance.statistics.info")));
-
         return infoContainer;
     }
 
