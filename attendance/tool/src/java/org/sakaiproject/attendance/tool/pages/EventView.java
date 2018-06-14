@@ -34,15 +34,34 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.sakaiproject.attendance.model.AttendanceEvent;
 import org.sakaiproject.attendance.model.AttendanceRecord;
+import org.sakaiproject.attendance.model.AttendanceSite;
 import org.sakaiproject.attendance.model.AttendanceStatus;
 import org.sakaiproject.attendance.model.Status;
+import org.sakaiproject.attendance.tool.actions.SetAttendanceStatusAction;
+import org.sakaiproject.attendance.tool.actions.ViewCommentAction;
+import org.sakaiproject.attendance.tool.component.AttendanceTable;
 import org.sakaiproject.attendance.tool.dataproviders.AttendanceRecordProvider;
+import org.sakaiproject.attendance.tool.dataproviders.AttendanceStatusProvider;
+import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormDataPanel;
+import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormHeaderPanel;
+import org.sakaiproject.attendance.tool.panels.PrintPanel;
+import org.sakaiproject.attendance.tool.panels.StatisticsPanel;
+import org.sakaiproject.attendance.tool.models.AttendanceModalWindow;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormDataPanel;
 import org.sakaiproject.attendance.tool.panels.AttendanceRecordFormHeaderPanel;
 import org.sakaiproject.attendance.tool.panels.PrintPanel;
 import org.sakaiproject.attendance.tool.panels.StatisticsPanel;
 
-import java.util.*;
 
 /**
  * EventView is a view into an AttendanceEvent
@@ -66,6 +85,8 @@ public class EventView extends BasePage {
 
                             PrintPanel              printPanel;
                             WebMarkupContainer      printContainer;
+
+    private AttendanceModalWindow showCommentWindow;
 
     public EventView(Long id, String fromPage) {
         super();
@@ -164,6 +185,9 @@ public class EventView extends BasePage {
         printContainer.add(AttributeModifier.append("class", "printHidden"));
 
         add(printContainer);
+
+        showCommentWindow = new AttendanceModalWindow("showCommentWindow");
+        add(showCommentWindow);
     }
 
     private void createStatsTable() {
@@ -187,11 +211,10 @@ public class EventView extends BasePage {
     }
 
     private void createTable() {
+        final AttendanceSite attendanceSite = attendanceLogic.getCurrentAttendanceSite();
+        final AttendanceStatusProvider attendanceStatusProvider = new AttendanceStatusProvider(attendanceSite, AttendanceStatusProvider.ACTIVE);
+
         Set<AttendanceRecord> records = this.attendanceEvent.getRecords();
-
-        add(new Label("student-name", new ResourceModel("attendance.event.view.student.name")));
-
-        add(new AttendanceRecordFormHeaderPanel("record-header"));
 
         // Generate records if none exist
         if(records == null || records.isEmpty()) {
@@ -247,7 +270,16 @@ public class EventView extends BasePage {
         filterForm.add(groupChoice);
         filterForm.add(new Label("group-choice-label", new ResourceModel("attendance.event.view.filter")));
 
-        add(new DataView<AttendanceRecord>("records", new AttendanceRecordProvider(this.attendanceEvent, selectedGroup)) {
+
+        AttendanceTable topTable = new AttendanceTable("takeAttendanceTable");
+
+        topTable.addEventListener("setStatus", new SetAttendanceStatusAction());
+        topTable.addEventListener("viewComment", new ViewCommentAction());
+
+        topTable.add(new Label("student-name", new ResourceModel("attendance.event.view.student.name")));
+        topTable.add(new AttendanceRecordFormHeaderPanel("record-header"));
+
+        topTable.add(new DataView<AttendanceRecord>("records", new AttendanceRecordProvider(this.attendanceEvent, selectedGroup)) {
             @Override
             protected void populateItem(final Item<AttendanceRecord> item) {
                 final String stuId = item.getModelObject().getUserID();
@@ -263,8 +295,14 @@ public class EventView extends BasePage {
                 };
                 studentLink.add(stuName);
                 item.add(studentLink);
-                item.add(new AttendanceRecordFormDataPanel("record", item.getModel(), returnPage, feedbackPanel));
+                item.add(new AttendanceRecordFormDataPanel("record", attendanceSite, attendanceStatusProvider, item.getModel(), returnPage, feedbackPanel));
             }
         });
+
+        add(topTable);
+    }
+
+    public AttendanceModalWindow getShowCommentWindow() {
+        return this.showCommentWindow;
     }
 }

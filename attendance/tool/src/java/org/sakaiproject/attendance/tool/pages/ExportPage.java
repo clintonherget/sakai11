@@ -46,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -219,6 +220,10 @@ public class ExportPage extends BasePage{
                     }
                 }
             });
+
+            List<String> userIds = finalUserStatsList.stream().map(u -> u.getUserID()).collect(Collectors.toList());
+            Map<String, List<AttendanceRecord>> attendanceRecordsByUserID = attendanceLogic.getAttendanceRecordsForUsers(userIds, attendanceSite);
+
             eventCount = attendanceEventlist.size();
             studentCount = finalUserStatsList.size();
             header.add("StudentID");
@@ -260,7 +265,7 @@ public class ExportPage extends BasePage{
             final int[] cellCount = {0};
             for(int x = 0; x < studentCount; x++) {
                 rowCounter = 0;
-                List<AttendanceRecord> attendanceRecordlist = attendanceLogic.getAttendanceRecordsForUser(finalUserStatsList.get(x).getUserID().toString());
+                List<AttendanceRecord> attendanceRecordlist = attendanceRecordsByUserID.get(finalUserStatsList.get(x).getUserID());
                 HSSFRow row = mainSheet.createRow(rowCount[0]);
                 final User user = sakaiProxy.getUser(finalUserStatsList.get(x).getUserID());
                 cellCount[0] = 0;
@@ -389,7 +394,6 @@ public class ExportPage extends BasePage{
             int eventCounter = 3;
             boolean hasComments = false;
             boolean hasCells = false;
-            boolean recordExists = false;
             boolean eventExists;
             boolean commentsChanged = false;
             boolean hasRows = true;
@@ -451,6 +455,11 @@ public class ExportPage extends BasePage{
                         hasRows = false;
                     }
                     if(hasRows){
+                        List<AttendanceEvent> siteEventList = new ArrayList<>(attendanceLogic.getAttendanceEventsForCurrentSite());
+
+                        // Populated once we've read the first row.
+                        Map<Long, List<AttendanceRecord>> attendanceRecordsByEventId = null;
+
                         rowCounter = 0;
                         for(int r =0; r <= studentCount; r++) {
                             if (rows.hasNext()) {
@@ -510,8 +519,12 @@ public class ExportPage extends BasePage{
                                             } else {
                                                 eventDateList.add(dateHolder);
                                             }
+                                        }
 
-
+                                        attendanceRecordsByEventId = new HashMap<>();
+                                        for (Long attendanceEventId : idTracker) {
+                                            attendanceRecordsByEventId.put(attendanceEventId,
+                                                                           new ArrayList<AttendanceRecord>((attendanceLogic.getAttendanceEvent(attendanceEventId)).getRecords()));
                                         }
                                     }
                                     if ((rowCounter > 0) && (hasCells)) {
@@ -519,34 +532,34 @@ public class ExportPage extends BasePage{
                                         String userName = String.valueOf(data.get(1));
                                         String userEID = String.valueOf(data.get(0));
                                         ////List<AttendanceRecord> attendanceRecordlist = attendanceLogic.getAttendanceRecordsForUser(userStatsList.get(rowCounter - 1).getUserID().toString());
-                                        List<AttendanceEvent> siteEventList = new ArrayList<AttendanceEvent>(attendanceLogic.getAttendanceEventsForCurrentSite());
                                         User userGetter;
 
+                                        AttendanceEvent attendanceEvent = null;
+
                                         for (int q = 0; q < eventCounter; q++) {
-                                            recordExists = false;
                                             eventExists = false;
                                             for (int i = 0; i < siteEventList.size(); i++) {
                                                 if (siteEventList.get(i).getId().equals(idTracker.get(q))) {
+                                                    attendanceEvent = siteEventList.get(i);
                                                     eventExists = true;
                                                 }
                                             }
 
                                             if (eventExists) {
-                                                List<AttendanceRecord> records = new ArrayList<AttendanceRecord>((attendanceLogic.getAttendanceEvent(idTracker.get(q))).getRecords());
+                                                List<AttendanceRecord> records = attendanceRecordsByEventId.get(idTracker.get(q));
+                                                AttendanceRecord aR = null;
+
                                                 for (int s = 0; s < records.size(); s++) {
                                                     userGetter = sakaiProxy.getUser(records.get(s).getUserID());
                                                     if (userEID.equals(userGetter.getEid())) {
-                                                        indexCounter = s;
-                                                        recordExists = true;
+                                                        aR = records.get(s);
+                                                        break;
                                                     }
                                                 }
-                                                AttendanceRecord aR;
-                                                if (recordExists) {
-                                                    aR = attendanceLogic.getAttendanceRecord(records.get(indexCounter).getId());
-                                                } else {
+                                                if (aR == null) {
                                                     missingNames.add(userEID);
                                                     userGetter = sakaiProxy.getUserByEID(userEID);
-                                                    aR = new AttendanceRecord((attendanceLogic.getAttendanceEvent(idTracker.get(q))), userGetter.getId(), Status.UNKNOWN);
+                                                    aR = new AttendanceRecord(attendanceEvent, userGetter.getId(), Status.UNKNOWN);
                                                     missingNames.clear();
                                                 }
                                                 if (hasComments) {
@@ -586,7 +599,7 @@ public class ExportPage extends BasePage{
                                                 if (aR.getStatus().equals(holder) && (oldComment.equals(aR.getComment()))) {
                                                 } else {
                                                     ICL = new ImportConfirmList();
-                                                    ICL.setAttendanceEvent(attendanceLogic.getAttendanceEvent(idTracker.get(q)));
+                                                    ICL.setAttendanceEvent(attendanceEvent);
                                                     ICL.setAttendanceRecord(aR);
                                                     ICL.setAttendanceSite(attendanceSite);
                                                     ICL.setComment(comment);

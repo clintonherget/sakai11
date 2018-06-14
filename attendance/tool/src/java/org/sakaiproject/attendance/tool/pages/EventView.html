@@ -50,7 +50,7 @@
             <span wicket:id="group-choice-label" /> <select wicket:id="group-choice" />
         </form>
 
-        <table id="takeAttendanceTable" class="takeAttendanceTable">
+        <table wicket:id="takeAttendanceTable" id="takeAttendanceTable" class="takeAttendanceTable" style="display: none;">
             <thead>
             <tr class="div-table-row">
                 <th class="takeAttendanceNameHeader">
@@ -75,16 +75,20 @@
 
         <script type="text/javascript" src="javascript/jquery.tablesorter.min.js"></script>
         <script type="text/javascript">
-            $("#takeAttendanceTable").tablesorter({
-                sortList: [[0,0]],
-                headers: {
-                    1: {
-                        sorter: false
-                    }
-                }
-            });
+         $("#takeAttendanceTable").tablesorter({
+             sortList: [[0,0]],
+             headers: {
+                 1: {
+                     sorter: false
+                 }
+             }
+         }).bind("sortEnd",function(e, t) {
+             $('#takeAttendanceTable').show();
+         });
         </script>
     </div>
+
+    <div wicket:id="showCommentWindow" />
 
     <div id="printContainer" class="printContainer" wicket:id="print-container">
         <span wicket:id="print-panel"/>

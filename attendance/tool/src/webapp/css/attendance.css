@@ -147,7 +147,7 @@ table.overviewTable thead tr .headerSortDown, table.itemListTable thead tr .head
     background-image: url(../images/desc.gif);
 }
 
-table.itemListTable, table.eventViewTable, table.takeAttendanceTable, div.eventFormContainer, form.addEditForm, .addComment h3, form.takeAttendanceNowForm, td.overviewGradeCol form {
+table.itemListTable, table.eventViewTable, table.takeAttendanceTable, div.eventFormContainer, form.addEditForm, form.takeAttendanceNowForm, td.overviewGradeCol form {
     margin: 0;
 }
 
@@ -366,7 +366,7 @@ td.noEventsCol, td.noStudentsCol{
     color: #555;
 }
 
-table.addEditFormTable, div.info, .addComment textarea {
+table.addEditFormTable, div.info {
     margin-bottom: 1em;
 }
 
@@ -421,21 +421,6 @@ p.setAll {
     color: #555;
     font-weight: bold;
     margin-top: 0;
-}
-
-.addComment {
-    position:absolute;
-    top:-130px;
-    left:-200px;
-    background-color:#fff;
-    border: 1px solid #555;
-    width:200px;
-    height:auto;
-    padding:1em;
-    text-align: left;
-    -webkit-box-shadow: 0 8px 6px -6px black;
-    -moz-box-shadow: 0 8px 6px -6px black;
-    box-shadow: 0 8px 6px -6px black;
 }
 
 div.printContainer {
@@ -628,22 +613,22 @@ form.gradeSettingsForm {
     float: left;
 }
 
-.PRESENT {
+.present.active {
     background-color: #DFF0D8;
     border: 1px solid green;
 }
 
-.UNEXCUSED_ABSENCE {
+.unexcused_absence.active {
     background-color: #FFBBBB;
     border: 1px solid red;
 }
 
-.EXCUSED_ABSENCE {
+.excused_absence.active {
     background-color: #CCCCCC;
     border: 1px solid gray;
 }
 
-.LATE, .LEFT_EARLY {
+.late.active, .left_early.active {
     background-color: #fcf8a5;
     border: 1px solid goldenrod;
 }
@@ -911,4 +896,12 @@ span.yui-skin-sam img {
 .boldSpace {
     font-weight:bold;
     padding-right: 4px;
+}
+
+.commentForm textarea {
+  width: 100%;
+}
+
+.commentToggle.has-comment .fa:before {
+  content: '\f075' !important;
 }

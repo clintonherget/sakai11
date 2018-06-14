@@ -22,10 +22,13 @@ import org.sakaiproject.attendance.model.AttendanceEvent;
 import org.sakaiproject.attendance.model.AttendanceRecord;
 import org.sakaiproject.attendance.tool.models.DetachableAttendanceRecordModel;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
 
 /**
  * An AttendanceRecord Provider
@@ -45,10 +48,11 @@ public class AttendanceRecordProvider extends BaseProvider<AttendanceRecord> {
      * @param id, the User ID
      */
     public AttendanceRecordProvider(String id) {
-        List<AttendanceRecord> records = attendanceLogic.getAttendanceRecordsForUser(id);
+        Map<String, List<AttendanceRecord>> records = attendanceLogic.getAttendanceRecordsForUsers(Arrays.asList(new String[] { id }),
+                                                                                                   attendanceLogic.getCurrentAttendanceSite());
         if(!records.isEmpty()) {
             // don't think records will ever be empty
-            this.list = records;
+            this.list = records.values().iterator().next();
         }
     }
 
