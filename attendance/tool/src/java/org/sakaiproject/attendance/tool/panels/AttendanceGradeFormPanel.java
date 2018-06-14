@@ -205,6 +205,7 @@ public class AttendanceGradeFormPanel extends BasePanel {
             }
         });
         useAutoGradingGroup.setRenderBodyOnly(false);
+        useAutoGradingGroup.setVisible(useAutoGrading.getObject()); // NYU hide this feature (unless already true)
         grading.add(useAutoGradingGroup);
 
         Radio<Boolean> manualGrading = new Radio<>("manual-grading", Model.of(Boolean.FALSE));
