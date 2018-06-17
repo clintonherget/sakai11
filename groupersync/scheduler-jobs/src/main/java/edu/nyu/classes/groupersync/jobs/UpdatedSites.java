@@ -24,6 +24,11 @@ class UpdatedSites {
     }
 
     private String extractSiteId(String s) {
+        if (s.startsWith("~") || s.startsWith("/site/~")) {
+            // Not interested in people's workspaces
+            return null;
+        }
+
         Matcher m = SITE_ID_PATTERN.matcher(s);
         String result = null;
 
@@ -38,12 +43,7 @@ class UpdatedSites {
         }
 
         if (result != null) {
-            if (result.startsWith("~")) {
-                // Not interested in people's workspaces
-                return null;
-            } else {
-                return result;
-            }
+            return result;
         } else {
             log.error("Could not get a site ID out of: " + s);
             return null;
