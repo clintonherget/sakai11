@@ -134,13 +134,14 @@ public class GrouperSyncJob implements StatefulJob {
             }
 
 
-            Set<String> processedSites = new HashSet<String>();
+            Set<String> processedSites = new HashSet<>();
             UpdatedSites updatedSites = new UpdatedSites(sqlService);
 
             Date now = new Date();
             Date previousTime = grouper.getLastRunDate();
 
-            log.info("Running GrouperSyncJob (last run time was " + previousTime + ")");
+            log.info("Running GrouperSyncJob (last successful run time was " + previousTime + ")");
+            long failureCount = 0;
 
             for (UpdatedSite update : updatedSites.listSince(previousTime)) {
                 if (processedSites.contains(update.getSiteId())) {
@@ -148,17 +149,27 @@ public class GrouperSyncJob implements StatefulJob {
                     continue;
                 }
 
-                log.info("Syncing site: " + update.getSiteId());
-                syncGroups(update, grouper, cms);
-                log.info("Syncing site completed: " + update.getSiteId());
+                try {
+                    log.info("Syncing site: " + update.getSiteId());
+                    syncGroups(update, grouper, cms);
+                    log.info("Syncing site completed: " + update.getSiteId());
 
-                processedSites.add(update.getSiteId());
+                    processedSites.add(update.getSiteId());
+                } catch (RuntimeException e) {
+                    failureCount++;
+                    log.error("Caught a runtime exception while syncing: " + update.getSiteId());
+                    e.printStackTrace();
+                }
             }
 
             // Find and delete any groups that were removed on the Sakai side
             log.info("Finding and removing detached groups");
             grouper.deleteDetachedGroups();
             log.info("Detached groups run finished");
+
+            if (failureCount > 0) {
+                throw new GrouperSyncException(String.format("Failed to sync %d sites", failureCount));
+            }
 
             grouper.setLastRunDate(now);
 
