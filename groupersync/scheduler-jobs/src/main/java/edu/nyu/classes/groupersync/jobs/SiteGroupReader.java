@@ -1,8 +1,12 @@
 package edu.nyu.classes.groupersync.jobs;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.nyu.classes.groupersync.api.UserWithRole;
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.Member;
+import org.sakaiproject.coursemanagement.api.exception.IdNotFoundException;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Site;
@@ -16,7 +20,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+
 class SiteGroupReader {
+
+    private static final Log log = LogFactory.getLog(SiteGroupReader.class);
 
     private final String siteId;
     private final CourseManagementService cms;
@@ -70,23 +77,28 @@ class SiteGroupReader {
                 HashSet<String> seenUsers = new HashSet<String>();
 
                 for (String providerId : provider.split("\\+")) {
-                    for (org.sakaiproject.coursemanagement.api.Membership m : cms.getSectionMemberships(providerId)) {
-                        if (seenUsers.contains(m.getUserId()) || inactiveUsers.contains(m.getUserId())) {
-                            continue;
+                    try {
+                        for (org.sakaiproject.coursemanagement.api.Membership m : cms.getSectionMemberships(providerId)) {
+                            if (seenUsers.contains(m.getUserId()) || inactiveUsers.contains(m.getUserId())) {
+                                continue;
+                            }
+
+                            String userId = m.getUserId();
+                            String role = m.getRole();
+
+                            if (rolesOfActiveUsers.containsKey(userId)) {
+                                // We'll give priority to the role set manually
+                                // within Sakai, just in case the user has had their
+                                // SIS role overridden.
+                                role = rolesOfActiveUsers.get(userId);
+                            }
+
+                            members.add(new UserWithRole(userId, role));
+                            seenUsers.add(userId);
                         }
-
-                        String userId = m.getUserId();
-                        String role = m.getRole();
-
-                        if (rolesOfActiveUsers.containsKey(userId)) {
-                            // We'll give priority to the role set manually
-                            // within Sakai, just in case the user has had their
-                            // SIS role overridden.
-                            role = rolesOfActiveUsers.get(userId);
-                        }
-
-                        members.add(new UserWithRole(userId, role));
-                        seenUsers.add(userId);
+                    } catch (IdNotFoundException e) {
+                        log.error("Failed to fetch CM Section corresponding to provider: " + providerId,
+                                  e);
                     }
                 }
             }
