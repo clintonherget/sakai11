@@ -398,6 +398,7 @@ public class ExportPage extends BasePage{
             String oldComment;
             String extension = "";
             String eventDateHolder ="";
+            int maxSheetLengthcounter = 0;
             int sheetLengthcounter;
             int indexCounter = 0;
             int headerIndexStart = 0;
@@ -486,11 +487,22 @@ public class ExportPage extends BasePage{
                                     sheetLengthcounter++;
                                 }
 
+                                if (sheetLengthcounter > maxSheetLengthcounter) {
+                                    maxSheetLengthcounter = sheetLengthcounter;
+                                }
+
+                                // If the maximum row length we've seen so far is greater than this current row's
+                                // length, pad out our data array.  This will happen if the instructor has added a new
+                                // column (for a new Attendance Event) without filling out any data.
+                                for (; sheetLengthcounter < maxSheetLengthcounter; sheetLengthcounter++) {
+                                    data.add("");
+                                }
+
                                 if (rowCounter == 0) {
                                     if ((data.get(0).toString().equals("StudentID")) && (data.get(1).toString().equals("Student Name")) && (data.get(2).toString().equals("Section"))) {
                                         unmodified = true;
                                     }
-                                    hasComments = (data.get(4).toString().contains("]Comments("));
+                                    hasComments = data.size() > 4 && (data.get(4).toString().contains("]Comments("));
                                 } else {
                                     if (data.size() > 0) {
                                         if (data.get(0).toString().equals("")) {
@@ -515,7 +527,7 @@ public class ExportPage extends BasePage{
                                         for (int q = 0; q < eventCounter; q++) {
                                             EventHeader eventHeader = EventHeader.parse(data, q, hasComments);
 
-                                            if (eventHeader.eventId == null) {
+                                            if (eventHeader == null || eventHeader.eventId == null) {
                                                 continue;
                                             }
 
@@ -535,6 +547,12 @@ public class ExportPage extends BasePage{
                                         for (int q = 0; q < eventCounter; q++) {
                                             EventHeader eventHeader = EventHeader.parse(data, q, hasComments);
 
+                                            if (eventHeader == null) {
+                                                getSession().error(getString("attendance.export.import.error.badHeaderError.nochange"));
+                                                setResponsePage(new ExportPage());
+                                                return;
+                                            }
+
                                             if (eventHeader.eventId == null) {
                                                 // Create a new event for this column
                                                 AttendanceEvent newEvent = new AttendanceEvent();
@@ -543,14 +561,15 @@ public class ExportPage extends BasePage{
                                                 newEvent.setStartDateTime(eventHeader.eventDate);
                                                 Long newEventId = (Long) attendanceLogic.addAttendanceEventNow(newEvent);
 
+                                                attendanceLogic.updateAttendanceRecordsForEvent(newEvent, Status.UNKNOWN);
                                                 unconfirmedEventIds.add(newEventId);
+
                                                 idTracker.add(newEventId);
                                             } else {
                                                 idTracker.add(eventHeader.eventId);
                                             }
 
                                             eventNameList.add(eventHeader.eventName);
-
 
                                             if (eventHeader.eventDate == null) {
                                                 eventDateList.add("NODATE");
@@ -635,7 +654,10 @@ public class ExportPage extends BasePage{
                                                 } else {
                                                     aR.setStatus(Status.UNKNOWN);
                                                 }
-                                                if (aR.getStatus().equals(holder) && (oldComment.equals(aR.getComment()))) {
+                                                if (aR.getStatus().equals(holder) &&
+                                                    (oldComment.equals(aR.getComment())) &&
+                                                    !unconfirmedEventIds.contains(attendanceEvent.getId())) {
+                                                    // This row hasn't changed.
                                                 } else {
                                                     ICL = new ImportConfirmList();
                                                     ICL.setAttendanceEvent(attendanceEvent);
@@ -711,8 +733,7 @@ public class ExportPage extends BasePage{
         public static EventHeader parse(List<String> data, int idx, boolean hasComments) {
             DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 
-            Pattern headerWithoutId = Pattern.compile("^(.+)\\[(.*)\\]$");
-            Pattern headerWithId = Pattern.compile("^(.+)\\[(.*)\\]\\(([0-9]+)\\)$");
+            Pattern headerPattern = Pattern.compile("^(.+)\\[(.*)\\](?:\\(([0-9]+)\\))?$");
 
             EventHeader result = new EventHeader();
 
@@ -723,11 +744,10 @@ public class ExportPage extends BasePage{
                 input = String.valueOf(data.get(3 + idx)).trim();
             }
 
-            Matcher m = headerWithoutId.matcher(input);
+            Matcher m = headerPattern.matcher(input);
             // All inputs should have a name and (optional) date
             if (m.matches()) {
                 result.eventName = m.group(1);
-
                 if ("".equals(m.group(2))) {
                     // Date was intentionally left blank
                     result.eventDate = null;
@@ -742,16 +762,16 @@ public class ExportPage extends BasePage{
                         result.eventDate = new Date();
                     }
                 }
+
+                if (m.group(3) != null) {
+                    result.eventId = Long.parseLong(m.group(3));
+                }
+            } else {
+                return null;
             }
 
             if (result.eventDate != null) {
                 result.formattedEventDate = dateFormat.format(result.eventDate);
-            }
-
-            // If the input has an ID, read that too
-            m = headerWithId.matcher(input);
-            if (m.matches()) {
-                result.eventId = Long.parseLong(m.group(3));
             }
 
             return result;
