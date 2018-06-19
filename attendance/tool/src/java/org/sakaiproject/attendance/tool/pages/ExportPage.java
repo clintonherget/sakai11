@@ -46,11 +46,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+import org.sakaiproject.time.cover.TimeService;
+
 
 
 /**
@@ -67,6 +71,9 @@ public class ExportPage extends BasePage{
     private static final long serialVersionUID = 1L;
     boolean includeComments = false;
     boolean blankSheet = false;
+
+    final static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
     public ExportPage() {
     }
 
@@ -231,17 +238,21 @@ public class ExportPage extends BasePage{
             header.add("Section");
 
             for(int y = 0; y < eventCount; y++){
-                String holder2 = String.valueOf(attendanceEventlist.get(y).getStartDateTime());
-                if (holder2.equals("null")){
+                Date eventStartDate = attendanceEventlist.get(y).getStartDateTime();
+                if (eventStartDate == null) {
                     header.add(attendanceEventlist.get(y).getName() + " [] " + "(" + String.valueOf(attendanceEventlist.get(y).getId())+ ")");
-                    if(commentsOnOff){
+                    if(commentsOnOff) {
                         header.add(attendanceEventlist.get(y).getName() + " [] Comments" + "(" + String.valueOf(attendanceEventlist.get(y).getId())+ ")");
                     }
                 }
-                else{
-                    header.add(attendanceEventlist.get(y).getName() + "[" + String.valueOf(attendanceEventlist.get(y).getStartDateTime()) + "]" + "(" + String.valueOf(attendanceEventlist.get(y).getId())+ ")");
+                else {
+                    DateFormat df = new SimpleDateFormat(DATE_FORMAT);
+                    df.setTimeZone(TimeService.getLocalTimeZone());
+                    String formattedStartTime = df.format(eventStartDate);
+
+                    header.add(attendanceEventlist.get(y).getName() + "[" + formattedStartTime + "]" + "(" + String.valueOf(attendanceEventlist.get(y).getId())+ ")");
                     if(commentsOnOff) {
-                        header.add(attendanceEventlist.get(y).getName() + "[" + String.valueOf(attendanceEventlist.get(y).getStartDateTime()) + "]Comments" + "(" + String.valueOf(attendanceEventlist.get(y).getId())+ ")");
+                        header.add(attendanceEventlist.get(y).getName() + "[" + formattedStartTime + "]Comments" + "(" + String.valueOf(attendanceEventlist.get(y).getId())+ ")");
                     }
                 }
                 eventHolder.add(attendanceLogic.getAttendanceEvent(attendanceEventlist.get(y).getId()));
@@ -401,9 +412,11 @@ public class ExportPage extends BasePage{
             boolean badHeader = false;
             User userHolder;
             final String selectedGroup = null;
-            final List<Long> idTracker = new ArrayList<Long>();
-            final List<String> eventNameList = new ArrayList<String>();
-            final List<String> eventDateList = new ArrayList<String>();
+            List<AttendanceEvent> siteEventList = null;
+            final List<Long> idTracker = new ArrayList<>();
+            final List<Long> unconfirmedEventIds = new ArrayList<>();
+            final List<String> eventNameList = new ArrayList<>();
+            final List<String> eventDateList = new ArrayList<>();
             int a = 0;
             boolean changes = false;
             ImportConfirmList ICL = new ImportConfirmList();
@@ -455,8 +468,6 @@ public class ExportPage extends BasePage{
                         hasRows = false;
                     }
                     if(hasRows){
-                        List<AttendanceEvent> siteEventList = new ArrayList<>(attendanceLogic.getAttendanceEventsForCurrentSite());
-
                         // Populated once we've read the first row.
                         Map<Long, List<AttendanceRecord>> attendanceRecordsByEventId = null;
 
@@ -499,32 +510,60 @@ public class ExportPage extends BasePage{
                                 }
                                 if (unmodified) {
                                     if (rowCounter == 0) {
+                                        // Preflight check: make sure we don't have duplicate IDs
+                                        Set<Long> seenIds = new HashSet<>();
+                                        for (int q = 0; q < eventCounter; q++) {
+                                            EventHeader eventHeader = EventHeader.parse(data, q, hasComments);
+
+                                            if (eventHeader.eventId == null) {
+                                                continue;
+                                            }
+
+                                            if (seenIds.contains(eventHeader.eventId)) {
+                                                // Oops!  That's an error.
+                                                getSession().error(getString("attendance.export.import.error.repeated_ids"));
+                                                setResponsePage(new ExportPage());
+                                                return;
+                                            } else {
+                                                seenIds.add(eventHeader.eventId);
+                                            }
+                                        }
+                                    }
+
+                                    if (rowCounter == 0) {
                                         hasCells = false;
                                         for (int q = 0; q < eventCounter; q++) {
-                                            if (hasComments) {
-                                                eventHeaderHolder = String.valueOf(data.get(3 + (2 * q)));
+                                            EventHeader eventHeader = EventHeader.parse(data, q, hasComments);
+
+                                            if (eventHeader.eventId == null) {
+                                                // Create a new event for this column
+                                                AttendanceEvent newEvent = new AttendanceEvent();
+                                                newEvent.setAttendanceSite(attendanceLogic.getCurrentAttendanceSite());
+                                                newEvent.setName(eventHeader.eventName);
+                                                newEvent.setStartDateTime(eventHeader.eventDate);
+                                                Long newEventId = (Long) attendanceLogic.addAttendanceEventNow(newEvent);
+
+                                                unconfirmedEventIds.add(newEventId);
+                                                idTracker.add(newEventId);
                                             } else {
-                                                eventHeaderHolder = String.valueOf(data.get(3 + q));
+                                                idTracker.add(eventHeader.eventId);
                                             }
-                                            headerIndexStart = eventHeaderHolder.lastIndexOf("(");
-                                            headerIndexEnd = eventHeaderHolder.lastIndexOf(")");
-                                            idHolder = eventHeaderHolder.substring(headerIndexStart + 1, headerIndexEnd);
-                                            headerIndexStart = eventHeaderHolder.lastIndexOf("[");
-                                            headerIndexEnd = eventHeaderHolder.lastIndexOf("]");
-                                            dateHolder = eventHeaderHolder.substring(headerIndexStart + 1, headerIndexEnd);
-                                            idTracker.add(Long.parseLong(idHolder));
-                                            eventNameList.add(eventHeaderHolder.substring(0, headerIndexStart));
-                                            if (headerIndexEnd == (headerIndexStart + 1)) {
+
+                                            eventNameList.add(eventHeader.eventName);
+
+
+                                            if (eventHeader.eventDate == null) {
                                                 eventDateList.add("NODATE");
                                             } else {
-                                                eventDateList.add(dateHolder);
+                                                eventDateList.add(eventHeader.formattedEventDate);
                                             }
                                         }
 
+                                        siteEventList = new ArrayList<>(attendanceLogic.getAttendanceEventsForCurrentSite());
+
                                         attendanceRecordsByEventId = new HashMap<>();
-                                        for (Long attendanceEventId : idTracker) {
-                                            attendanceRecordsByEventId.put(attendanceEventId,
-                                                                           new ArrayList<AttendanceRecord>((attendanceLogic.getAttendanceEvent(attendanceEventId)).getRecords()));
+                                        for (AttendanceEvent event : siteEventList) {
+                                            attendanceRecordsByEventId.put(event.getId(), new ArrayList(event.getRecords()));
                                         }
                                     }
                                     if ((rowCounter > 0) && (hasCells)) {
@@ -642,7 +681,7 @@ public class ExportPage extends BasePage{
                     if(badHeader){
                         getSession().error(getString("attendance.export.import.error.badHeaderError.submit"));
                     }
-                    setResponsePage(new ImportConfirmation(ICList ,commentsChanged));
+                    setResponsePage(new ImportConfirmation(ICList, commentsChanged, unconfirmedEventIds));
                 } else if (unmodified) {
 
                     if(badHeader){
@@ -660,6 +699,62 @@ public class ExportPage extends BasePage{
                 setResponsePage(new Overview());
             }
 
+        }
+    }
+
+    private static class EventHeader {
+        public String eventName;
+        public Date eventDate;
+        public String formattedEventDate;
+        public Long eventId;
+
+        public static EventHeader parse(List<String> data, int idx, boolean hasComments) {
+            DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+
+            Pattern headerWithoutId = Pattern.compile("^(.+)\\[(.*)\\]$");
+            Pattern headerWithId = Pattern.compile("^(.+)\\[(.*)\\]\\(([0-9]+)\\)$");
+
+            EventHeader result = new EventHeader();
+
+            String input = null;
+            if (hasComments) {
+                input = String.valueOf(data.get(3 + (2 * idx))).trim();
+            } else {
+                input = String.valueOf(data.get(3 + idx)).trim();
+            }
+
+            Matcher m = headerWithoutId.matcher(input);
+            // All inputs should have a name and (optional) date
+            if (m.matches()) {
+                result.eventName = m.group(1);
+
+                if ("".equals(m.group(2))) {
+                    // Date was intentionally left blank
+                    result.eventDate = null;
+                } else {
+                    // Attempt to parse what's there
+                    try {
+                        result.eventDate = dateFormat.parse(m.group(2));
+                    } catch (ParseException e) {
+                        // Invalid date given.  Just go with current time for now.  If we
+                        // throw an exception we'll risk partially creating events as we're
+                        // not running in a DB transaction.
+                        result.eventDate = new Date();
+                    }
+                }
+            }
+
+            if (result.eventDate != null) {
+                result.formattedEventDate = dateFormat.format(result.eventDate);
+            }
+
+            // If the input has an ID, read that too
+            m = headerWithId.matcher(input);
+            if (m.matches()) {
+                result.eventId = Long.parseLong(m.group(3));
+            }
+
+            return result;
         }
     }
 }
