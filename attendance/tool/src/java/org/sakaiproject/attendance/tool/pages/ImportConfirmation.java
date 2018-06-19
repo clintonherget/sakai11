@@ -41,13 +41,14 @@ import org.apache.wicket.model.ResourceModel;
  * Created by james on 6/8/17.
  */
 public class ImportConfirmation  extends BasePage{
+    protected List<Long> unconfirmedEventIds;
+
     @Override
     protected void onBeforeRender() {
         super.onBeforeRender();
         disableLink(exportLink);
 
-
-        add(new ImportConfirmation.UploadForm("form"));
+        add(new ImportConfirmation.UploadForm("form", this.unconfirmedEventIds));
     }
     private static final long serialVersionUID = 1L;
     private AttendanceStatusProvider attendanceStatusProvider;
@@ -55,8 +56,8 @@ public class ImportConfirmation  extends BasePage{
     private String selectedGroup;
     private List<ImportConfirmList> uploadICLList;
 
-    public ImportConfirmation(List<ImportConfirmList> attendanceItemDataList, Boolean commentsChanged) {
-
+    public ImportConfirmation(List<ImportConfirmList> attendanceItemDataList, Boolean commentsChanged, List<Long> unconfirmedEventIds) {
+        this.unconfirmedEventIds = unconfirmedEventIds;
         this.uploadICLList = attendanceItemDataList;
         homepageLink = new Link<Void>("homepage-link2") {
             private static final long serialVersionUID = 1L;
@@ -193,7 +194,7 @@ public class ImportConfirmation  extends BasePage{
 
     private class UploadForm extends Form<Void> {
 
-        public UploadForm(final String id) {
+        public UploadForm(final String id, final List<Long> unconfirmedEventIds) {
             super(id);
 
             add(new SubmitLink("submitLink") {
@@ -208,6 +209,15 @@ public class ImportConfirmation  extends BasePage{
             });
             add(new SubmitLink("submitLink2") {
                 public void onSubmit() {
+                    // Cancelled import.  Remove any events we just created.
+                    List<AttendanceEvent> events = attendanceLogic.getAttendanceEventsForCurrentSite();
+
+                    for (AttendanceEvent event : events) {
+                        if (unconfirmedEventIds.contains(event.getId())) {
+                            attendanceLogic.deleteAttendanceEvent(event);
+                        }
+                    }
+
                     setResponsePage(new ExportPage());
                 }
             });
