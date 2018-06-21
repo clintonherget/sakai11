@@ -149,7 +149,7 @@ public class DeliveryActionListener
       	return;
       }
 
-      if (delivery.pastDueDate() && (DeliveryBean.TAKE_ASSESSMENT == action || DeliveryBean.TAKE_ASSESSMENT_VIA_URL == action)) {
+      if (delivery.pastDueDate()){
         if (delivery.isAcceptLateSubmission()) {
           if(delivery.getTotalSubmissions() > 0) {
             // Not during a Retake
