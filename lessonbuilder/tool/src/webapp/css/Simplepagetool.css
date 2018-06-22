@@ -708,6 +708,12 @@ a.edit-link:link, a.edit-link:visited, a.section-merge-link:link, a.section-merg
  * Interaction styling.
  */
 
+#layoutReorderer ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 50px 0;
+}
+
 .layoutReorderer-movable-selected {
     border: 1px solid #fff;
 }
