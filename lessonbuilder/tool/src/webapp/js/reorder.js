@@ -1,25 +1,11 @@
-(function($, fluid){
-    //fluid.setLogging(true);
-    initlayoutReorderer = function(){
-        fluid.reorderLayout("#layoutReorderer", {
-            listeners: {
-                afterMove: function(args){
-                    recalculate();
-                }
-            },
-            styles: {
-                defaultStyle: "layoutReorderer-movable-default",
-                selected: "layoutReorderer-movable-selected",
-                dragging: "layoutReorderer-movable-dragging",
-                mouseDrag: "layoutReorderer-movable-mousedrag",
-                dropMarker: "layoutReorderer-dropMarker",
-                avatar: "layoutReorderer-avatar"
-            },
-            disableWrap: true,
-            containerRole: fluid.reorderer.roles.LIST
-        });
-    };
-})(jQuery, fluid);
+$(function() {
+    // Setup jQueryUI sortable lists
+    $( ".col1 ul, .col2 ul" ).sortable({
+        connectWith: ".lessonsreorderlist",
+        tolerance: "pointer",
+        placeholder: "layoutReorderer-dropMarker",
+    }).disableSelection();
+});
 
 var recalculate = function(){
     var keepList = '';
@@ -44,6 +30,8 @@ var recalculate = function(){
     }
     $('.layoutReorderer-module').find('.marker').closest('.layoutReorderer-module').remove();
 };
+
+
 $(document).ready(function(){
     $('.layoutReorderer-module').find('.marker').closest('.layoutReorderer-module').remove();
     recalculate();
@@ -65,9 +53,7 @@ $(document).ready(function(){
 
     $('.deleteAnswerLink').click(function(e){
         e.preventDefault();
-        $(this).closest('.layoutReorderer-module').addClass('highlightEl').hide().appendTo('#reorderCol2').fadeIn(2000, function(){
-            $(this).removeClass('highlightEl');
-        });
+        $(this).closest('.layoutReorderer-module').addClass('highlightEl').appendTo('#reorderCol2 ul').removeClass('highlightEl', {duration:1000});
         
         recalculate();
     });
