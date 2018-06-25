@@ -518,12 +518,6 @@ public class GradebookPage extends BasePage {
 		response.render(JavaScriptHeaderItem
 			.forUrl(String.format("/gradebookng-tool/scripts/gradebook-connection-poll.js?version=%s", version)));
 
-		// NYU help popup resources
-		response.render(CssHeaderItem
-			.forUrl(String.format("/gradebookng-tool/styles/gradebook-help-popup.css?version=%s", version)));
-		response.render(JavaScriptHeaderItem
-			.forUrl(String.format("/gradebookng-tool/scripts/gradebook-help-popup.js?version=%s", version)));
-
 		final StringValue focusAssignmentId = getPageParameters().get(FOCUS_ASSIGNMENT_ID_PARAM);
 		if (!focusAssignmentId.isNull()) {
 			getPageParameters().remove(FOCUS_ASSIGNMENT_ID_PARAM);
