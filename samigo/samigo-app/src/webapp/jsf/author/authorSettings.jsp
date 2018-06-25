@@ -355,6 +355,7 @@
           </li>
         </ul>
         <h:outputLabel styleClass="help-block info-text small" value="#{assessmentSettingsMessages.late_accept_help}" />
+        <h:outputLabel styleClass="help-block info-text small" value="#{assessmentSettingsMessages.instructor_auto_submit_info}" escape="false" />
       </div>
     </div>
   </h:panelGroup>
