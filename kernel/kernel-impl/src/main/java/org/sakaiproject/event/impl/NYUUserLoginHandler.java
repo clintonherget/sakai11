@@ -31,33 +31,56 @@ class NYUUserLoginHandler {
 
 
     public void invoke(Session sakaiSession) {
-        String userId = sakaiSession.getUserId();
-
         try {
             long startTime = System.currentTimeMillis();
 
-            String instructorToolsStr = HotReloadConfigurationService.getString("nyu.instructor-auto-tools", "");
-
-            if ("".equals(instructorToolsStr.trim())) {
-                return;
-            }
-
-            String[] instructorTools = instructorToolsStr.split(", *");
-            User user = UserDirectoryService.getUser(userId);
-
-            // Creates the workspace if it doesn't already exist
-            Site workspace = SiteService.getSite("~" + userId);
-
-            if (isInstructor(user)) {
-                addToolsIfMissing(workspace, instructorTools);
-            } else {
-                removeToolsIfPresent(workspace, instructorTools);
-            }
+            handleAutoTools(sakaiSession);
+            handleInstructorAutoTools(sakaiSession);
 
             LOG.info("Processed user tools in " + (System.currentTimeMillis() - startTime) + " ms");
         } catch (Exception e) {
             LOG.error("Failure while applying auto tools: " + e);
             e.printStackTrace();
+        }
+    }
+
+
+    private void handleAutoTools(Session sakaiSession) throws Exception {
+        String userId = sakaiSession.getUserId();
+        Site workspace = SiteService.getSite("~" + userId);
+
+        String toolsToAdd = HotReloadConfigurationService.getString("nyu.auto-tools.add", "");
+        String toolsToRemove = HotReloadConfigurationService.getString("nyu.auto-tools.remove", "");
+
+        if (!"".equals(toolsToRemove)) {
+            removeToolsIfPresent(workspace, toolsToRemove.split(", *"));
+        }
+
+        if (!"".equals(toolsToAdd)) {
+            addToolsIfMissing(workspace, toolsToAdd.split(", *"));
+        }
+    }
+
+
+    private void handleInstructorAutoTools(Session sakaiSession) throws Exception {
+        String userId = sakaiSession.getUserId();
+
+        String instructorToolsStr = HotReloadConfigurationService.getString("nyu.instructor-auto-tools", "");
+
+        if ("".equals(instructorToolsStr.trim())) {
+            return;
+        }
+
+        String[] instructorTools = instructorToolsStr.split(", *");
+        User user = UserDirectoryService.getUser(userId);
+
+        // Creates the workspace if it doesn't already exist
+        Site workspace = SiteService.getSite("~" + userId);
+
+        if (isInstructor(user)) {
+            addToolsIfMissing(workspace, instructorTools);
+        } else {
+            removeToolsIfPresent(workspace, instructorTools);
         }
     }
 
