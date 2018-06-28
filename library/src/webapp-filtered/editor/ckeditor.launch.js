@@ -295,6 +295,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         CKEDITOR.plugins.addExternal('a11ychecker',webJars+'a11ychecker/${ckeditor.a11ychecker.version}/', 'plugin.js');
 
         CKEDITOR.plugins.addExternal('audio',basePath+'audio/', 'plugin.js'); 
+        CKEDITOR.plugins.addExternal('kaltura', basePath + 'kaltura/', 'plugin.js');
         CKEDITOR.plugins.addExternal('kalturaflash',basePath+'kalturaflash/', 'plugin.js');
         CKEDITOR.plugins.addExternal('magicembed',basePath+'magicembed/', 'plugin.js');
         CKEDITOR.plugins.addExternal('youtube',basePath+'youtube/', 'plugin.js');
@@ -337,6 +338,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         ckconfig.extraPlugins+=",nyupreview";
         ckconfig.extraPlugins+=",encodedimage";
         ckconfig.extraPlugins+=",nyuhelp";
+        ckconfig.extraPlugins+=",kaltura";
 
 
         // CLASSES-1937
@@ -364,14 +366,14 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         ckconfig.specialChars = CKEDITOR.config.specialChars.concat([ ["&alpha;","alpha"],["&beta;","beta"],["&gamma;","gamma"],["&delta;","delta"],["&epsilon;","epsilon"],["&zeta;","zeta"],["&eta;","eta"],["&theta;","theta"], ["&iota;","iota"],["&kappa;","kappa"],["&lambda;","lambda"],["&mu;","mu"],["&nu;","nu"],["&xi;","xi"],["&omicron;","omnicron"],["&pi;","pi"],["&rho;","rho"],["&sigma;","sigma"],["&tau;","tau"],["&upsilon;","upsilon"], ["&phi;","phi"],["&chi;","chi"],["&psi;","psi"],["&omega;","omega"],["&Alpha;","Alpha"],["&Beta;","Beta"],["&Gamma;","Gamma"],["&Delta;","Delta"],["&Epsilon;","Epsilon"],["&Zeta;","Zeta"],["&Eta;","Eta"],["&Theta;","Theta"], ["&Iota;","Iota"],["&Kappa;","Kappa"],["&Lambda;","Lambda"],["&Mu;","Mu"],["&Nu;","Nu"],["&Xi;","Xi"],["&Omicron;","Omnicron"],["&Pi;","Pi"],["&Rho;","Rho"],["&Sigma;","Sigma"],["&Tau;","Tau"],["&Upsilon;","Upsilon"], ["&Phi;","Phi"],["&Chi;","Chi"],["&Psi;","Psi"],["&Omega;","Omega"] ]);
 
         if (PLUGINS_FROM_SITE_PROPERTIES.length > 0) {
-            ckconfig.extraPlugins += "," + PLUGINS_FROM_SITE_PROPERTIES.join(',');
-
             var toolbarGroup = [];
 
             PLUGINS_FROM_SITE_PROPERTIES.map(function(plugin) {
-                CKEDITOR.plugins.addExternal(plugin, basePath + plugin + '/', 'plugin.js');
-                // we include kaltura in toolbar already, so only add other plugins to toolbar
+                // we include kaltura/kalturaflash already, so only add other plugins
                 if (plugin != kalturaPluginToUse) {
+                    ckconfig.extraPlugins += "," + plugin;
+                    CKEDITOR.plugins.addExternal(plugin, basePath + plugin + '/', 'plugin.js');
+
                     toolbarGroup.push(plugin);
                 }
             });
