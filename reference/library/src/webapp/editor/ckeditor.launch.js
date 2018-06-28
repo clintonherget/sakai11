@@ -257,6 +257,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             CKEDITOR.plugins.addExternal('fontawesome',basePath+'fontawesome/', 'plugin.js');
 
             CKEDITOR.plugins.addExternal('audio',basePath+'audio/', 'plugin.js'); 
+            CKEDITOR.plugins.addExternal('kaltura', basePath + 'kaltura/', 'plugin.js');
             CKEDITOR.plugins.addExternal('kalturaflash',basePath+'kalturaflash/', 'plugin.js');
             CKEDITOR.plugins.addExternal('magicembed',basePath+'magicembed/', 'plugin.js');
             CKEDITOR.plugins.addExternal('youtube',basePath+'youtube/', 'plugin.js');
@@ -298,6 +299,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             ckconfig.extraPlugins+=",nyupreview";
             ckconfig.extraPlugins+=",encodedimage";
             ckconfig.extraPlugins+=",nyuhelp";
+            ckconfig.extraPlugins+=",kaltura";
 
             if (sakai.editor.enableMathJax) {
               ckconfig.mathJaxLib = sakai.editor.mathJaxPath;
@@ -327,14 +329,13 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
 
             // CLASSES-2093
             if (PLUGINS_FROM_SITE_PROPERTIES.length > 0) {
-                ckconfig.extraPlugins += "," + PLUGINS_FROM_SITE_PROPERTIES.join(',');
-
                 var toolbarGroup = [];
 
                 PLUGINS_FROM_SITE_PROPERTIES.map(function(plugin) {
-                    CKEDITOR.plugins.addExternal(plugin, basePath + plugin + '/', 'plugin.js');
-                    // we include kaltura in toolbar already, so only add other plugins to toolbar
+                    // we include kaltura/kalturaflash already, so only add other plugins
                     if (plugin != kalturaPluginToUse) {
+                        ckconfig.extraPlugins += "," + plugin;
+                        CKEDITOR.plugins.addExternal(plugin, basePath + plugin + '/', 'plugin.js');
                         toolbarGroup.push(plugin);
                     }
                 });
