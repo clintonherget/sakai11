@@ -39,6 +39,9 @@ public interface AttendanceLogic {
      */
 	AttendanceSite getAttendanceSite(String siteID);
 
+	AttendanceSite getAttendanceSiteOrCreateIfMissing(String siteID);
+
+
 	/**
 	 * Updates an AttendanceSite
 	 *
@@ -149,12 +152,20 @@ public interface AttendanceLogic {
 	AttendanceStatus getAttendanceStatusById(Long id);
 
 	/**
-	 * Update an AttendanceRecord
+	 * Update an AttendanceRecord for the current site
 	 *
 	 * @param aR, the AttendanceRecord to update (must not be null)
 	 * @return the success of the operation
      */
 	boolean updateAttendanceRecord(AttendanceRecord aR, Status oldStatus) throws IllegalArgumentException;
+
+	/**
+	 * Update an AttendanceRecord
+	 *
+	 * @param aR, the AttendanceRecord to update (must not be null)
+	 * @return the success of the operation
+     */
+	boolean updateAttendanceRecord(AttendanceSite site, AttendanceRecord aR, Status oldStatus) throws IllegalArgumentException;
 
 	/**
 	 * Update all AttendanceRecords for an AttendanceEvent

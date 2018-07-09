@@ -78,6 +78,11 @@
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
 		</dependency>
+		<dependency>
+		  <groupId>org.sakaiproject.scheduler</groupId>
+		  <artifactId>scheduler-api</artifactId>
+		</dependency>
+
 		<!-- Sakai dependencies -->
         <dependency>
             <groupId>org.sakaiproject.kernel</groupId>
