@@ -158,5 +158,7 @@
     <module>api</module>
     <module>impl</module>
     <module>pack</module>
+    <module>jobs/impl</module>
+    <module>jobs/pack</module>
   </modules>
 </project>
