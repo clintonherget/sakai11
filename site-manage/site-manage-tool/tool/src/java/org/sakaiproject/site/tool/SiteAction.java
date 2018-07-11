@@ -14201,8 +14201,15 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	private List<AcademicSession> setTermListForContext(Context context, SessionState state,
 			boolean upcomingOnly, boolean useFilteringIfEnabled) {
 		List<AcademicSession> terms;
+
+                boolean userIsNYUDental = nyuDbHelper.isCurrentUserDental();
+
 		if (upcomingOnly) {
-			terms = cms != null?cms.getCurrentAcademicSessions():null;
+			if (userIsNYUDental) {
+				terms = cms != null?cms.getCurrentAcademicSessionsNYUDental():null;
+			} else {
+				terms = cms != null?cms.getCurrentAcademicSessions():null;
+			}
 		} else { // get all
 			terms = cms != null?cms.getAcademicSessions():null;
 		}
