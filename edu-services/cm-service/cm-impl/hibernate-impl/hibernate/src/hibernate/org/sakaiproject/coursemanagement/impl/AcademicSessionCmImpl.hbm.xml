@@ -50,6 +50,14 @@
         ]]>
     </query>
 
+    <query name="findCurrentAcademicSessionsNYUDental">
+        <![CDATA[
+        from AcademicSessionCmImpl as term where
+        	term.startDate >= :today and term.eid like 'Spring_%' and term.current=false
+        	order by term.startDate desc
+        ]]>
+    </query>
+
     <query name="findAcademicSessionByEid">
         <![CDATA[
         from AcademicSessionCmImpl as term where term.eid=:eid
