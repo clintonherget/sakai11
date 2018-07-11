@@ -21,6 +21,8 @@
 package org.sakaiproject.coursemanagement.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -143,6 +145,24 @@ public class CourseManagementServiceHibernateImpl extends HibernateDaoSupport im
             query.setCacheable(true);
             return query.list();
         });
+	}
+
+	public List <AcademicSession> getCurrentAcademicSessionsNYUDental() {
+	    final List<AcademicSession> result = new ArrayList();
+
+	    getHibernateTemplate().execute(session -> {
+		    Query query = session.getNamedQuery("findCurrentAcademicSessionsNYUDental");
+		    query.setCacheable(true);
+		    query.setParameter("today", new Date());
+		    query.setMaxResults(1);
+		    result.addAll(query.list());
+
+		    return null;
+		});
+
+	    result.addAll(getCurrentAcademicSessions());
+
+	    return result;
 	}
 
 	public AcademicSession getAcademicSession(final String eid) throws IdNotFoundException {

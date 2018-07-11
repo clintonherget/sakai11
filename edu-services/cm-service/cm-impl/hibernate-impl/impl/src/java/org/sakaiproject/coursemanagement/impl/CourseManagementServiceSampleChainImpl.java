@@ -127,6 +127,10 @@ public class CourseManagementServiceSampleChainImpl implements CourseManagementS
 		return null;
 	}
 
+	public List getCurrentAcademicSessionsNYUDental() {
+		return null;
+	}
+
 	public EnrollmentSet getEnrollmentSet(String enrollmentSetEid) throws IdNotFoundException {
 		throw new IdNotFoundException(enrollmentSetEid, EnrollmentSet.class.getName());
 	}

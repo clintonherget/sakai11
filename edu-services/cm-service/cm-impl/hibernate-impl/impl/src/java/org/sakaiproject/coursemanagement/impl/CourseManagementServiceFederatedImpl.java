@@ -425,6 +425,19 @@ public class CourseManagementServiceFederatedImpl implements
 		return resultSet;
 	}
 
+	public List<AcademicSession> getCurrentAcademicSessionsNYUDental() {
+		List<AcademicSession> resultSet = new ArrayList<AcademicSession>();
+		for(Iterator implIter = implList.iterator(); implIter.hasNext();) {
+			CourseManagementService cm = (CourseManagementService)implIter.next();
+			List<AcademicSession> list = cm.getCurrentAcademicSessionsNYUDental();
+			if(list != null) {
+				resultSet.addAll(list);
+			}
+		}
+		// The federated list uses the sort provided by the db
+		return resultSet;
+	}
+
 	public EnrollmentSet getEnrollmentSet(String enrollmentSetEid) throws IdNotFoundException {
 		for(Iterator implIter = implList.iterator(); implIter.hasNext();) {
 			CourseManagementService cm = (CourseManagementService)implIter.next();

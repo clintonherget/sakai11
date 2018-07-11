@@ -9,6 +9,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.db.api.SqlService;
+import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 
 /**
  * NYUDbHelper abstracts the DB calls to the additional NYU_ specific DB tables.
@@ -226,4 +228,56 @@ public class NYUDbHelper {
 
 		return result;
 	}
+
+
+	protected boolean isCurrentUserDental() {
+		Connection db = null;
+		try {
+			db = sqlService.borrowConnection();
+
+			String netid = UserDirectoryService.getCurrentUser().getEid();
+			String dentalSchoolCodes = HotReloadConfigurationService.getString("nyu.dental-school-codes", "'DN', 'UD', 'CD'");
+
+			String[] queries = new String[] {
+				String.format("SELECT count(1) " +
+					      " from NYU_T_INSTRUCTORS i " +
+					      " inner join NYU_T_COURSE_CATALOG cc on cc.stem_name = i.stem_name AND cc.acad_group in (%s)" +
+					      " where i.instr_role IN ('12', 'PI', '11') AND i.netid = ?",
+					      dentalSchoolCodes),
+
+				String.format("SELECT count(1) " +
+					      " from NYU_T_COURSE_ADMINS a " +
+					      " inner join NYU_T_COURSE_CATALOG cc on cc.stem_name = a.stem_name AND cc.acad_group in (%s)" +
+					      " where a.netid = ?",
+					      dentalSchoolCodes),
+			};
+
+
+			PreparedStatement ps;
+			for (String query : queries) {
+				ps = db.prepareStatement(query);
+				ps.setString(1, netid);
+
+				ResultSet rs = null;
+				try {
+					rs = ps.executeQuery();
+					if (rs.next()) {
+						if (rs.getInt(1) > 0) {
+							return true;
+						}
+					}
+				} finally {
+					if (rs != null) { rs.close(); }
+					if (ps != null) { ps.close(); }
+				}
+			}
+		} catch (SQLException e) {
+			M_log.warn(this + ".isCurrentUserDental: " + e);
+		} finally {
+			sqlService.returnConnection(db);
+		}
+
+		return false;
+	}
+
 }
