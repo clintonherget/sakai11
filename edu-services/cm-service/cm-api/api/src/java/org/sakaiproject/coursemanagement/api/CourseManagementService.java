@@ -125,7 +125,10 @@ public interface CourseManagementService {
 	 * @return
 	 */
 	public List<AcademicSession> getCurrentAcademicSessions();
-	
+
+
+	public List <AcademicSession> getCurrentAcademicSessionsNYUDental();
+
 	/**
 	 * Gets a AcademicSession by its eid.
 	 * @param eid
