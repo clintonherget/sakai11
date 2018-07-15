@@ -96,7 +96,10 @@ public class PopupForUser {
 
                 // Or was dismissed temporarily, but some time has passed
                 "  (dismissed.state = 'temporary' AND" +
-                "   (? - dismissed.dismiss_time) >= ?))");
+                "   (? - dismissed.dismiss_time) >= ?))" +
+
+                // earlier start dates take priority over later ones
+               " ORDER BY popup.start_time ASC");
 
         try {
             long now = System.currentTimeMillis();
