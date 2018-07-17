@@ -176,7 +176,12 @@ public class GroupEditProducer implements ViewComponentProducer, ActionResultInt
          UIOutput.make(groupForm, "emptyGroupTitleAlert", messageLocator.getMessage("editgroup.titlemissing"));
          
          if (g != null && g.isLocked()) {
-            UIOutput.make(groupForm, "instructions", messageLocator.getMessage("editgroup.notallowed", null)); 
+            // CLASSES-3254 show assignment specific message if group is locked due to usage in assignments tool
+            if (g.isLocked("/assignment/")) {
+                UIOutput.make(groupForm, "instructions", messageLocator.getMessage("editgroup.notallowed.assignments", null));
+            } else {
+                UIOutput.make(groupForm, "instructions", messageLocator.getMessage("editgroup.notallowed", null));
+            }
          } else {
             UIOutput.make(groupForm, "instructions", messageLocator.getMessage("editgroup.instruction", new Object[]{addUpdateButtonName}));
          }
