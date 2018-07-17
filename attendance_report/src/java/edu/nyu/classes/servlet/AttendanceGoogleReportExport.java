@@ -122,6 +122,21 @@ public class AttendanceGoogleReportExport {
     static class SiteUser extends ValueObject {
         public String netid;
         public String siteid;
+        public String firstName;
+        public String lastName;
+        public String term;
+        public String siteTitle;
+        public String roster;
+
+        public SiteUser(String netid, String siteid, String firstName, String lastName, String term, String siteTitle, String roster) {
+            this.netid = Objects.requireNonNull(netid);
+            this.siteid = Objects.requireNonNull(siteid);
+            this.firstName = Objects.requireNonNull(firstName);
+            this.lastName = Objects.requireNonNull(lastName);
+            this.term = Objects.requireNonNull(term);
+            this.siteTitle = Objects.requireNonNull(siteTitle);
+            this.roster = Objects.requireNonNull(roster);
+        }
 
         public SiteUser(String netid, String siteid) {
             this.netid = Objects.requireNonNull(netid);
@@ -247,24 +262,35 @@ public class AttendanceGoogleReportExport {
         try {
             // Get out list of users in sites of interest
             List<SiteUser> users = new ArrayList<>();
+            Set<String> siteIds = new HashSet<>();
 
-            try (PreparedStatement ps = conn.prepareStatement("select map.eid, ssu.site_id" +
-                                                              " from sakai_site_user ssu" +
-                                                              " inner join sakai_user_id_map map on map.user_id = ssu.user_id" +
-                                                              " where ssu.permission = 1 AND" +
-                                                              "   ssu.site_id in (select distinct s.site_id from attendance_site_t s inner join attendance_event_t e on s.a_site_id = e.a_site_id)");
+            // FIXME pull out London locations into config
+            try (PreparedStatement ps = conn.prepareStatement("SELECT umap.eid, usr.fname, usr.lname, sess.descr as term, site.title, rlm.provider_id, site.site_id" +
+                                                              " FROM sakai_realm_rl_gr srg" +
+                                                              " INNER JOIN sakai_realm rlm ON rlm.realm_key = srg.realm_key" +
+                                                              " INNER JOIN nyu_t_course_catalog cc ON REPLACE(cc.stem_name, ':', '_') = rlm.provider_id AND cc.location in ('1L','2L','GLOBAL-0L', 'LO')" +
+                                                              " INNER JOIN nyu_t_acad_session sess ON cc.strm = sess.strm AND cc.acad_career = sess.acad_career AND sess.current_flag = 'Y'" +
+                                                              " INNER JOIN sakai_site site ON site.site_id = REPLACE(rlm.REALM_ID, '/site/', '')" +
+                                                              " INNER JOIN attendance_site_t att ON att.site_id = site.site_id" +
+                                                              " INNER JOIN sakai_user_id_map umap ON umap.user_id = srg.user_id" +
+                                                              " INNER JOIN nyu_t_users usr ON usr.netid = umap.eid" +
+                                                              " WHERE srg.role_key IN (SELECT role_key FROM sakai_realm_role WHERE role_name = 'Student')");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    users.add(new SiteUser(rs.getString("eid"), rs.getString("site_id")));
+                    users.add(new SiteUser(rs.getString("eid"), rs.getString("site_id"), rs.getString("fname"), rs.getString("lname"), rs.getString("term"), rs.getString("title"), rs.getString("provider_id")));
+                    siteIds.add(rs.getString("site_id"));
                 }
             }
 
+            // FIXME this will blow up if siteIds.length > 1000 .. do we care?
+            String siteIdQueryString = siteIds.stream().map(n -> String.format("'%s'", n)).collect(Collectors.joining(","));
 
             // Get our mapping of events to the sites that have them
             Map<AttendanceEvent, Set<String>> sitesWithEvent = new HashMap<>();
             try (PreparedStatement ps = conn.prepareStatement("select e.name, s.site_id" +
                                                               " from attendance_event_t e" +
-                                                              " inner join attendance_site_t s on s.a_site_id = e.a_site_id");
+                                                              " inner join attendance_site_t s on s.a_site_id = e.a_site_id" +
+                                                              " where s.site_id in (" + siteIdQueryString + ")");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     AttendanceEvent event = new AttendanceEvent(rs.getString("name"));
@@ -295,7 +321,8 @@ public class AttendanceGoogleReportExport {
                                                               " from attendance_event_t e" +
                                                               " inner join attendance_record_t r on e.a_event_id = r.a_event_id" +
                                                               " inner join attendance_site_t s on e.a_site_id = s.a_site_id" +
-                                                              " inner join sakai_user_id_map m on m.user_id = r.user_id");
+                                                              " inner join sakai_user_id_map m on m.user_id = r.user_id" +
+                                                              " where s.site_id in (" + siteIdQueryString + ")");
                  ResultSet rs = ps.executeQuery()) {
                 // Fill out the values we know
                 while (rs.next()) {
@@ -686,11 +713,11 @@ public class AttendanceGoogleReportExport {
         for (SiteUser user : table.users) {
             List<Object> row = new ArrayList<>();
             row.add(user.netid);
-            row.add("Last");
-            row.add("First");
-            row.add("Term");
-            row.add("Site Title");
-            row.add("Roster ID");
+            row.add(user.firstName);
+            row.add(user.lastName);
+            row.add(user.term);
+            row.add(user.siteTitle);
+            row.add(user.roster);
             row.add("https://newclasses.nyu.edu/portal/site/" + user.siteid);
 
             for (AttendanceEvent event : table.events) {
