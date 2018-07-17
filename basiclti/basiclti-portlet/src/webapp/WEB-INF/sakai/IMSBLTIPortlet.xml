@@ -1562,7 +1562,7 @@
 	<tool
 			id="nyu.ares"
 			title="Course Reserves"
-			description="Course Reserves">
+			description="Allows students and faculty to easily access library reserves services from within NYU Classes.">
 		<configuration name="sakai:portlet-pre-render" value="true" />
 		<category name="course" />
 		<category name="project" />
