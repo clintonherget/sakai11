@@ -188,25 +188,12 @@ public class NYUDbHelper {
 			return schoolCodeLookup(DEFAULT_KEY);
 		}
 
-		// CLASSES-2586
-		boolean useOldGradebook = ("Fall_2016".equals(termCode) || "Spring_2017".equals(termCode) || "January_2017".equals(termCode));
-
 		String result = null;
 
-		if (useOldGradebook) {
-			result = schoolCodeLookup(schoolCode);
+		result = schoolCodeLookup(schoolCode);
 
-			if (result == null) {
-				result = schoolCodeLookup(DEFAULT_KEY);
-			}
-		} else {
-			// Look for a special suffixed school for the template containing Gradebook NG
-			result = schoolCodeLookup(schoolCode + "_NG");
-
-			if (result == null) {
-				result = schoolCodeLookup(DEFAULT_KEY + "_NG");
-			}
-
+		if (result == null) {
+		    result = schoolCodeLookup(DEFAULT_KEY);
 		}
 
 		M_log.info("Selected template for school " + schoolCode + " and term " + termCode + ": " + result);
