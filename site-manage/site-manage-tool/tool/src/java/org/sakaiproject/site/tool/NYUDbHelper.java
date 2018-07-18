@@ -155,21 +155,13 @@ public class NYUDbHelper {
 	}
 	
 
-	protected String templateLookup(String schoolCode, String departmentCode) {
+	protected String schoolCodeLookup(String schoolCode) {
 		try {
 			Connection db = sqlService.borrowConnection();
 
 			try {
-				PreparedStatement ps;
-
-				if (departmentCode == null) {
-					ps = db.prepareStatement("SELECT template_site_id FROM nyu_t_site_templates WHERE school_code = ?");
-					ps.setString(1, schoolCode);
-				} else {
-					ps = db.prepareStatement("SELECT template_site_id FROM nyu_t_site_templates WHERE school_code = ? AND department_code = ?");
-					ps.setString(1, schoolCode);
-					ps.setString(2, departmentCode);
-				}
+				PreparedStatement ps = db.prepareStatement("SELECT template_site_id FROM nyu_t_site_templates WHERE school_code = ?");
+				ps.setString(1, schoolCode);
 
 				ResultSet rs = ps.executeQuery();
 				try {
@@ -183,17 +175,17 @@ public class NYUDbHelper {
 				sqlService.returnConnection(db);
 			}
 		} catch (SQLException e) {
-			M_log.warn(this + ".findSuitableSiteTemplate: " + e);
+			M_log.warn(this + ".getSiteTemplateForSchoolCode: " + e);
 		}
 
 		return null;
 	}
 
 
-	protected String findSuitableSiteTemplate(String schoolCode, String departmentCode, String termCode) {
+	protected String getSiteTemplateForSchoolCode(String schoolCode, String termCode) {
 
 		if (StringUtils.isBlank(schoolCode)) {
-			return templateLookup(DEFAULT_KEY, null);
+			return schoolCodeLookup(DEFAULT_KEY);
 		}
 
 		// CLASSES-2586
@@ -202,29 +194,22 @@ public class NYUDbHelper {
 		String result = null;
 
 		if (useOldGradebook) {
-			result = templateLookup(schoolCode, departmentCode);
+			result = schoolCodeLookup(schoolCode);
 
 			if (result == null) {
-				result = templateLookup(schoolCode, null);
-			}
-
-			if (result == null) {
-				result = templateLookup(DEFAULT_KEY, null);
+				result = schoolCodeLookup(DEFAULT_KEY);
 			}
 		} else {
 			// Look for a special suffixed school for the template containing Gradebook NG
-			result = templateLookup(schoolCode + "_NG", departmentCode);
+			result = schoolCodeLookup(schoolCode + "_NG");
 
 			if (result == null) {
-				result = templateLookup(schoolCode + "_NG", null);
+				result = schoolCodeLookup(DEFAULT_KEY + "_NG");
 			}
 
-			if (result == null) {
-				result = templateLookup(DEFAULT_KEY + "_NG", null);
-			}
 		}
 
-		M_log.info("Selected template for school " + schoolCode + ", department " + departmentCode + " and term " + termCode + ": " + result);
+		M_log.info("Selected template for school " + schoolCode + " and term " + termCode + ": " + result);
 
 		return result;
 	}

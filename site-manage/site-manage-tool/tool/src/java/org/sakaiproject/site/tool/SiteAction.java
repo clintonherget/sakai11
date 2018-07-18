@@ -16513,12 +16513,12 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		if (epolyCode.equals(prop_location)) {
 			// EPOLY isn't a real school code, but we just need a
 			// unique key for the table.
-			templateSiteId = nyuDbHelper.findSuitableSiteTemplate(epolyCode, null, term.getEid());
+			templateSiteId = nyuDbHelper.getSiteTemplateForSchoolCode(epolyCode, term.getEid());
 		}
 
 		if (templateSiteId == null) {
 			//CLASSES-494, get template site if it exists
-			templateSiteId = nyuDbHelper.findSuitableSiteTemplate(prop_school, prop_department, term.getEid());
+			templateSiteId = nyuDbHelper.getSiteTemplateForSchoolCode(prop_school, term.getEid());
 		}
 
 		// CLASSES-2906 If the `overwrite_site_info_from_template`
