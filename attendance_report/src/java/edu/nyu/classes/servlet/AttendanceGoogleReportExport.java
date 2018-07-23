@@ -476,23 +476,17 @@ public class AttendanceGoogleReportExport {
                             Status oldStatus = record.getStatus();
 
                             if (oldStatus.toString().equals(override.oldStatus)) {
-                                //                            record.setStatus(Status.valueOf(override.override));
-                                //                            attendance.updateAttendanceRecord(attendanceSite, record, oldStatus);
-                                // remove override
                                 try {
+                                    // Delete any existing overrides for this user and event
                                     PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t" +
                                                                                  " where netid = ?" + 
                                                                                  " and a_event_id = ?");
                                     ps.setString(1, netid);
                                     ps.setLong(2, record.getAttendanceEvent().getId());
-
                                     int result = ps.executeUpdate();
-                                } catch (Exception e) { // FIXME
-                                    throw new RuntimeException(e);
-                                }
 
-                                try {
-                                    PreparedStatement ps = conn.prepareStatement(
+                                    // Insert the override to our magic table
+                                    ps = conn.prepareStatement(
                                         "insert into attendance_record_override_t (netid, a_event_id, event_name, site_id, status)" +
                                         " values (?, ?, ?, ?, ?)");
                                     ps.setString(1, netid);
@@ -500,8 +494,7 @@ public class AttendanceGoogleReportExport {
                                     ps.setString(3, record.getAttendanceEvent().getName());
                                     ps.setString(4, override.userAtEvent.user.siteid);
                                     ps.setString(5, override.override);
-                                    int result = ps.executeUpdate();
-                                    if (result == 0) {
+                                    if (ps.executeUpdate() == 0) {
                                         System.err.println("\n*** ERROR did not storeOverride for netid:" + netid + " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) + " siteId: " + override.userAtEvent.user.siteid + " override: " + override.override);
                                     }
                                 } catch (Exception e) { // FIXME
