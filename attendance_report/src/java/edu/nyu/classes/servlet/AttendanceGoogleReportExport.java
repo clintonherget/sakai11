@@ -51,6 +51,22 @@ import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
 
 
+/**
+ * FIXME move to auto ddl script:
+
+ -- mysql
+ CREATE TABLE `attendance_record_override_t` (
+ `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+ `NETID` varchar(255) NOT NULL,
+ `SITE_ID` varchar(255) NOT NULL,
+ `A_EVENT_ID` bigint(20) NOT NULL,
+ `EVENT_NAME` varchar(255) NOT NULL,
+ `STATUS` varchar(255) NOT NULL,
+ PRIMARY KEY (`id`),
+ CONSTRAINT `FK_ATT_REC_O_EVENT` FOREIGN KEY (`A_EVENT_ID`) REFERENCES `attendance_event_t` (`A_EVENT_ID`),
+ CONSTRAINT `UNIQ_ATT_REC_O` UNIQUE (`NETID`, `SITE_ID`, `EVENT_NAME`, `STATUS`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ */
 
 
 public class AttendanceGoogleReportExport {
@@ -194,6 +210,20 @@ public class AttendanceGoogleReportExport {
         }
     }
 
+    static class AttendanceStoredOverride extends ValueObject {
+        public UserAtEvent userAtEvent;
+        public String status;
+
+        public AttendanceStoredOverride(UserAtEvent userAtEvent, String status) {
+            this.userAtEvent = Objects.requireNonNull(userAtEvent);
+            this.status = Objects.requireNonNull(status);
+        }
+
+        @Override
+        public Object[] interestingFields() {
+            return new Object[] { userAtEvent, status };
+        }
+    }
 
     static class DataTable {
         public Set<AttendanceEvent> events;
@@ -279,6 +309,14 @@ public class AttendanceGoogleReportExport {
                     if (status != null) {
                         statusTable.put(new UserAtEvent(user, event), status);
                     }
+                }
+            }
+
+            // poke in overrides
+            for (AttendanceStoredOverride override : getStoredOverrides(conn)) {
+                String status = mapStatus(override.status);
+                if (status != null) {
+                    statusTable.put(override.userAtEvent, status);
                 }
             }
 
@@ -402,65 +440,123 @@ public class AttendanceGoogleReportExport {
         protectSheet(duplicateSheetResponse.getProperties().getSheetId());
     }
 
-    private void storeOverrides(List<AttendanceOverride> overrides) {
+    private void storeOverrides(List<AttendanceOverride> overrides) throws Exception {
         // netid, siteid, event name...
         AttendanceLogic attendance = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
 
-        for (AttendanceOverride override : overrides) {
-            if (!override.isValid()) {
-                // "INVALID OVERRIDE", override.rawText
-                System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:315 f46b87]: " + "\n    'INVALID OVERRIDE' => " + ("INVALID OVERRIDE") + "\n    override.rawText => " + (override.rawText) + "\n");
-                continue;
-            }
-
-            boolean updated = false;
-
-            String netid = override.userAtEvent.user.netid;
-            try {
-                User user = UserDirectoryService.getUserByEid(netid);
-
-                AttendanceSite attendanceSite = attendance.getAttendanceSite(override.userAtEvent.user.siteid);
-
-                List<AttendanceRecord> records =
-                    attendance
-                    .getAttendanceRecordsForUsers(Collections.singletonList(user.getId()),
-                                                  attendanceSite)
-                    .get(user.getId());
-
-                if (records == null) {
-                    records = Collections.emptyList();
+        Connection conn = SqlService.borrowConnection();
+        try {
+            for (AttendanceOverride override : overrides) {
+                if (!override.isValid()) {
+                    // "INVALID OVERRIDE", override.rawText
+                    System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:315 f46b87]: " + "\n    'INVALID OVERRIDE' => " + ("INVALID OVERRIDE") + "\n    override.rawText => " + (override.rawText) + "\n");
+                    continue;
                 }
 
-                for (AttendanceRecord record : records) {
-                    if (override.userAtEvent.event.name.equals(record.getAttendanceEvent().getName())) {
-                        Status oldStatus = record.getStatus();
+                boolean updated = false;
 
-                        if (oldStatus.toString().equals(override.oldStatus)) {
-                            record.setStatus(Status.valueOf(override.override));
-                            attendance.updateAttendanceRecord(attendanceSite, record, oldStatus);
-                        } else {
-                            // FIXME
-                            System.err.println("WARNING: database status " + oldStatus + " doesn't match incoming " + override.oldStatus);
-                        }
-                        updated = true;
-                        break;
+                String netid = override.userAtEvent.user.netid;
+                try {
+                    User user = UserDirectoryService.getUserByEid(netid);
+
+                    AttendanceSite attendanceSite = attendance.getAttendanceSite(override.userAtEvent.user.siteid);
+
+                    List<AttendanceRecord> records =
+                        attendance
+                            .getAttendanceRecordsForUsers(Collections.singletonList(user.getId()),
+                                attendanceSite)
+                            .get(user.getId());
+
+                    if (records == null) {
+                        records = Collections.emptyList();
                     }
+
+                    for (AttendanceRecord record : records) {
+                        if (override.userAtEvent.event.name.equals(record.getAttendanceEvent().getName())) {
+                            Status oldStatus = record.getStatus();
+
+                            if (oldStatus.toString().equals(override.oldStatus)) {
+                                //                            record.setStatus(Status.valueOf(override.override));
+                                //                            attendance.updateAttendanceRecord(attendanceSite, record, oldStatus);
+                                // remove override
+                                try {
+                                    PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t" +
+                                                                                 " where netid = ?" + 
+                                                                                 " and a_event_id = ?");
+                                    ps.setString(1, netid);
+                                    ps.setLong(2, record.getAttendanceEvent().getId());
+
+                                    int result = ps.executeUpdate();
+                                } catch (Exception e) { // FIXME
+                                    throw new RuntimeException(e);
+                                }
+
+                                try {
+                                    PreparedStatement ps = conn.prepareStatement(
+                                        "insert into attendance_record_override_t (netid, a_event_id, event_name, site_id, status)" +
+                                        " values (?, ?, ?, ?, ?)");
+                                    ps.setString(1, netid);
+                                    ps.setLong(2, record.getAttendanceEvent().getId());
+                                    ps.setString(3, record.getAttendanceEvent().getName());
+                                    ps.setString(4, override.userAtEvent.user.siteid);
+                                    ps.setString(5, override.override);
+                                    int result = ps.executeUpdate();
+                                    if (result == 0) {
+                                        System.err.println("\n*** ERROR did not storeOverride for netid:" + netid + " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) + " siteId: " + override.userAtEvent.user.siteid + " override: " + override.override);
+                                    }
+                                } catch (Exception e) { // FIXME
+                                    throw new RuntimeException(e);
+                                }
+
+                                conn.commit();
+                            } else {
+                                // FIXME
+                                System.err.println("WARNING: database status " + oldStatus + " doesn't match incoming " + override.oldStatus);
+                            }
+                            updated = true;
+                            break;
+                        }
+                    }
+
+                    if (!updated) {
+                        // "FAILED TO FIND MATCH", override.userAtEvent.event.name, override.userAtEvent.user.netid
+                        System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:349 f69489]: " + "\n    'FAILED TO FIND MATCH' => " + ("FAILED TO FIND MATCH") + "\n    override.userAtEvent.event.name => " + (override.userAtEvent.event.name) + "\n    override.userAtEvent.user.netid => " + (override.userAtEvent.user.netid) + "\n");
+                    }
+                } catch (UserNotDefinedException e) {
+                    // FIXME: failed to match user
                 }
 
-                if (!updated) {
-                    // "FAILED TO FIND MATCH", override.userAtEvent.event.name, override.userAtEvent.user.netid
-                    System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:349 f69489]: " + "\n    'FAILED TO FIND MATCH' => " + ("FAILED TO FIND MATCH") + "\n    override.userAtEvent.event.name => " + (override.userAtEvent.event.name) + "\n    override.userAtEvent.user.netid => " + (override.userAtEvent.user.netid) + "\n");
-                }
-            } catch (UserNotDefinedException e) {
-                // FIXME: failed to match user
             }
-
+        }  finally {
+            SqlService.returnConnection(conn);
         }
+    }
+
+    private List<AttendanceStoredOverride> getStoredOverrides(Connection conn) throws Exception {
+        List<AttendanceStoredOverride> result = new ArrayList<>();
+
+        try (PreparedStatement ps = conn.prepareStatement("select netid, site_id, event_name, status" +
+             " from attendance_record_override_t");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                AttendanceEvent event = new AttendanceEvent(rs.getString("event_name"));
+                SiteUser user = new SiteUser(rs.getString("netid"), rs.getString("site_id"));
+                UserAtEvent userAtEvent = new UserAtEvent(user, event);
+                result.add(new AttendanceStoredOverride(userAtEvent, rs.getString("status")));
+            }
+        }
+
+        return result;
     }
 
     private List<AttendanceOverride> pullOverrides(Sheet sheet) throws IOException {
         Sheets.Spreadsheets.Values.Get request = service.spreadsheets().values().get(spreadsheetId, sheet.getProperties().getTitle());
         ValueRange values = request.execute();
+
+        // handle empty spreadsheet
+        if (values.getValues() == null || values.getValues().isEmpty()) {
+            return new ArrayList<>();
+        }
 
         List<Object> headers = values.getValues().get(0);
 
