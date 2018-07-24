@@ -62,7 +62,7 @@ import org.sakaiproject.user.api.UserNotDefinedException;
  `EVENT_NAME` varchar(255) NOT NULL,
  `STATUS` varchar(255) NOT NULL,
  PRIMARY KEY (`id`),
- CONSTRAINT `UNIQ_ATT_REC_O` UNIQUE (`NETID`, `SITE_ID`, `EVENT_NAME`, `STATUS`)
+ CONSTRAINT `UNIQ_ATT_REC_O` UNIQUE (`NETID`, `SITE_ID`, `EVENT_NAME`)
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
  */
 
@@ -498,13 +498,14 @@ public class AttendanceGoogleReportExport {
                                     ps.setString(2, override.userAtEvent.user.siteid);
                                     ps.setString(3, record.getAttendanceEvent().getName());
                                     ps.setString(4, override.override);
-                                    if (ps.executeUpdate()   == 0) {
+
+                                    if (ps.executeUpdate() == 0) {
                                         System.err.println("\n*** ERROR did not storeOverride for netid:" + netid + " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) + " siteId: " + override.userAtEvent.user.siteid + " override: " + override.override);
                                     }
                                 } catch (Exception e) { // FIXME
                                     throw new RuntimeException(e);
                                 }
-
+                                // FIXME ensure autocommit or commit at end of loop
                                 conn.commit();
                             } else {
                                 // FIXME
@@ -533,7 +534,7 @@ public class AttendanceGoogleReportExport {
         List<AttendanceStoredOverride> result = new ArrayList<>();
 
         try (PreparedStatement ps = conn.prepareStatement("select netid, site_id, event_name, status" +
-             " from attendance_record_override_t");
+                                                          " from attendance_record_override_t");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 AttendanceEvent event = new AttendanceEvent(rs.getString("event_name"));
