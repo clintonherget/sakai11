@@ -1937,8 +1937,33 @@ public class SyllabusTool
     return "read";
   }
 
+    public Map<SyllabusData, List<SyllabusAttachment>> exportPdfs;
+    public  Map<SyllabusData, List<SyllabusAttachment>> getExportPdfs() {
+        return exportPdfs;
+    }
+
     public String processExport() {
-        return "export";
+        try {
+            exportPdfs = new HashMap<>();
+
+            SyllabusItem syllabusItem = getSyllabusItem();
+            Set<SyllabusData> syllabi = syllabusManager.getSyllabiForSyllabusItem(syllabusItem);
+            for (SyllabusData data : syllabi) {
+                List<SyllabusAttachment> pdfs = new ArrayList<>();
+                for (SyllabusAttachment attachment : syllabusManager.getSyllabusAttachmentsForSyllabusData(data)) {
+                    if ("application/pdf".equals(attachment.getType())) {
+                        pdfs.add(attachment);
+                    }
+                }
+                if (!pdfs.isEmpty()) {
+                    exportPdfs.put(data, pdfs);
+                }
+            }
+
+            return "export";
+        } catch (PermissionException e) {
+            return "permission_error";
+        }
     }
 
   public String processRedirect() throws PermissionException
