@@ -185,6 +185,21 @@
 					<f:verbatim>
 					</span>
 				</li>
+				</f:verbatim>
+				<c:if test="${SyllabusTool.export}">
+				<f:verbatim>
+				<li>
+					<span>
+					</f:verbatim>
+						<h:commandLink action="#{SyllabusTool.processExport}">
+							<h:outputText value="Export"/>
+						</h:commandLink>
+					<f:verbatim>
+					</span>
+				</li>
+				</f:verbatim>
+				</c:if>
+				<f:verbatim>
 				</ul></f:verbatim>
 			<syllabus:syllabus_if test="#{SyllabusTool.syllabusItem.redirectURL}">
 					<f:verbatim>
