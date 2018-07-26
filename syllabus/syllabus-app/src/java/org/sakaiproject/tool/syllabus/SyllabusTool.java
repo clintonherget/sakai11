@@ -769,6 +769,10 @@ public class SyllabusTool
 			  
   }
 
+    public boolean isExport() {
+        // FIXME only true if AD course
+        return true;
+    }
  
   //testing the access to control the "create/edit"
   //button showing up or not on main page.
@@ -1932,6 +1936,10 @@ public class SyllabusTool
     filename = null;
     return "read";
   }
+
+    public String processExport() {
+        return "export";
+    }
 
   public String processRedirect() throws PermissionException
   {
