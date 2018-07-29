@@ -41,6 +41,8 @@ public class SyllabusAttachmentImpl implements SyllabusAttachment, Comparable
   private String lastModifiedBy;
   private String url;
 
+  private Long lastModifiedTime;
+
   public Integer getLockId()
   {
     return lockId;
@@ -176,5 +178,13 @@ public class SyllabusAttachmentImpl implements SyllabusAttachment, Comparable
   public String getUrl()
   {
     return url;
+  }
+
+  public Long getLastModifiedTime() {
+    return this.lastModifiedTime;
+  }
+
+  public void setLastModifiedTime(Long lastModifiedTime) {
+    this.lastModifiedTime = lastModifiedTime;
   }
 }

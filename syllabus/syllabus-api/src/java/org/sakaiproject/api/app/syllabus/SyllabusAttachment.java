@@ -62,4 +62,8 @@ public interface SyllabusAttachment
   public void setUrl(String url);
   
   public String getUrl();
+
+  public Long getLastModifiedTime();
+
+  public void setLastModifiedTime(Long lastModifiedTime);
 }
