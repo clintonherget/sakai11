@@ -43,6 +43,10 @@
             <column name="lastModifiedBy" length="256" not-null="false"/>
         </property>
         
+        <property name="lastModifiedTime">
+            <column name="lastModifiedTime" default="0" not-null="false"/>
+        </property>
+
         <many-to-one name="syllabusData"
                      column="syllabusId"                     
                      class="org.sakaiproject.component.app.syllabus.SyllabusDataImpl"
