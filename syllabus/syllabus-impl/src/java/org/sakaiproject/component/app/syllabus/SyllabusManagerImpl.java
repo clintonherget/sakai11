@@ -657,6 +657,8 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
       throw new IllegalArgumentException("Null Argument");
     }      
            
+    syllabusAttach.setLastModifiedTime(new Long(System.currentTimeMillis()));
+
     HibernateCallback hcb = new HibernateCallback()
     {
       public Object doInHibernate(Session session) throws HibernateException,
