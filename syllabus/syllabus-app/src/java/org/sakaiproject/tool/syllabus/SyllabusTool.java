@@ -45,6 +45,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.FilenameUtils;
 
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.api.app.syllabus.SyllabusAttachment;
 import org.sakaiproject.api.app.syllabus.SyllabusData;
 import org.sakaiproject.api.app.syllabus.SyllabusItem;
@@ -778,8 +779,27 @@ public class SyllabusTool
   }
 
     public boolean isExport() {
-        // FIXME only true if AD course
-        return true;
+        if (!ServerConfigurationService.getBoolean("syllabus.export.enable", true)) {
+            return false;
+        }
+
+        if (ServerConfigurationService.getBoolean("syllabus.export.enable.all", false)) {
+            return true;
+        }
+
+        if (syllabusItem == null) {
+            Placement currentPlacement = ToolManager.getCurrentPlacement();
+            syllabusItem = syllabusManager.getSyllabusItemByContextId(currentPlacement.getContext());
+        }
+
+        try {
+            Site site = SiteService.getSite(syllabusItem.getContextId());
+            ResourceProperties properties = site.getProperties();
+            String location = (String)properties.getProperty("Location");
+            return "AD".equals(location);
+        } catch (IdUnusedException e) {
+            return false;
+        }
     }
  
   //testing the access to control the "create/edit"
