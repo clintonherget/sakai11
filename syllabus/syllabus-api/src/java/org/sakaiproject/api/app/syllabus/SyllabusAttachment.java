@@ -66,4 +66,8 @@ public interface SyllabusAttachment
   public Long getLastModifiedTime();
 
   public void setLastModifiedTime(Long lastModifiedTime);
+
+  public boolean isExport();
+
+  public void setExport(boolean export);
 }

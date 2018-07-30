@@ -50,6 +50,10 @@
             <column name="lastModifiedTime" default="0" not-null="false"/>
         </property>
 
+        <property name="export" type="java.lang.Boolean">
+            <column name="export" default="false" not-null="true"/>
+        </property>
+
         <many-to-one name="syllabusData"
                      column="syllabusId"                     
                      class="org.sakaiproject.component.app.syllabus.SyllabusDataImpl"
