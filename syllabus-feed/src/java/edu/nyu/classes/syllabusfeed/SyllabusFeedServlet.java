@@ -68,7 +68,7 @@ public class SyllabusFeedServlet extends HttpServlet {
         throws ServletException, IOException {
         String stemName = request.getParameter("get");
 
-        List<String> errors = new ArrayList();
+        List<String> errors = new ArrayList<>();
 
         if (stemName.isEmpty()) {
             errors.add("Missing parameter 'get': expected a valid roster stem name");
@@ -113,7 +113,7 @@ public class SyllabusFeedServlet extends HttpServlet {
                             OutputStream out = response.getOutputStream();
                             byte[] buf = new byte[4096];
 
-                            int len = 0;
+                            int len;
                             while ((len = stream.read(buf)) > 0) {
                                 out.write(buf, 0, len);
                             }
@@ -128,7 +128,7 @@ public class SyllabusFeedServlet extends HttpServlet {
                     } else {
                         response.setStatus(404);
                         response.setContentType("text/plain");
-                        response.getWriter().write(String.format("Document not found"));
+                        response.getWriter().write("Document not found");
                     }
                 }
             }
@@ -149,7 +149,7 @@ public class SyllabusFeedServlet extends HttpServlet {
         String location = request.getParameter("location");
         String strm = request.getParameter("strm");
 
-        List<String> errors = new ArrayList();
+        List<String> errors = new ArrayList<>();
 
         if (location == null) {
             errors.add("Missing parameter 'location': expected a comma-separated list of location codes");
