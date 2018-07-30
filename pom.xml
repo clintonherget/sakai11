@@ -127,6 +127,7 @@
                 <module>site-manage</module>
                 <module>sitestats</module>
                 <module>syllabus</module>
+                <module>syllabus-feed</module>
                 <module>taggable</module>
                 <module>textarea</module>
                 <module>tool</module>
