@@ -387,6 +387,11 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
+      <from-outcome>export</from-outcome>
+      <to-view-id>/syllabus/export.jsp</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
       <from-outcome>permission_error</from-outcome>
       <to-view-id>/syllabus/permission_error.jsp</to-view-id>
       <redirect/>
