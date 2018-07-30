@@ -20,6 +20,8 @@
  **********************************************************************************/
 package org.sakaiproject.component.app.syllabus;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -48,6 +50,8 @@ import org.sakaiproject.calendar.api.CalendarService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.db.cover.SqlService;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.EntityManager;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.exception.IdUnusedException;
@@ -61,6 +65,9 @@ import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.user.api.PreferencesService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 /**
  * SyllabusManagerImpl provides convenience functions to query the database
@@ -986,4 +993,71 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
 	public void setEntityManager(EntityManager entityManager) {
 		this.entityManager = entityManager;
 	}
+
+    public void setSelectedExportAttachment(String userId, SyllabusItem syllabusItem, Long attachmentId) {
+        clearSelectedExportAttachment(userId, syllabusItem);
+        SyllabusAttachment attachment = getSyllabusAttachment(String.valueOf(attachmentId));
+        attachment.setExport(true);
+        attachment.setLastModifiedBy(userId);
+        attachment.setLastModifiedTime(System.currentTimeMillis());
+        saveSyllabusAttachment(attachment);
+    }
+
+    public SyllabusAttachment getSelectedExportAttachment(SyllabusItem syllabusItem) {
+        Connection conn = null;
+
+        try {
+            conn = SqlService.borrowConnection();
+
+            try (PreparedStatement ps = conn.prepareStatement("select ssa.syllabusAttachId" +
+                                                              " from sakai_syllabus_attach ssa" +
+                                                              " inner join sakai_syllabus_data ssd on ssd.id = ssa.syllabusId" +
+                                                              " inner join sakai_syllabus_item ssi on ssi.id = ssd.surrogateKey" +
+                                                              " where ssi.id = ?" +
+                                                              " and ssa.export = 1")) {
+                ps.setLong(1, syllabusItem.getSurrogateKey());
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String attachmentId = rs.getString("syllabusAttachId");
+                        return getSyllabusAttachment(attachmentId);
+                    } else {
+                        return null;
+                    }
+                }
+            }
+      } catch (SQLException e) {
+          throw new RuntimeException(e);
+      } finally {
+          if (conn != null) {
+              SqlService.returnConnection(conn);
+          }
+      }
+    }
+
+    public void clearSelectedExportAttachment(String userId, SyllabusItem syllabusItem) {
+        Connection conn = null;
+
+        try {
+            conn = SqlService.borrowConnection();
+
+            try (PreparedStatement ps = conn.prepareStatement("update sakai_syllabus_attach ssa" +
+                                                              " set export = 0, lastModifiedBy = ?, lastModifiedTime = ?" +
+                                                              " where ssa.export = 1" +
+                                                              " and ssa.syllabusId in (" +
+                                                              "  select ssd.id from sakai_syllabus_data ssd where ssd.surrogateKey = ?" +
+                                                              " )")) {
+                ps.setString(1, userId);
+                ps.setLong(2, System.currentTimeMillis());
+                ps.setLong(3, syllabusItem.getSurrogateKey());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (conn != null) {
+                SqlService.returnConnection(conn);
+            }
+        }
+    }
 }

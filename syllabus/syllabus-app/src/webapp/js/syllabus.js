@@ -120,7 +120,7 @@ function editorClick(event){
 	$("#textAreaWysiwyg" + (editorIndex - 1)).val($(event.target).closest(".control-group").find("iframe").contents().find('body').html()).change();
 }
 
-function showMessage(message, success){
+  function showMessage(message, success){
 	var spanItem;
 	if(success){
 		spanItem = $("#successInfo");

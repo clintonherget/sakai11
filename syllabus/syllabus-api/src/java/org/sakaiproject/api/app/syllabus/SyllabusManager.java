@@ -95,4 +95,10 @@ public interface SyllabusManager
   public SyllabusItem getSyllabusItem(final Long itemId);
   
   //public SyllabusAttachment creatSyllabusAttachmentResource(String attachId, String name);
+
+  public void setSelectedExportAttachment(String userId, SyllabusItem syllabusItem, Long attachmentId);
+
+  public SyllabusAttachment getSelectedExportAttachment(SyllabusItem syllabusItem);
+
+  public void clearSelectedExportAttachment(String userId, SyllabusItem syllabusItem);
 }
