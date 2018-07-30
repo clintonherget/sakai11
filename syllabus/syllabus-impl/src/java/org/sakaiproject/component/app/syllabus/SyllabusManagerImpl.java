@@ -1081,11 +1081,10 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
 		this.entityManager = entityManager;
 	}
 
-    public void setSelectedExportAttachment(String userId, SyllabusItem syllabusItem, Long attachmentId) {
-        clearSelectedExportAttachment(userId, syllabusItem);
+    public void setSelectedExportAttachment(SyllabusItem syllabusItem, Long attachmentId) {
+        clearSelectedExportAttachment(syllabusItem);
         SyllabusAttachment attachment = getSyllabusAttachment(String.valueOf(attachmentId));
         attachment.setExport(true);
-        attachment.setLastModifiedBy(userId);
         attachment.setLastModifiedTime(System.currentTimeMillis());
         saveSyllabusAttachment(attachment);
     }
@@ -1122,21 +1121,20 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
       }
     }
 
-    public void clearSelectedExportAttachment(String userId, SyllabusItem syllabusItem) {
+    public void clearSelectedExportAttachment(SyllabusItem syllabusItem) {
         Connection conn = null;
 
         try {
             conn = SqlService.borrowConnection();
 
             try (PreparedStatement ps = conn.prepareStatement("update sakai_syllabus_attach ssa" +
-                                                              " set export = 0, lastModifiedBy = ?, lastModifiedTime = ?" +
+                                                              " set export = 0, lastModifiedTime = ?" +
                                                               " where ssa.export = 1" +
                                                               " and ssa.syllabusId in (" +
                                                               "  select ssd.id from sakai_syllabus_data ssd where ssd.surrogateKey = ?" +
                                                               " )")) {
-                ps.setString(1, userId);
-                ps.setLong(2, System.currentTimeMillis());
-                ps.setLong(3, syllabusItem.getSurrogateKey());
+                ps.setLong(1, System.currentTimeMillis());
+                ps.setLong(2, syllabusItem.getSurrogateKey());
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
