@@ -419,6 +419,14 @@ public class SyllabusTool
 	  this.alertMessage = alertMessage;
   }
 
+  private String successMessage = null;
+  public String getSuccessMessage() {
+    return successMessage;
+  }
+  public void setSuccessMessage(String message) {
+    this.successMessage = message;
+  }
+
   protected String mobileSession = "false";
   
   public String getMobileSession()
@@ -1942,11 +1950,11 @@ public class SyllabusTool
         return exportPdfs;
     }
 
-    public String selectedExportAttachmentId;
-    public String getSelectedExportAttachmentId() {
+    public Long selectedExportAttachmentId;
+    public Long getSelectedExportAttachmentId() {
         return selectedExportAttachmentId;
     }
-    public void setSelectedExportAttachmentId(String selectedExportAttachmentId) {
+    public void setSelectedExportAttachmentId(Long selectedExportAttachmentId) {
         this.selectedExportAttachmentId = selectedExportAttachmentId;
     }
 
@@ -1962,8 +1970,14 @@ public class SyllabusTool
         try {
             exportPdfs = new HashMap<>();
 
-            // FIXME get exportEnabled from DB
-            exportEnabled = false;
+            SyllabusAttachment syllabusAttachment = syllabusManager.getSelectedExportAttachment(syllabusItem);
+            if (syllabusAttachment == null) {
+                exportEnabled = false;
+                selectedExportAttachmentId = null;
+            } else {
+                exportEnabled = true;
+                selectedExportAttachmentId = syllabusAttachment.getSyllabusAttachId();
+            }
 
             SyllabusItem syllabusItem = getSyllabusItem();
             Set<SyllabusData> syllabi = syllabusManager.getSyllabiForSyllabusItem(syllabusItem);
@@ -1986,17 +2000,26 @@ public class SyllabusTool
     }
 
     public String processSaveExportSettings() {
-        // FIXME
-        // check permissions
-        // - redirect to permission_error if fails test
-        // update exportEnabled in DB
-        // if exportEnabled
-        //  - show message if selectedExportAttachmentId is null
-        //  - save selectedExportAttachmentId in DB
-        //  - show saved message
-        // else
-        //  - clear selectedExportAttachmentId in DB
-        //  - show saved message
+        if (!isAddOrEdit()) {
+            return "permission_error";
+        }
+
+        alertMessage = null;
+        successMessage = null;
+
+        if (exportEnabled) {
+            if (selectedExportAttachmentId == null) {
+                setAlertMessage("Please select an attachment to export for this Syllabus");
+            } else {
+                syllabusManager.setSelectedExportAttachment(userId, syllabusItem, selectedExportAttachmentId);
+                setSuccessMessage("Export settings updated");
+            }
+        } else {
+            syllabusManager.clearSelectedExportAttachment(userId, syllabusItem);
+            selectedExportAttachmentId = null;
+            setSuccessMessage("Export settings updated");
+        }
+
         return "export";
     }
 

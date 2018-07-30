@@ -40,6 +40,7 @@ public class SyllabusAttachmentImpl implements SyllabusAttachment, Comparable
   private String createdBy;
   private String lastModifiedBy;
   private String url;
+  private boolean export;
 
   private Long lastModifiedTime;
 
@@ -186,5 +187,13 @@ public class SyllabusAttachmentImpl implements SyllabusAttachment, Comparable
 
   public void setLastModifiedTime(Long lastModifiedTime) {
     this.lastModifiedTime = lastModifiedTime;
+  }
+
+  public boolean isExport() {
+    return this.export;
+  }
+
+  public void setExport(boolean export) {
+    this.export = export;
   }
 }
