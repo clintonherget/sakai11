@@ -2024,11 +2024,11 @@ public class SyllabusTool
             if (selectedExportAttachmentId == null) {
                 setAlertMessage("Please select an attachment to export for this Syllabus");
             } else {
-                syllabusManager.setSelectedExportAttachment(userId, syllabusItem, selectedExportAttachmentId);
+                syllabusManager.setSelectedExportAttachment(syllabusItem, selectedExportAttachmentId);
                 setSuccessMessage("Export settings updated");
             }
         } else {
-            syllabusManager.clearSelectedExportAttachment(userId, syllabusItem);
+            syllabusManager.clearSelectedExportAttachment(syllabusItem);
             selectedExportAttachmentId = null;
             setSuccessMessage("Export settings updated");
         }
