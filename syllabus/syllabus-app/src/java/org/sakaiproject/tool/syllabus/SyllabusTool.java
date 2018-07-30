@@ -24,13 +24,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
@@ -40,6 +34,7 @@ import javax.faces.event.PhaseId;
 import javax.faces.event.ValueChangeEvent;
 
 import org.apache.commons.fileupload.FileItem;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sakaiproject.api.app.syllabus.SyllabusAttachment;
@@ -783,8 +778,27 @@ public class SyllabusTool
   }
 
     public boolean isExport() {
-        // FIXME only true if AD course
-        return true;
+        if (!ServerConfigurationService.getBoolean("syllabus.export.enable", true)) {
+            return false;
+        }
+
+        if (ServerConfigurationService.getBoolean("syllabus.export.enable.all", false)) {
+            return true;
+        }
+
+        if (syllabusItem == null) {
+            Placement currentPlacement = ToolManager.getCurrentPlacement();
+            syllabusItem = syllabusManager.getSyllabusItemByContextId(currentPlacement.getContext());
+        }
+
+        try {
+            Site site = SiteService.getSite(syllabusItem.getContextId());
+            ResourceProperties properties = site.getProperties();
+            String location = (String)properties.getProperty("Location");
+            return "AD".equals(location);
+        } catch (IdUnusedException e) {
+            return false;
+        }
     }
  
   //testing the access to control the "create/edit"
