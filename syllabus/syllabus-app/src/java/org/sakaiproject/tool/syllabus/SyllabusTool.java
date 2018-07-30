@@ -1955,9 +1955,28 @@ public class SyllabusTool
         return exportPdfs;
     }
 
+    public String selectedExportAttachmentId;
+    public String getSelectedExportAttachmentId() {
+        return selectedExportAttachmentId;
+    }
+    public void setSelectedExportAttachmentId(String selectedExportAttachmentId) {
+        this.selectedExportAttachmentId = selectedExportAttachmentId;
+    }
+
+    public boolean exportEnabled;
+    public boolean isExportEnabled() {
+        return exportEnabled;
+    }
+    public void setExportEnabled(boolean exportEnabled) {
+        this.exportEnabled = exportEnabled;
+    }
+
     public String processExport() {
         try {
             exportPdfs = new HashMap<>();
+
+            // FIXME get exportEnabled from DB
+            exportEnabled = false;
 
             SyllabusItem syllabusItem = getSyllabusItem();
             Set<SyllabusData> syllabi = syllabusManager.getSyllabiForSyllabusItem(syllabusItem);
@@ -1977,6 +1996,25 @@ public class SyllabusTool
         } catch (PermissionException e) {
             return "permission_error";
         }
+    }
+
+    public String processSaveExportSettings() {
+        // FIXME
+        // check permissions
+        // - redirect to permission_error if fails test
+        // update exportEnabled in DB
+        // if exportEnabled
+        //  - show message if selectedExportAttachmentId is null
+        //  - save selectedExportAttachmentId in DB
+        //  - show saved message
+        // else
+        //  - clear selectedExportAttachmentId in DB
+        //  - show saved message
+        return "export";
+    }
+
+    public String cancelSaveExportSettings() {
+        return "main";
     }
 
   public String processRedirect() throws PermissionException
