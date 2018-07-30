@@ -50,7 +50,7 @@ public class SyllabusFeedServlet extends HttpServlet {
          " inner join sakai_site ss on concat('/site/', ss.site_id) = sr.realm_id" +
          " inner join sakai_syllabus_item ssi on ssi.contextId = ss.site_id" +
          " inner join sakai_syllabus_data ssd on ssd.surrogateKey = ssi.id AND ssd.status = 'posted'" +
-         " inner join sakai_syllabus_attach ssa on ssa.syllabusId = ssd.id"
+         " inner join sakai_syllabus_attach ssa on ssa.syllabusId = ssd.id AND export = 1"
          );
 
 

@@ -1049,6 +1049,7 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
                 ps.setLong(1, System.currentTimeMillis());
                 ps.setLong(2, syllabusItem.getSurrogateKey());
                 ps.executeUpdate();
+		conn.commit();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
