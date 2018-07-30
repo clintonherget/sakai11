@@ -13,7 +13,9 @@
       <script>includeLatestJQuery('export.jsp');</script>
       <h:form id="exportForm">
         <f:verbatim>
-          <h3>Export Settings</h3>
+          <h3>Export Settings</h3></f:verbatim>
+          <h:outputText value="#{SyllabusTool.alertMessage}" styleClass="alertMessage" rendered="#{SyllabusTool.alertMessage != null}" />
+          <h:outputText value="#{SyllabusTool.successMessage}" styleClass="messageSuccess" rendered="#{SyllabusTool.successMessage != null}" /><f:verbatim>
           <p>
             <label></f:verbatim>
             <h:selectBooleanCheckbox value="#{SyllabusTool.exportEnabled}" id="exportEnabled" /><f:verbatim> 
@@ -28,7 +30,7 @@
               <t:dataList value="#{SyllabusTool.exportPdfs[entry]}" var="attachment">
                 <f:verbatim><li>
                   <label>
-                    <input type="radio" name="selectedExportPdf" value="</f:verbatim><h:outputText value="#{attachment.attachmentId}" /><f:verbatim>"> </f:verbatim>
+                    <input type="radio" name="selectedExportPdf" value="</f:verbatim><h:outputText value="#{attachment.syllabusAttachId}" /><f:verbatim>"> </f:verbatim>
                     <h:outputText value="#{attachment.name}" /><f:verbatim>
                   </label>
                 </li></f:verbatim>
@@ -66,9 +68,11 @@
             if ($checkbox.is(':checked')) {
               // enable radios
               $('#exportList :radio').prop('disabled', false);
+              $('#exportList label.disabled').removeClass('disabled');
             } else {
               // disable radios
               $('#exportList :radio').prop('disabled', true);
+              $('#exportList label').addClass('disabled');
             }
           }
 
@@ -85,6 +89,10 @@
             var $radio = $(this);
             $hidden.val($radio.val()).trigger('changed');
           });
+
+          if ($hidden.val() != "") {
+            $('#exportList :radio[value="'+$hidden.val()+'"]').prop('checked', true);
+          }
         };
 
         new ExportForm();
