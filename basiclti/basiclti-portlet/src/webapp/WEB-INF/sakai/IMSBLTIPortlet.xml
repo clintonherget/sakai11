@@ -1465,7 +1465,7 @@
 
 	<tool
 	    id="nyu.zoom"
-	    title="Zoom - Basic"
+	    title="Zoom - Quick Launch"
 	    description="Conduct web conferencing sessions for synchronous online/blended courses. &lt;br&gt;Note: before adding this tool to your site's left menu, please complete the Zoom certification training and activate your Zoom account.">
 	  <configuration name="sakai:portlet-pre-render" value="true" />
 	  <category name="course" />
