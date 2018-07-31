@@ -51,6 +51,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.coursemanagement.api.CourseManagementService;
+import org.sakaiproject.coursemanagement.api.exception.IdNotFoundException;
+import org.sakaiproject.coursemanagement.api.Membership;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
+
 /**
  * <p>
  * DbAuthzGroupService is an extension of the BaseAuthzGroupService with database storage.
@@ -107,6 +114,8 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 	private Cache m_realmRoleGRCache;
 	
 	private Cache authzUserGroupIdsCache;
+
+	private CourseManagementService courseManagementService;
 
     private Cache maintainRolesCache;
 
@@ -240,6 +249,8 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 			M_log.info("init(): table: " + m_realmTableName + " external locks: " + m_useExternalLocks);
 
 			authzUserGroupIdsCache = m_memoryService.newCache("org.sakaiproject.authz.impl.DbAuthzGroupService.authzUserGroupIdsCache");
+
+			courseManagementService = (CourseManagementService)ComponentManager.get("org.sakaiproject.coursemanagement.api.CourseManagementService");
 
             maintainRolesCache = m_memoryService.newCache("org.sakaiproject.authz.impl.DbAuthzGroupService.maintainRolesCache");
             //get the set of maintain roles and cache them on startup
@@ -2584,6 +2595,24 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 			// get the latest userEid -> role name map from the provider
 			Map<String,String> target = m_provider.getUserRolesForGroup(realm.getProviderGroupId());
 
+			Map<String,Boolean> userToCMActiveStatus = new HashMap<>();
+
+			boolean nyuInactiveUsersEnabled = "true".equals(HotReloadConfigurationService.getString("nyu.rosters-enable-inactive-users", "true"));
+
+			if (nyuInactiveUsersEnabled && realm.getProviderGroupId() != null) {
+				for (String sectionEid : realm.getProviderGroupId().split("\\+")) {
+					try {
+						Set<Membership> memberships = courseManagementService.getSectionMemberships(sectionEid);
+
+						for (Membership m : memberships) {
+							userToCMActiveStatus.put(m.getUserId(), "active".equals(m.getStatus()));
+						}
+					} catch (IdNotFoundException e) {
+						M_log.warn("refreshAuthzGroupInternal() Section not found in CM tables: " + sectionEid);
+					}
+				}
+			}
+
 			// read the realm's grants
 			List<UserAndRole> grants = getGrants(realm);
 
@@ -2731,6 +2760,13 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 							if (providedInactive.get(userId) != null)
 							{
 								active = false;
+							}
+
+							if (nyuInactiveUsersEnabled) {
+							    // If the user was inactive in the CMS tables, honor that here.
+							    if (userToCMActiveStatus.containsKey(userEid)) {
+								active = userToCMActiveStatus.get(userEid).booleanValue();
+							    }
 							}
 
 							// this is either at site level or at the group level but no need to synchronize

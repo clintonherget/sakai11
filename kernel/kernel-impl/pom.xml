@@ -361,6 +361,13 @@
       <artifactId>HikariCP</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- Added by NYU -->
+    <dependency>
+      <groupId>org.sakaiproject.edu-services.course-management</groupId>
+      <artifactId>coursemanagement-api</artifactId>
+    </dependency>
+
   </dependencies>
 
   <profiles>
