@@ -361,6 +361,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		case NEW_URLS:
 			template = buildNewUrlsContext(portlet, context, data, state);
 			break;
+		case NEW_GOOGLE_DRIVE_ITEMS:
+			template = buildNewGoogleDriveContext(portlet, context, data, state);
+			break;
+
 		default:
 			// hmmmm
 		    logger.info(this + "hmmm");
@@ -382,7 +386,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		return MAKE_SITE_PAGE_TEMPLATE;
 	}
-	
+
+	protected String buildNewGoogleDriveContext(VelocityPortlet portlet, Context context, RunData data, SessionState state) {
+		return "resources/sakai_google_drive";
+	}
 
 	protected String buildNewUrlsContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
 	 {
@@ -882,6 +889,9 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_URL);
 			pipe.setNotification(noti);
+		}
+		else if(ResourceType.TYPE_GOOGLE_DRIVE_ITEM.equals(resourceType)) {
+			System.out.println("DO SOMETHING WITH THE GOOGLE ITEM RESOURCE HERE!");
 		}
 		else if(ResourceType.TYPE_FOLDER.equals(resourceType))
 		{

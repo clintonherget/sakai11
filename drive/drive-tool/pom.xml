@@ -7,14 +7,14 @@
   <name>drive-tool</name>
   <groupId>org.sakaiproject.drive</groupId>
   <artifactId>drive-tool</artifactId>
-  <version>11.2</version>
+  <version>11.4</version>
 
   <packaging>war</packaging>
 
   <parent>
     <artifactId>drive-base</artifactId>
     <groupId>org.sakaiproject.drive</groupId>
-    <version>11.2</version>
+    <version>11.4</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 

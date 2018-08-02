@@ -848,6 +848,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		CONTENT_NEW_ACTIONS.add(ActionType.NEW_UPLOAD);
 		CONTENT_NEW_ACTIONS.add(ActionType.NEW_FOLDER);
 		CONTENT_NEW_ACTIONS.add(ActionType.NEW_URLS);
+		CONTENT_NEW_ACTIONS.add(ActionType.NEW_GOOGLE_DRIVE_ITEMS);
 		CONTENT_NEW_ACTIONS.add(ActionType.CREATE);
 		CONTENT_NEW_ACTIONS.add(ActionType.CREATE_BY_HELPER);
 		
@@ -903,6 +904,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		CREATION_ACTIONS.add(ActionType.NEW_UPLOAD);
 		CREATION_ACTIONS.add(ActionType.NEW_FOLDER);
 		CREATION_ACTIONS.add(ActionType.NEW_URLS);
+		CREATION_ACTIONS.add(ActionType.NEW_GOOGLE_DRIVE_ITEMS);
 		CREATION_ACTIONS.add(ActionType.CREATE);
 		CREATION_ACTIONS.add(ActionType.CREATE_BY_HELPER);
 		CREATION_ACTIONS.add(ActionType.PASTE_MOVED);
@@ -6752,6 +6754,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				case NEW_FOLDER:
 					break;
 				case NEW_URLS:
+					break;
+				case NEW_GOOGLE_DRIVE_ITEMS:
 					break;
 				case CREATE:
 					break;

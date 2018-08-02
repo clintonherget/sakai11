@@ -24,6 +24,9 @@
 
 package org.sakaiproject.drive.tool.handlers;
 
+import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.drive.tool.GoogleClient;
 
 import java.util.ArrayList;
@@ -145,7 +148,10 @@ public class AddResourceHandler implements Handler {
             properties.addProperty("google-icon-link", googleFile.getIconLink());
 
             try {
-                chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
+                ContentResource r = chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
+                ContentResourceEdit redit = chs.editResource(r.getId());
+                redit.setResourceType(ResourceType.TYPE_GOOGLE_DRIVE_ITEM);
+                chs.commitResource(redit);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

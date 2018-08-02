@@ -72,6 +72,7 @@ public class ResourceTypeRegistryImpl implements ResourceTypeRegistry
 		nativeTypes.add(ResourceType.TYPE_UPLOAD);
 		nativeTypes.add(ResourceType.TYPE_URL);
 		nativeTypes.add(ResourceType.TYPE_HTML);
+		nativeTypes.add(ResourceType.TYPE_GOOGLE_DRIVE_ITEM);
 	}
 
 	/**
@@ -202,6 +203,9 @@ public class ResourceTypeRegistryImpl implements ResourceTypeRegistry
 			case NEW_URLS:
 				pipe = new BasicMultiFileUploadPipe(initializationId, action);
 				break;
+			case NEW_GOOGLE_DRIVE_ITEMS:
+				pipe = new BasicMultiFileUploadPipe(initializationId, action);
+				break;
 			default:
 				pipe = new BasicResourceToolActionPipe(initializationId, action);
 				break;	
@@ -243,6 +247,11 @@ public class ResourceTypeRegistryImpl implements ResourceTypeRegistry
 		{
 			typeId = ResourceType.TYPE_URL;
 		}
+		else if(ResourceType.MIME_TYPE_GOOGLE_DRIVE_ITEM.equals(contentType))
+		{
+			typeId = ResourceType.TYPE_GOOGLE_DRIVE_ITEM;
+		}
+
 		else if(ResourceType.MIME_TYPE_METAOBJ.equals(contentType))
 		{
 			typeId = ResourceType.TYPE_METAOBJ;

@@ -35,11 +35,13 @@ public interface ResourceType
 	public static final String TYPE_UPLOAD = "org.sakaiproject.content.types.fileUpload";
 	public static final String TYPE_FOLDER = "org.sakaiproject.content.types.folder";
 	public static final String TYPE_METAOBJ = "org.sakaiproject.metaobj.shared.FormHelper";
+	public static final String TYPE_GOOGLE_DRIVE_ITEM = "org.sakaiproject.content.types.GoogleDriveItemType";
 
 	public static final String MIME_TYPE_TEXT = "text/plain";
 	public static final String MIME_TYPE_HTML = "text/html";
 	public static final String MIME_TYPE_METAOBJ = "application/x-osp";
 	public static final String MIME_TYPE_URL = "text/url";
+	public static final String MIME_TYPE_GOOGLE_DRIVE_ITEM = "x-nyu-google/item";
 	
 	public static final int EXPANDABLE_FOLDER_SIZE_LIMIT = 256;
 	

@@ -71,6 +71,11 @@ public interface ResourceToolAction
 		NEW_URLS,
 		
 		/**
+		 * Add Google Drive items
+		 */
+		NEW_GOOGLE_DRIVE_ITEMS,
+		
+		/**
 		 * Create other -- Handled by helper and Resources tool.  Can create one item at a time.  
 		 * 		Content (and possibly some properties) handled by helper. Metadata supplied in 
 		 * 		form that appears after helper finishes.  Requires content.new permission in 
