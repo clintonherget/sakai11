@@ -358,6 +358,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		case NEW_URLS:
 			template = buildNewUrlsContext(portlet, context, data, state);
 			break;
+		case NEW_GOOGLE_DRIVE_ITEMS:
+			template = buildNewGoogleDriveContext(portlet, context, data, state);
+			break;
+
 		default:
 			template = buildMakeSitePageContext(portlet, context, data, state);
 			break;
@@ -377,7 +381,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		return MAKE_SITE_PAGE_TEMPLATE;
 	}
-	
+
+	protected String buildNewGoogleDriveContext(VelocityPortlet portlet, Context context, RunData data, SessionState state) {
+		return "resources/sakai_google_drive";
+	}
 
 	protected String buildNewUrlsContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
 	 {
@@ -893,6 +900,9 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_URL);
 			pipe.setNotification(noti);
 		}
+		else if(ResourceType.TYPE_GOOGLE_DRIVE_ITEM.equals(resourceType)) {
+			System.out.println("DO SOMETHING WITH THE GOOGLE ITEM RESOURCE HERE!");
+		}
 		else if(ResourceType.TYPE_FOLDER.equals(resourceType))
 		{
 			MultiFileUploadPipe mfp = (MultiFileUploadPipe) pipe;
@@ -1175,19 +1185,19 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		ParameterParser params = data.getParameters ();
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
-		
+
 		int requestStateId = params.getInt("requestStateId", 0);
 		ResourcesAction.restoreRequestState(state, new String[]{ResourcesAction.PREFIX + ResourcesAction.REQUEST}, requestStateId);
-		
+
 		MultiFileUploadPipe mfp = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		if(mfp == null)
 		{
 			return;
 		}
-		
+
 		String pipe_init_id = mfp.getInitializationId();
 		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
-	
+
 		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
 		{
 			// in this case, prevent upload to wrong folder
@@ -1197,10 +1207,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			mfp.setActionCompleted(false);
 			return;
 		}
-		
+
 		int count = params.getInt("fileCount");
 		mfp.setFileCount(count);
-		
+
 		int lastIndex = params.getInt("lastIndex");
 		
 		ContentEntity entity = mfp.getContentEntity();
@@ -2350,5 +2360,38 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		return fileName;
 	}
 */
+
+	public void doAddGoogleItems(RunData data) {
+		log.debug(this + ".soAddUrls()");
+		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
+		ParameterParser params = data.getParameters ();
+		ToolSession toolSession = SessionManager.getCurrentToolSession();
+
+		int requestStateId = params.getInt("requestStateId", 0);
+		ResourcesAction.restoreRequestState(state, new String[]{ResourcesAction.PREFIX + ResourcesAction.REQUEST}, requestStateId);
+
+		MultiFileUploadPipe mfp = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(mfp == null)
+		{
+			return;
+		}
+
+		String pipe_init_id = mfp.getInitializationId();
+		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
+
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			mfp.setErrorMessage(rb.getString("alert.try-again"));
+			mfp.setActionCanceled(false);
+			mfp.setErrorEncountered(true);
+			mfp.setActionCompleted(false);
+			return;
+		}
+
+		String[] googleItemIds = params.getStrings("googleitemid[]");
+
+		addAlert(state, "TODO got these just need to save them: " + String.join(",", googleItemIds));
+	}
 
 }
