@@ -76,7 +76,7 @@ public class GoogleDriveItemType extends BaseResourceType
 	
 	public GoogleDriveItemType()
 	{		
-//		actions.put(CREATE, new BaseInteractionAction(CREATE, ActionType.NEW_GOOGLE_DRIVE_ITEMS, typeId, helperId, localizer("create.googledriveitems")));
+		actions.put(CREATE, new BaseInteractionAction(CREATE, ActionType.NEW_GOOGLE_DRIVE_ITEMS, typeId, helperId, localizer("create.googledriveitems")));
 //		actions.put(ACCESS_PROPERTIES, new BaseServiceLevelAction(ACCESS_PROPERTIES, ActionType.VIEW_METADATA, typeId, false, localizer("action.access")));
 //		actions.put(REVISE_METADATA, new BaseServiceLevelAction(REVISE_METADATA, ActionType.REVISE_METADATA, typeId, false, localizer("action.props")));
 //		actions.put(MOVE, new BaseServiceLevelAction(MOVE, ActionType.MOVE, typeId, true, localizer("action.move")));

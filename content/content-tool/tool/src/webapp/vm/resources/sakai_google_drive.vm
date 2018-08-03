@@ -1,1 +1,86 @@
-<p>STUFF GOES HERE!</p>
+<script type="text/javascript">includeLatestJQuery('google-drive');</script>
+#javascript("/sakai-content-tool/js/google-drive.js")
+
+<div id="google-drive" class="google-drive">
+  <div class="row">
+    <div class="col-sm-12">
+      <div style="text-align: right;">
+        <form method="POST" action="/direct/google-drive/reset-oauth">
+          <input type="submit" class="btn btn-danger" value="Relink my Google account" />
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-2 google-drive-menu">
+      <div>
+        <ul class="nav">
+          <li class="active"><a href="#googledriverecent" data-toggle="tab">Most Recent</a></li>
+          <li><a href="#googledrivehome" data-toggle="tab">My Drive</a></li>
+          <li><a href="#googledrivestarred" data-toggle="tab">Starred</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-sm-10 google-drive-panel">
+      <div class="tab-content">
+        <div id="googledriverecent" class="tab-pane active">
+          <div class="search-bar">
+            <input class="file-search" type="text" placeholder="Search Most Recent" value="" />
+          </div>
+          <form class="google-drive-add-selected-form" method="POST" action="/direct/google-drive/add-selected">
+            <div class="scroll-container">
+              <ul class="file-list">
+              </ul>
+              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+            </div>
+          </form>
+        </div>
+        <div id="googledrivehome" class="tab-pane">
+          <div class="search-bar">
+            <input class="file-search" type="text" placeholder="Search My Drive" value="" />
+          </div>
+          <ul class="breadcrumb">
+            <li class="active"><a href="#" data-id="root">My Drive</a></li>
+          </ul>
+          <form class="google-drive-add-selected-form" method="POST" action="/direct/google-drive/add-selected">
+            <div class="scroll-container">
+              <ul class="file-list">
+              </ul>
+              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+            </div>
+          </form>
+        </div>
+        <div id="googledrivestarred" class="tab-pane">
+          <div class="search-bar">
+            <input class="file-search" type="text" placeholder="Search Starred" value="" />
+          </div>
+          <ul class="breadcrumb">
+            <li class="active"><a href="#" data-id="root">Starred</a></li>
+          </ul>
+          <form class="google-drive-add-selected-form" method="POST" action="/direct/google-drive/add-selected">
+            <div class="scroll-container">
+              <ul class="file-list">
+              </ul>
+              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="fileTemplate" type="text/template">
+  {if folder}
+    <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a class="google-drive-folder" href="#" data-id="${id}">${name}</a></label></li>
+  {else}
+    <li><label><input type="checkbox" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
+  {/if}
+</script>
+
+<script type="text/javascript">
+$(function() {
+  new GoogleDriveContainer($("#google-drive"), "/direct/google-drive");
+});
+</script>
