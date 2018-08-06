@@ -59,6 +59,7 @@ GoogleDrive.prototype.hideNoMatches = function () {
   this.root.find('.no-matches-msg').hide();
 };
 
+// FIXME now that scrollbar is on the window, we need to rework this one :(
 GoogleDrive.prototype.setupScrollHandling = function() {
   var self = this;
 
@@ -226,32 +227,16 @@ function GoogleDriveContainer($container, baseURL) {
 GoogleDriveContainer.prototype.init = function() {
   var self = this;
 
-//  $(window).resize(function() {
-//    self.resizeGoogleModal();
-//  });
+  $(window).resize(function() {
+    self.resizeGoogleContainer();
+  });
 
-//  self.$container.on('show.bs.modal', function () {
-//    $.ajax(self.baseURL + "show-google-drive",
-//           {
-//             type: "GET",
-//             contentType: "html",
-//           }).success(function (content) {
-//             $('#google-drive-modal .modal-body').html(content);
+  self.setupTabs();
+  self.setupForm();
 
-             self.setupTabs();
-
-//             // setup form submit
-//             $('#google-drive-modal .modal-footer .btn-primary').on('click', function() {
-//               $('#google-drive-modal .modal-body form.google-drive-add-selected-form:visible').submit();
-//             });
-//           });
-
-//    return true;
-//  });
-
-//  self.$container.on('shown.bs.modal', function () {
-//    self.resizeGoogleModal();
-//  });
+  self.$container.on('shown.bs.modal', function () {
+    self.resizeGoogleContainer();
+  });
 
   self.$container.on('click', '.file-list :checkbox', function(event) {
     if ($(this).is(':checked')) {
@@ -259,16 +244,57 @@ GoogleDriveContainer.prototype.init = function() {
     } else {
       $(this).closest('li').removeClass('active');
     }
+    self.handleCheckboxChange();
   });
 };
 
-//GoogleDriveContainer.prototype.resizeGoogleModal = function() {
+GoogleDriveContainer.prototype.getSelectedFilesIds = function() {
+  var self = this;
+
+  var files = [];
+
+  self.$container.find('.file-list :checkbox:checked:visible').each(function() {
+    files.push($(this).val());
+  });
+
+  return files;
+};
+
+GoogleDriveContainer.prototype.setupForm = function() {
+  var self = this;
+
+  var $form = $('#addGoogleItemsForm');
+
+  var $button = $('#addSelectedGoogleItems');
+  $button.on('click', function() {
+    $form.submit();
+  });
+
+  $form.on('submit', function() {
+    var files = self.getSelectedFilesIds();
+
+    $form.find(':hidden[name="googleitemid[]"]').remove();
+
+    for (var i=0; i<files.length; i++) {
+      var $hidden = $('<input type="hidden">').attr('name', 'googleitemid[]').val(files[i]);
+      $form.append($hidden);
+    }
+
+    if (files.length == 0) {
+      return false;
+    }
+
+    return true;
+  });
+};
+
+
+GoogleDriveContainer.prototype.resizeGoogleContainer = function() {
 //  if (this.$container.is(':visible')) {
-//    this.$container.find('.modal-body').height($(window).height() - this.$container.find('.modal-header').height() - this.$container.find('.modal-footer').height() - 150);
-//    this.$container.find('.tab-content').height(this.$container.find('.modal-body').height() - (this.$container.find('.tab-content').offset().top - this.$container.find('.modal-body').offset().top))
+//    this.$container.find('.tab-content').height($(window).height() - this.$container.find('.tab-content').position().top - 150);
 //    this.$container.find('.scroll-container').height(this.$container.find('.tab-content').height() - (this.$container.find('.tab-pane.active .breadcrumb').height() || 0));
 //  }
-//};
+};
 
 GoogleDriveContainer.prototype.setupTabs = function() {
     var self = this;
@@ -280,10 +306,10 @@ GoogleDriveContainer.prototype.setupTabs = function() {
 
     // Recent/Search
     self.recentDrive = new GoogleDrive(self.$container.find('#googledriverecent'), self.baseURL, {
-      path: '/drive-data',
+      path: '/drive-data?mode=recent',
     }, $.proxy(self.onLoading, self), $.proxy(self.onLoaded, self));
 
-    self.$container.find('.google-drive-menu a[href="#googledriverecent"]').on('show.bs.tab', function() {
+    self.$container.find('.google-drive-menu a[href="?mode=recent#googledriverecent"]').on('show.bs.tab', function() {
         self._currentTab = 'googledriverecent';
     });
 
@@ -296,7 +322,7 @@ GoogleDriveContainer.prototype.setupTabs = function() {
         if (self.myDrive == null) {
           // load my drive (for root context)
           self.myDrive = new GoogleDrive($('#googledrivehome'), self.baseURL, {
-            path: '/my-drive-data',
+            path: '/drive-data?mode=home',
           }, $.proxy(self.onLoading, self), $.proxy(self.onLoaded, self));
 
 
@@ -335,7 +361,7 @@ GoogleDriveContainer.prototype.setupTabs = function() {
         if (self.starredDrive == null) {
           // load my drive (for root context)
           self.starredDrive = new GoogleDrive($('#googledrivestarred'), self.baseURL, {
-            path: '/starred-drive-data',
+            path: '/drive-data?mode=starred',
           }, $.proxy(self.onLoading, self), $.proxy(self.onLoaded, self));
 
 
@@ -368,12 +394,21 @@ GoogleDriveContainer.prototype.setupTabs = function() {
 
 GoogleDriveContainer.prototype.onLoading = function() {
   this._spinner = $('<i class="loading fa fa-circle-o-notch" aria-hidden="true"></i>');
-  this.$container.find('.google-drive-menu a[href="#'+this._currentTab+'"]').after(this._spinner);
+  this.$container.find('.google-drive-menu a[href="#'+this._currentTab+'"]').append(this._spinner);
 }
+
+GoogleDriveContainer.prototype.handleCheckboxChange = function() {
+  if (this.$container.find(':checkbox:checked').length > 0) {
+    $('#addSelectedGoogleItems').prop('disabled', false).removeClass('disabled');
+  } else {
+    $('#addSelectedGoogleItems').prop('disabled', true).addClass('disabled');
+  }
+};
 
 GoogleDriveContainer.prototype.onLoaded = function() {
   if (this._spinner) {
     this._spinner.remove();
     this._spinner = undefined;
   }
+  this.handleCheckboxChange();
 }

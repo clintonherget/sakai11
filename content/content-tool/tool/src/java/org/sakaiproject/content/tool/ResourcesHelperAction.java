@@ -1188,19 +1188,19 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		ParameterParser params = data.getParameters ();
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
-		
+
 		int requestStateId = params.getInt("requestStateId", 0);
 		ResourcesAction.restoreRequestState(state, new String[]{ResourcesAction.PREFIX + ResourcesAction.REQUEST}, requestStateId);
-		
+
 		MultiFileUploadPipe mfp = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		if(mfp == null)
 		{
 			return;
 		}
-		
+
 		String pipe_init_id = mfp.getInitializationId();
 		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
-	
+
 		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
 		{
 			// in this case, prevent upload to wrong folder
@@ -1210,10 +1210,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			mfp.setActionCompleted(false);
 			return;
 		}
-		
+
 		int count = params.getInt("fileCount");
 		mfp.setFileCount(count);
-		
+
 		int lastIndex = params.getInt("lastIndex");
 		
 		ContentEntity entity = mfp.getContentEntity();
@@ -2372,5 +2372,38 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		return fileName;
 	}
 */
+
+	public void doAddGoogleItems(RunData data) {
+		logger.debug(this + ".soAddUrls()");
+		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
+		ParameterParser params = data.getParameters ();
+		ToolSession toolSession = SessionManager.getCurrentToolSession();
+
+		int requestStateId = params.getInt("requestStateId", 0);
+		ResourcesAction.restoreRequestState(state, new String[]{ResourcesAction.PREFIX + ResourcesAction.REQUEST}, requestStateId);
+
+		MultiFileUploadPipe mfp = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
+		if(mfp == null)
+		{
+			return;
+		}
+
+		String pipe_init_id = mfp.getInitializationId();
+		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
+
+		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
+		{
+			// in this case, prevent upload to wrong folder
+			mfp.setErrorMessage(rb.getString("alert.try-again"));
+			mfp.setActionCanceled(false);
+			mfp.setErrorEncountered(true);
+			mfp.setActionCompleted(false);
+			return;
+		}
+
+		String[] googleItemIds = params.getStrings("googleitemid[]");
+
+		addAlert(state, "TODO got these just need to save them: " + String.join(",", googleItemIds));
+	}
 
 }

@@ -4,7 +4,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.sakaiproject.authz.api.SecurityService;
-import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.tool.GoogleClient;
 import org.sakaiproject.content.tool.RequestParams;
 import org.sakaiproject.entitybroker.EntityView;
@@ -18,22 +17,9 @@ import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.user.api.UserDirectoryService;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.CredentialRefreshListener;
-import com.google.api.client.auth.oauth2.DataStoreCredentialRefreshListener;
-import com.google.api.client.auth.oauth2.TokenErrorResponse;
-import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -48,9 +34,13 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 
 	public final static String ENTITY_PREFIX = "google-drive";
 
-//	public static final int RECENT = 0;
-//	public static final int MY_DRIVE = 1;
-//	public static final int STARRED = 2;
+	public static final String DRIVE_MODE_RECENT = "recent";
+	public static final String DRIVE_MODE_MY_DRIVE = "home";
+	public static final String DRIVE_MODE_STARRED = "starred";
+
+	public static final String AUTH_MODE_SEND_TO_GOOGLE = "send_to_google";
+	public static final String AUTH_MODE_HANDLE = "handle";
+	public static final String AUTH_MODE_RESET = "reset";
 
 	private static final String GOOGLE_DOMAIN = "gqa.nyu.edu";
 
@@ -66,7 +56,6 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 
 	@EntityCustomAction(action = "drive-data", viewKey = EntityView.VIEW_LIST)
 	public List<GoogleItem> getGoogleDriveItems(EntityView view, Map<String, Object> params) {
-//	public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
 		HttpServletRequest request = requestGetter.getRequest();
 		HttpServletResponse response = requestGetter.getResponse();
 
@@ -74,20 +63,21 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 			GoogleClient google = new GoogleClient();
 
 			RequestParams p = new RequestParams(request);
+			String mode = p.getString("mode", DRIVE_MODE_RECENT);
 
 			String user = getCurrentGoogleUser();
 
 			FileList fileList = null;
 
-//			if (RECENT == mode) {
+			if (DRIVE_MODE_RECENT.equals(mode)) {
 				fileList = getRecentFiles(google, user, p);
-//			} else if (MY_DRIVE == mode) {
-//				fileList = getChildrenForContext(google, user, p);
-//			} else if (STARRED == mode) {
-//				fileList = getChildrenForContext(google, user, p, true);
-//			} else {
-//				throw new RuntimeException("DriveHandler mode not supported: " + mode);
-//			}
+			} else if (DRIVE_MODE_MY_DRIVE.equals(mode)) {
+				fileList = getChildrenForContext(google, user, p);
+			} else if (DRIVE_MODE_STARRED.equals(mode)) {
+				fileList = getChildrenForContext(google, user, p, true);
+			} else {
+				throw new RuntimeException("DriveHandler mode not supported: " + mode);
+			}
 
 			List<GoogleItem> items = new ArrayList<>();
 
@@ -108,6 +98,35 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 			throw new RuntimeException(e);
 		}
 	}
+
+//	@EntityCustomAction(action = "auth", viewKey = EntityView.VIEW_LIST)
+//	public void auth(EntityView view, Map<String, Object> params) {
+//		HttpServletRequest request = requestGetter.getRequest();
+//		HttpServletResponse response = requestGetter.getResponse();
+//
+//		RequestParams p = new RequestParams(request);
+//		String mode = p.getString("mode", null);
+//
+//		try {
+//			GoogleClient google = new GoogleClient();
+//
+//			if (AUTH_MODE_HANDLE.equals(mode)) {
+//				handleOAuth(request, response, context);
+//			} else if (AUTH_MODE_SEND_TO_GOOGLE.equals(mode)) {
+//				sendToGoogle(request, response, context);
+//			} else if (AUTH_MODE_RESET.equals(mode)) {
+//				String googleUser = getCurrentGoogleUser();
+//
+//				if (googleUser != null) {
+//					google.deleteCredential(googleUser);
+//				}
+//
+//				// WHAT TO DO?
+//			}
+//		} catch (Exception e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
 
 	private FileList getRecentFiles(GoogleClient google, String user, RequestParams p) {
 		try {
