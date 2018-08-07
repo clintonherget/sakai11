@@ -151,6 +151,11 @@ public class SiteTitleAdvisorCMS implements SiteTitleAdvisor
             }
         }
 
+        // CLASSES-3383 override site title for My Workspace
+        if (site.getId().startsWith("~")) {
+            return "Home";
+        }
+
         // If the section title could not be found, the algorithm hit one of the short circuits,
         // sakai property not set or set to false, or didn't find section or preferred type; use default behaviour
         return site.getTitle();
