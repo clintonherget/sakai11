@@ -39,6 +39,8 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -4942,7 +4944,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		Double points = page.getGradebookPoints();
 		String pointString = "";
 		if (points != null) {
-			pointString = points.toString();
+			// CLASSES-3385 lessons assumes the points value is an integer, so make it so 
+			NumberFormat nf = DecimalFormat.getInstance();
+			nf.setMaximumFractionDigits(0);
+			pointString = nf.format(points);
 		}
 		
 		if(!simplePageBean.isStudentPage(page)) {
