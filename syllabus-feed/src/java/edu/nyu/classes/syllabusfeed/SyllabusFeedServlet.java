@@ -56,14 +56,6 @@ public class SyllabusFeedServlet extends HttpServlet {
          );
 
 
-    private long maxTokenAgeMs = 86400000;
-    private String hmacAlgorithm = "HmacSHA256";
-
-    public SyllabusFeedServlet() {
-        this.maxTokenAgeMs = Long.valueOf(HotReloadConfigurationService.getString("nyu.syllabus-feed.max-token-age", "86400000"));
-        this.hmacAlgorithm = HotReloadConfigurationService.getString("nyu.syllabus-feed.hmac-algorithm", "HmacSHA256");
-    }
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
         reportErrors(Arrays.asList("Request method not supported"), response);
@@ -108,14 +100,18 @@ public class SyllabusFeedServlet extends HttpServlet {
         throws ServletException, IOException {
         String token = request.getParameter("token");
 
+        String algorithm = HotReloadConfigurationService.getString("nyu.syllabus-feed.hmac-algorithm", "HmacSHA256");
+
         for (String client : HotReloadConfigurationService.getString("nyu.syllabus-feed.clients", "").split(" *, *")) {
-            HMACSession hmac = new HMACSession(this.hmacAlgorithm);
+            HMACSession hmac = new HMACSession(algorithm);
 
             String secret = HotReloadConfigurationService.getString("nyu.syllabus-feed.client." + client + ".secret", "");
             String restrictLocations = HotReloadConfigurationService.getString("nyu.syllabus-feed.client." + client + ".restrict-locations", "true");
             String allowedLocations = HotReloadConfigurationService.getString("nyu.syllabus-feed.client." + client + ".allowed-locations", "");
 
-            if (hmac.tokenOk(token, secret, maxTokenAgeMs)) {
+            long maxAge = Long.valueOf(HotReloadConfigurationService.getString("nyu.syllabus-feed.max-token-age", "86400000"));
+
+            if (hmac.tokenOk(token, secret, maxAge)) {
                 return new ClientConfig(!"false".equals(restrictLocations),
                                         Arrays.asList(allowedLocations.split(" *, *")),
                                         token);
