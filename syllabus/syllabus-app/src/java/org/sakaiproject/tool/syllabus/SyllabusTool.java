@@ -2036,7 +2036,7 @@ public class SyllabusTool
 
         if (exportEnabled) {
             if (selectedExportAttachmentId == null) {
-                setAlertMessage("Please select an attachment to export for this Syllabus");
+                setAlertMessage("Please select an attachment to export");
             } else {
                 syllabusManager.setSelectedExportAttachment(syllabusItem, selectedExportAttachmentId);
                 setSuccessMessage("Export settings updated");
