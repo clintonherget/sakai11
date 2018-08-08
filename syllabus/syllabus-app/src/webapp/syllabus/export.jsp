@@ -41,7 +41,10 @@
                   <input type="radio" name="selectedExportPdf" value="</f:verbatim><h:outputText value="#{attachment.syllabusAttachId}" /><f:verbatim>"> </f:verbatim>
                   <sakai:contentTypeMap fileType="#{attachment.type}" mapType="image" var="icon" pathPrefix="/library/image/"/>
                   <h:graphicImage id="icon" value="#{icon}" />
-                  <h:outputText value=" #{attachment.name}" /><f:verbatim>
+                  <h:outputText value=" " />
+                  <h:outputLink value="#{attachment.url}" target="_blank">
+                    <h:outputText value="#{attachment.name}" />
+                  </h:outputLink><f:verbatim>
                 </label>
               </li></f:verbatim>
             </t:dataList>
