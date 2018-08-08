@@ -16,6 +16,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -30,6 +31,7 @@ import java.sql.SQLException;
 import org.sakaiproject.authz.api.SecurityAdvisor;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.cover.ContentHostingService;
 import org.sakaiproject.db.cover.SqlService;
@@ -54,17 +56,74 @@ public class SyllabusFeedServlet extends HttpServlet {
          );
 
 
+    private long maxTokenAgeMs = 86400000;
+    private String hmacAlgorithm = "HmacSHA256";
+
+    public SyllabusFeedServlet() {
+        this.maxTokenAgeMs = Long.valueOf(HotReloadConfigurationService.getString("nyu.syllabus-feed.max-token-age", "86400000"));
+        this.hmacAlgorithm = HotReloadConfigurationService.getString("nyu.syllabus-feed.hmac-algorithm", "HmacSHA256");
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+        reportErrors(Arrays.asList("Request method not supported"), response);
+        return;
+    }
+
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
 
+        if (request.getParameter("token") == null) {
+            reportErrors(Arrays.asList("Missing parameter 'token': expected a HMAC token"), response);
+            return;
+        }
+
+        ClientConfig clientConfig = determineClientIdentity(request);
+
+        if (clientConfig == null) {
+            reportErrors(Arrays.asList("Token unrecognized"), response);
+            return;
+        }
+
         if (request.getParameter("get") == null) {
-            handleListing(request, response);
+            handleListing(clientConfig, request, response);
         } else {
-            handleFetch(request, response);
+            handleFetch(clientConfig, request, response);
         }
     }
 
-    private void handleFetch(HttpServletRequest request, HttpServletResponse response)
+    private class ClientConfig {
+        public boolean restrictLocations;
+        public List<String> allowedLocations;
+
+        public ClientConfig(boolean restrictLocations, List<String> allowedLocations) {
+            this.restrictLocations = restrictLocations;
+            this.allowedLocations = Objects.requireNonNull(allowedLocations);
+        }
+    }
+
+    private ClientConfig determineClientIdentity(HttpServletRequest request)
+        throws ServletException, IOException {
+        String token = request.getParameter("token");
+
+        for (String client : HotReloadConfigurationService.getString("nyu.syllabus-feed.clients", "").split(" *, *")) {
+            HMACSession hmac = new HMACSession(this.hmacAlgorithm);
+
+            String secret = HotReloadConfigurationService.getString("nyu.syllabus-feed.client." + client + ".secret", "");
+            String restrictLocations = HotReloadConfigurationService.getString("nyu.syllabus-feed.client." + client + ".restrict-locations", "true");
+            String allowedLocations = HotReloadConfigurationService.getString("nyu.syllabus-feed.client." + client + ".allowed-locations", "");
+
+            if (hmac.tokenOk(token, secret, maxTokenAgeMs)) {
+                return new ClientConfig(!"false".equals(restrictLocations),
+                                        Arrays.asList(allowedLocations.split(" *, *")));
+            }
+        }
+
+        // Token invalid
+        return null;
+    }
+
+    private void handleFetch(ClientConfig config, HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
         String stemName = request.getParameter("get");
 
@@ -78,6 +137,13 @@ public class SyllabusFeedServlet extends HttpServlet {
             return;
         }
 
+        String locationRestriction = "";
+        if (config.restrictLocations) {
+            locationRestriction = "cc.location in (" +
+                config.allowedLocations.stream().map(l -> "?").collect(Collectors.joining(", "))
+                + ") AND ";
+        }
+
         Connection conn = null;
 
         try {
@@ -85,9 +151,19 @@ public class SyllabusFeedServlet extends HttpServlet {
 
             try (PreparedStatement ps = conn.prepareStatement("select ssa.syllabusAttachName, ssa.syllabusAttachType, ssa.attachmentId" +
                                                               BASE_JOINS +
-                                                              " where cc.stem_name = ?")) {
-                ps.setString(1, stemName);
-                try(ResultSet rs = ps.executeQuery()) {
+                                                              " where " +
+                                                              locationRestriction +
+                                                              " cc.stem_name = ?")) {
+                int i = 0;
+                if (config.restrictLocations) {
+                    for (; i < config.allowedLocations.size(); i++) {
+                        ps.setString(i + 1, config.allowedLocations.get(i));
+                    }
+                }
+
+                ps.setString(i + 1, stemName);
+
+                try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         String filename = rs.getString("syllabusAttachName");
                         String mimeType = rs.getString("syllabusAttachType");
@@ -144,14 +220,14 @@ public class SyllabusFeedServlet extends HttpServlet {
         }
     }
 
-    private void handleListing(HttpServletRequest request, HttpServletResponse response)
+    private void handleListing(ClientConfig config, HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException {
-        String location = request.getParameter("location");
+        String locationCSV = request.getParameter("location");
         String strm = request.getParameter("strm");
 
         List<String> errors = new ArrayList();
 
-        if (location == null) {
+        if (locationCSV == null) {
             errors.add("Missing parameter 'location': expected a comma-separated list of location codes");
         }
 
@@ -169,7 +245,12 @@ public class SyllabusFeedServlet extends HttpServlet {
             return;
         }
 
-        handleQuery(strm, Arrays.asList(location.split(" *, *")), response);
+        List<String> locations = Arrays.asList(locationCSV.split(" *, *"))
+            .stream()
+            .filter(location -> !config.restrictLocations || config.allowedLocations.indexOf(location) >= 0)
+            .collect(Collectors.toList());
+
+        handleQuery(strm, locations, response);
     }
 
 
@@ -207,8 +288,6 @@ public class SyllabusFeedServlet extends HttpServlet {
 
             String locationPlaceholders = locationCodes.stream().map(l -> "?").collect(Collectors.joining(", "));
 
-            // FIXME: limit to published/selected attachments
-            // TODO: touch the attachment mtime on publish too
             try (PreparedStatement ps = conn.prepareStatement("select cc.stem_name," +
                                                               "  cc.crse_id," +
                                                               "  cc.class_section," +
