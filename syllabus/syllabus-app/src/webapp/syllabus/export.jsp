@@ -13,30 +13,39 @@
       <script>includeLatestJQuery('export.jsp');</script>
       <h:form id="exportForm">
         <f:verbatim>
-          <h3>Export Settings</h3></f:verbatim>
+          <h3>Enable automatic syllabus export to external systems</h3>
+          <p>
+            When enabled, the selected syllabus file will be automatically exported to external systems (for example,
+            CAaR and the web course lists).
+          </p></f:verbatim>
           <h:outputText value="#{SyllabusTool.alertMessage}" styleClass="alertMessage" rendered="#{SyllabusTool.alertMessage != null}" />
           <h:outputText value="#{SyllabusTool.successMessage}" styleClass="messageSuccess" rendered="#{SyllabusTool.successMessage != null}" /><f:verbatim>
           <p>
-            <label></f:verbatim>
-            <h:selectBooleanCheckbox value="#{SyllabusTool.exportEnabled}" id="exportEnabled" /><f:verbatim> 
-            Enable Export</label>
+            <div class="onoffswitch"></f:verbatim>
+              <h:selectBooleanCheckbox value="#{SyllabusTool.exportEnabled}" id="exportEnabled" styleClass="onoffswitch-checkbox"/><f:verbatim>
+              <label class="onoffswitch-label" for="exportForm:exportEnabled">
+                <span class="onoffswitch-inner"></span>
+                <span class="onoffswitch-switch"></span>
+                <span class="sr-only">Toggle Enable Export</span>
+              </label>
+            </div>
           </p>
+          <h4>Attachment Files</h4>
           <ul id="exportList">
           </f:verbatim>
+          <c:if test="${SyllabusTool.exportPdfs.isEmpty()}">
+            <f:verbatim><p>No attachments to export</p></f:verbatim>
+          </c:if>
           <t:dataList value="#{SyllabusTool.exportPdfs.keySet().toArray()}" var="entry">
-            <f:verbatim><li></f:verbatim>
-              <h:outputText value="#{entry.title}" />
-              <f:verbatim><ul></f:verbatim>
-              <t:dataList value="#{SyllabusTool.exportPdfs[entry]}" var="attachment">
-                <f:verbatim><li>
-                  <label>
-                    <input type="radio" name="selectedExportPdf" value="</f:verbatim><h:outputText value="#{attachment.syllabusAttachId}" /><f:verbatim>"> </f:verbatim>
-                    <h:outputText value="#{attachment.name}" /><f:verbatim>
-                  </label>
-                </li></f:verbatim>
-              </t:dataList>
-              <f:verbatim></ul></f:verbatim>
-            <f:verbatim></li></f:verbatim>
+            <t:dataList value="#{SyllabusTool.exportPdfs[entry]}" var="attachment">
+              <f:verbatim><li>
+                <label>
+                  <input type="radio" name="selectedExportPdf" value="</f:verbatim><h:outputText value="#{attachment.syllabusAttachId}" /><f:verbatim>"> 
+                  <img src="/library/image/sakai/pdf.gif" alt="PDF icon"/> </f:verbatim>
+                  <h:outputText value="#{attachment.name}" /><f:verbatim>
+                </label>
+              </li></f:verbatim>
+            </t:dataList>
           </t:dataList>
           <f:verbatim>
           </ul>
@@ -97,6 +106,14 @@
 
         new ExportForm();
       </script>
+      <style>
+        #exportList {
+          list-style: none;
+        }
+        #exportList label {
+          font-weight: normal;
+        }
+      </style>
     </sakai:view_content>
   </sakai:view_container>
 </f:view>
