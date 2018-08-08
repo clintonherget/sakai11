@@ -12,14 +12,13 @@
     <sakai:view_content>
       <script>includeLatestJQuery('export.jsp');</script>
       <h:form id="exportForm">
-        <f:verbatim>
+          <h:outputText value="#{SyllabusTool.alertMessage}" styleClass="alertMessage" rendered="#{SyllabusTool.alertMessage != null}" />
+          <h:outputText value="#{SyllabusTool.successMessage}" styleClass="messageSuccess" rendered="#{SyllabusTool.successMessage != null}" /><f:verbatim>
           <h3>Enable automatic syllabus export to external systems</h3>
           <p>
             When enabled, the selected syllabus file will be automatically exported to external systems (for example,
             CAaR and the web course lists).
-          </p></f:verbatim>
-          <h:outputText value="#{SyllabusTool.alertMessage}" styleClass="alertMessage" rendered="#{SyllabusTool.alertMessage != null}" />
-          <h:outputText value="#{SyllabusTool.successMessage}" styleClass="messageSuccess" rendered="#{SyllabusTool.successMessage != null}" /><f:verbatim>
+          </p>
           <p>
             <div class="onoffswitch"></f:verbatim>
               <h:selectBooleanCheckbox value="#{SyllabusTool.exportEnabled}" id="exportEnabled" styleClass="onoffswitch-checkbox"/><f:verbatim>
@@ -30,6 +29,7 @@
               </label>
             </div>
           </p>
+          <hr>
           <h4>Attachment Files</h4>
           <ul id="exportList">
           </f:verbatim>
