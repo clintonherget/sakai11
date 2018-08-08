@@ -280,6 +280,11 @@ public class SyllabusFeedServlet extends HttpServlet {
 
         response.setContentType("text/json; charset=utf-8");
 
+        if (locationCodes.isEmpty()) {
+            response.getWriter().write("[]");
+            return;
+        }
+
         try {
             conn = SqlService.borrowConnection();
 
