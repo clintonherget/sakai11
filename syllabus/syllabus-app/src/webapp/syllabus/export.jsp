@@ -33,9 +33,7 @@
           <h4>Attachment Files</h4>
           <ul id="exportList">
           </f:verbatim>
-          <c:if test="${SyllabusTool.exportPdfs.isEmpty()}">
-            <f:verbatim><p>No attachments to export</p></f:verbatim>
-          </c:if>
+          <h:outputText value="No attachments to export" rendered="#{SyllabusTool.exportPdfs.isEmpty()}"/>
           <t:dataList value="#{SyllabusTool.exportPdfs.keySet().toArray()}" var="entry">
             <t:dataList value="#{SyllabusTool.exportPdfs[entry]}" var="attachment">
               <f:verbatim><li>
