@@ -38,9 +38,10 @@
             <t:dataList value="#{SyllabusTool.exportPdfs[entry]}" var="attachment">
               <f:verbatim><li>
                 <label>
-                  <input type="radio" name="selectedExportPdf" value="</f:verbatim><h:outputText value="#{attachment.syllabusAttachId}" /><f:verbatim>"> 
-                  <img src="/library/image/sakai/pdf.gif" alt="PDF icon"/> </f:verbatim>
-                  <h:outputText value="#{attachment.name}" /><f:verbatim>
+                  <input type="radio" name="selectedExportPdf" value="</f:verbatim><h:outputText value="#{attachment.syllabusAttachId}" /><f:verbatim>"> </f:verbatim>
+                  <sakai:contentTypeMap fileType="#{attachment.type}" mapType="image" var="icon" pathPrefix="/library/image/"/>
+                  <h:graphicImage id="icon" value="#{icon}" />
+                  <h:outputText value=" #{attachment.name}" /><f:verbatim>
                 </label>
               </li></f:verbatim>
             </t:dataList>
