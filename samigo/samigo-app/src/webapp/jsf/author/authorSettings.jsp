@@ -67,12 +67,15 @@
               val: '<h:outputText value="#{assessmentSettings.startDate}"><f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/></h:outputText>',
               ashidden: { iso8601: 'startDateISO8601' }
           });
+
+          var defaultEndDate = moment().add('1', 'year').format('YYYY-MM-DD h:mm:ss');
+
           localDatePicker({
               input: '#assessmentSettingsAction\\:endDate',
               useTime: 1,
               parseFormat: 'YYYY-MM-DD HH:mm:ss',
-              allowEmptyDate: true,
-              val: '<h:outputText value="#{assessmentSettings.dueDate}"><f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/></h:outputText>',
+              allowEmptyDate: false,
+              val: '<h:outputText value="#{assessmentSettings.dueDate}"><f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/></h:outputText>' || defaultEndDate,
               ashidden: { iso8601: 'endDateISO8601' }
           });
           localDatePicker({
@@ -80,7 +83,7 @@
               useTime: 1,
               parseFormat: 'YYYY-MM-DD HH:mm:ss',
               allowEmptyDate: false,
-              val: '<h:outputText value="#{assessmentSettings.retractDate}"><f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/></h:outputText>',
+              val: '<h:outputText value="#{assessmentSettings.retractDate}"><f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/></h:outputText>'  || defaultEndDate,
               ashidden: { iso8601: 'retractDateISO8601' }
           });
           localDatePicker({
