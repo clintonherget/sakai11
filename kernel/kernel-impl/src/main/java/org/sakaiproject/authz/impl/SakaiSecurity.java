@@ -44,6 +44,8 @@ import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
 import java.util.*;
 
 /**
@@ -775,11 +777,20 @@ public abstract class SakaiSecurity implements SecurityService, Observer
 		if (m_callCache != null)
 		{
 			final Boolean value = getFromCache(command, false);
-			if(value != null) return value.booleanValue();
+			if(value != null) {
+			    if (!value.booleanValue() && "true".equals(HotReloadConfigurationService.getString("nyu-log-failed-unlocks", "true"))) {
+				M_log.info("checkAuthzGroups returning cached false for key: " + command);
+			    }
+			    return value.booleanValue();
+			}
 		}
 
 
 		boolean rv = authzGroupService().isAllowed(userId, function, azgs);
+
+		if (!rv && "true".equals(HotReloadConfigurationService.getString("nyu-log-failed-unlocks", "true"))) {
+		    M_log.info("checkAuthzGroups returning calculated false for key: " + command + " in authz groups: " + azgs);
+		}
 
 		// cache
 		addToCache(command, rv, false);
