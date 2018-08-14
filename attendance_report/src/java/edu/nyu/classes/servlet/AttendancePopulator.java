@@ -39,6 +39,11 @@ import java.util.Locale;
 import java.text.SimpleDateFormat;
 import java.sql.SQLException;
 
+import java.time.LocalDate;
+import java.time.temporal.WeekFields;
+import java.time.temporal.TemporalField;
+import java.time.format.DateTimeFormatter;
+
 public class AttendancePopulator {
 
     private static final String ATTENDANCE_PREPOPULATED = "attendance_prepopulated";
@@ -101,6 +106,8 @@ public class AttendancePopulator {
                             failureReport.append(String.format("Error processing attendance for site %s: %s",
                                                                siteId,
                                                                e.toString()));
+                            System.err.println(e.toString());
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -122,14 +129,14 @@ public class AttendancePopulator {
 
     private class Meeting {
         public String stemName;
-        public long startDate;
-        public long endDate;
+        public LocalDate startDate;
+        public LocalDate endDate;
         public String holidaySchedule;
         public List<String> days = new ArrayList<>();
     }
 
-    private Set<Date> holidaysForSchedule(Connection conn, String schedule) throws Exception {
-        Set<Date> result = new HashSet<>();
+    private Set<LocalDate> holidaysForSchedule(Connection conn, String schedule) throws Exception {
+        Set<LocalDate> result = new HashSet<>();
 
         try (PreparedStatement ps = conn.prepareStatement("select holiday" +
                                                           " from nyu_t_holiday_date" +
@@ -137,9 +144,7 @@ public class AttendancePopulator {
             ps.setString(1, schedule);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Calendar date = truncateToDay(toCalendar(new Date(rs.getDate("holiday").getTime())));
-
-                    result.add(date.getTime());
+                    result.add(rs.getDate("holiday").toLocalDate());
                 }
             }
         }
@@ -147,37 +152,25 @@ public class AttendancePopulator {
         return result;
     }
 
-    private static List<Date> getDaysBetweenDates(long startdate, long enddate)
+    private static List<LocalDate> getDaysBetweenDates(LocalDate start, LocalDate end)
     {
-        List<Date> dates = new ArrayList<Date>();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(startdate);
+        List<LocalDate> dates = new ArrayList<>();
 
-        calendar = truncateToDay(calendar);
+        LocalDate day = start;
 
-        while (calendar.getTimeInMillis() < enddate)
-        {
-            dates.add(calendar.getTime());
-            calendar.add(Calendar.DATE, 1);
+        while (!day.isAfter(end)) {
+            dates.add(day);
+            day = day.plusDays(1);
         }
 
         return dates;
     }
 
-    private static Calendar truncateToDay(Calendar calendar) {
-        calendar.set(Calendar.HOUR, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        return calendar;
-    }
-
     private class MeetingWithDate {
         public String title;
-        public Date date;
+        public LocalDate date;
 
-        public MeetingWithDate(String title, Date date) {
+        public MeetingWithDate(String title, LocalDate date) {
             this.title = title;
             this.date = date;
         }
@@ -201,8 +194,8 @@ public class AttendancePopulator {
                     Meeting meeting = new Meeting();
 
                     meeting.stemName = rs.getString("stem_name");
-                    meeting.startDate = rs.getDate("start_dt").getTime();
-                    meeting.endDate = rs.getDate("end_dt").getTime() + (24 * 60 * 60 * 1000); // Add a day to make our end date inclusive
+                    meeting.startDate = rs.getDate("start_dt").toLocalDate();
+                    meeting.endDate = rs.getDate("end_dt").toLocalDate();
                     meeting.holidaySchedule = rs.getString("holiday_schedule");
 
                     for (String day : MEETING_DAYS) {
@@ -221,7 +214,7 @@ public class AttendancePopulator {
         }
 
         // Get term start date
-        Date termStartDate;
+        LocalDate termStartDate;
         try (PreparedStatement ps = conn.prepareStatement("select s.term_begin_dt" +
                                                           " from nyu_t_course_catalog cc" +
                                                           " inner join nyu_t_acad_session s on cc.strm = s.strm AND s.acad_career = cc.acad_career" +
@@ -229,22 +222,24 @@ public class AttendancePopulator {
             ps.setString(1, rosterId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    termStartDate = rs.getDate("term_begin_dt");
+                    termStartDate = rs.getDate("term_begin_dt").toLocalDate();
                 } else {
                     throw new RuntimeException("Failed to determine term start date for roster: " + rosterId);
                 }
             }
         }
 
-        Set<Date> holidays = holidaysForSchedule(conn, meetings.get(0).holidaySchedule);
+        Set<LocalDate> holidays = holidaysForSchedule(conn, meetings.get(0).holidaySchedule);
 
         List<MeetingWithDate> result = new ArrayList<>();
 
-        SimpleDateFormat dayOfWeek = new SimpleDateFormat("EEE");
+        DateTimeFormatter dayOfWeek = DateTimeFormatter.ofPattern("EEE");
         Map<Integer, Integer> weekCounts = new HashMap<>();
 
+        TemporalField weekOfYear = WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear();
+
         for (Meeting meeting : meetings) {
-            for (Date day : getDaysBetweenDates(meeting.startDate, meeting.endDate)) {
+            for (LocalDate day : getDaysBetweenDates(meeting.startDate, meeting.endDate)) {
                 if (!meeting.days.contains(dayOfWeek.format(day).toUpperCase(Locale.ROOT))) {
                     // If our meeting doesn't meet this day, skip.
                     continue;
@@ -254,9 +249,7 @@ public class AttendancePopulator {
                     continue;
                 }
 
-                int meetingWeek = (toCalendar(day).get(Calendar.WEEK_OF_YEAR) -
-                                   toCalendar(termStartDate).get(Calendar.WEEK_OF_YEAR)
-                                   + 1);
+                int meetingWeek = day.get(weekOfYear) - termStartDate.get(weekOfYear) + 1;
 
                 if (!weekCounts.containsKey(meetingWeek)) {
                     weekCounts.put(meetingWeek, 0);
@@ -272,13 +265,6 @@ public class AttendancePopulator {
         }
 
         return result;
-    }
-
-    private Calendar toCalendar(Date date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-
-        return calendar;
     }
 
     private void prepopulateAttendance(Connection conn, String siteId, List<String> rosters) throws Exception {
