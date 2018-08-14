@@ -11,6 +11,10 @@ import javax.servlet.http.HttpServletResponse;
 public class AttendanceReportServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        new AttendanceGoogleReportExport().export();
+        if (request.getParameter("prepopulate") != null) {
+            new AttendancePopulator().run();
+        } else {
+            new AttendanceGoogleReportExport().export();
+        }
     }
 }
