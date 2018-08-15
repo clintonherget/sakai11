@@ -87,10 +87,11 @@ public class AttendancePopulator {
                                            " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
                                            " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
                                            " inner join sakai_site ss on sr.realm_id = concat('/site/', ss.site_id)" +
-                                           " left join sakai_site_property ssp on ssp.name = 'attendance_prepopulated' AND ssp.value is null" +
+                                           " left join sakai_site_property ssp on ssp.name = ? AND ssp.value is null" +
                                            " where cc.location = ? AND cc.strm >= ?")) {
-                    ps.setString(1, LOCATION_CODE);
-                    ps.setInt(2, STRM);
+                    ps.setString(1, ATTENDANCE_PREPOPULATED);
+                    ps.setString(2, LOCATION_CODE);
+                    ps.setInt(3, STRM);
 
                     try (ResultSet rs = ps.executeQuery()) {
                         Map<String, List<String>> siteRosters = new HashMap<>();
