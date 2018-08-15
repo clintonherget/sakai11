@@ -127,7 +127,7 @@ public class AttendancePopulator {
 
     private static final String[] MEETING_DAYS = new String[] { "MON", "TUES", "WED", "THURS", "FRI", "SAT", "SUN" };
 
-    private class Meeting {
+    private class MeetingPattern {
         public String stemName;
         public LocalDate startDate;
         public LocalDate endDate;
@@ -166,11 +166,11 @@ public class AttendancePopulator {
         return dates;
     }
 
-    private class MeetingWithDate {
+    private class Meeting {
         public String title;
         public LocalDate date;
 
-        public MeetingWithDate(String title, LocalDate date) {
+        public Meeting(String title, LocalDate date) {
             this.title = title;
             this.date = date;
         }
@@ -180,9 +180,9 @@ public class AttendancePopulator {
         }
     }
 
-    private List<MeetingWithDate> eventsForRoster(Connection conn, String rosterId) throws Exception {
+    private List<Meeting> eventsForRoster(Connection conn, String rosterId) throws Exception {
         // Load meetings
-        List<Meeting> meetings = new ArrayList<>();
+        List<MeetingPattern> meetings = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement("select ct.holiday_schedule, mp.*" +
                                                           " from nyu_t_class_tbl ct" +
                                                           " inner join nyu_t_class_mtg_pat mp on mp.stem_name = ct.stem_name" +
@@ -191,7 +191,7 @@ public class AttendancePopulator {
             ps.setString(1, rosterId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Meeting meeting = new Meeting();
+                    MeetingPattern meeting = new MeetingPattern();
 
                     meeting.stemName = rs.getString("stem_name");
                     meeting.startDate = rs.getDate("start_dt").toLocalDate();
@@ -231,14 +231,14 @@ public class AttendancePopulator {
 
         Set<LocalDate> holidays = holidaysForSchedule(conn, meetings.get(0).holidaySchedule);
 
-        List<MeetingWithDate> result = new ArrayList<>();
+        List<Meeting> result = new ArrayList<>();
 
         DateTimeFormatter dayOfWeek = DateTimeFormatter.ofPattern("EEE");
         Map<Integer, Integer> weekCounts = new HashMap<>();
 
         TemporalField weekOfYear = WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear();
 
-        for (Meeting meeting : meetings) {
+        for (MeetingPattern meeting : meetings) {
             for (LocalDate day : getDaysBetweenDates(meeting.startDate, meeting.endDate)) {
                 if (!meeting.days.contains(dayOfWeek.format(day).toUpperCase(Locale.ROOT))) {
                     // If our meeting doesn't meet this day, skip.
@@ -257,9 +257,9 @@ public class AttendancePopulator {
 
                 weekCounts.put(meetingWeek, weekCounts.get(meetingWeek) + 1);
 
-                MeetingWithDate m = new MeetingWithDate(String.format("Week %d Session %d",
-                                                                      meetingWeek, weekCounts.get(meetingWeek)),
-                                                        day);
+                Meeting m = new Meeting(String.format("Week %d Session %d",
+                                                      meetingWeek, weekCounts.get(meetingWeek)),
+                                        day);
                 result.add(m);
             }
         }
@@ -268,7 +268,7 @@ public class AttendancePopulator {
     }
 
     private void prepopulateAttendance(Connection conn, String siteId, List<String> rosters) throws Exception {
-        List<List<MeetingWithDate>> rosterEvents = new ArrayList<>();
+        List<List<Meeting>> rosterEvents = new ArrayList<>();
 
         for (String rosterId : rosters) {
             rosterEvents.add(eventsForRoster(conn, rosterId));
@@ -292,12 +292,16 @@ public class AttendancePopulator {
         }
 
         // FIXME: do something
-        List<MeetingWithDate> siteMeetingDates = rosterEvents.get(0);
+        List<Meeting> siteMeetingDates = rosterEvents.get(0);
 
-        // rosters
-        System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[AttendancePopulator.java:313 9d30e1]: " + "\n    rosters => " + (rosters) + "\n");
+        System.err.println("Rosters for site:");
+        for (String roster : rosters) {
+            System.err.println("  * " + roster);
+        }
 
-        // siteMeetingDates
-        System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[AttendancePopulator.java:306 49b64]: " + "\n    siteMeetingDates => " + (siteMeetingDates) + "\n");
+        System.err.println("\nMeeting dates:");
+        for (Meeting meeting : siteMeetingDates) {
+            System.err.println("  * " + meeting);
+        }
     }
 }
