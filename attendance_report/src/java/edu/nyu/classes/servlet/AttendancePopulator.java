@@ -71,6 +71,10 @@ public class AttendancePopulator {
     //   * If anything goes wrong along the way, we'll retry next run.  Set a
     //     failure count property on the site and email alert when it hits 10. (TODO)
     //
+
+    private static final String LOCATION_CODE = "GLOBAL-0L";
+    private static final int STRM = 1188;
+
     public void run() {
         StringBuilder failureReport = new StringBuilder();
 
@@ -84,30 +88,34 @@ public class AttendancePopulator {
                                            " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
                                            " inner join sakai_site ss on sr.realm_id = concat('/site/', ss.site_id)" +
                                            " left join sakai_site_property ssp on ssp.name = 'attendance_prepopulated' AND ssp.value is null" +
-                                           " where cc.location = 'GLOBAL-0L' AND cc.strm >= 1188");
-                     ResultSet rs = ps.executeQuery()) {
-                    Map<String, List<String>> siteRosters = new HashMap<>();
+                                           " where cc.location = ? AND cc.strm >= ?")) {
+                    ps.setString(1, LOCATION_CODE);
+                    ps.setInt(2, STRM);
 
-                    while (rs.next()) {
-                        String siteId = rs.getString("site_id");
-                        String roster = rs.getString("stem_name");
+                    try (ResultSet rs = ps.executeQuery()) {
+                        Map<String, List<String>> siteRosters = new HashMap<>();
 
-                        if (!siteRosters.containsKey(siteId)) {
-                            siteRosters.put(siteId, new ArrayList<String>());
+                        while (rs.next()) {
+                            String siteId = rs.getString("site_id");
+                            String roster = rs.getString("stem_name");
+
+                            if (!siteRosters.containsKey(siteId)) {
+                                siteRosters.put(siteId, new ArrayList<String>());
+                            }
+
+                            siteRosters.get(siteId).add(roster);
                         }
 
-                        siteRosters.get(siteId).add(roster);
-                    }
-
-                    for (String siteId : siteRosters.keySet()) {
-                        try {
-                            prepopulateAttendance(conn, siteId, siteRosters.get(siteId));
-                        } catch (Exception e) {
-                            failureReport.append(String.format("Error processing attendance for site %s: %s",
-                                                               siteId,
-                                                               e.toString()));
-                            System.err.println(e.toString());
-                            e.printStackTrace();
+                        for (String siteId : siteRosters.keySet()) {
+                            try {
+                                prepopulateAttendance(conn, siteId, siteRosters.get(siteId));
+                            } catch (Exception e) {
+                                failureReport.append(String.format("Error processing attendance for site %s: %s",
+                                                                   siteId,
+                                                                   e.toString()));
+                                System.err.println(e.toString());
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -180,9 +188,9 @@ public class AttendancePopulator {
         }
     }
 
-    private List<Meeting> eventsForRoster(Connection conn, String rosterId) throws Exception {
-        // Load meetings
-        List<MeetingPattern> meetings = new ArrayList<>();
+    private List<Meeting> meetingsForRoster(Connection conn, String rosterId) throws Exception {
+        // Load meeting patterns
+        List<MeetingPattern> meetingPatterns = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement("select ct.holiday_schedule, mp.*" +
                                                           " from nyu_t_class_tbl ct" +
                                                           " inner join nyu_t_class_mtg_pat mp on mp.stem_name = ct.stem_name" +
@@ -191,26 +199,26 @@ public class AttendancePopulator {
             ps.setString(1, rosterId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    MeetingPattern meeting = new MeetingPattern();
+                    MeetingPattern meetingPattern = new MeetingPattern();
 
-                    meeting.stemName = rs.getString("stem_name");
-                    meeting.startDate = rs.getDate("start_dt").toLocalDate();
-                    meeting.endDate = rs.getDate("end_dt").toLocalDate();
-                    meeting.holidaySchedule = rs.getString("holiday_schedule");
+                    meetingPattern.stemName = rs.getString("stem_name");
+                    meetingPattern.startDate = rs.getDate("start_dt").toLocalDate();
+                    meetingPattern.endDate = rs.getDate("end_dt").toLocalDate();
+                    meetingPattern.holidaySchedule = rs.getString("holiday_schedule");
 
                     for (String day : MEETING_DAYS) {
                         if ("Y".equals(rs.getString(day))) {
-                            meeting.days.add(day.substring(0, 3));
+                            meetingPattern.days.add(day.substring(0, 3));
                         }
                     }
 
-                    meetings.add(meeting);
+                    meetingPatterns.add(meetingPattern);
                 }
             }
         }
 
-        if (meetings.size() == 0) {
-            throw new RuntimeException("No meetings found for roster: " + rosterId);
+        if (meetingPatterns.size() == 0) {
+            throw new RuntimeException("No meeting patterns found for roster: " + rosterId);
         }
 
         // Get term start date
@@ -229,7 +237,7 @@ public class AttendancePopulator {
             }
         }
 
-        Set<LocalDate> holidays = holidaysForSchedule(conn, meetings.get(0).holidaySchedule);
+        Set<LocalDate> holidays = holidaysForSchedule(conn, meetingPatterns.get(0).holidaySchedule);
 
         List<Meeting> result = new ArrayList<>();
 
@@ -238,7 +246,7 @@ public class AttendancePopulator {
 
         TemporalField weekOfYear = WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear();
 
-        for (MeetingPattern meeting : meetings) {
+        for (MeetingPattern meeting : meetingPatterns) {
             for (LocalDate day : getDaysBetweenDates(meeting.startDate, meeting.endDate)) {
                 if (!meeting.days.contains(dayOfWeek.format(day).toUpperCase(Locale.ROOT))) {
                     // If our meeting doesn't meet this day, skip.
@@ -268,21 +276,21 @@ public class AttendancePopulator {
     }
 
     private void prepopulateAttendance(Connection conn, String siteId, List<String> rosters) throws Exception {
-        List<List<Meeting>> rosterEvents = new ArrayList<>();
+        List<List<Meeting>> rosterMeetings = new ArrayList<>();
 
         for (String rosterId : rosters) {
-            rosterEvents.add(eventsForRoster(conn, rosterId));
+            rosterMeetings.add(meetingsForRoster(conn, rosterId));
         }
 
-        if (rosterEvents.stream().map(e -> e.size()).distinct().count() > 1) {
+        if (rosterMeetings.stream().map(e -> e.size()).distinct().count() > 1) {
             throw new RuntimeException(String.format("Site %s has multiple rosters with differing meeting patterns (count mismatch)",
                                                      siteId));
         }
 
-        for (int i = 0; i < rosterEvents.get(0).size(); i++) {
+        for (int i = 0; i < rosterMeetings.get(0).size(); i++) {
             Set<String> titles = new HashSet<>();
             for (int r = 0; r < rosters.size(); r++) {
-                titles.add(rosterEvents.get(r).get(i).title);
+                titles.add(rosterMeetings.get(r).get(i).title);
             }
 
             if (titles.size() > 1) {
@@ -292,7 +300,7 @@ public class AttendancePopulator {
         }
 
         // FIXME: do something
-        List<Meeting> siteMeetingDates = rosterEvents.get(0);
+        List<Meeting> siteMeetingDates = rosterMeetings.get(0);
 
         System.err.println("Rosters for site:");
         for (String roster : rosters) {
