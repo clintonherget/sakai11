@@ -58,6 +58,7 @@ import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.authz.api.SecurityAdvisor;
 
+import org.sakaiproject.email.cover.EmailService;
 
 public class AttendancePopulator {
 
@@ -93,14 +94,16 @@ public class AttendancePopulator {
     private static final int STRM = 1188;
 
     private AttendanceLogic attendanceLogic;
+    private ErrorReporter errorReporter;
+
 
     public AttendancePopulator() {
         attendanceLogic = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
+        errorReporter = new ErrorReporter(HotReloadConfigurationService.getString("nyu.attendance-populator.error-address", ""),
+                                          "AttendancePopulator error");
     }
 
     public void run() {
-        StringBuilder failureReport = new StringBuilder();
-
         try{
             Connection conn = SqlService.borrowConnection();
             try {
@@ -150,9 +153,9 @@ public class AttendancePopulator {
                                     SecurityService.popAdvisor();
                                 }
                             } catch (Exception e) {
-                                failureReport.append(String.format("Error processing attendance for site %s: %s",
-                                                                   siteId,
-                                                                   e.toString()));
+                                errorReporter.addError(String.format("Error processing attendance for site %s: %s",
+                                                                     siteId,
+                                                                     e.toString()));
                                 System.err.println(e.toString());
                                 e.printStackTrace();
                             }
@@ -164,13 +167,10 @@ public class AttendancePopulator {
             }
         } catch (SQLException e) {
             // FIXME: Make better
-            failureReport.append("SQL Error: " + e.toString());
+            errorReporter.addError("SQL Error: " + e.toString());
         }
 
-        // TODO: If failureReport not empty, email it...
-        if (failureReport.length() > 0) {
-            System.err.println("BAD THINGS HAPPENED: " + failureReport.toString());
-        }
+        errorReporter.report();
     }
 
     private static final String[] MEETING_DAYS = new String[] { "MON", "TUES", "WED", "THURS", "FRI", "SAT", "SUN" };
@@ -410,5 +410,44 @@ public class AttendancePopulator {
         tool.setTitle(ToolManager.getTool(ATTENDANCE_TOOL).getTitle());
 
         SiteService.save(site);
+    }
+
+
+    private class ErrorReporter {
+        private String recipientAddress;
+        private String subject;
+        private List<String> errors;
+
+        public ErrorReporter(String recipientAddress, String subject) {
+            this.recipientAddress = recipientAddress;
+            this.subject = subject;
+            this.errors = new ArrayList<>();
+        }
+
+        public void addError(String error) {
+            this.errors.add(error);
+        }
+
+        public void report() {
+            if (this.errors.isEmpty()) {
+                return;
+            }
+
+            StringBuilder body = new StringBuilder();
+            body.append("The following errors occurred while populating attendance events:\n\n");
+
+            for (String error : this.errors) {
+                body.append("  * " + error);
+                body.append("\n\n");
+            }
+
+            EmailService.send(HotReloadConfigurationService.getString("nyu.overrideFromAddress", ""),
+                              this.recipientAddress,
+                              this.subject,
+                              body.toString(),
+                              null,
+                              null,
+                              null);
+        }
     }
 }
