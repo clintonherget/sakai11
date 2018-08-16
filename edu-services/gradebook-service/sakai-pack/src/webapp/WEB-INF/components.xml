@@ -460,6 +460,56 @@
 						</map>
 					</property>
 				</bean>
+				<bean class="org.sakaiproject.service.gradebook.shared.GradingScaleDefinition">
+					<property name="uid" value="LetterGradePlusMinusMapping_global"/>
+					<property name="name" value="Global: Letter Grades with +/-"/>
+					<property name="grades">
+						<list>
+							<value>A</value>
+							<value>A-</value>
+							<value>B+</value>
+							<value>B</value>
+							<value>B-</value>
+							<value>C+</value>
+							<value>C</value>
+							<value>C-</value>
+							<value>D+</value>
+							<value>D</value>
+							<value>F</value>
+						</list>
+					</property>
+
+					<property name="defaultBottomPercentsAsList">
+						<list>
+							<value>94.0</value>
+							<value>90.0</value>
+							<value>87.0</value>
+							<value>84.0</value>
+							<value>80.0</value>
+							<value>77.0</value>
+							<value>74.0</value>
+							<value>70.0</value>
+							<value>67.0</value>
+							<value>65.0</value>
+							<value>00.0</value>
+						</list>
+					</property>
+					<property name="defaultBottomPercents">
+						<map>
+							<entry key="A" value="94.0" />
+							<entry key="A-" value="90.0" />
+							<entry key="B+" value="87.0" />
+							<entry key="B" value="84.0" />
+							<entry key="B-" value="80.0" />
+							<entry key="C+" value="77.0" />
+							<entry key="C" value="74.0" />
+							<entry key="C-" value="70.0" />
+							<entry key="D+" value="67.0" />
+							<entry key="D" value="65.0" />
+							<entry key="F" value="00.0" />
+						</map>
+					</property>
+				</bean>
 			</list>
 		</property>
 
