@@ -35,7 +35,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.attendance.services;
+package org.sakaiproject.attendance.jobs;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
@@ -75,8 +75,11 @@ import org.sakaiproject.user.api.UserNotDefinedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.quartz.StatefulJob;
+import org.quartz.JobExecutionContext;
+import org.quartz.SchedulerException;
 
-public class AttendanceGoogleReportExport {
+public class AttendanceGoogleReportExport implements StatefulJob {
 
     private static final Logger LOG = LoggerFactory.getLogger(AttendanceGoogleReportExport.class);
 
@@ -85,6 +88,10 @@ public class AttendanceGoogleReportExport {
     private String spreadsheetId;
     private GoogleClient client;
     private Sheets service;
+
+    public void execute(JobExecutionContext context) {
+        this.export();
+    }
 
     public AttendanceGoogleReportExport() {
         String oauthPropertiesFile = HotReloadConfigurationService.getString("attendance-report.oauth-properties", "attendance_report_oauth_properties_not_set");

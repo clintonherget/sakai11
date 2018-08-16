@@ -1,4 +1,4 @@
-package edu.nyu.classes.servlet;
+package org.sakaiproject.attendance.jobs;
 
 import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
@@ -60,7 +60,12 @@ import org.sakaiproject.authz.api.SecurityAdvisor;
 
 import org.sakaiproject.email.cover.EmailService;
 
-public class AttendancePopulator {
+import org.quartz.StatefulJob;
+import org.quartz.JobExecutionContext;
+import org.quartz.SchedulerException;
+
+
+public class AttendancePopulator implements StatefulJob {
 
     private static long lastErrorTime = 0;
 
@@ -83,7 +88,7 @@ public class AttendancePopulator {
                                           "AttendancePopulator error");
     }
 
-    public void run() {
+    public void execute(JobExecutionContext context) {
         try {
             Connection conn = SqlService.borrowConnection();
             try {
@@ -142,13 +147,22 @@ public class AttendancePopulator {
                     }
                 }
 
-                try (PreparedStatement ps = conn.prepareStatement("delete from nyu_t_attendance_jobs where job = 'AttendancePopulator'")) {
-                    ps.executeUpdate();
-                }
+                boolean oldAutoCommit = conn.getAutoCommit();
+                conn.setAutoCommit(false);
 
-                try (PreparedStatement ps = conn.prepareStatement("insert into nyu_t_attendance_jobs (job, last_success_time) VALUES ('AttendancePopulator', ?)")) {
-                    ps.setLong(1, System.currentTimeMillis());
-                    ps.executeUpdate();
+                try {
+                    try (PreparedStatement ps = conn.prepareStatement("delete from nyu_t_attendance_jobs where job = 'AttendancePopulator'")) {
+                        ps.executeUpdate();
+                    }
+
+                    try (PreparedStatement ps = conn.prepareStatement("insert into nyu_t_attendance_jobs (job, last_success_time) VALUES ('AttendancePopulator', ?)")) {
+                        ps.setLong(1, System.currentTimeMillis());
+                        ps.executeUpdate();
+                    }
+
+                    conn.commit();
+                } finally {
+                    conn.setAutoCommit(oldAutoCommit);
                 }
             } finally {
                 SqlService.returnConnection(conn);

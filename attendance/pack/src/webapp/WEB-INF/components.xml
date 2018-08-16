@@ -122,30 +122,6 @@
 	<property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager" />
 </bean>
 
-	<bean id="AttendanceGoogleReportJob"
-				class="org.sakaiproject.attendance.services.AttendanceGoogleReportJob"
-				init-method="init" destroy-method="destroy">
-		<property name="attendanceStatCalc" ref="org.sakaiproject.attendance.services.AttendanceStatCalc" />
-		<property name="eventTrackingService" ref="org.sakaiproject.event.api.EventTrackingService" />
-		<property name="usageSessionService" ref="org.sakaiproject.event.api.UsageSessionService" />
-		<property name="authzGroupService" ref="org.sakaiproject.authz.api.AuthzGroupService" />
-		<property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager" />
-	</bean>
-
-	<bean id="org.sakaiproject.api.app.scheduler.JobBeanWrapper.AttendanceGoogleReportJob"
-				class="org.sakaiproject.component.app.scheduler.jobs.SpringJobBeanWrapper"
-				init-method="init">
-		<property name="beanId">
-			<value>AttendanceGoogleReportJob</value>
-		</property>
-		<property name="jobName">
-			<value>AttendanceGoogleReportJob</value>
-		</property>
-		<property name="schedulerManager">
-			<ref bean="org.sakaiproject.api.app.scheduler.SchedulerManager" />
-		</property>
-	</bean>
-
 	<bean id="org.sakaiproject.attendance.services.AttendanceStatCalc"
 		  class="org.sakaiproject.attendance.services.AttendanceStatCalc"
 		  init-method="init" destroy-method="destroy">
@@ -153,4 +129,5 @@
 		<property name="sakaiProxy" ref="org.sakaiproject.attendance.logic.SakaiProxy" />
 		<property name="attendanceLogic" ref="org.sakaiproject.attendance.logic.AttendanceLogic" />
 	</bean>
+
 </beans>
