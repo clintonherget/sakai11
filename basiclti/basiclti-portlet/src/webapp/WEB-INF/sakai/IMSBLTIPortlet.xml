@@ -1616,7 +1616,7 @@
 		<category name="project" />
 		<category name="portfolio" />
 		<configuration name="functions.require" />
-		<configuration name="sakai:menuClass" value="icon-sakai-basiclti"/>
+		<configuration name="sakai:menuClass" value="icon-sakai--sakai-basiclti"/>
 		<configuration name="imsti.launch" />
 		<configuration name="imsti.xml" />
 		<configuration name="imsti.secret" />
@@ -1664,7 +1664,7 @@
 		<category name="project" />
 		<category name="portfolio" />
 		<configuration name="functions.require" />
-		<configuration name="sakai:menuClass" value="icon-sakai-basiclti"/>
+		<configuration name="sakai:menuClass" value="icon-sakai--sakai-basiclti"/>
 		<configuration name="imsti.launch" />
 		<configuration name="imsti.xml" />
 		<configuration name="imsti.secret" />
