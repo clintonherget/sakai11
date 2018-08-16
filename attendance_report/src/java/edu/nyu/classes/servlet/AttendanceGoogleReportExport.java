@@ -10,6 +10,12 @@
 //
 //   * Audit FIXMEs
 //
+//   * Target "Edit Mode" sheet
+//
+//   * Add data validation to override cells
+//
+//   * Filter out certain rosters (e.g. 3-meeting-per-week)
+//
 
 
 package edu.nyu.classes.servlet;
@@ -50,24 +56,13 @@ import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
 
-
-/**
- * FIXME move to auto ddl script:
-
- -- mysql
- CREATE TABLE `attendance_record_override_t` (
- `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
- `NETID` varchar(255) NOT NULL,
- `SITE_ID` varchar(255) NOT NULL,
- `EVENT_NAME` varchar(255) NOT NULL,
- `STATUS` varchar(255) NOT NULL,
- PRIMARY KEY (`id`),
- CONSTRAINT `UNIQ_ATT_REC_O` UNIQUE (`NETID`, `SITE_ID`, `EVENT_NAME`)
- ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AttendanceGoogleReportExport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AttendanceGoogleReportExport.class);
 
     private static final String APPLICATION_NAME = "AttendanceGoogleReportExport";
     private static final String BACKUP_SHEET_NAME = "_backup_";
@@ -91,11 +86,10 @@ public class AttendanceGoogleReportExport {
             this.client = new GoogleClient(oauthProperties);
             this.service = client.getSheets(APPLICATION_NAME);
 
-            // FIXME from config
-            // this.spreadsheetId = "1D4XcY7fQGfWu3ep_EDKOR-xIAoXPUp3sZyGfLp9ANNs";
-            // this.spreadsheetId = "1BhsfNJl-3gfXyXMGqgoncMKvofQxFxICAHcdeO2iTDs";
-            this.spreadsheetId = "1RVVvJIYPgazujEty_3MkQlX9oip66ItgY9ieF236py4";
+            this.spreadsheetId = HotReloadConfigurationService.getString("attendance-report.spreadsheet", "attendance_report_spreadsheet_not_set");
         } catch (Exception e) {
+            LOG.error("Unable to initialize attendance report: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -249,10 +243,10 @@ public class AttendanceGoogleReportExport {
             List<SiteUser> users = new ArrayList<>();
 
             try (PreparedStatement ps = conn.prepareStatement("select map.eid, ssu.site_id" +
-                                                              " from sakai_site_user ssu" +
-                                                              " inner join sakai_user_id_map map on map.user_id = ssu.user_id" +
-                                                              " where ssu.permission = 1 AND" +
-                                                              "   ssu.site_id in (select distinct s.site_id from attendance_site_t s inner join attendance_event_t e on s.a_site_id = e.a_site_id)");
+                " from sakai_site_user ssu" +
+                " inner join sakai_user_id_map map on map.user_id = ssu.user_id" +
+                " where ssu.permission = 1 AND" +
+                "   ssu.site_id in (select distinct s.site_id from attendance_site_t s inner join attendance_event_t e on s.a_site_id = e.a_site_id)");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     users.add(new SiteUser(rs.getString("eid"), rs.getString("site_id")));
@@ -263,8 +257,8 @@ public class AttendanceGoogleReportExport {
             // Get our mapping of events to the sites that have them
             Map<AttendanceEvent, Set<String>> sitesWithEvent = new HashMap<>();
             try (PreparedStatement ps = conn.prepareStatement("select e.name, s.site_id" +
-                                                              " from attendance_event_t e" +
-                                                              " inner join attendance_site_t s on s.a_site_id = e.a_site_id");
+                " from attendance_event_t e" +
+                " inner join attendance_site_t s on s.a_site_id = e.a_site_id");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     AttendanceEvent event = new AttendanceEvent(rs.getString("name"));
@@ -292,10 +286,10 @@ public class AttendanceGoogleReportExport {
 
             // Get all users at all events
             try (PreparedStatement ps = conn.prepareStatement("select s.site_id, e.name, m.eid, r.status" +
-                                                              " from attendance_event_t e" +
-                                                              " inner join attendance_record_t r on e.a_event_id = r.a_event_id" +
-                                                              " inner join attendance_site_t s on e.a_site_id = s.a_site_id" +
-                                                              " inner join sakai_user_id_map m on m.user_id = r.user_id");
+                " from attendance_event_t e" +
+                " inner join attendance_record_t r on e.a_event_id = r.a_event_id" +
+                " inner join attendance_site_t s on e.a_site_id = s.a_site_id" +
+                " inner join sakai_user_id_map m on m.user_id = r.user_id");
                  ResultSet rs = ps.executeQuery()) {
                 // Fill out the values we know
                 while (rs.next()) {
@@ -364,8 +358,8 @@ public class AttendanceGoogleReportExport {
             }
 
         } catch (Exception e) {
-            System.out.println("ERROR in AttendanceGoogleReportExport.export");
-            System.out.println(e.getMessage());
+            LOG.error("ERROR in AttendanceGoogleReportExport.export");
+            LOG.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -384,7 +378,7 @@ public class AttendanceGoogleReportExport {
     }
 
     private void deleteSheet(String sheetName) throws IOException {
-        System.out.println("Delete sheet: " + sheetName);
+        LOG.debug("Delete sheet: " + sheetName);
 
         Sheets.Spreadsheets.Get getSpreadsheetRequest = service.spreadsheets().get(spreadsheetId);
         Spreadsheet spreadsheet = getSpreadsheetRequest.execute();
@@ -411,11 +405,10 @@ public class AttendanceGoogleReportExport {
             service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
 
         BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
-        System.out.println(batchUpdateSpreadsheetResponse);
     }
 
     private void backupSheet(Sheet sheet) throws IOException {
-        System.out.println("Backup sheet");
+        LOG.debug("Backup sheet");
 
         DuplicateSheetRequest duplicateSheetRequest = new DuplicateSheetRequest();
         duplicateSheetRequest.setSourceSheetId(sheet.getProperties().getSheetId());
@@ -439,7 +432,7 @@ public class AttendanceGoogleReportExport {
     }
 
     private void storeOverrides(List<AttendanceOverride> overrides) throws Exception {
-        System.out.println("Store overrides");
+        LOG.debug("Store overrides");
         // netid, siteid, event name...
         AttendanceLogic attendance = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
 
@@ -448,7 +441,7 @@ public class AttendanceGoogleReportExport {
             for (AttendanceOverride override : overrides) {
                 if (!override.isValid()) {
                     // "INVALID OVERRIDE", override.rawText
-                    System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:315 f46b87]: " + "\n    'INVALID OVERRIDE' => " + ("INVALID OVERRIDE") + "\n    override.rawText => " + (override.rawText) + "\n");
+                    LOG.error("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:315 f46b87]: " + "\n    'INVALID OVERRIDE' => " + ("INVALID OVERRIDE") + "\n    override.rawText => " + (override.rawText) + "\n");
                     continue;
                 }
 
@@ -482,9 +475,9 @@ public class AttendanceGoogleReportExport {
                                 try {
                                     // Delete any existing overrides for this user and event
                                     PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t" +
-                                                                                 " where netid = ?" + 
-                                                                                 " and site_id = ?" +
-                                                                                 " and event_name = ?");
+                                        " where netid = ?" +
+                                        " and site_id = ?" +
+                                        " and event_name = ?");
                                     ps.setString(1, netid);
                                     ps.setString(2, override.userAtEvent.user.siteid);
                                     ps.setString(3, override.userAtEvent.event.name);
@@ -493,23 +486,25 @@ public class AttendanceGoogleReportExport {
                                     // Insert the override to our magic table
                                     ps = conn.prepareStatement(
                                         "insert into attendance_record_override_t (netid, site_id, event_name, status)" +
-                                        " values (?, ?, ?, ?)");
+                                            " values (?, ?, ?, ?)");
                                     ps.setString(1, netid);
                                     ps.setString(2, override.userAtEvent.user.siteid);
                                     ps.setString(3, record.getAttendanceEvent().getName());
                                     ps.setString(4, override.override);
 
                                     if (ps.executeUpdate() == 0) {
-                                        System.err.println("\n*** ERROR did not storeOverride for netid:" + netid + " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) + " siteId: " + override.userAtEvent.user.siteid + " override: " + override.override);
+                                        LOG.error("\n*** ERROR did not storeOverride for netid:" + netid + " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) + " siteId: " + override.userAtEvent.user.siteid + " override: " + override.override);
                                     }
                                 } catch (Exception e) { // FIXME
+                                    LOG.error("Error updating attendance report override: " + e.getMessage());
+                                    e.printStackTrace();
                                     throw new RuntimeException(e);
                                 }
                                 // FIXME ensure autocommit or commit at end of loop
                                 conn.commit();
                             } else {
-                                // FIXME
-                                System.err.println("WARNING: database status " + oldStatus + " doesn't match incoming " + override.oldStatus);
+                                // FIXME add to email?
+                                LOG.warn("WARNING: database status " + oldStatus + " doesn't match incoming " + override.oldStatus);
                             }
                             updated = true;
                             break;
@@ -518,10 +513,12 @@ public class AttendanceGoogleReportExport {
 
                     if (!updated) {
                         // "FAILED TO FIND MATCH", override.userAtEvent.event.name, override.userAtEvent.user.netid
-                        System.err.println("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:349 f69489]: " + "\n    'FAILED TO FIND MATCH' => " + ("FAILED TO FIND MATCH") + "\n    override.userAtEvent.event.name => " + (override.userAtEvent.event.name) + "\n    override.userAtEvent.user.netid => " + (override.userAtEvent.user.netid) + "\n");
+                        LOG.error("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:349 f69489]: " + "\n    'FAILED TO FIND MATCH' => " + ("FAILED TO FIND MATCH") + "\n    override.userAtEvent.event.name => " + (override.userAtEvent.event.name) + "\n    override.userAtEvent.user.netid => " + (override.userAtEvent.user.netid) + "\n");
                     }
                 } catch (UserNotDefinedException e) {
                     // FIXME: failed to match user
+                    LOG.error(e.getMessage());
+                    e.printStackTrace();
                 }
 
             }
@@ -534,7 +531,7 @@ public class AttendanceGoogleReportExport {
         List<AttendanceStoredOverride> result = new ArrayList<>();
 
         try (PreparedStatement ps = conn.prepareStatement("select netid, site_id, event_name, status" +
-                                                          " from attendance_record_override_t");
+            " from attendance_record_override_t");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 AttendanceEvent event = new AttendanceEvent(rs.getString("event_name"));
@@ -548,7 +545,7 @@ public class AttendanceGoogleReportExport {
     }
 
     private List<AttendanceOverride> pullOverrides(Sheet sheet) throws IOException {
-        System.out.println("Pull overrides");
+        LOG.debug("Pull overrides");
         Sheets.Spreadsheets.Values.Get request = service.spreadsheets().values().get(spreadsheetId, sheet.getProperties().getTitle());
         ValueRange values = request.execute();
 
@@ -599,13 +596,13 @@ public class AttendanceGoogleReportExport {
             }
         }
 
-        System.out.println("- overrides found: " + result.size());
+        LOG.debug("- overrides found: " + result.size());
 
         return result;
     }
 
     private ProtectedRange protectSheet(Integer sheetId) throws IOException {
-        System.out.println("Protect sheet: " + sheetId);
+        LOG.debug("Protect sheet: " + sheetId);
         AddProtectedRangeRequest addProtectedRangeRequest = new AddProtectedRangeRequest();
         ProtectedRange protectedRange = new ProtectedRange();
         GridRange gridRange = new GridRange();
@@ -625,7 +622,6 @@ public class AttendanceGoogleReportExport {
             service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
 
         BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
-        System.out.println(batchUpdateSpreadsheetResponse);
         AddProtectedRangeResponse addProtectedRangeResponse = batchUpdateSpreadsheetResponse.getReplies().get(0).getAddProtectedRange();
 
         return addProtectedRangeResponse.getProtectedRange();
@@ -648,20 +644,17 @@ public class AttendanceGoogleReportExport {
         batchUpdateSpreadsheetRequest.setRequests(requests);
         Sheets.Spreadsheets.BatchUpdate batchUpdateRequest = service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
         BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
-
-        System.out.println(batchUpdateSpreadsheetResponse);
     }
 
     private void clearSheet(Sheet sheet) throws IOException {
-        System.out.println("Clear the sheet");
+        LOG.debug("Clear the sheet");
         Sheets.Spreadsheets.Values.Clear clearRequest =
             service.spreadsheets().values().clear(spreadsheetId, sheet.getProperties().getTitle(), new ClearValuesRequest());
         ClearValuesResponse clearValuesResponse = clearRequest.execute();
-        System.out.println(clearValuesResponse);
     }
 
     private void syncValuesToSheet(Sheet sheet) throws Exception {
-        System.out.println("Give it some values");
+        LOG.debug("Give it some values");
         ValueRange valueRange = new ValueRange();
         List<List<Object>> rows = new ArrayList<>();
 
@@ -708,11 +701,10 @@ public class AttendanceGoogleReportExport {
             service.spreadsheets().values().update(spreadsheetId, sheet.getProperties().getTitle() + "!A1:ZZ", valueRange);
         updateRequest.setValueInputOption("RAW");
         UpdateValuesResponse updateValuesResponse = updateRequest.execute();
-        System.out.println(updateValuesResponse);
     }
 
     private Sheet getTargetSheet() throws IOException {
-        System.out.println("Get the sheet");
+        LOG.debug("Get the sheet");
         List<String> ranges = new ArrayList<>();
         Sheets.Spreadsheets.Get request = service.spreadsheets().get(spreadsheetId);
         request.setRanges(ranges);
@@ -723,13 +715,13 @@ public class AttendanceGoogleReportExport {
     }
 
     private void protectNonEditableColumns(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws IOException {
-        System.out.println("Protect non editable columns");
+        LOG.debug("Protect non editable columns");
 
         // All requests to apply to the spreadsheet
         List<Request> requests = new ArrayList<>();
 
         // Build requests to drop all existing protected ranges (except sheetProtectingRange)
-        System.out.println("- get existing protected ranges for deletion");
+        LOG.debug("- get existing protected ranges for deletion");
         Sheets.Spreadsheets.Get getSpreadsheetRequest = service.spreadsheets().get(spreadsheetId);
         Spreadsheet spreadsheet = getSpreadsheetRequest.execute();
         for (Sheet sheet : spreadsheet.getSheets()) {
@@ -749,7 +741,7 @@ public class AttendanceGoogleReportExport {
         }
 
         // Build requests to protected each non-OVERRIDE column
-        System.out.println("- build new protected ranges from headers");
+        LOG.debug("- build new protected ranges from headers");
         Sheets.Spreadsheets.Values.Get spreadsheetGetRequest = service.spreadsheets().values().get(spreadsheetId, targetSheet.getProperties().getTitle() + "!A1:ZZ1");
         ValueRange values = spreadsheetGetRequest.execute();
 
@@ -793,14 +785,12 @@ public class AttendanceGoogleReportExport {
         requests.add(request);
 
         // Do the request!
-        System.out.println("- do the batch request");
+        LOG.debug("- do the batch request");
         BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
         batchUpdateSpreadsheetRequest.setRequests(requests);
         Sheets.Spreadsheets.BatchUpdate batchUpdateRequest =
             service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
 
         BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
-
-        System.out.println(batchUpdateSpreadsheetResponse);
     }
 }
