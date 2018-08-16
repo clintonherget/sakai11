@@ -39,6 +39,9 @@ public interface AttendanceLogic {
      */
 	AttendanceSite getAttendanceSite(String siteID);
 
+	AttendanceSite getAttendanceSiteOrCreateIfMissing(String siteID);
+
+
 	/**
 	 * Updates an AttendanceSite
 	 *

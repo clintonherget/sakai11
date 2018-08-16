@@ -46,6 +46,21 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 		return dao.getAttendanceSite(siteID);
 	}
 
+	public AttendanceSite getAttendanceSiteOrCreateIfMissing(String siteId) {
+		AttendanceSite currentAttendanceSite = getAttendanceSite(siteId);
+		if(currentAttendanceSite == null) {
+			currentAttendanceSite = new AttendanceSite(siteId);
+			if(!addSite(currentAttendanceSite)){
+				throw new RuntimeException("Failed to add an attendance tool for site: " + siteId);
+			}
+		}
+
+		generateMissingAttendanceStatusesForSite(currentAttendanceSite);
+		currentAttendanceSite = getAttendanceSite(siteId);
+
+		return currentAttendanceSite;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

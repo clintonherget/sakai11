@@ -32,6 +32,7 @@ import org.sakaiproject.attendance.model.Status;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
+import org.sakaiproject.tool.cover.ToolManager;
 
 import java.util.Date;
 import java.util.Calendar;
@@ -40,12 +41,27 @@ import java.text.SimpleDateFormat;
 import java.sql.SQLException;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.WeekFields;
 import java.time.temporal.TemporalField;
 import java.time.format.DateTimeFormatter;
 
+import org.sakaiproject.entity.api.ResourcePropertiesEdit;
+import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.site.api.Site;
+
+import org.sakaiproject.attendance.model.AttendanceEvent;
+import java.time.ZoneId;
+
+import org.sakaiproject.site.api.ToolConfiguration;
+import org.sakaiproject.site.api.SitePage;
+import org.sakaiproject.authz.cover.SecurityService;
+import org.sakaiproject.authz.api.SecurityAdvisor;
+
+
 public class AttendancePopulator {
 
+    private static final String ATTENDANCE_TOOL = "sakai.attendance";
     private static final String ATTENDANCE_PREPOPULATED = "attendance_prepopulated";
 
     // The big idea:
@@ -72,8 +88,15 @@ public class AttendancePopulator {
     //     failure count property on the site and email alert when it hits 10. (TODO)
     //
 
+    private static final String ZONE = "Europe/London";
     private static final String LOCATION_CODE = "GLOBAL-0L";
     private static final int STRM = 1188;
+
+    private AttendanceLogic attendanceLogic;
+
+    public AttendancePopulator() {
+        attendanceLogic = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
+    }
 
     public void run() {
         StringBuilder failureReport = new StringBuilder();
@@ -87,8 +110,8 @@ public class AttendancePopulator {
                                            " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
                                            " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
                                            " inner join sakai_site ss on sr.realm_id = concat('/site/', ss.site_id)" +
-                                           " left join sakai_site_property ssp on ssp.name = ? AND ssp.value is null" +
-                                           " where cc.location = ? AND cc.strm >= ?")) {
+                                           " left join sakai_site_property ssp on ssp.name = ?" +
+                                           " where cc.location = ? AND cc.strm >= ? AND ssp.value is null")) {
                     ps.setString(1, ATTENDANCE_PREPOPULATED);
                     ps.setString(2, LOCATION_CODE);
                     ps.setInt(3, STRM);
@@ -109,7 +132,23 @@ public class AttendancePopulator {
 
                         for (String siteId : siteRosters.keySet()) {
                             try {
-                                prepopulateAttendance(conn, siteId, siteRosters.get(siteId));
+                                SecurityAdvisor yesMan = new SecurityAdvisor() {
+                                    public SecurityAdvice isAllowed(String userId, String function, String reference) {
+                                        if ("site.upd".equals(function)) {
+                                            return SecurityAdvice.ALLOWED;
+                                        }
+
+                                        return SecurityAdvice.PASS;
+                                    }
+                                };
+
+                                SecurityService.pushAdvisor(yesMan);
+
+                                try {
+                                    prepopulateAttendance(conn, siteId, siteRosters.get(siteId));
+                                } finally {
+                                    SecurityService.popAdvisor();
+                                }
                             } catch (Exception e) {
                                 failureReport.append(String.format("Error processing attendance for site %s: %s",
                                                                    siteId,
@@ -140,6 +179,7 @@ public class AttendancePopulator {
         public String stemName;
         public LocalDate startDate;
         public LocalDate endDate;
+        public LocalTime meetingTime;
         public String holidaySchedule;
         public List<String> days = new ArrayList<>();
     }
@@ -177,11 +217,19 @@ public class AttendancePopulator {
 
     private class Meeting {
         public String title;
-        public LocalDate date;
 
-        public Meeting(String title, LocalDate date) {
+        public LocalDate date;
+        public LocalTime time;
+
+        public Meeting(String title, LocalDate date, LocalTime time) {
             this.title = title;
             this.date = date;
+            this.time = time;
+        }
+
+        public Date getStartDateTime() {
+            ZoneId zone = ZoneId.of(ZONE);
+            return Date.from(date.atTime(time).atZone(zone).toInstant());
         }
 
         public String toString() {
@@ -195,7 +243,7 @@ public class AttendancePopulator {
         try (PreparedStatement ps = conn.prepareStatement("select ct.holiday_schedule, mp.*" +
                                                           " from nyu_t_class_tbl ct" +
                                                           " inner join nyu_t_class_mtg_pat mp on mp.stem_name = ct.stem_name" +
-                                                          " where mp.stem_name = ?" +
+                                                          " where mp.stem_name = ? AND mp.start_dt is not null AND mp.end_dt is not null" +
                                                           " order by mp.start_dt")) {
             ps.setString(1, rosterId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -205,6 +253,9 @@ public class AttendancePopulator {
                     meetingPattern.stemName = rs.getString("stem_name");
                     meetingPattern.startDate = rs.getDate("start_dt").toLocalDate();
                     meetingPattern.endDate = rs.getDate("end_dt").toLocalDate();
+                    meetingPattern.meetingTime = (rs.getTimestamp("meeting_time_start") == null) ?
+                        LocalTime.parse("00:00:00") :
+                        rs.getTimestamp("meeting_time_start").toLocalDateTime().toLocalTime();
                     meetingPattern.holidaySchedule = rs.getString("holiday_schedule");
 
                     for (String day : MEETING_DAYS) {
@@ -247,9 +298,9 @@ public class AttendancePopulator {
 
         TemporalField weekOfYear = WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear();
 
-        for (MeetingPattern meeting : meetingPatterns) {
-            for (LocalDate day : getDaysBetweenDates(meeting.startDate, meeting.endDate)) {
-                if (!meeting.days.contains(dayOfWeek.format(day).toUpperCase(Locale.ROOT))) {
+        for (MeetingPattern pattern : meetingPatterns) {
+            for (LocalDate day : getDaysBetweenDates(pattern.startDate, pattern.endDate)) {
+                if (!pattern.days.contains(dayOfWeek.format(day).toUpperCase(Locale.ROOT))) {
                     // If our meeting doesn't meet this day, skip.
                     continue;
                 }
@@ -268,7 +319,8 @@ public class AttendancePopulator {
 
                 Meeting m = new Meeting(String.format("Week %d Session %d",
                                                       meetingWeek, weekCounts.get(meetingWeek)),
-                                        day);
+                                        day,
+                                        pattern.meetingTime);
                 result.add(m);
             }
         }
@@ -303,14 +355,60 @@ public class AttendancePopulator {
         // FIXME: do something
         List<Meeting> siteMeetingDates = rosterMeetings.get(0);
 
-        System.err.println("Rosters for site:");
+        System.err.println("Rosters for site " + siteId + ":");
         for (String roster : rosters) {
             System.err.println("  * " + roster);
         }
 
-        System.err.println("\nMeeting dates:");
+        addToolIfMissing(siteId, ATTENDANCE_TOOL);
+
+        AttendanceSite attendanceSite = attendanceLogic.getAttendanceSiteOrCreateIfMissing(siteId);
+
+
+        Set<String> existingMeetings = attendanceLogic
+            .getAttendanceEventsForSite(attendanceSite)
+            .stream()
+            .map(e -> e.getName())
+            .collect(Collectors.toSet());
+
         for (Meeting meeting : siteMeetingDates) {
-            System.err.println("  * " + meeting);
+            System.err.println(" * " + meeting);
         }
+
+        for (Meeting meeting : siteMeetingDates) {
+            if (existingMeetings.contains(meeting.title)) {
+                System.err.println("Already have: " + meeting.title);
+                continue;
+            }
+
+            AttendanceEvent event = new AttendanceEvent();
+            event.setAttendanceSite(attendanceSite);
+            event.setName(meeting.title);
+            event.setStartDateTime(meeting.getStartDateTime());
+
+            if (attendanceLogic.addAttendanceEventNow(event) == null) {
+                throw new RuntimeException("Failed to add attendance event for meeting: " + meeting);
+            }
+        }
+
+        Site site = SiteService.getSite(siteId);
+        ResourcePropertiesEdit properties = site.getPropertiesEdit();
+        properties.addProperty(ATTENDANCE_PREPOPULATED, "true");
+        SiteService.save(site);
+    }
+
+    private void addToolIfMissing(String siteId, String registration) throws Exception {
+        Site site = SiteService.getSite(siteId);
+
+        if (site.getToolForCommonId(registration) != null) {
+            return;
+        }
+
+        SitePage page = site.addPage();
+        ToolConfiguration tool = page.addTool();
+        tool.setTool(ATTENDANCE_TOOL, ToolManager.getTool(ATTENDANCE_TOOL));
+        tool.setTitle(ToolManager.getTool(ATTENDANCE_TOOL).getTitle());
+
+        SiteService.save(site);
     }
 }
