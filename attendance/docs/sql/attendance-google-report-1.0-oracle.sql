@@ -16,3 +16,6 @@ BEGIN
   INTO :new.id
   FROM dual;
 END;
+
+
+CREATE TABLE nyu_t_attendance_jobs (job varchar2(64), last_success_time NUMBER);

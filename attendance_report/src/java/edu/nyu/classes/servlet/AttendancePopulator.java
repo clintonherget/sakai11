@@ -62,32 +62,12 @@ import org.sakaiproject.email.cover.EmailService;
 
 public class AttendancePopulator {
 
+    private static long lastErrorTime = 0;
+
     private static final String ATTENDANCE_TOOL = "sakai.attendance";
     private static final String ATTENDANCE_PREPOPULATED = "attendance_prepopulated";
 
-    // The big idea:
-    //
-    //   * Find any site that is connected to a London roster (done)
-    //
-    //   * Check whether it has a site property to indicate that it's had its
-    //     attendance populated.  Skip if it has.  Otherwise: (TODO)
-    //
-    //   * Generate the list of attendance events for the site, based on the
-    //     meeting pattern of the roster(s). (done)
-    //
-    //   * If there are multiple rosters, assert that their meeting patterns all
-    //     match.  If they don't, report an error and email it somewhere.  Set
-    //     the site property as "failed" and give instructions on how to
-    //     correct. (done)
-    //
-    //   * Create one attendance event per meeting, checking first whether the
-    //     event already exists.  Skip if it does. (TODO)
-    //
-    //   * Set the site property to mark it as populated (TODO)
-    //
-    //   * If anything goes wrong along the way, we'll retry next run.  Set a
-    //     failure count property on the site and email alert when it hits 10. (TODO)
-    //
+    private static final int MAX_REPORT_FREQUENCY_MS = (60 * 60 * 1000);
 
     private static final String ZONE = "Europe/London";
     private static final String LOCATION_CODE = "GLOBAL-0L";
@@ -104,17 +84,16 @@ public class AttendancePopulator {
     }
 
     public void run() {
-        try{
+        try {
             Connection conn = SqlService.borrowConnection();
             try {
-                try (PreparedStatement ps =
-                     conn.prepareStatement("select ss.site_id, cc.stem_name" +
-                                           " from nyu_t_course_catalog cc" +
-                                           " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
-                                           " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
-                                           " inner join sakai_site ss on sr.realm_id = concat('/site/', ss.site_id)" +
-                                           " left join sakai_site_property ssp on ssp.name = ?" +
-                                           " where cc.location = ? AND cc.strm >= ? AND ssp.value is null")) {
+                try (PreparedStatement ps = conn.prepareStatement("select ss.site_id, cc.stem_name" +
+                                                                  " from nyu_t_course_catalog cc" +
+                                                                  " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
+                                                                  " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
+                                                                  " inner join sakai_site ss on sr.realm_id = concat('/site/', ss.site_id)" +
+                                                                  " left join sakai_site_property ssp on ssp.name = ?" +
+                                                                  " where cc.location = ? AND cc.strm >= ? AND ssp.value is null")) {
                     ps.setString(1, ATTENDANCE_PREPOPULATED);
                     ps.setString(2, LOCATION_CODE);
                     ps.setInt(3, STRM);
@@ -162,15 +141,29 @@ public class AttendancePopulator {
                         }
                     }
                 }
+
+                try (PreparedStatement ps = conn.prepareStatement("delete from nyu_t_attendance_jobs where job = 'AttendancePopulator'")) {
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement("insert into nyu_t_attendance_jobs (job, last_success_time) VALUES ('AttendancePopulator', ?)")) {
+                    ps.setLong(1, System.currentTimeMillis());
+                    ps.executeUpdate();
+                }
             } finally {
                 SqlService.returnConnection(conn);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             // FIXME: Make better
-            errorReporter.addError("SQL Error: " + e.toString());
+            errorReporter.addError("Caught exception in AttendancePopulator: " + e.toString());
+            e.printStackTrace();
         }
 
-        errorReporter.report();
+        if ((System.currentTimeMillis() - lastErrorTime) > MAX_REPORT_FREQUENCY_MS) {
+            if (errorReporter.report()) {
+                lastErrorTime = System.currentTimeMillis();
+            }
+        }
     }
 
     private static final String[] MEETING_DAYS = new String[] { "MON", "TUES", "WED", "THURS", "FRI", "SAT", "SUN" };
@@ -387,7 +380,8 @@ public class AttendancePopulator {
             event.setStartDateTime(meeting.getStartDateTime());
 
             if (attendanceLogic.addAttendanceEventNow(event) == null) {
-                throw new RuntimeException("Failed to add attendance event for meeting: " + meeting);
+                throw new RuntimeException(String.format("Failed to add attendance event for meeting %s in site %s",
+                                                         meeting, siteId));
             }
         }
 
@@ -428,9 +422,9 @@ public class AttendancePopulator {
             this.errors.add(error);
         }
 
-        public void report() {
+        public boolean report() {
             if (this.errors.isEmpty()) {
-                return;
+                return false;
             }
 
             StringBuilder body = new StringBuilder();
@@ -448,6 +442,8 @@ public class AttendancePopulator {
                               null,
                               null,
                               null);
+
+            return true;
         }
     }
 }
