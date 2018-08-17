@@ -99,14 +99,6 @@ public class AttendanceGoogleReportExport implements Job {
             return;
         }
 
-        try {
-            this.export();
-        } finally {
-            jobIsRunning.set(false);
-        }
-    }
-
-    public AttendanceGoogleReportExport() {
         String oauthPropertiesFile = HotReloadConfigurationService.getString("attendance-report.oauth-properties", "attendance_report_oauth_properties_not_set");
         oauthPropertiesFile = ServerConfigurationService.getSakaiHomePath() + "/" + oauthPropertiesFile;
 
@@ -117,7 +109,7 @@ public class AttendanceGoogleReportExport implements Job {
             }
 
             oauthProperties.setProperty("credentials_path", new File(new File(oauthPropertiesFile).getParentFile(),
-                "oauth_credentials").getPath());
+                                                                     "oauth_credentials").getPath());
 
             this.client = new GoogleClient(oauthProperties);
             this.service = client.getSheets(APPLICATION_NAME);
@@ -127,6 +119,12 @@ public class AttendanceGoogleReportExport implements Job {
             LOG.error("Unable to initialize attendance report: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
+        }
+
+        try {
+            this.export();
+        } finally {
+            jobIsRunning.set(false);
         }
     }
 
