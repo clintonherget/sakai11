@@ -170,7 +170,7 @@ public class AttendancePopulator implements StatefulJob {
             e.printStackTrace();
         }
 
-        if ((System.currentTimeMillis() - lastErrorTime) > MAX_REPORT_FREQUENCY_MS) {
+        if (!dryRunMode && (System.currentTimeMillis() - lastErrorTime) > MAX_REPORT_FREQUENCY_MS) {
             if (errorReporter.report()) {
                 lastErrorTime = System.currentTimeMillis();
             }
