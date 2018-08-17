@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.sakaiproject.attendance.model.AttendanceSite;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.tool.cover.ToolManager;
@@ -46,14 +48,14 @@ import org.sakaiproject.authz.api.SecurityAdvisor;
 
 import org.sakaiproject.email.cover.EmailService;
 
-import org.quartz.StatefulJob;
+import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class AttendancePopulator implements StatefulJob {
+public class AttendancePopulator implements Job {
 
     private static long lastErrorTime = 0;
 
@@ -65,6 +67,8 @@ public class AttendancePopulator implements StatefulJob {
     private static final String ZONE = "Europe/London";
     private static final String LOCATION_CODE = "GLOBAL-0L";
     private static final int STRM = 1188;
+
+    private static AtomicBoolean jobIsRunning = new AtomicBoolean(false);
 
     private AttendanceLogic attendanceLogic;
     private ErrorReporter errorReporter;
@@ -84,6 +88,11 @@ public class AttendancePopulator implements StatefulJob {
             LOG.warn("***\n" +
                      "*** AttendancePopulator running in dry run mode.  No attendance items will be added!\n" +
                      "***\n");
+        }
+
+        if (!jobIsRunning.compareAndSet(false, true)){
+            LOG.warn("Stopping job since this job is already running");
+            return;
         }
 
         try {
@@ -168,12 +177,14 @@ public class AttendancePopulator implements StatefulJob {
             // FIXME: Make better
             errorReporter.addError("Caught exception in AttendancePopulator: " + e.toString());
             e.printStackTrace();
-        }
-
-        if (!dryRunMode && (System.currentTimeMillis() - lastErrorTime) > MAX_REPORT_FREQUENCY_MS) {
-            if (errorReporter.report()) {
-                lastErrorTime = System.currentTimeMillis();
+        } finally {
+            if (!dryRunMode && (System.currentTimeMillis() - lastErrorTime) > MAX_REPORT_FREQUENCY_MS) {
+                if (errorReporter.report()) {
+                    lastErrorTime = System.currentTimeMillis();
+                }
             }
+
+            jobIsRunning.set(false);
         }
     }
 
