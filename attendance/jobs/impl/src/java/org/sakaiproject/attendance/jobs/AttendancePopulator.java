@@ -70,18 +70,13 @@ public class AttendancePopulator implements Job {
 
     private static AtomicBoolean jobIsRunning = new AtomicBoolean(false);
 
-    private AttendanceLogic attendanceLogic;
-    private ErrorReporter errorReporter;
-
     private static final Logger LOG = LoggerFactory.getLogger(AttendancePopulator.class);
 
-    public AttendancePopulator() {
-        attendanceLogic = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
-        errorReporter = new ErrorReporter(HotReloadConfigurationService.getString("nyu.attendance-populator.error-address", ""),
-                                          "AttendancePopulator error");
-    }
-
     public void execute(JobExecutionContext context) {
+        ErrorReporter errorReporter = new ErrorReporter(HotReloadConfigurationService.getString("nyu.attendance-populator.error-address", ""),
+                                                        "AttendancePopulator error");
+
+
         boolean dryRunMode = "true".equals(HotReloadConfigurationService.getString("nyu.attendance-populator.dry-run-mode", "true"));
 
         if (dryRunMode) {
@@ -387,6 +382,7 @@ public class AttendancePopulator implements Job {
 
         addToolIfMissing(siteId, ATTENDANCE_TOOL);
 
+        AttendanceLogic attendanceLogic = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
         AttendanceSite attendanceSite = attendanceLogic.getAttendanceSiteOrCreateIfMissing(siteId);
 
         Set<String> existingMeetings = attendanceLogic
