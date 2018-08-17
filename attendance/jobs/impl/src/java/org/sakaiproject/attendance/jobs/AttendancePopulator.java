@@ -1,14 +1,10 @@
 package org.sakaiproject.attendance.jobs;
 
 import org.sakaiproject.component.cover.HotReloadConfigurationService;
-import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.attendance.logic.AttendanceLogic;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -18,27 +14,17 @@ import java.util.stream.Collectors;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.HashSet;
 import java.util.Set;
 
-import java.util.Collections;
 import org.sakaiproject.attendance.model.AttendanceSite;
-import org.sakaiproject.attendance.model.AttendanceRecord;
-import org.sakaiproject.attendance.model.Status;
-import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.user.api.User;
-import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.tool.cover.ToolManager;
 
 import java.util.Date;
-import java.util.Calendar;
 import java.util.Locale;
-import java.text.SimpleDateFormat;
-import java.sql.SQLException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -62,7 +48,9 @@ import org.sakaiproject.email.cover.EmailService;
 
 import org.quartz.StatefulJob;
 import org.quartz.JobExecutionContext;
-import org.quartz.SchedulerException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AttendancePopulator implements StatefulJob {
@@ -81,6 +69,7 @@ public class AttendancePopulator implements StatefulJob {
     private AttendanceLogic attendanceLogic;
     private ErrorReporter errorReporter;
 
+    private static final Logger LOG = LoggerFactory.getLogger(AttendancePopulator.class);
 
     public AttendancePopulator() {
         attendanceLogic = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
@@ -89,6 +78,14 @@ public class AttendancePopulator implements StatefulJob {
     }
 
     public void execute(JobExecutionContext context) {
+        boolean dryRunMode = "true".equals(HotReloadConfigurationService.getString("nyu.attendance-populator.dry-run-mode", "true"));
+
+        if (dryRunMode) {
+            LOG.warn("***\n" +
+                     "*** AttendancePopulator running in dry run mode.  No attendance items will be added!\n" +
+                     "***\n");
+        }
+
         try {
             Connection conn = SqlService.borrowConnection();
             try {
@@ -132,7 +129,7 @@ public class AttendancePopulator implements StatefulJob {
                                 SecurityService.pushAdvisor(yesMan);
 
                                 try {
-                                    prepopulateAttendance(conn, siteId, siteRosters.get(siteId));
+                                    prepopulateAttendance(conn, siteId, siteRosters.get(siteId), dryRunMode);
                                 } finally {
                                     SecurityService.popAdvisor();
                                 }
@@ -335,7 +332,8 @@ public class AttendancePopulator implements StatefulJob {
         return result;
     }
 
-    private void prepopulateAttendance(Connection conn, String siteId, List<String> rosters) throws Exception {
+    private void prepopulateAttendance(Connection conn, String siteId, List<String> rosters, boolean dryRunMode)
+        throws Exception {
         List<List<Meeting>> rosterMeetings = new ArrayList<>();
 
         for (String rosterId : rosters) {
@@ -359,18 +357,26 @@ public class AttendancePopulator implements StatefulJob {
             }
         }
 
-        // FIXME: do something
         List<Meeting> siteMeetingDates = rosterMeetings.get(0);
 
-        System.err.println("Rosters for site " + siteId + ":");
-        for (String roster : rosters) {
-            System.err.println("  * " + roster);
+        if (dryRunMode) {
+            LOG.info("Rosters for site " + siteId + ":");
+            for (String roster : rosters) {
+                LOG.info("  * " + roster);
+            }
+
+            LOG.info("Meetings to be added to site: " + siteId);
+
+            for (Meeting meeting : siteMeetingDates) {
+                LOG.info(" * " + meeting);
+            }
+
+            return;
         }
 
         addToolIfMissing(siteId, ATTENDANCE_TOOL);
 
         AttendanceSite attendanceSite = attendanceLogic.getAttendanceSiteOrCreateIfMissing(siteId);
-
 
         Set<String> existingMeetings = attendanceLogic
             .getAttendanceEventsForSite(attendanceSite)
@@ -379,12 +385,8 @@ public class AttendancePopulator implements StatefulJob {
             .collect(Collectors.toSet());
 
         for (Meeting meeting : siteMeetingDates) {
-            System.err.println(" * " + meeting);
-        }
-
-        for (Meeting meeting : siteMeetingDates) {
             if (existingMeetings.contains(meeting.title)) {
-                System.err.println("Already have: " + meeting.title);
+                LOG.info("Already have a meeting for: " + meeting.title);
                 continue;
             }
 
@@ -397,12 +399,17 @@ public class AttendancePopulator implements StatefulJob {
                 throw new RuntimeException(String.format("Failed to add attendance event for meeting %s in site %s",
                                                          meeting, siteId));
             }
+
+            LOG.info(String.format("Added a new meeting to site %s: %s",
+                                   siteId, meeting.title));
         }
 
         Site site = SiteService.getSite(siteId);
         ResourcePropertiesEdit properties = site.getPropertiesEdit();
         properties.addProperty(ATTENDANCE_PREPOPULATED, "true");
         SiteService.save(site);
+
+        LOG.info("Site now fully populated: " + siteId);
     }
 
     private void addToolIfMissing(String siteId, String registration) throws Exception {
