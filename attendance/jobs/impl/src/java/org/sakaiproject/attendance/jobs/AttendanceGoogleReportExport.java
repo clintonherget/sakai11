@@ -75,13 +75,17 @@ import org.sakaiproject.user.api.UserNotDefinedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.quartz.StatefulJob;
+import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
 
-public class AttendanceGoogleReportExport implements StatefulJob {
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class AttendanceGoogleReportExport implements Job {
 
     private static final Logger LOG = LoggerFactory.getLogger(AttendanceGoogleReportExport.class);
+
+    private static AtomicBoolean jobIsRunning = new AtomicBoolean(false);
 
     private static final String APPLICATION_NAME = "AttendanceGoogleReportExport";
     private static final String BACKUP_SHEET_NAME = "_backup_";
@@ -90,7 +94,16 @@ public class AttendanceGoogleReportExport implements StatefulJob {
     private Sheets service;
 
     public void execute(JobExecutionContext context) {
-        this.export();
+        if (!jobIsRunning.compareAndSet(false, true)){
+            LOG.warn("Stopping job since this job is already running");
+            return;
+        }
+
+        try {
+            this.export();
+        } finally {
+            jobIsRunning.set(false);
+        }
     }
 
     public AttendanceGoogleReportExport() {
