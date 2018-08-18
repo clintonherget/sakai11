@@ -20,7 +20,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <upstream.version>${ckeditor.wordcount.version}</upstream.version>
-        <upstream.url>https://github.com/w8tcha/CKEditor-WordCount-Plugin/archive/${upstream.version}</upstream.url>
         <destDir>${project.build.outputDirectory}/META-INF/resources/webjars/wordcount/${upstream.version}</destDir>
         <requirejs>
             {
@@ -44,7 +43,7 @@
                         <configuration>
                             <target>
                                 <mkdir dir="${destDir}" />
-                                <get src="${upstream.url}/${upstream.version}.zip" dest="${project.build.directory}/${project.artifactId}.zip" />
+                                <get src="file:${project.build.directory}/../${upstream.version}.zip" dest="${project.build.directory}/${project.artifactId}.zip" />
                                 <echo message="unzip archives" />
                                 <unzip src="${project.build.directory}/${project.artifactId}.zip" dest="${project.build.directory}">
                                     <cutdirsmapper dirs="1"/>
