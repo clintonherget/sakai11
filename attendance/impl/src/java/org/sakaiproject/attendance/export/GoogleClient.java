@@ -22,7 +22,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.attendance.jobs;
+package org.sakaiproject.attendance.export;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.CredentialRefreshListener;
@@ -43,10 +43,8 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import java.io.IOException;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.util.*;
-import org.sakaiproject.component.cover.ServerConfigurationService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

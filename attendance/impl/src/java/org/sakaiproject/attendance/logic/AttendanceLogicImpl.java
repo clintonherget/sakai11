@@ -25,6 +25,7 @@ import lombok.Setter;
 import org.apache.log4j.Logger;
 
 import org.sakaiproject.attendance.api.AttendanceGradebookProvider;
+import org.sakaiproject.attendance.export.AttendanceGoogleReportExport;
 import org.sakaiproject.attendance.dao.AttendanceDao;
 import org.sakaiproject.attendance.model.*;
 import org.sakaiproject.user.api.User;
@@ -857,6 +858,11 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 		} else {
 			return totalPoints;
 		}
+	}
+
+	public void runGoogleReportExport() {
+		AttendanceGoogleReportExport report = new AttendanceGoogleReportExport();
+		report.export();
 	}
 
 	@Setter

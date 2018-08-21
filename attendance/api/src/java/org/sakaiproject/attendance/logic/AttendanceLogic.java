@@ -325,4 +325,6 @@ public interface AttendanceLogic {
 	 * @return The points a student earned after being regraded.
 	 */
 	Double regrade(AttendanceGrade attendanceGrade, boolean saveGrade);
+
+	void runGoogleReportExport();
 }

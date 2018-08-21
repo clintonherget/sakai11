@@ -1,6 +1,6 @@
 // Things left to do:
 //
-//   * Email error reports to someone who cares
+//   * Email error reports to someone who cares (sticky backup etc)
 //
 //   * clean up logging
 //
@@ -10,6 +10,11 @@
 //
 //   * Audit FIXMEs
 //
+//   * Target correct sheet (by name)
+//
+//   * Add data validation to override cells
+//
+//   * Cell/column colors (conditional formatting might perisist?)
 
 /**********************************************************************************
  *
@@ -35,7 +40,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.attendance.jobs;
+package org.sakaiproject.attendance.export;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
@@ -54,7 +59,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.sakaiproject.db.cover.SqlService;
-import java.util.stream.Collectors;
+
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
@@ -75,13 +80,9 @@ import org.sakaiproject.user.api.UserNotDefinedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.SchedulerException;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AttendanceGoogleReportExport implements Job {
+public class AttendanceGoogleReportExport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AttendanceGoogleReportExport.class);
 
@@ -93,12 +94,7 @@ public class AttendanceGoogleReportExport implements Job {
     private GoogleClient client;
     private Sheets service;
 
-    public void execute(JobExecutionContext context) {
-        if (!jobIsRunning.compareAndSet(false, true)){
-            LOG.warn("Stopping job since this job is already running");
-            return;
-        }
-
+    public AttendanceGoogleReportExport() {
         String oauthPropertiesFile = HotReloadConfigurationService.getString("attendance-report.oauth-properties", "attendance_report_oauth_properties_not_set");
         oauthPropertiesFile = ServerConfigurationService.getSakaiHomePath() + "/" + oauthPropertiesFile;
 
@@ -119,12 +115,6 @@ public class AttendanceGoogleReportExport implements Job {
             LOG.error("Unable to initialize attendance report: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
-        }
-
-        try {
-            this.export();
-        } finally {
-            jobIsRunning.set(false);
         }
     }
 
@@ -384,7 +374,7 @@ public class AttendanceGoogleReportExport implements Job {
 
                 syncValuesToSheet(sheet);
 
-                protectNonEditableColumns(sheet, range);
+                applyColumnAndCellProperties(sheet, range);
 
                 deleteSheet(BACKUP_SHEET_NAME);
             } finally {
@@ -748,8 +738,8 @@ public class AttendanceGoogleReportExport implements Job {
         return spreadsheet.getSheets().get(0);
     }
 
-    private void protectNonEditableColumns(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws IOException {
-        LOG.debug("Protect non editable columns");
+    private void applyColumnAndCellProperties(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws IOException {
+        LOG.debug("Apply column and cell properties");
 
         // All requests to apply to the spreadsheet
         List<Request> requests = new ArrayList<>();
@@ -817,6 +807,41 @@ public class AttendanceGoogleReportExport implements Job {
         Request request = new Request();
         request.setAddProtectedRange(addProtectedRangeRequest);
         requests.add(request);
+
+        LOG.debug("- add data validation to override columns");
+        DataValidationRule validationRule = new DataValidationRule();
+        BooleanCondition booleanCondition = new BooleanCondition();
+        booleanCondition.setType("ONE_OF_LIST");
+        List<ConditionValue> overrideValues = new ArrayList<>();
+        ConditionValue conditionValue = new ConditionValue();
+        conditionValue.setUserEnteredValue("P");
+        overrideValues.add(conditionValue);
+        conditionValue = new ConditionValue();
+        conditionValue.setUserEnteredValue("A");
+        overrideValues.add(conditionValue);
+        conditionValue = new ConditionValue();
+        conditionValue.setUserEnteredValue("E");
+        overrideValues.add(conditionValue);
+        booleanCondition.setValues(overrideValues);
+        validationRule.setCondition(booleanCondition);
+        validationRule.setStrict(true);
+        validationRule.setInputMessage("Select an override value from the list of available options.");
+        for (int i=0; i < headers.size(); i++) {
+            String header = (String) headers.get(i);
+            if (!header.endsWith("\nOVERRIDE")) {
+                continue;
+            }
+            gridRange = new GridRange();
+            gridRange.setSheetId(targetSheet.getProperties().getSheetId());
+            gridRange.setStartColumnIndex(i);
+            gridRange.setEndColumnIndex(i+1);
+            SetDataValidationRequest setDataValidationRequest = new SetDataValidationRequest();
+            setDataValidationRequest.setRange(gridRange);
+            setDataValidationRequest.setRule(validationRule);
+            request = new Request();
+            request.setSetDataValidation(setDataValidationRequest);
+            requests.add(request);
+        }
 
         // Do the request!
         LOG.debug("- do the batch request");
