@@ -5,6 +5,7 @@
 //   * clean up logging
 //
 //   * Pull in rosters/schools/real user information from the right NYU_* tables
+//     (see branch AttendanceGoogleReportJob-wip)
 //
 //   * Pull out config stuff into sakai.properties if useful (hot reload)
 //
@@ -673,21 +674,21 @@ public class AttendanceGoogleReportExport {
             requests.add(request);
         }
 
-//        LOG.debug("Delete any conditional formatting from sheet: " + sheetId);
-//        List<ConditionalFormatRule> conditionalFormatRules = sheet.getConditionalFormats();
-//        for (int i=0; i < conditionalFormatRules.size(); i++) {
-//            ConditionalFormatRule conditionalFormatRule = conditionalFormatRules.get(i);
-//            BooleanRule booleanRule = conditionalFormatRule.getBooleanRule();
-//            if (booleanRule == null) {
-//                continue;
-//            }
-//            DeleteConditionalFormatRuleRequest deleteConditionalFormatRuleRequest = new DeleteConditionalFormatRuleRequest();
-//            deleteConditionalFormatRuleRequest.setSheetId(sheetId);
-//            deleteConditionalFormatRuleRequest.setIndex(i);
-//            Request request = new Request();
-//            request.setDeleteConditionalFormatRule(deleteConditionalFormatRuleRequest);
-//            requests.add(request);
-//        }
+        LOG.debug("Delete any conditional formatting from sheet: " + sheetId);
+        List<ConditionalFormatRule> conditionalFormatRules = sheet.getConditionalFormats();
+        for (int i=conditionalFormatRules.size()-1; i >= 0; i--) {
+            ConditionalFormatRule conditionalFormatRule = conditionalFormatRules.get(i);
+            BooleanRule booleanRule = conditionalFormatRule.getBooleanRule();
+            if (booleanRule == null) {
+                continue;
+            }
+            DeleteConditionalFormatRuleRequest deleteConditionalFormatRuleRequest = new DeleteConditionalFormatRuleRequest();
+            deleteConditionalFormatRuleRequest.setSheetId(sheetId);
+            deleteConditionalFormatRuleRequest.setIndex(i);
+            Request request = new Request();
+            request.setDeleteConditionalFormatRule(deleteConditionalFormatRuleRequest);
+            requests.add(request);
+        }
 
         LOG.debug("Add a  new protected range for the sheet: " + sheetId);
         return protectSheet(sheetId, requests);
