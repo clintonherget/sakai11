@@ -16,21 +16,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AttendanceGoogleReportJob implements Job {
 
-    private static long lastErrorTime = 0;
-
     private static AtomicBoolean jobIsRunning = new AtomicBoolean(false);
 
     private static final Logger LOG = LoggerFactory.getLogger(AttendanceGoogleReportJob.class);
 
     public void execute(JobExecutionContext context) {
-        boolean dryRunMode = "true".equals(HotReloadConfigurationService.getString("nyu.attendance-report.dry-run-mode", "true"));
-
-        if (dryRunMode) {
-            LOG.warn("***\n" +
-                     "*** AttendanceGoogleReportJob running in dry run mode.  Nothing will be exported!\n" +
-                     "***\n");
-        }
-
         if (!jobIsRunning.compareAndSet(false, true)){
             LOG.warn("Stopping job since this job is already running");
             return;

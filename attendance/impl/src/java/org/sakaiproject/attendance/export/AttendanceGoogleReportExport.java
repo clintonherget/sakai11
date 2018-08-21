@@ -812,6 +812,7 @@ public class AttendanceGoogleReportExport {
         DataValidationRule validationRule = new DataValidationRule();
         BooleanCondition booleanCondition = new BooleanCondition();
         booleanCondition.setType("ONE_OF_LIST");
+
         List<ConditionValue> overrideValues = new ArrayList<>();
         ConditionValue conditionValue = new ConditionValue();
         conditionValue.setUserEnteredValue("P");
@@ -823,9 +824,11 @@ public class AttendanceGoogleReportExport {
         conditionValue.setUserEnteredValue("E");
         overrideValues.add(conditionValue);
         booleanCondition.setValues(overrideValues);
+
         validationRule.setCondition(booleanCondition);
         validationRule.setStrict(true);
         validationRule.setInputMessage("Select an override value from the list of available options.");
+
         for (int i=0; i < headers.size(); i++) {
             String header = (String) headers.get(i);
             if (!header.endsWith("\nOVERRIDE")) {
@@ -835,6 +838,7 @@ public class AttendanceGoogleReportExport {
             gridRange.setSheetId(targetSheet.getProperties().getSheetId());
             gridRange.setStartColumnIndex(i);
             gridRange.setEndColumnIndex(i+1);
+            gridRange.setStartRowIndex(1); // not the header
             SetDataValidationRequest setDataValidationRequest = new SetDataValidationRequest();
             setDataValidationRequest.setRange(gridRange);
             setDataValidationRequest.setRule(validationRule);
@@ -851,5 +855,6 @@ public class AttendanceGoogleReportExport {
             service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
 
         BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
+        LOG.debug(batchUpdateSpreadsheetResponse.toString());
     }
 }
