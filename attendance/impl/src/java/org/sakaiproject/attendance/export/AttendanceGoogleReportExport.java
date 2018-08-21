@@ -54,6 +54,7 @@ import org.sakaiproject.attendance.logic.AttendanceLogic;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.ResponseCache;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -363,7 +364,7 @@ public class AttendanceGoogleReportExport {
                 throw new RuntimeException("Backup sheet exists! Stop everything!");
             }
 
-            ProtectedRange range = protectSheet(sheet);
+            ProtectedRange range = prepareAndProtectSheet(sheet);
 
             try {
                 storeOverrides(pullOverrides(sheet));
@@ -394,7 +395,7 @@ public class AttendanceGoogleReportExport {
 
         for (Sheet sheet : spreadsheet.getSheets()) {
             if (BACKUP_SHEET_NAME.equals(sheet.getProperties().getTitle())) {
-                return true;
+                return false;
             }
         }
 
@@ -626,6 +627,10 @@ public class AttendanceGoogleReportExport {
     }
 
     private ProtectedRange protectSheet(Integer sheetId) throws IOException {
+        return protectSheet(sheetId, new ArrayList<>());
+    }
+
+    private ProtectedRange protectSheet(Integer sheetId, List<Request> requests) throws IOException {
         LOG.debug("Protect sheet: " + sheetId);
         AddProtectedRangeRequest addProtectedRangeRequest = new AddProtectedRangeRequest();
         ProtectedRange protectedRange = new ProtectedRange();
@@ -637,7 +642,6 @@ public class AttendanceGoogleReportExport {
         addProtectedRangeRequest.setProtectedRange(protectedRange);
 
         BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
-        List<Request> requests = new ArrayList<>();
         Request wrapperRequest = new Request();
         wrapperRequest.setAddProtectedRange(addProtectedRangeRequest);
         requests.add(wrapperRequest);
@@ -646,13 +650,47 @@ public class AttendanceGoogleReportExport {
             service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
 
         BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
-        AddProtectedRangeResponse addProtectedRangeResponse = batchUpdateSpreadsheetResponse.getReplies().get(0).getAddProtectedRange();
+        for (Response response : batchUpdateSpreadsheetResponse.getReplies()) {
+            AddProtectedRangeResponse addProtectedRangeResponse = response.getAddProtectedRange();
+            if (addProtectedRangeResponse != null) {
+                return addProtectedRangeResponse.getProtectedRange();
+            }
+        }
 
-        return addProtectedRangeResponse.getProtectedRange();
+        throw new RuntimeException("No protected range returned after protectSheet");
     }
 
-    private ProtectedRange protectSheet(Sheet sheet) throws IOException {
-        return protectSheet(sheet.getProperties().getSheetId());
+    private ProtectedRange prepareAndProtectSheet(Sheet sheet) throws IOException {
+        Integer sheetId = sheet.getProperties().getSheetId();
+
+        LOG.debug("Delete any protected ranges from sheet: " + sheetId);
+        List<Request> requests = new ArrayList<>();
+        for (ProtectedRange protectedRange : sheet.getProtectedRanges()) {
+            DeleteProtectedRangeRequest deleteProtectedRangeRequest = new DeleteProtectedRangeRequest();
+            deleteProtectedRangeRequest.setProtectedRangeId(protectedRange.getProtectedRangeId());
+            Request request = new Request();
+            request.setDeleteProtectedRange(deleteProtectedRangeRequest);
+            requests.add(request);
+        }
+
+//        LOG.debug("Delete any conditional formatting from sheet: " + sheetId);
+//        List<ConditionalFormatRule> conditionalFormatRules = sheet.getConditionalFormats();
+//        for (int i=0; i < conditionalFormatRules.size(); i++) {
+//            ConditionalFormatRule conditionalFormatRule = conditionalFormatRules.get(i);
+//            BooleanRule booleanRule = conditionalFormatRule.getBooleanRule();
+//            if (booleanRule == null) {
+//                continue;
+//            }
+//            DeleteConditionalFormatRuleRequest deleteConditionalFormatRuleRequest = new DeleteConditionalFormatRuleRequest();
+//            deleteConditionalFormatRuleRequest.setSheetId(sheetId);
+//            deleteConditionalFormatRuleRequest.setIndex(i);
+//            Request request = new Request();
+//            request.setDeleteConditionalFormatRule(deleteConditionalFormatRuleRequest);
+//            requests.add(request);
+//        }
+
+        LOG.debug("Add a  new protected range for the sheet: " + sheetId);
+        return protectSheet(sheetId, requests);
     }
 
     private void unprotectRange(Sheet sheet, ProtectedRange range) throws IOException {
