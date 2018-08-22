@@ -198,7 +198,7 @@ public class AttendancePopulator implements Job {
         Set<LocalDate> result = new HashSet<>();
 
         try (PreparedStatement ps = conn.prepareStatement("select holiday" +
-                                                          " from nyu_t_holiday_date" +
+                                                          " from ps_holiday_date@rdb0" +
                                                           " where holiday_schedule = ?")) {
             ps.setString(1, schedule);
             try (ResultSet rs = ps.executeQuery()) {
@@ -250,10 +250,17 @@ public class AttendancePopulator implements Job {
     private List<Meeting> meetingsForRoster(Connection conn, String rosterId) throws Exception {
         // Load meeting patterns
         List<MeetingPattern> meetingPatterns = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement("select ct.holiday_schedule, mp.*" +
-                                                          " from nyu_t_class_tbl ct" +
-                                                          " inner join nyu_t_class_mtg_pat mp on mp.stem_name = ct.stem_name" +
-                                                          " where mp.stem_name = ? AND mp.start_dt is not null AND mp.end_dt is not null" +
+        // try (PreparedStatement ps = conn.prepareStatement("select ct.holiday_schedule, mp.*" +
+        //                                                   " from nyu_t_class_tbl ct" +
+        //                                                   " inner join nyu_t_class_mtg_pat mp on mp.stem_name = ct.stem_name" +
+        //                                                   " where mp.stem_name = ? AND mp.start_dt is not null AND mp.end_dt is not null" +
+        //                                                   " order by mp.start_dt")) {
+
+        try (PreparedStatement ps = conn.prepareStatement("select cc.stem_name, ct.holiday_schedule, mp.*" +
+                                                          " from nyu_t_course_catalog cc" +
+                                                          " inner join ps_class_tbl@rdb0 ct on (cc.crse_id = ct.crse_id AND cc.crse_offer_nbr = ct.crse_offer_nbr AND cc.strm = ct.strm AND cc.session_code = ct.session_code AND cc.class_section = ct.class_section)" +
+                                                          " inner join ps_class_mtg_pat@rdb0 mp on (cc.crse_id = mp.crse_id AND cc.crse_offer_nbr = mp.crse_offer_nbr AND cc.strm = mp.strm AND cc.session_code = mp.session_code AND cc.class_section = mp.class_section)" +
+                                                          " where cc.stem_name = ? AND mp.start_dt is not null AND mp.end_dt is not null" +
                                                           " order by mp.start_dt")) {
             ps.setString(1, rosterId);
             try (ResultSet rs = ps.executeQuery()) {
