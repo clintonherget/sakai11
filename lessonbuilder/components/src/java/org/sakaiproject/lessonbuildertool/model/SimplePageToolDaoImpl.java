@@ -1878,7 +1878,7 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 				" INNER JOIN lesson_builder_pages p2" +
 				"   ON (p2.pageId = i.sakaiId)" +
 				" LEFT OUTER JOIN lesson_builder_log log" +
-				"   ON (log.itemId = i.id AND log.userId = ?)" +
+				"   ON (log.itemId = i.id AND log.userId = ? AND log.complete = 1)" +
 				" WHERE p.parent IS NULL" +
 				"   AND p.toolId IN (" + pageIds.stream().map(i -> "?").collect(Collectors.joining(",")) + ")" +
 				" ORDER BY i.sequence");
