@@ -677,24 +677,6 @@ public class AttendanceGoogleReportExport {
             }
         }
 
-//        LOG.debug("Delete any conditional formatting from sheet: " + sheetId);
-//        List<ConditionalFormatRule> conditionalFormatRules = sheet.getConditionalFormats();
-//        if (conditionalFormatRules != null) {
-//            for (int i = conditionalFormatRules.size() - 1; i >= 0; i--) {
-//                ConditionalFormatRule conditionalFormatRule = conditionalFormatRules.get(i);
-//                BooleanRule booleanRule = conditionalFormatRule.getBooleanRule();
-//                if (booleanRule == null) {
-//                    continue;
-//                }
-//                DeleteConditionalFormatRuleRequest deleteConditionalFormatRuleRequest = new DeleteConditionalFormatRuleRequest();
-//                deleteConditionalFormatRuleRequest.setSheetId(sheetId);
-//                deleteConditionalFormatRuleRequest.setIndex(i);
-//                Request request = new Request();
-//                request.setDeleteConditionalFormatRule(deleteConditionalFormatRuleRequest);
-//                requests.add(request);
-//            }
-//        }
-
         LOG.debug("Delete any data validations from sheet: " + sheetId);
         GridRange gridRange = new GridRange();
         gridRange.setSheetId(sheetId);
