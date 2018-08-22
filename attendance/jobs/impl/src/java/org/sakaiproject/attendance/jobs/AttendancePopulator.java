@@ -169,7 +169,6 @@ public class AttendancePopulator implements Job {
                 SqlService.returnConnection(conn);
             }
         } catch (Exception e) {
-            // FIXME: Make better
             errorReporter.addError("Caught exception in AttendancePopulator: " + e.toString());
             e.printStackTrace();
         } finally {
