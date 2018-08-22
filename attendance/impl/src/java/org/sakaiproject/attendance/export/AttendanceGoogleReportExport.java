@@ -666,29 +666,44 @@ public class AttendanceGoogleReportExport {
 
         LOG.debug("Delete any protected ranges from sheet: " + sheetId);
         List<Request> requests = new ArrayList<>();
-        for (ProtectedRange protectedRange : sheet.getProtectedRanges()) {
-            DeleteProtectedRangeRequest deleteProtectedRangeRequest = new DeleteProtectedRangeRequest();
-            deleteProtectedRangeRequest.setProtectedRangeId(protectedRange.getProtectedRangeId());
-            Request request = new Request();
-            request.setDeleteProtectedRange(deleteProtectedRangeRequest);
-            requests.add(request);
+        List<ProtectedRange> protectedRanges = sheet.getProtectedRanges();
+        if (protectedRanges != null) {
+            for (ProtectedRange protectedRange : protectedRanges) {
+                DeleteProtectedRangeRequest deleteProtectedRangeRequest = new DeleteProtectedRangeRequest();
+                deleteProtectedRangeRequest.setProtectedRangeId(protectedRange.getProtectedRangeId());
+                Request request = new Request();
+                request.setDeleteProtectedRange(deleteProtectedRangeRequest);
+                requests.add(request);
+            }
         }
 
-        LOG.debug("Delete any conditional formatting from sheet: " + sheetId);
-        List<ConditionalFormatRule> conditionalFormatRules = sheet.getConditionalFormats();
-        for (int i=conditionalFormatRules.size()-1; i >= 0; i--) {
-            ConditionalFormatRule conditionalFormatRule = conditionalFormatRules.get(i);
-            BooleanRule booleanRule = conditionalFormatRule.getBooleanRule();
-            if (booleanRule == null) {
-                continue;
-            }
-            DeleteConditionalFormatRuleRequest deleteConditionalFormatRuleRequest = new DeleteConditionalFormatRuleRequest();
-            deleteConditionalFormatRuleRequest.setSheetId(sheetId);
-            deleteConditionalFormatRuleRequest.setIndex(i);
-            Request request = new Request();
-            request.setDeleteConditionalFormatRule(deleteConditionalFormatRuleRequest);
-            requests.add(request);
-        }
+//        LOG.debug("Delete any conditional formatting from sheet: " + sheetId);
+//        List<ConditionalFormatRule> conditionalFormatRules = sheet.getConditionalFormats();
+//        if (conditionalFormatRules != null) {
+//            for (int i = conditionalFormatRules.size() - 1; i >= 0; i--) {
+//                ConditionalFormatRule conditionalFormatRule = conditionalFormatRules.get(i);
+//                BooleanRule booleanRule = conditionalFormatRule.getBooleanRule();
+//                if (booleanRule == null) {
+//                    continue;
+//                }
+//                DeleteConditionalFormatRuleRequest deleteConditionalFormatRuleRequest = new DeleteConditionalFormatRuleRequest();
+//                deleteConditionalFormatRuleRequest.setSheetId(sheetId);
+//                deleteConditionalFormatRuleRequest.setIndex(i);
+//                Request request = new Request();
+//                request.setDeleteConditionalFormatRule(deleteConditionalFormatRuleRequest);
+//                requests.add(request);
+//            }
+//        }
+
+        LOG.debug("Delete any data validations from sheet: " + sheetId);
+        GridRange gridRange = new GridRange();
+        gridRange.setSheetId(sheetId);
+        SetDataValidationRequest setDataValidationRequest = new SetDataValidationRequest();
+        setDataValidationRequest.setRange(gridRange);
+        setDataValidationRequest.setRule(null);
+        Request request = new Request();
+        request.setSetDataValidation(setDataValidationRequest);
+        requests.add(request);
 
         LOG.debug("Add a  new protected range for the sheet: " + sheetId);
         return protectSheet(sheetId, requests);
