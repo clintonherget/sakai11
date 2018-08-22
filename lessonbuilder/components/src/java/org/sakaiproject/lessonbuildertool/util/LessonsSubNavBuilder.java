@@ -48,6 +48,8 @@ public class LessonsSubNavBuilder {
     private String siteId;
     private boolean isInstructor;
     private Map<String, ArrayList<Map<String, String>>> subnavData;
+    private String lastAddedSakaiToolId = null;
+    private String lastAddedItemId = null;
 
     public LessonsSubNavBuilder(final String siteId, final boolean isInstructor) {
         this.siteId = siteId;
@@ -93,7 +95,15 @@ public class LessonsSubNavBuilder {
         if (!this.subnavData.containsKey(sakaiToolId)) {
             this.subnavData.put(sakaiToolId, new ArrayList<>());
         }
-        
+
+        // CLASSES-3393 avoid duplicates caused by multiple entries in lesson_builder_log
+        final String toolId = rs.getString("sakaiToolId");
+        final String itemId = rs.getString("itemId");
+        if (toolId.equals(this.lastAddedSakaiToolId) && itemId.equals(this.lastAddedItemId)) {
+            // this item has already been added, so skip it
+            return null;
+        }
+
         final Map<String, String> subnavItem = new HashMap<>();
 
         subnavItem.put("toolId", rs.getString("sakaiToolId"));
@@ -119,6 +129,10 @@ public class LessonsSubNavBuilder {
                 subnavItem.put("releaseDate", df.format(releaseDate));
             }
         }
+
+        // CLASSES-3393 store last added to allow quick check for duplicates
+        this.lastAddedSakaiToolId = subnavItem.get("toolId");
+        this.lastAddedItemId = subnavItem.get("itemId");
 
         this.subnavData.get(sakaiToolId).add(subnavItem);
 
