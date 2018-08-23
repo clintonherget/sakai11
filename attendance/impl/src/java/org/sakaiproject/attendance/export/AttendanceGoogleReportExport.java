@@ -57,6 +57,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -97,7 +98,9 @@ public class AttendanceGoogleReportExport {
     private GoogleClient client;
     private Sheets service;
 
-    public AttendanceGoogleReportExport() {
+    public AttendanceGoogleReportExport(ErrorReporter errorReporter) {
+        this.errorReporter = new ErrorReporter;
+
         String oauthPropertiesFile = HotReloadConfigurationService.getString("attendance-report.oauth-properties", "attendance_report_oauth_properties_not_set");
         oauthPropertiesFile = ServerConfigurationService.getSakaiHomePath() + "/" + oauthPropertiesFile;
 
@@ -120,6 +123,20 @@ public class AttendanceGoogleReportExport {
             throw new RuntimeException(e);
         }
     }
+
+    private errorAndThrow(String msg) {
+        LOG.error(msg);
+        errorReporter.addError(msg);
+        throw new RuntimeException(msg);
+    }
+
+    private errorAndThrow(String msg, Throwable cause) {
+        LOG.error(msg + ": " + cause);
+        errorReporter.addError(msg + ": " + cause);
+        cause.printStackTrace();
+        throw new RuntimeException(msg, cause);
+    }
+
 
     abstract static class ValueObject {
         public abstract Object[] interestingFields();
@@ -275,7 +292,9 @@ public class AttendanceGoogleReportExport {
         return statusMapping.get(status);
     }
 
-    private DataTable loadAllData() throws Exception {
+
+
+    private Optional<DataTable> loadAllData() throws Exception {
         // Get a list of all students from the sites of interest
         // Get a list of the attendance events for all sites, joined to any attendance records
 
@@ -305,7 +324,7 @@ public class AttendanceGoogleReportExport {
             }
 
             if (siteIds.isEmpty()) {
-                return new DataTable(new ArrayList<>(), new HashSet<>(), new HashMap<>());
+                return Optional.empty();
             }
 
             // FIXME this will blow up if siteIds.length > 1000 .. do we care?
@@ -383,7 +402,7 @@ public class AttendanceGoogleReportExport {
                 }
             }
 
-            return new DataTable(users, events, statusTable);
+            return Optional.of(new DataTable(users, events, statusTable));
 
         } finally {
             SqlService.returnConnection(conn);
@@ -396,7 +415,13 @@ public class AttendanceGoogleReportExport {
 
             if (backupExists()) {
                 // FIXME
-                throw new RuntimeException("Backup sheet exists! Stop everything!");
+                errorAndThrow("Backup sheet exists! Stop everything!");
+            }
+
+            Optional<DataTable> table = loadAllData();
+
+            if (!table.isPresent()) {
+                errorAndThrow("No data to report.  Leaving current sheet alone.");
             }
 
             ProtectedRange range = prepareAndProtectSheet(sheet);
@@ -408,7 +433,7 @@ public class AttendanceGoogleReportExport {
 
                 clearSheet(sheet);
 
-                syncValuesToSheet(sheet);
+                syncValuesToSheet(sheet, table.get());
 
                 applyColumnAndCellProperties(sheet, range);
 
@@ -418,10 +443,7 @@ public class AttendanceGoogleReportExport {
             }
 
         } catch (Exception e) {
-            LOG.error("ERROR in AttendanceGoogleReportExport.export");
-            LOG.error(e.getMessage());
-            e.printStackTrace();
-            throw e;
+            errorAndThrow("ERROR in AttendanceGoogleReportExport.export", e);
         }
     }
 
@@ -498,11 +520,13 @@ public class AttendanceGoogleReportExport {
         AttendanceLogic attendance = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
 
         Connection conn = SqlService.borrowConnection();
+        boolean oldAutoCommit = conn.getAutoCommit();
+        conn.setAutoCommit(false);
+
         try {
             for (AttendanceOverride override : overrides) {
                 if (!override.isValid()) {
-                    // "INVALID OVERRIDE", override.rawText
-                    LOG.error("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:315 f46b87]: " + "\n    'INVALID OVERRIDE' => " + ("INVALID OVERRIDE") + "\n    override.rawText => " + (override.rawText) + "\n");
+                    errorReporter.addError("Invalid override: " + override.rawText);
                     continue;
                 }
 
@@ -528,44 +552,30 @@ public class AttendanceGoogleReportExport {
                         if (override.userAtEvent.event.name.equals(record.getAttendanceEvent().getName())) {
                             Status oldStatus = record.getStatus();
 
-                            // FIXME need to handle updating an override
-                            // (as incoming "override.oldStatus" will match the override not what's in the official
-                            // attendance table)
-                            // if (oldStatus.toString().equals(override.oldStatus)) {
-                            if (true) {
-                                try {
-                                    // Delete any existing overrides for this user and event
-                                    PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t" +
-                                        " where netid = ?" +
-                                        " and site_id = ?" +
-                                        " and event_name = ?");
-                                    ps.setString(1, netid);
-                                    ps.setString(2, override.userAtEvent.user.siteid);
-                                    ps.setString(3, override.userAtEvent.event.name);
-                                    int result = ps.executeUpdate();
+                            try {
+                                // Delete any existing overrides for this user and event
+                                PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t" +
+                                                                             " where netid = ?" +
+                                                                             " and site_id = ?" +
+                                                                             " and event_name = ?");
+                                ps.setString(1, netid);
+                                ps.setString(2, override.userAtEvent.user.siteid);
+                                ps.setString(3, override.userAtEvent.event.name);
+                                int result = ps.executeUpdate();
 
-                                    // Insert the override to our magic table
-                                    ps = conn.prepareStatement(
-                                        "insert into attendance_record_override_t (netid, site_id, event_name, status)" +
-                                            " values (?, ?, ?, ?)");
-                                    ps.setString(1, netid);
-                                    ps.setString(2, override.userAtEvent.user.siteid);
-                                    ps.setString(3, record.getAttendanceEvent().getName());
-                                    ps.setString(4, override.override);
+                                // Insert the override to our magic table
+                                ps = conn.prepareStatement("insert into attendance_record_override_t (netid, site_id, event_name, status)" +
+                                                           " values (?, ?, ?, ?)");
+                                ps.setString(1, netid);
+                                ps.setString(2, override.userAtEvent.user.siteid);
+                                ps.setString(3, record.getAttendanceEvent().getName());
+                                ps.setString(4, override.override);
 
-                                    if (ps.executeUpdate() == 0) {
-                                        LOG.error("\n*** ERROR did not storeOverride for netid:" + netid + " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) + " siteId: " + override.userAtEvent.user.siteid + " override: " + override.override);
-                                    }
-                                } catch (Exception e) { // FIXME
-                                    LOG.error("Error updating attendance report override: " + e.getMessage());
-                                    e.printStackTrace();
-                                    throw new RuntimeException(e);
+                                if (ps.executeUpdate() == 0) {
+                                    errorReporter.addError("Failed to store override for netid:" + netid + " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) + " siteId: " + override.userAtEvent.user.siteid + " override: " + override.override);
                                 }
-                                // FIXME ensure autocommit or commit at end of loop
-                                conn.commit();
-                            } else {
-                                // FIXME add to email?
-                                LOG.warn("WARNING: database status " + oldStatus + " doesn't match incoming " + override.oldStatus);
+                            } catch (Exception e) {
+                                errorAndThrow("Error updating attendance report override", e);
                             }
                             updated = true;
                             break;
@@ -577,13 +587,13 @@ public class AttendanceGoogleReportExport {
                         LOG.error("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:349 f69489]: " + "\n    'FAILED TO FIND MATCH' => " + ("FAILED TO FIND MATCH") + "\n    override.userAtEvent.event.name => " + (override.userAtEvent.event.name) + "\n    override.userAtEvent.user.netid => " + (override.userAtEvent.user.netid) + "\n");
                     }
                 } catch (UserNotDefinedException e) {
-                    // FIXME: failed to match user
-                    LOG.error(e.getMessage());
-                    e.printStackTrace();
+                    errorAndThrow(String.format("Failed to match user '%s'", netid), e);
                 }
-
             }
+
+            conn.commit();
         }  finally {
+            conn.setAutoCommit(oldAutoCommit);
             SqlService.returnConnection(conn);
         }
     }
@@ -693,7 +703,7 @@ public class AttendanceGoogleReportExport {
             }
         }
 
-        throw new RuntimeException("No protected range returned after protectSheet");
+        errorAndThrow("No protected range returned after protectSheet");
     }
 
     private ProtectedRange prepareAndProtectSheet(Sheet sheet) throws IOException {
@@ -748,12 +758,10 @@ public class AttendanceGoogleReportExport {
         ClearValuesResponse clearValuesResponse = clearRequest.execute();
     }
 
-    private void syncValuesToSheet(Sheet sheet) throws Exception {
+    private void syncValuesToSheet(Sheet sheet, DataTable table) throws Exception {
         LOG.debug("Give it some values");
         ValueRange valueRange = new ValueRange();
         List<List<Object>> rows = new ArrayList<>();
-
-        DataTable table = loadAllData();
 
         // Add a row for our header
         List<Object> header = new ArrayList<>();
@@ -812,7 +820,7 @@ public class AttendanceGoogleReportExport {
             }
         }
 
-        throw new RuntimeException("Could not find 'Edit Mode' sheet");
+        errorAndThrow("Could not find 'Edit Mode' sheet");
     }
 
     private void applyColumnAndCellProperties(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws IOException {
