@@ -307,16 +307,23 @@ public class AttendanceGoogleReportExport {
 
             Set<String> allSiteIds = new HashSet<>();
 
-            try (PreparedStatement ps = conn.prepareStatement("SELECT umap.eid, usr.fname, usr.lname, sess.descr as term, site.title, rlm.provider_id, site.site_id" +
-                                                              " FROM sakai_realm_rl_gr srg" +
-                                                              " INNER JOIN sakai_realm rlm ON rlm.realm_key = srg.realm_key" +
-                                                              " INNER JOIN nyu_t_course_catalog cc ON REPLACE(cc.stem_name, ':', '_') = rlm.provider_id AND cc.location in ('GLOBAL-0L')" +
+            try (PreparedStatement ps = conn.prepareStatement("SELECT usr.netid," +
+                                                              "  usr.fname," +
+                                                              "  usr.lname," +
+                                                              "  sess.descr as term," +
+                                                              "  site.title," +
+                                                              "  site.site_id," +
+                                                              "  listagg(srp.provider_id, ',') within group (order by srp.provider_id) provider_id" +
+                                                              " FROM nyu_t_course_catalog cc" +
                                                               " INNER JOIN nyu_t_acad_session sess ON cc.strm = sess.strm AND cc.acad_career = sess.acad_career AND sess.current_flag = 'Y'" +
-                                                              " INNER JOIN sakai_site site ON site.site_id = REPLACE(rlm.REALM_ID, '/site/', '')" +
+                                                              " INNER JOIN nyu_t_student_enrollments se on se.stem_name = cc.stem_name" +
+                                                              " INNER JOIN sakai_realm_provider srp on srp.provider_id = REPLACE(cc.stem_name, ':', '_')" +
+                                                              " INNER JOIN sakai_realm rlm ON rlm.realm_key = srp.realm_key" +
+                                                              " INNER JOIN sakai_site site on CONCAT('/site/', site.site_id) = rlm.realm_id" +
                                                               " INNER JOIN attendance_site_t att ON att.site_id = site.site_id" +
-                                                              " INNER JOIN sakai_user_id_map umap ON umap.user_id = srg.user_id" +
-                                                              " INNER JOIN nyu_t_users usr ON usr.netid = umap.eid" +
-                                                              " WHERE srg.role_key IN (SELECT role_key FROM sakai_realm_role WHERE role_name = 'Student')");
+                                                              " INNER JOIN nyu_t_users usr ON usr.netid = se.netid" +
+                                                              " WHERE cc.location in ('GLOBAL-0L')" +
+                                                              " GROUP BY usr.netid, usr.fname, usr.lname, sess.descr, site.title, site.site_id");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     users.add(new SiteUser(rs.getString("eid"), rs.getString("site_id"), rs.getString("fname"), rs.getString("lname"), rs.getString("term"), rs.getString("title"), rs.getString("provider_id")));
