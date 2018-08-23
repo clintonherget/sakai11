@@ -63,8 +63,6 @@ public class AttendancePopulator implements Job {
     private static final String ATTENDANCE_TOOL = "sakai.attendance";
     private static final String ATTENDANCE_PREPOPULATED = "attendance_prepopulated";
 
-    private static final int MAX_REPORT_FREQUENCY_MS = (60 * 60 * 1000);
-
     private static final String ZONE = "Europe/London";
     private static final String LOCATION_CODE = "GLOBAL-0L";
     private static final int STRM = 1188;
@@ -82,6 +80,9 @@ public class AttendancePopulator implements Job {
 
         List<String> excludeRosterList = new ArrayList(Arrays.asList(HotReloadConfigurationService.getString("nyu.attendance-populator.exclude-rosters", "").split(" *, *")));
         excludeRosterList.remove("");
+
+        int maxReportFrequencyMs = Integer.valueOf(HotReloadConfigurationService.getString("nyu.attendance-populator.max-report-frequency-ms", "3600000"));
+
 
         if (dryRunMode) {
             LOG.warn("***\n" +
@@ -180,7 +181,7 @@ public class AttendancePopulator implements Job {
             errorReporter.addError("Caught exception in AttendancePopulator: " + e.toString());
             e.printStackTrace();
         } finally {
-            if (!dryRunMode && (System.currentTimeMillis() - lastErrorTime) > MAX_REPORT_FREQUENCY_MS) {
+            if (!dryRunMode && (System.currentTimeMillis() - lastErrorTime) > maxReportFrequencyMs) {
                 if (errorReporter.report()) {
                     lastErrorTime = System.currentTimeMillis();
                 }
