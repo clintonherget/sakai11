@@ -11,9 +11,9 @@
 //
 //   * Audit FIXMEs
 //
-//   * Target correct sheet (by name)
+//   * DONE Target correct sheet (by name)
 //
-//   * Add data validation to override cells
+//   * DONE Add data validation to override cells
 //
 //   * Cell/column colors (conditional formatting might perisist?)
 
@@ -806,7 +806,13 @@ public class AttendanceGoogleReportExport {
         request.setIncludeGridData(false);
         Spreadsheet spreadsheet = request.execute();
 
-        return spreadsheet.getSheets().get(0);
+        for (Sheet sheet : spreadsheet.getSheets()) {
+            if ("Edit Mode".equals(sheet.getProperties().getTitle())) {
+                return sheet;
+            }
+        }
+
+        throw new RuntimeException("Could not find 'Edit Mode' sheet");
     }
 
     private void applyColumnAndCellProperties(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws IOException {
