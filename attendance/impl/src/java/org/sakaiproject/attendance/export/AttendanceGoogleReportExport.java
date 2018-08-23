@@ -298,6 +298,9 @@ public class AttendanceGoogleReportExport {
         // Get a list of the attendance events for all sites, joined to any attendance records
 
         Connection conn = SqlService.borrowConnection();
+        boolean oldAutoCommit = conn.getAutoCommit();
+        conn.setAutoCommit(false);
+
         try {
             // Get out list of users in sites of interest
             List<SiteUser> users = new ArrayList<>();
@@ -396,29 +399,30 @@ public class AttendanceGoogleReportExport {
                         }
                     }
                 }
+            }
 
-                // poke in overrides
-                for (AttendanceStoredOverride override : getStoredOverrides(conn)) {
-                    String status = mapStatus(override.status);
-                    if (status != null) {
-                        statusTable.put(override.userAtEvent, status);
-                    }
+            // poke in overrides
+            for (AttendanceStoredOverride override : getStoredOverrides(conn)) {
+                String status = mapStatus(override.status);
+                if (status != null) {
+                    statusTable.put(override.userAtEvent, status);
                 }
+            }
 
-                // And fill out any that were missing as UKNOWN
-                for (SiteUser user : users) {
-                    for (AttendanceEvent event : events) {
-                        UserAtEvent key = new UserAtEvent(user, event);
+            // And fill out any that were missing as UKNOWN
+            for (SiteUser user : users) {
+                for (AttendanceEvent event : events) {
+                    UserAtEvent key = new UserAtEvent(user, event);
 
-                        if (!statusTable.containsKey(key)) {
-                            statusTable.put(key, "UNKNOWN");
-                        }
+                    if (!statusTable.containsKey(key)) {
+                        statusTable.put(key, "UNKNOWN");
                     }
                 }
             }
 
             return Optional.of(new DataTable(users, events, statusTable));
         } finally {
+            conn.setAutoCommit(oldAutoCommit);
             SqlService.returnConnection(conn);
         }
     }
