@@ -1,10 +1,10 @@
 // Things left to do:
 //
-//   * Email error reports to someone who cares (sticky backup etc)
+//   * DONE Email error reports to someone who cares (sticky backup etc)
 //
-//   * clean up logging
+//   * DONE clean up logging
 //
-//   * Pull in rosters/schools/real user information from the right NYU_* tables
+//   * DONE Pull in rosters/schools/real user information from the right NYU_* tables
 //     (see branch AttendanceGoogleReportJob-wip)
 //
 //   * Pull out config stuff into sakai.properties if useful (hot reload)
