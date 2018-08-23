@@ -536,16 +536,45 @@ public class SakaiProxyImpl implements SakaiProxy {
                 contentHostingService.checkCollection(toolCollection);
             } catch (Exception e) {
                 // add this collection
-                ContentCollectionEdit toolEdit = contentHostingService.addCollection(toolCollection);
-                toolEdit.getPropertiesEdit().addProperty(ResourceProperties.PROP_DISPLAY_NAME, "commons");
-                contentHostingService.commitCollection(toolEdit);
+                SecurityAdvisor makeFolder = new SecurityAdvisor() {
+                    public SecurityAdvice isAllowed(String userId, String function, String reference) {
+                        if ("content.new".equals(function) && reference != null && reference.equals("/content" + toolCollection)) {
+                            return SecurityAdvice.ALLOWED;
+                        } else {
+                            return SecurityAdvice.PASS;
+                        }
+                    }
+                };
+                securityService.pushAdvisor(makeFolder);
+                try {
+                    ContentCollectionEdit toolEdit = contentHostingService.addCollection(toolCollection);
+                    toolEdit.getPropertiesEdit().addProperty(ResourceProperties.PROP_DISPLAY_NAME, "commons");
+                    contentHostingService.commitCollection(toolEdit);
+                } finally {
+                    securityService.popAdvisor(makeFolder);
+                }
             }
 
-            ContentResourceEdit edit
-                = contentHostingService.addResource(toolCollection, fileName, suffix , 2);
-            edit.setContent(fileItem.getInputStream());
-            contentHostingService.commitResource(edit, NotificationService.NOTI_NONE);
-            return edit.getUrl();
+            SecurityAdvisor addFile = new SecurityAdvisor() {
+                    public SecurityAdvice isAllowed(String userId, String function, String reference) {
+                        if ("content.new".equals(function) && reference != null && reference.startsWith("/content" + toolCollection)) {
+                            return SecurityAdvice.ALLOWED;
+                        }
+
+                        return SecurityAdvice.PASS;
+                    }
+            };
+
+            securityService.pushAdvisor(addFile);
+            try {
+                ContentResourceEdit edit
+                    = contentHostingService.addResource(toolCollection, fileName, suffix , 2);
+                edit.setContent(fileItem.getInputStream());
+                contentHostingService.commitResource(edit, NotificationService.NOTI_NONE);
+                return edit.getUrl();
+            } finally {
+                securityService.popAdvisor(addFile);
+            }
         } catch (Exception e) {
             log.error("Failed to store file.", e);
             return null;
