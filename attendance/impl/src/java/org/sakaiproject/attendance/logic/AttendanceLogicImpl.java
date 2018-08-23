@@ -860,7 +860,7 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 		}
 	}
 
-	public void runGoogleReportExport() {
+	public void runGoogleReportExport() throws Exception {
 		AttendanceGoogleReportExport report = new AttendanceGoogleReportExport();
 		report.export();
 	}

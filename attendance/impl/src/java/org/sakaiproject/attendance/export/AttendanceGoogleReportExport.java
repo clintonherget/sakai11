@@ -76,6 +76,7 @@ import java.util.Collections;
 import org.sakaiproject.attendance.model.AttendanceSite;
 import org.sakaiproject.attendance.model.AttendanceRecord;
 import org.sakaiproject.attendance.model.Status;
+import org.sakaiproject.site.api.Site;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
@@ -303,6 +304,10 @@ public class AttendanceGoogleReportExport {
                 }
             }
 
+            if (siteIds.isEmpty()) {
+                return new DataTable(new ArrayList<>(), new HashSet<>(), new HashMap<>());
+            }
+
             // FIXME this will blow up if siteIds.length > 1000 .. do we care?
             String siteIdQueryString = siteIds.stream().map(n -> String.format("'%s'", n)).collect(Collectors.joining(","));
 
@@ -385,7 +390,7 @@ public class AttendanceGoogleReportExport {
         }
     }
 
-    public void export() {
+    public void export() throws Exception {
         try {
             Sheet sheet = getTargetSheet();
 
@@ -416,6 +421,7 @@ public class AttendanceGoogleReportExport {
             LOG.error("ERROR in AttendanceGoogleReportExport.export");
             LOG.error(e.getMessage());
             e.printStackTrace();
+            throw e;
         }
     }
 
@@ -425,7 +431,7 @@ public class AttendanceGoogleReportExport {
 
         for (Sheet sheet : spreadsheet.getSheets()) {
             if (BACKUP_SHEET_NAME.equals(sheet.getProperties().getTitle())) {
-                return false;
+                return true;
             }
         }
 
