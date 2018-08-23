@@ -140,4 +140,9 @@ public class GoogleClient {
             .build();
     }
 
+    public static Set<String> requiredScopes() {
+        return SCOPES;
+    }
+
+
 }

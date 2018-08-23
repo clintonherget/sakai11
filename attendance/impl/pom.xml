@@ -117,6 +117,11 @@
 			</dependency>
 			<dependency>
 				<groupId>com.google.apis</groupId>
+				<artifactId>google-api-services-admin-directory</artifactId>
+				<version>directory_v1-rev103-1.24.1</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.apis</groupId>
 				<artifactId>google-api-services-sheets</artifactId>
 				<version>v4-rev530-1.23.0</version>
 			</dependency>
@@ -130,6 +135,11 @@
 				<artifactId>jackson-databind</artifactId>
 			</dependency>
 			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<scope>compile</scope>
+			</dependency>
+			<dependency>
 				<groupId>javax.servlet</groupId>
 				<artifactId>servlet-api</artifactId>
 			</dependency>
@@ -137,12 +147,34 @@
 	</dependencies>
 	<build>
 		<resources>
-            <resource>
-                <directory>${basedir}/src/resources</directory>
-                <includes>
-                    <include>**/*.properties</include>
-                </includes>
-            </resource>
-        </resources>
+			<resource>
+				<directory>${basedir}/src/resources</directory>
+				<includes>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+		</resources>
+
+	<plugins>
+		<plugin>
+			<artifactId>maven-assembly-plugin</artifactId>
+			<configuration>
+				<descriptorRefs>
+					<descriptorRef>jar-with-dependencies</descriptorRef>
+				</descriptorRefs>
+			</configuration>
+			<executions>
+				<execution>
+					<id>make-assembly</id>
+					<goals>
+						<goal>single</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
+
+
+
 	</build>
 </project>
