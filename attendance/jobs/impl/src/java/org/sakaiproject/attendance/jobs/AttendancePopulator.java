@@ -470,6 +470,10 @@ public class AttendancePopulator implements Job {
                 return false;
             }
 
+            if (this.recipientAddress.isEmpty()) {
+                return false;
+            }
+
             StringBuilder body = new StringBuilder();
             body.append("The following errors occurred while populating attendance events:\n\n");
 
