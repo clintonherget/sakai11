@@ -5,6 +5,7 @@ import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.attendance.logic.AttendanceLogic;
 
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -79,6 +80,9 @@ public class AttendancePopulator implements Job {
 
         boolean dryRunMode = "true".equals(HotReloadConfigurationService.getString("nyu.attendance-populator.dry-run-mode", "true"));
 
+        List<String> excludeRosterList = new ArrayList(Arrays.asList(HotReloadConfigurationService.getString("nyu.attendance-populator.exclude-rosters", "").split(" *, *")));
+        excludeRosterList.remove("");
+
         if (dryRunMode) {
             LOG.warn("***\n" +
                      "*** AttendancePopulator running in dry run mode.  No attendance items will be added!\n" +
@@ -110,6 +114,10 @@ public class AttendancePopulator implements Job {
                         while (rs.next()) {
                             String siteId = rs.getString("site_id");
                             String roster = rs.getString("stem_name");
+
+                            if (excludeRosterList.contains(roster)) {
+                                continue;
+                            }
 
                             if (!siteRosters.containsKey(siteId)) {
                                 siteRosters.put(siteId, new ArrayList<String>());
