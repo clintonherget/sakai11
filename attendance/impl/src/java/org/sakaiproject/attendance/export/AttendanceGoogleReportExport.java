@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -301,6 +302,8 @@ public class AttendanceGoogleReportExport {
         boolean oldAutoCommit = conn.getAutoCommit();
         conn.setAutoCommit(false);
 
+        String dbFamily = conn.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT);
+
         try {
             // Get out list of users in sites of interest
             List<SiteUser> users = new ArrayList<>();
@@ -313,7 +316,9 @@ public class AttendanceGoogleReportExport {
                                                               "  sess.descr as term," +
                                                               "  site.title," +
                                                               "  site.site_id," +
-                                                              "  listagg(srp.provider_id, ',') within group (order by srp.provider_id) provider_id" +
+                                                              ("mysql".equals(dbFamily) ?
+                                                               "  group_concat(srp.provider_id separator ',') within group (order by srp.provider_id) provider_id" :
+                                                               "  listagg(srp.provider_id, ',') within group (order by srp.provider_id) provider_id") +
                                                               " FROM nyu_t_course_catalog cc" +
                                                               " INNER JOIN nyu_t_acad_session sess ON cc.strm = sess.strm AND cc.acad_career = sess.acad_career AND sess.current_flag = 'Y'" +
                                                               " INNER JOIN nyu_t_student_enrollments se on se.stem_name = cc.stem_name" +
