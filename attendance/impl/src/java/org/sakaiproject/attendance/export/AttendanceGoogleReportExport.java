@@ -326,7 +326,14 @@ public class AttendanceGoogleReportExport {
                                                               " GROUP BY usr.netid, usr.fname, usr.lname, sess.descr, site.title, site.site_id");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    users.add(new SiteUser(rs.getString("eid"), rs.getString("site_id"), rs.getString("fname"), rs.getString("lname"), rs.getString("term"), rs.getString("title"), rs.getString("provider_id")));
+                    users.add(new SiteUser(rs.getString("eid"),
+                                           rs.getString("site_id"),
+                                           rs.getString("fname"),
+                                           rs.getString("lname"),
+                                           rs.getString("term"),
+                                           rs.getString("title"),
+                                           rs.getString("provider_id")));
+
                     allSiteIds.add(rs.getString("site_id"));
                 }
             }
