@@ -255,6 +255,15 @@ public class AttendanceGoogleReportExport {
             return !"".equals(this.override);
         }
 
+        public String toString() {
+            return String.format("AttendanceOverride site_id: %s, netid: %s, event: %s, override: %s, replacing: %s",
+                                 userAtEvent.user.siteid,
+                                 userAtEvent.user.netid,
+                                 userAtEvent.event.name,
+                                 override,
+                                 oldStatus);
+        }
+
         @Override
         public Object[] interestingFields() {
             return new Object[] { userAtEvent, override, oldStatus };
@@ -280,11 +289,13 @@ public class AttendanceGoogleReportExport {
         public Set<AttendanceEvent> events;
         public List<SiteUser> users;
         public Map<UserAtEvent, String> statusTable;
+        public Map<UserAtEvent, AttendanceStoredOverride> overrides;
 
-        public DataTable(List<SiteUser> users, Set<AttendanceEvent> events, Map<UserAtEvent, String> statusTable) {
+        public DataTable(List<SiteUser> users, Set<AttendanceEvent> events, Map<UserAtEvent, String> statusTable, Map<UserAtEvent, AttendanceStoredOverride> overrides) {
             this.users = users;
             this.events = events;
             this.statusTable = statusTable;
+            this.overrides = overrides;
         }
     }
 
@@ -331,7 +342,7 @@ public class AttendanceGoogleReportExport {
                                                               " GROUP BY usr.netid, usr.fname, usr.lname, sess.descr, site.title, site.site_id");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    users.add(new SiteUser(rs.getString("eid"),
+                    users.add(new SiteUser(rs.getString("netid"),
                                            rs.getString("site_id"),
                                            rs.getString("fname"),
                                            rs.getString("lname"),
@@ -420,14 +431,6 @@ public class AttendanceGoogleReportExport {
                 }
             }
 
-            // poke in overrides
-            for (AttendanceStoredOverride override : getStoredOverrides(conn)) {
-                String status = mapStatus(override.status);
-                if (status != null) {
-                    statusTable.put(override.userAtEvent, status);
-                }
-            }
-
             // And fill out any that were missing as UKNOWN
             for (SiteUser user : users) {
                 for (AttendanceEvent event : events) {
@@ -439,7 +442,9 @@ public class AttendanceGoogleReportExport {
                 }
             }
 
-            return Optional.of(new DataTable(users, events, statusTable));
+            Map<UserAtEvent, AttendanceStoredOverride> overrides = getStoredOverrides(conn);
+
+            return Optional.of(new DataTable(users, events, statusTable, overrides));
         } finally {
             conn.setAutoCommit(oldAutoCommit);
             SqlService.returnConnection(conn);
@@ -479,9 +484,7 @@ public class AttendanceGoogleReportExport {
                 errorAndThrow("Backup sheet exists! Stop everything!");
             }
 
-            Optional<DataTable> table = loadAllData();
-
-            if (!table.isPresent()) {
+            if (!loadAllData().isPresent()) {
                 errorAndThrow("No data to report.  Leaving current sheet alone.");
             }
 
@@ -489,6 +492,7 @@ public class AttendanceGoogleReportExport {
 
             try {
                 storeOverrides(pullOverrides(sheet));
+                Optional<DataTable> table = loadAllData(); // this must run after pulling the overrides
                 backupSheet(sheet);
                 clearSheet(sheet);
                 syncValuesToSheet(sheet, table.get());
@@ -575,18 +579,25 @@ public class AttendanceGoogleReportExport {
     private void storeOverrides(List<AttendanceOverride> overrides) throws Exception {
         LOG.debug("Store overrides");
         // netid, siteid, event name...
-        AttendanceLogic attendance = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
+         AttendanceLogic attendance = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
 
         Connection conn = SqlService.borrowConnection();
         boolean oldAutoCommit = conn.getAutoCommit();
         conn.setAutoCommit(false);
 
         try {
+            // Delete any existing overrides
+            try (PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t")) {
+                 ps.executeUpdate();
+            }
+
             for (AttendanceOverride override : overrides) {
                 if (!override.isValid()) {
                     errorReporter.addError("Invalid override: " + override.rawText);
                     continue;
                 }
+
+                LOG.info(override.toString());
 
                 boolean updated = false;
 
@@ -611,29 +622,20 @@ public class AttendanceGoogleReportExport {
                             Status oldStatus = record.getStatus();
 
                             try {
-                                // Delete any existing overrides for this user and event
-                                PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t" +
-                                                                             " where netid = ?" +
-                                                                             " and site_id = ?" +
-                                                                             " and event_name = ?");
-                                ps.setString(1, netid);
-                                ps.setString(2, override.userAtEvent.user.siteid);
-                                ps.setString(3, override.userAtEvent.event.name);
-                                int result = ps.executeUpdate();
-
                                 // Insert the override to our magic table
-                                ps = conn.prepareStatement("insert into attendance_record_override_t (netid, site_id, event_name, status)" +
-                                                           " values (?, ?, ?, ?)");
-                                ps.setString(1, netid);
-                                ps.setString(2, override.userAtEvent.user.siteid);
-                                ps.setString(3, record.getAttendanceEvent().getName());
-                                ps.setString(4, override.override);
+                                try (PreparedStatement ps = conn.prepareStatement("insert into attendance_record_override_t (netid, site_id, event_name, status)" +
+                                                                                  " values (?, ?, ?, ?)")) {
+                                    ps.setString(1, netid);
+                                    ps.setString(2, override.userAtEvent.user.siteid);
+                                    ps.setString(3, record.getAttendanceEvent().getName());
+                                    ps.setString(4, override.override);
 
-                                if (ps.executeUpdate() == 0) {
-                                    errorReporter.addError("Failed to store override for netid:" + netid +
-                                                           " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) +
-                                                           " siteId: " + override.userAtEvent.user.siteid +
-                                                           " override: " + override.override);
+                                    if (ps.executeUpdate() == 0) {
+                                        errorReporter.addError("Failed to store override for netid:" + netid +
+                                            " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) +
+                                            " siteId: " + override.userAtEvent.user.siteid +
+                                            " override: " + override.override);
+                                    }
                                 }
                             } catch (Exception e) {
                                 errorAndThrow("Error updating attendance report override", e);
@@ -661,8 +663,8 @@ public class AttendanceGoogleReportExport {
         }
     }
 
-    private List<AttendanceStoredOverride> getStoredOverrides(Connection conn) throws Exception {
-        List<AttendanceStoredOverride> result = new ArrayList<>();
+    private Map<UserAtEvent,AttendanceStoredOverride> getStoredOverrides(Connection conn) throws Exception {
+        Map<UserAtEvent,AttendanceStoredOverride> result = new HashMap<>();
 
         try (PreparedStatement ps = conn.prepareStatement("select netid, site_id, event_name, status" +
                                                           " from attendance_record_override_t");
@@ -671,7 +673,7 @@ public class AttendanceGoogleReportExport {
                 AttendanceEvent event = new AttendanceEvent(rs.getString("event_name"));
                 SiteUser user = new SiteUser(rs.getString("netid"), rs.getString("site_id"));
                 UserAtEvent userAtEvent = new UserAtEvent(user, event);
-                result.add(new AttendanceStoredOverride(userAtEvent, rs.getString("status")));
+                result.put(userAtEvent, new AttendanceStoredOverride(userAtEvent, rs.getString("status")));
             }
         }
 
@@ -857,8 +859,19 @@ public class AttendanceGoogleReportExport {
             row.add("https://newclasses.nyu.edu/portal/site/" + user.siteid);
 
             for (AttendanceEvent event : table.events) {
-                row.add(table.statusTable.get(new UserAtEvent(user, event)));
-                row.add("");
+                UserAtEvent userAtEvent = new UserAtEvent(user, event);
+                row.add(table.statusTable.get(userAtEvent));
+
+                if (table.overrides.containsKey(userAtEvent)) {
+                    String mappedOverride = mapStatus(table.overrides.get(userAtEvent).status);
+                    if (mappedOverride == null) {
+                        row.add("");
+                    } else {
+                        row.add(mappedOverride);
+                    }
+                } else {
+                    row.add("");
+                }
             }
 
             rows.add(row);
