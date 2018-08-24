@@ -317,7 +317,7 @@ public class AttendanceGoogleReportExport {
                                                               "  site.title," +
                                                               "  site.site_id," +
                                                               ("mysql".equals(dbFamily) ?
-                                                               "  group_concat(srp.provider_id separator ',') within group (order by srp.provider_id) provider_id" :
+                                                               "  group_concat(srp.provider_id separator ',') provider_id" :
                                                                "  listagg(srp.provider_id, ',') within group (order by srp.provider_id) provider_id") +
                                                               " FROM nyu_t_course_catalog cc" +
                                                               " INNER JOIN nyu_t_acad_session sess ON cc.strm = sess.strm AND cc.acad_career = sess.acad_career AND sess.current_flag = 'Y'" +
