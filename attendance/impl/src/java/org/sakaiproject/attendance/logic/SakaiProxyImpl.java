@@ -401,13 +401,15 @@ public class SakaiProxyImpl implements SakaiProxy {
 		return sessionManager.getCurrentSession();
 	}
 
+	private static List<String> NON_STUDENT_ROLES = Arrays.asList("Teaching Assistant", "Course Site Admin", "Instructor");
+
 	private List<User> getUserListForMemberSetHelper(Set<Member> memberSet, String maintainRole) {
 		if (memberSet == null || maintainRole == null) {
 			return Collections.emptyList();
 		}
 
 		List<String> userIds = memberSet.stream()
-			.filter(member -> member.isActive() && !maintainRole.equals(member.getRole().getId()))
+			.filter(member -> member.isActive() && !maintainRole.equals(member.getRole().getId()) && !NON_STUDENT_ROLES.contains(member.getRole().getId()))
 			.map(member -> member.getUserId())
 			.collect(Collectors.toList());
 
