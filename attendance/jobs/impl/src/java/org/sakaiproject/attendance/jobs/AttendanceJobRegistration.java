@@ -26,7 +26,7 @@ public class AttendanceJobRegistration {
                 return;
             }
 
-            registerQuartzJob(scheduler, "AttendanceGoogleReportExport", AttendanceGoogleReportExport.class, ServerConfigurationService.getString("attendance.google-export-cron", ""));
+            registerQuartzJob(scheduler, "AttendanceGoogleReportExport", AttendanceGoogleReportJob.class, ServerConfigurationService.getString("attendance.google-export-cron", ""));
             registerQuartzJob(scheduler, "AttendancePopulator", AttendancePopulator.class, ServerConfigurationService.getString("attendance.populator-cron", ""));
         } catch (SchedulerException e) {
             LOG.error("Error while scheduling Attendance jobs", e);
