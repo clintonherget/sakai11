@@ -1,15 +1,21 @@
 // Things left to do:
 //
-//   * Email error reports to someone who cares
+//   * DONE Email error reports to someone who cares (sticky backup etc)
 //
-//   * clean up logging
+//   * DONE clean up logging
 //
-//   * Pull in rosters/schools/real user information from the right NYU_* tables
+//   * DONE Pull in rosters/schools/real user information from the right NYU_* tables
+//     (see branch AttendanceGoogleReportJob-wip)
 //
 //   * Pull out config stuff into sakai.properties if useful (hot reload)
 //
-//   * Audit FIXMEs
+//   * DONE Audit FIXMEs
 //
+//   * DONE Target correct sheet (by name)
+//
+//   * DONE Add data validation to override cells
+//
+//   * Cell/column colors (conditional formatting might persist?)
 
 /**********************************************************************************
  *
@@ -35,53 +41,47 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.attendance.jobs;
+package org.sakaiproject.attendance.export;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
-
-import org.sakaiproject.component.cover.HotReloadConfigurationService;
-import org.sakaiproject.component.cover.ServerConfigurationService;
-import org.sakaiproject.component.cover.ComponentManager;
-import org.sakaiproject.attendance.logic.AttendanceLogic;
-
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import org.sakaiproject.db.cover.SqlService;
-import java.util.stream.Collectors;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.HashSet;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
-
-import java.util.Collections;
-import org.sakaiproject.attendance.model.AttendanceSite;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import org.sakaiproject.attendance.logic.AttendanceLogic;
 import org.sakaiproject.attendance.model.AttendanceRecord;
+import org.sakaiproject.attendance.model.AttendanceSite;
 import org.sakaiproject.attendance.model.Status;
-import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.db.cover.SqlService;
+import org.sakaiproject.email.cover.EmailService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
+import org.sakaiproject.user.cover.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.SchedulerException;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
-public class AttendanceGoogleReportExport implements Job {
+public class AttendanceGoogleReportExport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AttendanceGoogleReportExport.class);
 
@@ -90,14 +90,13 @@ public class AttendanceGoogleReportExport implements Job {
     private static final String APPLICATION_NAME = "AttendanceGoogleReportExport";
     private static final String BACKUP_SHEET_NAME = "_backup_";
     private String spreadsheetId;
-    private GoogleClient client;
     private Sheets service;
 
-    public void execute(JobExecutionContext context) {
-        if (!jobIsRunning.compareAndSet(false, true)){
-            LOG.warn("Stopping job since this job is already running");
-            return;
-        }
+    private ErrorReporter errorReporter;
+
+    public AttendanceGoogleReportExport() {
+        this.errorReporter = new ErrorReporter(HotReloadConfigurationService.getString("nyu.attendance-report.error-address", ""),
+                                               "AttendanceGoogleReportExport error");
 
         String oauthPropertiesFile = HotReloadConfigurationService.getString("attendance-report.oauth-properties", "attendance_report_oauth_properties_not_set");
         oauthPropertiesFile = ServerConfigurationService.getSakaiHomePath() + "/" + oauthPropertiesFile;
@@ -111,22 +110,33 @@ public class AttendanceGoogleReportExport implements Job {
             oauthProperties.setProperty("credentials_path", new File(new File(oauthPropertiesFile).getParentFile(),
                                                                      "oauth_credentials").getPath());
 
-            this.client = new GoogleClient(oauthProperties);
+            GoogleClient client = new GoogleClient(oauthProperties);
             this.service = client.getSheets(APPLICATION_NAME);
 
             this.spreadsheetId = HotReloadConfigurationService.getString("attendance-report.spreadsheet", "attendance_report_spreadsheet_not_set");
         } catch (Exception e) {
-            LOG.error("Unable to initialize attendance report: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-
-        try {
-            this.export();
-        } finally {
-            jobIsRunning.set(false);
+            errorAndThrow("Unable to initialize attendance report", e);
+            this.finish();
         }
     }
+
+    public void finish() {
+        this.errorReporter.report();
+    }
+
+    private void errorAndThrow(String msg) {
+        LOG.error(msg);
+        errorReporter.addError(msg);
+        throw new RuntimeException(msg);
+    }
+
+    private void errorAndThrow(String msg, Throwable cause) {
+        LOG.error(msg + ": " + cause);
+        errorReporter.addError(msg + ": " + cause);
+        cause.printStackTrace();
+        throw new RuntimeException(msg, cause);
+    }
+
 
     abstract static class ValueObject {
         public abstract Object[] interestingFields();
@@ -150,6 +160,21 @@ public class AttendanceGoogleReportExport implements Job {
     static class SiteUser extends ValueObject {
         public String netid;
         public String siteid;
+        public String firstName;
+        public String lastName;
+        public String term;
+        public String siteTitle;
+        public String roster;
+
+        public SiteUser(String netid, String siteid, String firstName, String lastName, String term, String siteTitle, String roster) {
+            this.netid = Objects.requireNonNull(netid);
+            this.siteid = Objects.requireNonNull(siteid);
+            this.firstName = Objects.requireNonNull(firstName);
+            this.lastName = Objects.requireNonNull(lastName);
+            this.term = Objects.requireNonNull(term);
+            this.siteTitle = Objects.requireNonNull(siteTitle);
+            this.roster = Objects.requireNonNull(roster);
+        }
 
         public SiteUser(String netid, String siteid) {
             this.netid = Objects.requireNonNull(netid);
@@ -230,6 +255,15 @@ public class AttendanceGoogleReportExport implements Job {
             return !"".equals(this.override);
         }
 
+        public String toString() {
+            return String.format("AttendanceOverride site_id: %s, netid: %s, event: %s, override: %s, replacing: %s",
+                                 userAtEvent.user.siteid,
+                                 userAtEvent.user.netid,
+                                 userAtEvent.event.name,
+                                 override,
+                                 oldStatus);
+        }
+
         @Override
         public Object[] interestingFields() {
             return new Object[] { userAtEvent, override, oldStatus };
@@ -255,11 +289,13 @@ public class AttendanceGoogleReportExport implements Job {
         public Set<AttendanceEvent> events;
         public List<SiteUser> users;
         public Map<UserAtEvent, String> statusTable;
+        public Map<UserAtEvent, AttendanceStoredOverride> overrides;
 
-        public DataTable(List<SiteUser> users, Set<AttendanceEvent> events, Map<UserAtEvent, String> statusTable) {
+        public DataTable(List<SiteUser> users, Set<AttendanceEvent> events, Map<UserAtEvent, String> statusTable, Map<UserAtEvent, AttendanceStoredOverride> overrides) {
             this.users = users;
             this.events = events;
             this.statusTable = statusTable;
+            this.overrides = overrides;
         }
     }
 
@@ -267,82 +303,131 @@ public class AttendanceGoogleReportExport implements Job {
         return statusMapping.get(status);
     }
 
-    private DataTable loadAllData() throws Exception {
+
+
+    private Optional<DataTable> loadAllData() throws Exception {
         // Get a list of all students from the sites of interest
         // Get a list of the attendance events for all sites, joined to any attendance records
 
         Connection conn = SqlService.borrowConnection();
+        boolean oldAutoCommit = conn.getAutoCommit();
+        conn.setAutoCommit(false);
+
+        String dbFamily = conn.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT);
+
         try {
             // Get out list of users in sites of interest
             List<SiteUser> users = new ArrayList<>();
 
-            try (PreparedStatement ps = conn.prepareStatement("select map.eid, ssu.site_id" +
-                " from sakai_site_user ssu" +
-                " inner join sakai_user_id_map map on map.user_id = ssu.user_id" +
-                " where ssu.permission = 1 AND" +
-                "   ssu.site_id in (select distinct s.site_id from attendance_site_t s inner join attendance_event_t e on s.a_site_id = e.a_site_id)");
+            Set<String> allSiteIds = new HashSet<>();
+
+            try (PreparedStatement ps = conn.prepareStatement("SELECT usr.netid," +
+                                                              "  usr.fname," +
+                                                              "  usr.lname," +
+                                                              "  sess.descr as term," +
+                                                              "  site.title," +
+                                                              "  site.site_id," +
+                                                              ("mysql".equals(dbFamily) ?
+                                                               "  group_concat(srp.provider_id separator ',') provider_id" :
+                                                               "  listagg(srp.provider_id, ',') within group (order by srp.provider_id) provider_id") +
+                                                              " FROM nyu_t_course_catalog cc" +
+                                                              " INNER JOIN nyu_t_acad_session sess ON cc.strm = sess.strm AND cc.acad_career = sess.acad_career AND sess.current_flag = 'Y'" +
+                                                              " INNER JOIN nyu_t_student_enrollments se on se.stem_name = cc.stem_name" +
+                                                              " INNER JOIN sakai_realm_provider srp on srp.provider_id = REPLACE(cc.stem_name, ':', '_')" +
+                                                              " INNER JOIN sakai_realm rlm ON rlm.realm_key = srp.realm_key" +
+                                                              " INNER JOIN sakai_site site on CONCAT('/site/', site.site_id) = rlm.realm_id" +
+                                                              " INNER JOIN attendance_site_t att ON att.site_id = site.site_id" +
+                                                              " INNER JOIN nyu_t_users usr ON usr.netid = se.netid" +
+                                                              " WHERE cc.location in ('GLOBAL-0L')" +
+                                                              " GROUP BY usr.netid, usr.fname, usr.lname, sess.descr, site.title, site.site_id");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    users.add(new SiteUser(rs.getString("eid"), rs.getString("site_id")));
+                    users.add(new SiteUser(rs.getString("netid"),
+                                           rs.getString("site_id"),
+                                           rs.getString("fname"),
+                                           rs.getString("lname"),
+                                           rs.getString("term"),
+                                           rs.getString("title"),
+                                           rs.getString("provider_id")));
+
+                    allSiteIds.add(rs.getString("site_id"));
                 }
             }
 
-
-            // Get our mapping of events to the sites that have them
-            Map<AttendanceEvent, Set<String>> sitesWithEvent = new HashMap<>();
-            try (PreparedStatement ps = conn.prepareStatement("select e.name, s.site_id" +
-                " from attendance_event_t e" +
-                " inner join attendance_site_t s on s.a_site_id = e.a_site_id");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    AttendanceEvent event = new AttendanceEvent(rs.getString("name"));
-
-                    if (!sitesWithEvent.containsKey(event)) {
-                        sitesWithEvent.put(event, new HashSet<>());
-                    }
-
-                    sitesWithEvent.get(event).add(rs.getString("site_id"));
-                }
-
+            if (allSiteIds.isEmpty()) {
+                return Optional.empty();
             }
 
-            Set<AttendanceEvent> events = sitesWithEvent.keySet();
+
+            Set<AttendanceEvent> events = new HashSet<>();
             Map<UserAtEvent, String> statusTable = new HashMap<>();
 
-            // If a user is in a site that doesn't have a particular event, that's a "-"
-            for (SiteUser user : users) {
-                for (AttendanceEvent event : events) {
-                    if (!sitesWithEvent.get(event).contains(user.siteid)) {
-                        statusTable.put(new UserAtEvent(user, event), "-");
+
+            for (Set<String> siteIds : partitionSet(allSiteIds, 512)) {
+                // String siteIdQueryString = siteIds.stream().map(n -> String.format("'%s'", n)).collect(Collectors.joining(","));
+                String placeholders = siteIds.stream().map(_p -> "?").collect(Collectors.joining(","));
+
+                // Get our mapping of events to the sites that have them
+                Map<AttendanceEvent, Set<String>> sitesWithEvent = new HashMap<>();
+                try (PreparedStatement ps = conn.prepareStatement("select e.name, s.site_id" +
+                                                                  " from attendance_event_t e" +
+                                                                  " inner join attendance_site_t s on s.a_site_id = e.a_site_id" +
+                                                                  " where s.site_id in (" + placeholders + ")")) {
+                    Iterator<String> it = siteIds.iterator();
+                    for (int i = 0; it.hasNext(); i++) {
+                        ps.setString(i + 1, it.next());
+                    }
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            AttendanceEvent event = new AttendanceEvent(rs.getString("name"));
+
+                            if (!sitesWithEvent.containsKey(event)) {
+                                sitesWithEvent.put(event, new HashSet<>());
+                            }
+
+                            sitesWithEvent.get(event).add(rs.getString("site_id"));
+                        }
+
                     }
                 }
-            }
 
-            // Get all users at all events
-            try (PreparedStatement ps = conn.prepareStatement("select s.site_id, e.name, m.eid, r.status" +
-                " from attendance_event_t e" +
-                " inner join attendance_record_t r on e.a_event_id = r.a_event_id" +
-                " inner join attendance_site_t s on e.a_site_id = s.a_site_id" +
-                " inner join sakai_user_id_map m on m.user_id = r.user_id");
-                 ResultSet rs = ps.executeQuery()) {
-                // Fill out the values we know
-                while (rs.next()) {
-                    SiteUser user = new SiteUser(rs.getString("eid"), rs.getString("site_id"));
-                    AttendanceEvent event = new AttendanceEvent(rs.getString("name"));
+                events.addAll(sitesWithEvent.keySet());
 
-                    String status = mapStatus(rs.getString("status"));
-
-                    if (status != null) {
-                        statusTable.put(new UserAtEvent(user, event), status);
+                // If a user is in a site that doesn't have a particular event, that's a "-"
+                for (SiteUser user : users) {
+                    for (AttendanceEvent event : events) {
+                        if (!sitesWithEvent.get(event).contains(user.siteid)) {
+                            statusTable.put(new UserAtEvent(user, event), "-");
+                        }
                     }
                 }
-            }
 
-            // poke in overrides
-            for (AttendanceStoredOverride override : getStoredOverrides(conn)) {
-                String status = mapStatus(override.status);
-                if (status != null) {
-                    statusTable.put(override.userAtEvent, status);
+                // Get all users at all events
+                try (PreparedStatement ps = conn.prepareStatement("select s.site_id, e.name, m.eid, r.status" +
+                                                                  " from attendance_event_t e" +
+                                                                  " inner join attendance_record_t r on e.a_event_id = r.a_event_id" +
+                                                                  " inner join attendance_site_t s on e.a_site_id = s.a_site_id" +
+                                                                  " inner join sakai_user_id_map m on m.user_id = r.user_id" +
+                                                                  " where s.site_id in (" + placeholders + ")")) {
+                    Iterator<String> it = siteIds.iterator();
+                    for (int i = 0; it.hasNext(); i++) {
+                        ps.setString(i + 1, it.next());
+                    }
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        // Fill out the values we know
+                        while (rs.next()) {
+                            SiteUser user = new SiteUser(rs.getString("eid"), rs.getString("site_id"));
+                            AttendanceEvent event = new AttendanceEvent(rs.getString("name"));
+
+                            String status = mapStatus(rs.getString("status"));
+
+                            if (status != null) {
+                                statusTable.put(new UserAtEvent(user, event), status);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -357,44 +442,70 @@ public class AttendanceGoogleReportExport implements Job {
                 }
             }
 
-            return new DataTable(users, events, statusTable);
+            Map<UserAtEvent, AttendanceStoredOverride> overrides = getStoredOverrides(conn);
 
+            return Optional.of(new DataTable(users, events, statusTable, overrides));
         } finally {
+            conn.setAutoCommit(oldAutoCommit);
             SqlService.returnConnection(conn);
         }
     }
 
-    public void export() {
+    // Group a set of items into subsets of no more than partitionSize
+    private <T> List<Set<T>> partitionSet(Set<T> items, int partitionSize) {
+        if (partitionSize <= 0) {
+            throw new IllegalArgumentException("partitionSize must be positive");
+        }
+
+        List<Set<T>> result = new ArrayList<>();
+
+        if (items.isEmpty()) {
+            return result;
+        }
+
+        Iterator<T> it = items.iterator();
+
+        for (int i = 0; it.hasNext(); i++) {
+            if ((i % partitionSize) == 0) {
+                result.add(new HashSet<T>());
+            }
+
+            result.get(result.size() - 1).add(it.next());
+        }
+
+        return result;
+    }
+
+    public void export() throws Exception {
         try {
             Sheet sheet = getTargetSheet();
 
             if (backupExists()) {
-                // FIXME
-                throw new RuntimeException("Backup sheet exists! Stop everything!");
+                errorAndThrow("Backup sheet exists! Stop everything!");
             }
 
-            ProtectedRange range = protectSheet(sheet);
+            if (!loadAllData().isPresent()) {
+                errorAndThrow("No data to report.  Leaving current sheet alone.");
+            }
+
+            ProtectedRange range = prepareAndProtectSheet(sheet);
 
             try {
                 storeOverrides(pullOverrides(sheet));
-
+                Optional<DataTable> table = loadAllData(); // this must run after pulling the overrides
                 backupSheet(sheet);
-
                 clearSheet(sheet);
-
-                syncValuesToSheet(sheet);
-
-                protectNonEditableColumns(sheet, range);
-
+                syncValuesToSheet(sheet, table.get());
+                applyColumnAndCellProperties(sheet, range);
                 deleteSheet(BACKUP_SHEET_NAME);
             } finally {
                 unprotectRange(sheet, range);
             }
 
         } catch (Exception e) {
-            LOG.error("ERROR in AttendanceGoogleReportExport.export");
-            LOG.error(e.getMessage());
-            e.printStackTrace();
+            errorAndThrow("ERROR in AttendanceGoogleReportExport.export", e);
+        } finally {
+            this.finish();
         }
     }
 
@@ -468,16 +579,25 @@ public class AttendanceGoogleReportExport implements Job {
     private void storeOverrides(List<AttendanceOverride> overrides) throws Exception {
         LOG.debug("Store overrides");
         // netid, siteid, event name...
-        AttendanceLogic attendance = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
+         AttendanceLogic attendance = (AttendanceLogic) ComponentManager.get("org.sakaiproject.attendance.logic.AttendanceLogic");
 
         Connection conn = SqlService.borrowConnection();
+        boolean oldAutoCommit = conn.getAutoCommit();
+        conn.setAutoCommit(false);
+
         try {
+            // Delete any existing overrides
+            try (PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t")) {
+                 ps.executeUpdate();
+            }
+
             for (AttendanceOverride override : overrides) {
                 if (!override.isValid()) {
-                    // "INVALID OVERRIDE", override.rawText
-                    LOG.error("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:315 f46b87]: " + "\n    'INVALID OVERRIDE' => " + ("INVALID OVERRIDE") + "\n    override.rawText => " + (override.rawText) + "\n");
+                    errorReporter.addError("Invalid override: " + override.rawText);
                     continue;
                 }
+
+                LOG.info(override.toString());
 
                 boolean updated = false;
 
@@ -489,9 +609,9 @@ public class AttendanceGoogleReportExport implements Job {
 
                     List<AttendanceRecord> records =
                         attendance
-                            .getAttendanceRecordsForUsers(Collections.singletonList(user.getId()),
-                                attendanceSite)
-                            .get(user.getId());
+                        .getAttendanceRecordsForUsers(Collections.singletonList(user.getId()),
+                                                      attendanceSite)
+                        .get(user.getId());
 
                     if (records == null) {
                         records = Collections.emptyList();
@@ -501,44 +621,24 @@ public class AttendanceGoogleReportExport implements Job {
                         if (override.userAtEvent.event.name.equals(record.getAttendanceEvent().getName())) {
                             Status oldStatus = record.getStatus();
 
-                            // FIXME need to handle updating an override
-                            // (as incoming "override.oldStatus" will match the override not what's in the official
-                            // attendance table)
-                            // if (oldStatus.toString().equals(override.oldStatus)) {
-                            if (true) {
-                                try {
-                                    // Delete any existing overrides for this user and event
-                                    PreparedStatement ps = conn.prepareStatement("delete from attendance_record_override_t" +
-                                        " where netid = ?" +
-                                        " and site_id = ?" +
-                                        " and event_name = ?");
-                                    ps.setString(1, netid);
-                                    ps.setString(2, override.userAtEvent.user.siteid);
-                                    ps.setString(3, override.userAtEvent.event.name);
-                                    int result = ps.executeUpdate();
-
-                                    // Insert the override to our magic table
-                                    ps = conn.prepareStatement(
-                                        "insert into attendance_record_override_t (netid, site_id, event_name, status)" +
-                                            " values (?, ?, ?, ?)");
+                            try {
+                                // Insert the override to our magic table
+                                try (PreparedStatement ps = conn.prepareStatement("insert into attendance_record_override_t (netid, site_id, event_name, status)" +
+                                                                                  " values (?, ?, ?, ?)")) {
                                     ps.setString(1, netid);
                                     ps.setString(2, override.userAtEvent.user.siteid);
                                     ps.setString(3, record.getAttendanceEvent().getName());
                                     ps.setString(4, override.override);
 
                                     if (ps.executeUpdate() == 0) {
-                                        LOG.error("\n*** ERROR did not storeOverride for netid:" + netid + " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) + " siteId: " + override.userAtEvent.user.siteid + " override: " + override.override);
+                                        errorReporter.addError("Failed to store override for netid:" + netid +
+                                            " eventId: " + String.valueOf(record.getAttendanceEvent().getId()) +
+                                            " siteId: " + override.userAtEvent.user.siteid +
+                                            " override: " + override.override);
                                     }
-                                } catch (Exception e) { // FIXME
-                                    LOG.error("Error updating attendance report override: " + e.getMessage());
-                                    e.printStackTrace();
-                                    throw new RuntimeException(e);
                                 }
-                                // FIXME ensure autocommit or commit at end of loop
-                                conn.commit();
-                            } else {
-                                // FIXME add to email?
-                                LOG.warn("WARNING: database status " + oldStatus + " doesn't match incoming " + override.oldStatus);
+                            } catch (Exception e) {
+                                errorAndThrow("Error updating attendance report override", e);
                             }
                             updated = true;
                             break;
@@ -546,32 +646,34 @@ public class AttendanceGoogleReportExport implements Job {
                     }
 
                     if (!updated) {
-                        // "FAILED TO FIND MATCH", override.userAtEvent.event.name, override.userAtEvent.user.netid
-                        LOG.error("\n*** DEBUG " + System.currentTimeMillis() + "[AttendanceGoogleReportExport.java:349 f69489]: " + "\n    'FAILED TO FIND MATCH' => " + ("FAILED TO FIND MATCH") + "\n    override.userAtEvent.event.name => " + (override.userAtEvent.event.name) + "\n    override.userAtEvent.user.netid => " + (override.userAtEvent.user.netid) + "\n");
+                        errorReporter.addError("Failed to store override for netid:" + netid +
+                                               " event: " + override.userAtEvent.event.name +
+                                               " siteId: " + override.userAtEvent.user.siteid +
+                                               " override: " + override.override);
                     }
                 } catch (UserNotDefinedException e) {
-                    // FIXME: failed to match user
-                    LOG.error(e.getMessage());
-                    e.printStackTrace();
+                    errorAndThrow(String.format("Failed to match user '%s'", netid), e);
                 }
-
             }
+
+            conn.commit();
         }  finally {
+            conn.setAutoCommit(oldAutoCommit);
             SqlService.returnConnection(conn);
         }
     }
 
-    private List<AttendanceStoredOverride> getStoredOverrides(Connection conn) throws Exception {
-        List<AttendanceStoredOverride> result = new ArrayList<>();
+    private Map<UserAtEvent,AttendanceStoredOverride> getStoredOverrides(Connection conn) throws Exception {
+        Map<UserAtEvent,AttendanceStoredOverride> result = new HashMap<>();
 
         try (PreparedStatement ps = conn.prepareStatement("select netid, site_id, event_name, status" +
-            " from attendance_record_override_t");
+                                                          " from attendance_record_override_t");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 AttendanceEvent event = new AttendanceEvent(rs.getString("event_name"));
                 SiteUser user = new SiteUser(rs.getString("netid"), rs.getString("site_id"));
                 UserAtEvent userAtEvent = new UserAtEvent(user, event);
-                result.add(new AttendanceStoredOverride(userAtEvent, rs.getString("status")));
+                result.put(userAtEvent, new AttendanceStoredOverride(userAtEvent, rs.getString("status")));
             }
         }
 
@@ -636,6 +738,10 @@ public class AttendanceGoogleReportExport implements Job {
     }
 
     private ProtectedRange protectSheet(Integer sheetId) throws IOException {
+        return protectSheet(sheetId, new ArrayList<>());
+    }
+
+    private ProtectedRange protectSheet(Integer sheetId, List<Request> requests) throws IOException {
         LOG.debug("Protect sheet: " + sheetId);
         AddProtectedRangeRequest addProtectedRangeRequest = new AddProtectedRangeRequest();
         ProtectedRange protectedRange = new ProtectedRange();
@@ -647,7 +753,6 @@ public class AttendanceGoogleReportExport implements Job {
         addProtectedRangeRequest.setProtectedRange(protectedRange);
 
         BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
-        List<Request> requests = new ArrayList<>();
         Request wrapperRequest = new Request();
         wrapperRequest.setAddProtectedRange(addProtectedRangeRequest);
         requests.add(wrapperRequest);
@@ -656,13 +761,47 @@ public class AttendanceGoogleReportExport implements Job {
             service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
 
         BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
-        AddProtectedRangeResponse addProtectedRangeResponse = batchUpdateSpreadsheetResponse.getReplies().get(0).getAddProtectedRange();
+        for (Response response : batchUpdateSpreadsheetResponse.getReplies()) {
+            AddProtectedRangeResponse addProtectedRangeResponse = response.getAddProtectedRange();
+            if (addProtectedRangeResponse != null) {
+                return addProtectedRangeResponse.getProtectedRange();
+            }
+        }
 
-        return addProtectedRangeResponse.getProtectedRange();
+        errorAndThrow("No protected range returned after protectSheet");
+
+        // Never reached
+        return null;
     }
 
-    private ProtectedRange protectSheet(Sheet sheet) throws IOException {
-        return protectSheet(sheet.getProperties().getSheetId());
+    private ProtectedRange prepareAndProtectSheet(Sheet sheet) throws IOException {
+        Integer sheetId = sheet.getProperties().getSheetId();
+
+        LOG.debug("Delete any protected ranges from sheet: " + sheetId);
+        List<Request> requests = new ArrayList<>();
+        List<ProtectedRange> protectedRanges = sheet.getProtectedRanges();
+        if (protectedRanges != null) {
+            for (ProtectedRange protectedRange : protectedRanges) {
+                DeleteProtectedRangeRequest deleteProtectedRangeRequest = new DeleteProtectedRangeRequest();
+                deleteProtectedRangeRequest.setProtectedRangeId(protectedRange.getProtectedRangeId());
+                Request request = new Request();
+                request.setDeleteProtectedRange(deleteProtectedRangeRequest);
+                requests.add(request);
+            }
+        }
+
+        LOG.debug("Delete any data validations from sheet: " + sheetId);
+        GridRange gridRange = new GridRange();
+        gridRange.setSheetId(sheetId);
+        SetDataValidationRequest setDataValidationRequest = new SetDataValidationRequest();
+        setDataValidationRequest.setRange(gridRange);
+        setDataValidationRequest.setRule(null);
+        Request request = new Request();
+        request.setSetDataValidation(setDataValidationRequest);
+        requests.add(request);
+
+        LOG.debug("Add a  new protected range for the sheet: " + sheetId);
+        return protectSheet(sheetId, requests);
     }
 
     private void unprotectRange(Sheet sheet, ProtectedRange range) throws IOException {
@@ -687,12 +826,10 @@ public class AttendanceGoogleReportExport implements Job {
         ClearValuesResponse clearValuesResponse = clearRequest.execute();
     }
 
-    private void syncValuesToSheet(Sheet sheet) throws Exception {
+    private void syncValuesToSheet(Sheet sheet, DataTable table) throws Exception {
         LOG.debug("Give it some values");
         ValueRange valueRange = new ValueRange();
         List<List<Object>> rows = new ArrayList<>();
-
-        DataTable table = loadAllData();
 
         // Add a row for our header
         List<Object> header = new ArrayList<>();
@@ -714,16 +851,27 @@ public class AttendanceGoogleReportExport implements Job {
         for (SiteUser user : table.users) {
             List<Object> row = new ArrayList<>();
             row.add(user.netid);
-            row.add("Last");
-            row.add("First");
-            row.add("Term");
-            row.add("Site Title");
-            row.add("Roster ID");
+            row.add(user.firstName);
+            row.add(user.lastName);
+            row.add(user.term);
+            row.add(user.siteTitle);
+            row.add(user.roster);
             row.add("https://newclasses.nyu.edu/portal/site/" + user.siteid);
 
             for (AttendanceEvent event : table.events) {
-                row.add(table.statusTable.get(new UserAtEvent(user, event)));
-                row.add("");
+                UserAtEvent userAtEvent = new UserAtEvent(user, event);
+                row.add(table.statusTable.get(userAtEvent));
+
+                if (table.overrides.containsKey(userAtEvent)) {
+                    String mappedOverride = mapStatus(table.overrides.get(userAtEvent).status);
+                    if (mappedOverride == null) {
+                        row.add("");
+                    } else {
+                        row.add(mappedOverride);
+                    }
+                } else {
+                    row.add("");
+                }
             }
 
             rows.add(row);
@@ -745,11 +893,20 @@ public class AttendanceGoogleReportExport implements Job {
         request.setIncludeGridData(false);
         Spreadsheet spreadsheet = request.execute();
 
-        return spreadsheet.getSheets().get(0);
+        for (Sheet sheet : spreadsheet.getSheets()) {
+            if ("Edit Mode".equals(sheet.getProperties().getTitle())) {
+                return sheet;
+            }
+        }
+
+        errorAndThrow("Could not find 'Edit Mode' sheet");
+
+        // Never reached
+        return null;
     }
 
-    private void protectNonEditableColumns(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws IOException {
-        LOG.debug("Protect non editable columns");
+    private void applyColumnAndCellProperties(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws IOException {
+        LOG.debug("Apply column and cell properties");
 
         // All requests to apply to the spreadsheet
         List<Request> requests = new ArrayList<>();
@@ -818,6 +975,45 @@ public class AttendanceGoogleReportExport implements Job {
         request.setAddProtectedRange(addProtectedRangeRequest);
         requests.add(request);
 
+        LOG.debug("- add data validation to override columns");
+        DataValidationRule validationRule = new DataValidationRule();
+        BooleanCondition booleanCondition = new BooleanCondition();
+        booleanCondition.setType("ONE_OF_LIST");
+
+        List<ConditionValue> overrideValues = new ArrayList<>();
+        ConditionValue conditionValue = new ConditionValue();
+        conditionValue.setUserEnteredValue("P");
+        overrideValues.add(conditionValue);
+        conditionValue = new ConditionValue();
+        conditionValue.setUserEnteredValue("A");
+        overrideValues.add(conditionValue);
+        conditionValue = new ConditionValue();
+        conditionValue.setUserEnteredValue("E");
+        overrideValues.add(conditionValue);
+        booleanCondition.setValues(overrideValues);
+
+        validationRule.setCondition(booleanCondition);
+        validationRule.setStrict(true);
+        validationRule.setInputMessage("Select an override value from the list of available options.");
+
+        for (int i=0; i < headers.size(); i++) {
+            String header = (String) headers.get(i);
+            if (!header.endsWith("\nOVERRIDE")) {
+                continue;
+            }
+            gridRange = new GridRange();
+            gridRange.setSheetId(targetSheet.getProperties().getSheetId());
+            gridRange.setStartColumnIndex(i);
+            gridRange.setEndColumnIndex(i+1);
+            gridRange.setStartRowIndex(1); // not the header
+            SetDataValidationRequest setDataValidationRequest = new SetDataValidationRequest();
+            setDataValidationRequest.setRange(gridRange);
+            setDataValidationRequest.setRule(validationRule);
+            request = new Request();
+            request.setSetDataValidation(setDataValidationRequest);
+            requests.add(request);
+        }
+
         // Do the request!
         LOG.debug("- do the batch request");
         BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
@@ -826,5 +1022,51 @@ public class AttendanceGoogleReportExport implements Job {
             service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
 
         BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
+        LOG.debug(batchUpdateSpreadsheetResponse.toString());
+    }
+
+
+    private class ErrorReporter {
+        private String recipientAddress;
+        private String subject;
+        private List<String> errors;
+
+        public ErrorReporter(String recipientAddress, String subject) {
+            this.recipientAddress = recipientAddress;
+            this.subject = subject;
+            this.errors = new ArrayList<>();
+        }
+
+        public void addError(String error) {
+            this.errors.add(error);
+        }
+
+        public boolean report() {
+            if (this.errors.isEmpty()) {
+                return false;
+            }
+
+            if (this.recipientAddress.isEmpty()) {
+                return false;
+            }
+
+            StringBuilder body = new StringBuilder();
+            body.append("The following errors occurred while producing the Attendance report:\n\n");
+
+            for (String error : this.errors) {
+                body.append("  * " + error);
+                body.append("\n\n");
+            }
+
+            EmailService.send(HotReloadConfigurationService.getString("nyu.overrideFromAddress", ""),
+                              this.recipientAddress,
+                              this.subject,
+                              body.toString(),
+                              null,
+                              null,
+                              null);
+
+            return true;
+        }
     }
 }
