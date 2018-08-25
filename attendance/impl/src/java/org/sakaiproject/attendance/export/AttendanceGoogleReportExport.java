@@ -65,6 +65,8 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import org.sakaiproject.attendance.logic.AttendanceLogic;
 import org.sakaiproject.attendance.model.AttendanceRecord;
@@ -157,7 +159,7 @@ public class AttendanceGoogleReportExport {
         }
     }
 
-    static class SiteUser extends ValueObject {
+    static class SiteUser extends ValueObject implements Comparable<SiteUser> {
         public String netid;
         public String siteid;
         public String firstName;
@@ -185,18 +187,49 @@ public class AttendanceGoogleReportExport {
         public Object[] interestingFields() {
             return new Object[] { netid, siteid };
         }
+
+        @Override
+        public int compareTo(SiteUser other) {
+            if (this.siteid.equals(other.siteid)) {
+                return this.netid.compareTo(other.netid);
+            } else {
+                return this.siteid.compareTo(other.siteid);
+            }
+        }
     }
 
-    static class AttendanceEvent extends ValueObject {
+    static class AttendanceEvent extends ValueObject implements Comparable<AttendanceEvent> {
         public String name;
+        public Integer week;
+        public Integer session;
 
         public AttendanceEvent(String name) {
             this.name = Objects.requireNonNull(name);
+
+            String pattern = "\\w+\\s(\\d+)\\s\\w+\\s(\\d+)";
+            Pattern regex = Pattern.compile(pattern);
+            Matcher m = regex.matcher(this.name);
+            if (m.matches()) {
+                this.week = Integer.valueOf(m.group(1));
+                this.session = Integer.valueOf(m.group(2));
+            } else {
+                this.week = new Integer(-1);
+                this.session = new Integer(-1);
+            }
         }
 
         @Override
         public Object[] interestingFields() {
             return new Object[] { name };
+        }
+
+        @Override
+        public int compareTo(AttendanceEvent other) {
+            if (this.week.equals(other.week)) {
+                return this.session.compareTo(other.session);
+            } else {
+                return this.week.compareTo(other.week);
+            }
         }
     }
 
@@ -841,24 +874,30 @@ public class AttendanceGoogleReportExport {
         header.add("Roster ID");
         header.add("Site URL");
 
-        for (AttendanceEvent event : table.events) {
+        List<AttendanceEvent> sortedEvents = new ArrayList(table.events);
+        Collections.sort(sortedEvents);
+
+        for (AttendanceEvent event : sortedEvents) {
             header.add(event.name);
             header.add(event.name + "\nOVERRIDE");
         }
         rows.add(header);
 
+        List<SiteUser> sortedUsers = new ArrayList(table.users);
+        Collections.sort(sortedUsers);
+
         // Now our student data
-        for (SiteUser user : table.users) {
+        for (SiteUser user : sortedUsers) {
             List<Object> row = new ArrayList<>();
             row.add(user.netid);
-            row.add(user.firstName);
             row.add(user.lastName);
+            row.add(user.firstName);
             row.add(user.term);
             row.add(user.siteTitle);
             row.add(user.roster);
             row.add("https://newclasses.nyu.edu/portal/site/" + user.siteid);
 
-            for (AttendanceEvent event : table.events) {
+            for (AttendanceEvent event : sortedEvents) {
                 UserAtEvent userAtEvent = new UserAtEvent(user, event);
                 row.add(table.statusTable.get(userAtEvent));
 
