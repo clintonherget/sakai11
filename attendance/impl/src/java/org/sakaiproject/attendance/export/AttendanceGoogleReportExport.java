@@ -256,6 +256,7 @@ public class AttendanceGoogleReportExport {
         statusMapping.put("EXCUSED_ABSENCE", "E");
         statusMapping.put("LATE", "L");
         statusMapping.put("LEFT_EARLY", "LE");
+        statusMapping.put("UNKNOWN", "");
     }
 
     static class AttendanceOverride extends ValueObject {
@@ -464,13 +465,13 @@ public class AttendanceGoogleReportExport {
                 }
             }
 
-            // And fill out any that were missing as UKNOWN
+            // And fill out any that were missing as UNKNOWN/empty strings
             for (SiteUser user : users) {
                 for (AttendanceEvent event : events) {
                     UserAtEvent key = new UserAtEvent(user, event);
 
                     if (!statusTable.containsKey(key)) {
-                        statusTable.put(key, "UNKNOWN");
+                        statusTable.put(key, "");
                     }
                 }
             }
