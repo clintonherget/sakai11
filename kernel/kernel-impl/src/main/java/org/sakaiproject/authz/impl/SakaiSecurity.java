@@ -788,6 +788,33 @@ public abstract class SakaiSecurity implements SecurityService, Observer
 
 		boolean rv = authzGroupService().isAllowed(userId, function, azgs);
 
+		// If we rejected site.visit.unp for a user we know to be an
+		// instructor, assume the condition is temporary and retry for
+		// up to 10 seconds.
+		if (!rv &&
+		    "site.visit.unp".equals(function) &&
+		    "true".equals(HotReloadConfigurationService.getString("nyu-instructor-permission-check-harder", "true")) &&
+		    azgs != null &&
+		    azgs.contains("!user.template.Instructor")) {
+			for (int retry = 0; retry < 20; retry++) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {}
+				rv = authzGroupService().isAllowed(userId, function, azgs);
+
+				if (rv) {
+					M_log.info(String.format("Successfully got permissions for instructor '%s' after %d retries",
+								 userId, retry));
+					break;
+				}
+			}
+
+			if (!rv) {
+				M_log.info(String.format("Failed to confirm permissions for instructor '%s' after multiple attempts!",
+							 userId));
+			}
+		}
+
 		if (!rv && "true".equals(HotReloadConfigurationService.getString("nyu-log-failed-unlocks", "true"))) {
 		    M_log.info("checkAuthzGroups returning calculated false for key: " + command + " in authz groups: " + azgs);
 		}
