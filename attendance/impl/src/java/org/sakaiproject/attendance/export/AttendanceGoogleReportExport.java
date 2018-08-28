@@ -1035,6 +1035,7 @@ public class AttendanceGoogleReportExport {
         validationRule.setCondition(booleanCondition);
         validationRule.setStrict(true);
         validationRule.setInputMessage("Select an override value from the list of available options.");
+        validationRule.setShowCustomUi(true);
 
         for (int i=0; i < headers.size(); i++) {
             String header = (String) headers.get(i);
