@@ -786,13 +786,14 @@ public class SyllabusTool
             return true;
         }
 
-        if (syllabusItem == null) {
-            Placement currentPlacement = ToolManager.getCurrentPlacement();
-            syllabusItem = syllabusManager.getSyllabusItemByContextId(currentPlacement.getContext());
+        Placement currentPlacement = ToolManager.getCurrentPlacement();
+
+        if (currentPlacement == null) {
+            return false;
         }
 
         try {
-            Site site = SiteService.getSite(syllabusItem.getContextId());
+            Site site = SiteService.getSite(currentPlacement.getContext());
             ResourceProperties properties = site.getProperties();
             String location = (String)properties.getProperty("Location");
             return "AD".equals(location);
