@@ -102,6 +102,7 @@ public class Overview extends BasePage {
 		Label headerInfo 			= new Label("overview-header-info",			new StringResourceModel("attendance.overview.header.info",
 				null, new Object[]{addButtonText, takeAttendanceNowText}));
 		headerInfo.setEscapeModelStrings(false);
+		headerInfo.setVisible(!this.isPrepopulated);
 
 		//headers for the table
 		Label headerEventName 		= new Label("header-event-name", 			new ResourceModel("attendance.overview.header.event.name"));
@@ -211,6 +212,7 @@ public class Overview extends BasePage {
 			}
 		};
 		takeAttendanceNowForm.add(new SubmitLink("take-attendance-now"));
+		takeAttendanceNowForm.setVisible(!this.isPrepopulated);
 		add(takeAttendanceNowForm);
 	}
 
@@ -229,6 +231,8 @@ public class Overview extends BasePage {
 		addAttendanceItem.setDefaultFormProcessing(false);
 		addAttendanceItem.setOutputMarkupId(true);
 		addAttendanceItemForm.add(addAttendanceItem);
+
+		addAttendanceItemForm.setVisible(!this.isPrepopulated);
 
 		add(addAttendanceItemForm);
 	}

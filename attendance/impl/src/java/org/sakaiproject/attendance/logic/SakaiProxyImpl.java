@@ -425,6 +425,16 @@ public class SakaiProxyImpl implements SakaiProxy {
 		return foundUsers;
 	}
 
+	public ResourceProperties getCurrentSiteProperties() {
+		try {
+			return siteService.getSite(getCurrentSiteId()).getProperties();
+		} catch (IdUnusedException e) {
+			log.error("Unable to get site properties", e);
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	@Getter @Setter
 	private ToolManager toolManager;
 

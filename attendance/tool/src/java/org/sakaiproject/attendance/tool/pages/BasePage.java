@@ -80,6 +80,8 @@ public class BasePage extends WebPage implements IHeaderContributor {
 
 	FeedbackPanel feedbackPanel;
 
+	public boolean isPrepopulated;
+
 	@Getter
 	ModalWindow addOrEditItemWindow;
 	
@@ -88,6 +90,8 @@ public class BasePage extends WebPage implements IHeaderContributor {
 		log.debug("BasePage()");
 
 		this.role = sakaiProxy.getCurrentUserRoleInCurrentSite();
+
+		this.isPrepopulated = attendanceLogic.isPrepopulated();
 
     	//Take Attendance Overview link
 		homepageLink = new Link<Void>("homepage-link") {

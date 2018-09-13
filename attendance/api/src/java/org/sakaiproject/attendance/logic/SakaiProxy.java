@@ -16,6 +16,7 @@
 
 package org.sakaiproject.attendance.logic;
 
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.user.api.User;
 
 import java.util.Collection;
@@ -270,4 +271,6 @@ public interface SakaiProxy {
      * @return the title of the group
      */
 	String getGroupTitle(String siteId, String groupId);
+
+	ResourceProperties getCurrentSiteProperties();
 }

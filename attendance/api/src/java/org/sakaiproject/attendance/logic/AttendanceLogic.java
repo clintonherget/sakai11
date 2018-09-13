@@ -327,4 +327,6 @@ public interface AttendanceLogic {
 	Double regrade(AttendanceGrade attendanceGrade, boolean saveGrade);
 
 	void runGoogleReportExport() throws Exception;
+
+	boolean isPrepopulated();
 }

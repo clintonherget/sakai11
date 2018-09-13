@@ -28,6 +28,7 @@ import org.sakaiproject.attendance.api.AttendanceGradebookProvider;
 import org.sakaiproject.attendance.export.AttendanceGoogleReportExport;
 import org.sakaiproject.attendance.dao.AttendanceDao;
 import org.sakaiproject.attendance.model.*;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.user.api.User;
 
 /**
@@ -863,6 +864,15 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 	public void runGoogleReportExport() throws Exception {
 		AttendanceGoogleReportExport report = new AttendanceGoogleReportExport();
 		report.export();
+	}
+
+	public boolean isPrepopulated() {
+		ResourceProperties properties = sakaiProxy.getCurrentSiteProperties();
+		if (properties == null) {
+			return false;
+		} else {
+			return "true".equals(properties.getProperty("attendance_prepopulated"));
+		}
 	}
 
 	@Setter
