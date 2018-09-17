@@ -269,6 +269,52 @@
 						</executions>
 					</plugin>
 					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.8</version>
+						<executions>
+							<execution>
+								<phase>generate-resources</phase>
+								<configuration>
+									<target>
+										<concat destfile="${project.build.directory}/library-11.4/editor/ckextraplugins/combined.js" append="false">
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="lineutils/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="widget/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="iframedialog/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="movieplayer/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="fmath_formula/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="audiorecorder/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="image2/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="notification/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="fontawesome/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="audio/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="kaltura/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="kalturaflash/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="magicembed/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="youtube/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="nyupreview/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="encodedimage/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="nyuhelp/plugin.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="audio/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="audiorecorder/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="encodedimage/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="image2/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="kalturaflash/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="magicembed/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="movieplayer/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="notification/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="nyupreview/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="widget/lang/en.js" />
+											<string>;</string><filelist dir="${basedir}/src/webapp/editor/ckextraplugins/" files="youtube/lang/en.js" />
+										</concat>
+									</target>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
 						<groupId>net.alchim31.maven</groupId>
 						<artifactId>yuicompressor-maven-plugin</artifactId>
 						<version>1.1</version>
