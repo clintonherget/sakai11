@@ -235,6 +235,18 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
 	ckconfig.baseFloatZIndex = config.baseFloatZIndex;
     }
 
+    (function() {
+        // We're going to combine together as much JS from the standard set
+        // of plugins as possible and load it explicitly.  This saves going
+        // out to the network multiple times for every plugin.
+        var combined = new CKEDITOR.dom.element( 'script' );
+        combined.setAttributes( {
+            type: 'text/javascript',
+            src: basePath + 'combined.js?t=' + CKEDITOR.timestamp
+        } );
+        combined.appendTo( CKEDITOR.document.getHead() );
+    }());
+
     //To add extra plugins outside the plugins directory, add them here! (And in the variable)
     (function() {
         // SAK-30370 present a nice and simple editor without plugins to the user on a tiny screen.
@@ -286,7 +298,8 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             ckconfig.extraPlugins+="image,audiorecorder,movieplayer,wordcount,fmath_formula,autosave,fontawesome,notification";
 
             //SAK-29648
-            ckconfig.contentsCss = [basePath+'/fontawesome/font-awesome/css/font-awesome.min.css'];
+            // ckconfig.contentsCss = [basePath+'/fontawesome/font-awesome/css/font-awesome.min.css'];
+            ckconfig.contentsCss = [];
             //If the siteskin is defined, add the print.css
             if (sakai.editor.sitePrintSkin) {
                 ckconfig.contentsCss.push(sakai.editor.sitePrintSkin);
