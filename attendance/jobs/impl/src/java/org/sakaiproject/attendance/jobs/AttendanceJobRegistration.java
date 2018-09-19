@@ -50,15 +50,16 @@ public class AttendanceJobRegistration {
 
         scheduler.deleteJob(key);
 
-        if (cronTrigger.isEmpty()) {
-            return;
-        }
-
         JobDetail detail = JobBuilder.newJob(className)
             .withIdentity(key)
             .build();
 
         detail.getJobDataMap().put(JobBeanWrapper.SPRING_BEAN_NAME, this.getClass().toString());
+
+        if (cronTrigger.isEmpty()) {
+            scheduler.addJob(detail, true, true);
+            return;
+        }
 
         Trigger trigger = TriggerBuilder.newTrigger()
             .withIdentity(jobName + "Trigger")
