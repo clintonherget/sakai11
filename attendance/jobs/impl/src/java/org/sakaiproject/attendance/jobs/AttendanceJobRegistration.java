@@ -38,15 +38,24 @@ public class AttendanceJobRegistration {
 
     private void registerQuartzJob(Scheduler scheduler, String jobName, Class className, String cronTrigger)
             throws SchedulerException, ParseException {
+        JobKey oldKey = new JobKey(jobName, jobName);
+        JobKey key = new JobKey(jobName, Scheduler.DEFAULT_GROUP);
         // Delete any old instances of the job
-        scheduler.deleteJob(new JobKey(jobName, jobName));
+        //
+        // NOTE: deleting oldKey here because I've switched the group from
+        // jobName to DEFAULT_GROUP to get these jobs to show up in the Job
+        // Scheduler tool.  Once this change is released the oldKey stuff can be
+        // removed here (but we want to keep the other deleteJob).
+        scheduler.deleteJob(oldKey);
+
+        scheduler.deleteJob(key);
 
         if (cronTrigger.isEmpty()) {
             return;
         }
 
         JobDetail detail = JobBuilder.newJob(className)
-            .withIdentity(jobName, jobName)
+            .withIdentity(key)
             .build();
 
         detail.getJobDataMap().put(JobBeanWrapper.SPRING_BEAN_NAME, this.getClass().toString());
