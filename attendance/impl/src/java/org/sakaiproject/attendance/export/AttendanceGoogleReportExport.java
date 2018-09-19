@@ -522,12 +522,15 @@ public class AttendanceGoogleReportExport {
                 errorAndThrow("No data to report.  Leaving current sheet alone.");
             }
 
-            ProtectedRange range = prepareAndProtectSheet(sheet);
+            clearProtectedRanges(sheet);
+            ProtectedRange range = protectSheet(sheet.getProperties().getSheetId());
 
             try {
                 storeOverrides(pullOverrides(sheet));
                 Optional<DataTable> table = loadAllData(); // this must run after pulling the overrides
                 backupSheet(sheet);
+
+                clearValidations(sheet);
                 clearSheet(sheet);
                 syncValuesToSheet(sheet, table.get());
                 applyColumnAndCellProperties(sheet, range);
@@ -772,10 +775,8 @@ public class AttendanceGoogleReportExport {
     }
 
     private ProtectedRange protectSheet(Integer sheetId) throws IOException {
-        return protectSheet(sheetId, new ArrayList<>());
-    }
+        List<Request> requests = new ArrayList<>();
 
-    private ProtectedRange protectSheet(Integer sheetId, List<Request> requests) throws IOException {
         LOG.debug("Protect sheet: " + sheetId);
         AddProtectedRangeRequest addProtectedRangeRequest = new AddProtectedRangeRequest();
         ProtectedRange protectedRange = new ProtectedRange();
@@ -808,7 +809,7 @@ public class AttendanceGoogleReportExport {
         return null;
     }
 
-    private ProtectedRange prepareAndProtectSheet(Sheet sheet) throws IOException {
+    private void clearProtectedRanges(Sheet sheet) throws IOException {
         Integer sheetId = sheet.getProperties().getSheetId();
 
         LOG.debug("Delete any protected ranges from sheet: " + sheetId);
@@ -824,6 +825,20 @@ public class AttendanceGoogleReportExport {
             }
         }
 
+        if (!requests.isEmpty()) {
+            BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
+            batchUpdateSpreadsheetRequest.setRequests(requests);
+            Sheets.Spreadsheets.BatchUpdate batchUpdateRequest =
+                service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
+            LOG.debug(batchUpdateRequest.execute().toString());
+        }
+    }
+
+    private void clearValidations(Sheet sheet) throws IOException {
+        Integer sheetId = sheet.getProperties().getSheetId();
+
+        List<Request> requests = new ArrayList<>();
+
         LOG.debug("Delete any data validations from sheet: " + sheetId);
         GridRange gridRange = new GridRange();
         gridRange.setSheetId(sheetId);
@@ -834,8 +849,11 @@ public class AttendanceGoogleReportExport {
         request.setSetDataValidation(setDataValidationRequest);
         requests.add(request);
 
-        LOG.debug("Add a  new protected range for the sheet: " + sheetId);
-        return protectSheet(sheetId, requests);
+        BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
+        batchUpdateSpreadsheetRequest.setRequests(requests);
+        Sheets.Spreadsheets.BatchUpdate batchUpdateRequest =
+            service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
+        LOG.debug(batchUpdateRequest.execute().toString());
     }
 
     private void unprotectRange(Sheet sheet, ProtectedRange range) throws IOException {
