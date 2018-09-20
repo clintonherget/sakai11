@@ -550,14 +550,14 @@ public class AttendanceGoogleReportExport {
                 errorAndThrow("No data to report.  Leaving current sheet alone.");
             }
 
+            backupSheet(sheet);
+
             clearProtectedRanges(sheet);
             ProtectedRange range = protectSheet(sheet.getProperties().getSheetId());
 
             try {
                 storeOverrides(pullOverrides(sheet));
                 Optional<DataTable> table = loadAllData(); // this must run after pulling the overrides
-                backupSheet(sheet);
-
                 clearValidations(sheet);
                 clearSheet(sheet);
                 syncValuesToSheet(sheet, table.get());
