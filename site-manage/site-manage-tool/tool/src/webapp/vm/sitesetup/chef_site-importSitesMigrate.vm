@@ -107,7 +107,8 @@
 		<input type="hidden" name="templateIndex" value="60" />
 		<input type="hidden" name="continue" value="$continue" />
 		<p class="act">
-			<input type="submit" accesskey="s" class="active" name="eventSubmit_doContinue" value="$tlang.getString('gen.finish')" onclick="SPNR.disableControlsAndSpin( this, null );" />
+			<input id="showConfirmation" type="button" accesskey="s" class="active" value="$tlang.getString('gen.finish')" />
+			<input style="display: none" id="realSubmit" type="button" class="active" name="eventSubmit_doContinue" value="$tlang.getString('gen.finish')" onclick="SPNR.disableControlsAndSpin( this, null );" />
 			<input type="submit" accesskey="b" name="eventSubmit_doBack" value="$tlang.getString('gen.back')" onclick="SPNR.disableControlsAndSpin( this, null );" />
 			<input type="submit" accesskey="x" name="eventSubmit_doCancel" value="$tlang.getString('gen.cancel')" onclick="SPNR.disableControlsAndSpin( this, null );" />
 		</p>
@@ -117,3 +118,34 @@
 		<input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
 	</form>
 </div>
+
+<script id="confirmationTemplate" type="text/template">
+  <div id="confirmationContent">
+    <p>WARNING: All content in this site will be deleted and replaced with the imported content. Deleted content cannot be recovered. Type CONFIRM to continue.</p>
+    <p><input type="text" id="confirm" class="form-control" /></p>
+    <p class="small">Replacing site: $currentSite.title</p>
+    <p><button id="doConfirm" class="btn btn-primary" disabled>Replace content in this site</button></p>
+  </div>
+</script>
+
+<script>
+  $(function() {
+    var popup_html = "<p>WARNING: All content in this site will be deleted and replaced with the imported content. Deleted content cannot be recovered. Type CONFIRM to continue."
+    $("#showConfirmation").featherlight($("#confirmationTemplate").html(), {
+      afterContent: function() {
+        $("#confirmationContent #confirm").on("keyup", function() {
+          if ($(this).val() == "CONFIRM") {
+            $("#doConfirm").prop("disabled", false);
+          } else {
+            $("#doConfirm").prop("disabled", true);
+          }
+        });
+        $("#doConfirm").on('click', function() {
+          $("#doConfirm").prop("disabled", true);
+          $("#showConfirmation").hide();
+          $("#realSubmit").attr("type", "submit").show().trigger('click');
+        });
+      }
+    });
+  });
+</script>
