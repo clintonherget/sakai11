@@ -52,6 +52,7 @@ public class AttendanceJobRegistration {
 
         JobDetail detail = JobBuilder.newJob(className)
             .withIdentity(key)
+            .storeDurably(true)
             .build();
 
         detail.getJobDataMap().put(JobBeanWrapper.SPRING_BEAN_NAME, this.getClass().toString());
