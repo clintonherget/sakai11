@@ -257,6 +257,10 @@ public class AttendanceGoogleReportExport {
         statusMapping.put("LATE", "L");
         statusMapping.put("LEFT_EARLY", "LE");
         statusMapping.put("UNKNOWN", "");
+        statusMapping.put("M", "M");
+        statusMapping.put("N", "N");
+        statusMapping.put("R", "R");
+        statusMapping.put("X", "X");
     }
 
     static class AttendanceOverride extends ValueObject {
@@ -1040,14 +1044,13 @@ public class AttendanceGoogleReportExport {
 
         List<ConditionValue> overrideValues = new ArrayList<>();
         ConditionValue conditionValue = new ConditionValue();
-        conditionValue.setUserEnteredValue("P");
-        overrideValues.add(conditionValue);
-        conditionValue = new ConditionValue();
-        conditionValue.setUserEnteredValue("A");
-        overrideValues.add(conditionValue);
-        conditionValue = new ConditionValue();
-        conditionValue.setUserEnteredValue("E");
-        overrideValues.add(conditionValue);
+
+        for (String status : new String[] { "P", "A", "E", "M", "N", "R", "X" }) {
+            conditionValue = new ConditionValue();
+            conditionValue.setUserEnteredValue(status);
+            overrideValues.add(conditionValue);
+        }
+
         booleanCondition.setValues(overrideValues);
 
         validationRule.setCondition(booleanCondition);
