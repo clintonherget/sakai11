@@ -1144,6 +1144,8 @@ public class AttendanceGoogleReportExport {
                 body.append("\n\n");
             }
 
+            LOG.error("AttendanceGoogleReportExport: " + body.toString());
+
             EmailService.send(HotReloadConfigurationService.getString("nyu.overrideFromAddress", ""),
                               this.recipientAddress,
                               this.subject,
