@@ -353,6 +353,20 @@ public class AttendanceGoogleReportExport {
 
         String dbFamily = conn.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT);
 
+        String excludedSectionsStr = HotReloadConfigurationService.getString("attendance-report.excluded-sections", "");
+        List<String> excludedSections = new ArrayList<>();
+        if (!excludedSectionsStr.isEmpty()) {
+            for (String section : excludedSectionsStr.split(" *, *")) {
+                section = section.trim();
+
+                if (section.isEmpty()) {
+                    continue;
+                }
+
+                excludedSections.add(section);
+            }
+        }
+
         try {
             // Get out list of users in sites of interest
             List<SiteUser> users = new ArrayList<>();
@@ -365,6 +379,7 @@ public class AttendanceGoogleReportExport {
                                                               "  sess.descr as term," +
                                                               "  site.title," +
                                                               "  site.site_id," +
+                                                              // NOTE: The comma here is load bearing!  See below.
                                                               ("mysql".equals(dbFamily) ?
                                                                "  group_concat(srp.provider_id separator ',') provider_id" :
                                                                "  listagg(srp.provider_id, ',') within group (order by srp.provider_id) provider_id") +
@@ -380,6 +395,15 @@ public class AttendanceGoogleReportExport {
                                                               " GROUP BY usr.netid, usr.fname, usr.lname, sess.descr, site.title, site.site_id");
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    // NOTE: We're assuming that the comma was inserted by the
+                    // SQL above.  If you change one, change the other.
+
+                    // If the student entry only consists of excluded sections, skip the whole row
+                    if (Arrays.stream(rs.getString("provider_id").split(","))
+                        .allMatch(s -> excludedSections.contains(s))) {
+                        continue;
+                    }
+
                     users.add(new SiteUser(rs.getString("netid"),
                                            rs.getString("site_id"),
                                            rs.getString("fname"),
