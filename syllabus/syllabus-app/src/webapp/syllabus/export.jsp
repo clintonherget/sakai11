@@ -17,7 +17,8 @@
           <h3>Enable automatic syllabus export to external systems</h3>
           <p>
             When enabled, the selected syllabus file will be automatically exported to external systems (for example,
-            CAaR and the web course lists).
+            <a href="https://intranet.nyuad.nyu.edu/faculty-resources/academics/course-preparation-information/syllabi-and-course-requirements/" target="_blank">CAaR</a>
+            and <a href="https://intranet.nyuad.nyu.edu/faculty-resources/academics/course-list-and-syllabi/" target="_blank">internal web course lists</a>).
           </p>
           <p>
             <div class="onoffswitch"></f:verbatim>
