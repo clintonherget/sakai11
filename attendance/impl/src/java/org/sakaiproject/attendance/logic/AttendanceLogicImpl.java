@@ -865,6 +865,11 @@ public class AttendanceLogicImpl implements AttendanceLogic {
 		report.export();
 	}
 
+	public boolean isSitePrepopulated() {
+		return sakaiProxy.isSitePrepopulated();
+	}
+
+
 	@Setter
 	private AttendanceDao dao;
 

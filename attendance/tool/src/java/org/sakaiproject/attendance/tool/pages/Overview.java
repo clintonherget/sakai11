@@ -84,9 +84,11 @@ public class Overview extends BasePage {
 		}
 
 		this.attendanceStatusProvider = new AttendanceStatusProvider(attendanceLogic.getCurrentAttendanceSite(), AttendanceStatusProvider.ACTIVE);
-		
-		createHeaders();
-		createTable();
+
+		boolean sitePrepopulated = attendanceLogic.isSitePrepopulated();
+
+		createHeaders(!sitePrepopulated);
+		createTable(!sitePrepopulated);
 
 		this.printContainer = new WebMarkupContainer("print-container");
 		printContainer.setOutputMarkupId(true);
@@ -99,11 +101,11 @@ public class Overview extends BasePage {
 
 		add(printContainer);
 
-		createTakeAttendanceNow();
-		createAddAttendanceItem();
+		createTakeAttendanceNow(!sitePrepopulated);
+		createAddAttendanceItem(!sitePrepopulated);
 	}
 
-	private void createHeaders() {
+	private void createHeaders(boolean allowEdit) {
 		// Main header
 		Label headerOverview 		= new Label("header-overview",				new ResourceModel("attendance.overview.header"));
 
@@ -112,6 +114,8 @@ public class Overview extends BasePage {
 		Label headerInfo 			= new Label("overview-header-info",			new StringResourceModel("attendance.overview.header.info",
 				null, new Object[]{addButtonText, takeAttendanceNowText}));
 		headerInfo.setEscapeModelStrings(false);
+
+		headerInfo.setVisible(allowEdit);
 
 		//headers for the table
 		Label headerEventName 		= new Label("header-event-name", 			new ResourceModel("attendance.overview.header.event.name"));
@@ -137,7 +141,7 @@ public class Overview extends BasePage {
 
 	}
 
-	private void createTable() {
+	private void createTable(boolean allowEdit) {
 		EventDataProvider eventDataProvider = new EventDataProvider();
 		DataView<AttendanceEvent> attendanceEventDataView = new DataView<AttendanceEvent>("events", eventDataProvider) {
 			@Override
@@ -174,6 +178,11 @@ public class Overview extends BasePage {
 
 				final AjaxLink eventEditLink = getAddEditWindowAjaxLink(modelObject, "event-edit-link");
 				eventEditLink.add(new Label("event-edit-alt", new StringResourceModel("attendance.icon.edit.alt", null, new String[]{name})));
+
+				if (!allowEdit) {
+					eventEditLink.setVisible(false);
+				}
+
 				item.add(eventEditLink);
 
 				final AjaxLink printLink = new AjaxLink<Void>("print-link"){
@@ -203,7 +212,7 @@ public class Overview extends BasePage {
 		add(noEvents);
 	}
 
-	private void createTakeAttendanceNow() {
+	private void createTakeAttendanceNow(boolean visible) {
 		final Form<?> takeAttendanceNowForm = new Form<Void>("take-attendance-now-form") {
 			@Override
 			protected void onSubmit() {
@@ -221,10 +230,11 @@ public class Overview extends BasePage {
 			}
 		};
 		takeAttendanceNowForm.add(new SubmitLink("take-attendance-now"));
+		takeAttendanceNowForm.setVisible(visible);
 		add(takeAttendanceNowForm);
 	}
 
-	private void createAddAttendanceItem() {
+	private void createAddAttendanceItem(boolean visible) {
 		final Form<?> addAttendanceItemForm = new Form<Void>("add-attendance-item-form");
 		final AjaxButton addAttendanceItem = new AjaxButton("add-attendance-item") {
 			@Override
@@ -239,6 +249,7 @@ public class Overview extends BasePage {
 		addAttendanceItem.setDefaultFormProcessing(false);
 		addAttendanceItem.setOutputMarkupId(true);
 		addAttendanceItemForm.add(addAttendanceItem);
+		addAttendanceItemForm.setVisible(visible);
 
 		add(addAttendanceItemForm);
 	}

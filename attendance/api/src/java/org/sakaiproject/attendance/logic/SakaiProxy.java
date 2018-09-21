@@ -270,4 +270,9 @@ public interface SakaiProxy {
      * @return the title of the group
      */
 	String getGroupTitle(String siteId, String groupId);
+
+	/**
+	 * True if the current site's attendance items were created by the AttendancePopulator job.
+	 */
+	boolean isSitePrepopulated();
 }

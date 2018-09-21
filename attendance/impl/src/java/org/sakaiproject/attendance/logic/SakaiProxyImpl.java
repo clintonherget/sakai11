@@ -425,6 +425,20 @@ public class SakaiProxyImpl implements SakaiProxy {
 		return foundUsers;
 	}
 
+	public boolean isSitePrepopulated() {
+		try {
+			String siteId = getCurrentSiteId();
+			Site site = siteService.getSite(siteId);
+
+			ResourceProperties siteProperties = site.getProperties();
+
+			return "true".equals(siteProperties.get("attendance_prepopulated"));
+		} catch (IdUnusedException e) {
+			return false;
+		}
+	}
+
+
 	@Getter @Setter
 	private ToolManager toolManager;
 
