@@ -86,6 +86,16 @@ public class StudentOverview extends BasePage {
         add(createStatsTable());
     }
 
+    // Make refresh behave itself.
+    @Override
+    public void onBeforeRender() {
+        super.onBeforeRender();
+        if (hasBeenRendered()) {
+            setResponsePage(new StudentOverview(this.selectedGroup));
+        }
+    }
+
+
     private WebMarkupContainer createHeader() {
         WebMarkupContainer  contain         = new WebMarkupContainer("student-overview-header");
         Label               title           = new Label("student-overview-title", new ResourceModel("attendance.student.overview.title"));

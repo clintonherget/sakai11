@@ -79,6 +79,17 @@ public class StudentView extends BasePage {
         init();
     }
 
+    // Make refresh behave itself.
+    @Override
+    public void onBeforeRender() {
+        super.onBeforeRender();
+        if (hasBeenRendered()) {
+            setResponsePage(new StudentView(this.studentId,
+                                            this.previousEventId,
+                                            this.returnPage));
+        }
+    }
+
     private void init() {
         if(this.role != null && this.role.equals("Student")){
             this.isStudent = true;
