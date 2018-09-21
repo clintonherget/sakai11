@@ -66,6 +66,16 @@ public class Overview extends BasePage {
 
 	private Model<String> printHiddenClass = new Model<String>("printHidden");
 
+	// Make refresh behave itself.
+	@Override
+	public void onBeforeRender() {
+		super.onBeforeRender();
+		if (hasBeenRendered()) {
+			setResponsePage(new Overview());
+		}
+	}
+
+
 	public Overview() {
 		disableLink(this.homepageLink);
 
