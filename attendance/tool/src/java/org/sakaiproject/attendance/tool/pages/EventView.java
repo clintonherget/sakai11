@@ -131,6 +131,18 @@ public class EventView extends BasePage {
         init();
     }
 
+    // Make refresh behave itself.
+    @Override
+    public void onBeforeRender() {
+        super.onBeforeRender();
+        if (hasBeenRendered()) {
+            AttendanceEvent refreshedEvent = attendanceLogic.getAttendanceEvent(this.attendanceEvent.getId());
+            setResponsePage(new EventView(refreshedEvent,
+                                          this.returnPage,
+                                          this.selectedGroup));
+        }
+    }
+
     private void init() {
         createHeader();
         createTable();
