@@ -426,13 +426,26 @@ public class AttendancePopulator implements Job {
                                    siteId, meeting.title));
         }
 
-        Site site = SiteService.getSite(siteId);
-        ResourcePropertiesEdit properties = site.getPropertiesEdit();
-        properties.addProperty(ATTENDANCE_PREPOPULATED, "true");
-        SiteService.save(site);
-
+        markSiteAsPopulated(conn, siteId);
         LOG.info("Site now fully populated: " + siteId);
     }
+
+    // We avoid using site.getPropertiesEdit() & SiteService.save() here because
+    // we might get called while site creation is in progress.  If that happens,
+    // we risk trying to write properties while the site creation process is
+    // doing the same, overwriting site properties with a partial set.
+    //
+    // Not just paranoia--this actually happened!
+    //
+    private void markSiteAsPopulated(Connection conn, String siteId) throws Exception {
+        try (PreparedStatement ps = conn.prepareStatement("insert into sakai_site_property (site_id, name, value) values (?, ?, ?)")) {
+            ps.setString(1, siteId);
+            ps.setString(2, ATTENDANCE_PREPOPULATED);
+            ps.setString(3, "true");
+            ps.executeUpdate();
+        }
+    }
+
 
     private void addToolIfMissing(String siteId, String registration) throws Exception {
         Site site = SiteService.getSite(siteId);
