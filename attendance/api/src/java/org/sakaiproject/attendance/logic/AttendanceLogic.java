@@ -327,4 +327,10 @@ public interface AttendanceLogic {
 	Double regrade(AttendanceGrade attendanceGrade, boolean saveGrade);
 
 	void runGoogleReportExport() throws Exception;
+
+	/**
+	 * True if the current site's attendance items were created by the AttendancePopulator job.
+	 */
+	boolean isSitePrepopulated();
+
 }

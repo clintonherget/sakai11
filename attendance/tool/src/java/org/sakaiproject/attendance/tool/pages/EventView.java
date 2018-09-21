@@ -61,6 +61,8 @@ import org.sakaiproject.attendance.tool.panels.StatisticsPanel;
 import org.sakaiproject.time.cover.TimeService;
 import java.util.TimeZone;
 
+import org.apache.wicket.ajax.markup.html.AjaxLink;
+
 
 /**
  * EventView is a view into an AttendanceEvent
@@ -144,7 +146,7 @@ public class EventView extends BasePage {
     }
 
     private void init() {
-        createHeader();
+        createHeader(!attendanceLogic.isSitePrepopulated());
         createTable();
 
         statisticsPanel = createStatsTable();
@@ -218,7 +220,7 @@ public class EventView extends BasePage {
         return infoContainer;
     }
 
-    private void createHeader() {
+    private void createHeader(boolean allowEdit) {
         Link<Void> closeLink = new Link<Void>("close-link") {
             @Override
             public void onClick() {
@@ -226,9 +228,12 @@ public class EventView extends BasePage {
             }
         };
 
-         closeLink.add(new Label("close-link-text", new ResourceModel("attendance.event.view.link.close.overview")));
+        closeLink.add(new Label("close-link-text", new ResourceModel("attendance.event.view.link.close.overview")));
 
-        add(getAddEditWindowAjaxLink(attendanceEvent, "edit-link"));
+        AjaxLink<?> editLink = getAddEditWindowAjaxLink(attendanceEvent, "edit-link");
+        editLink.setVisible(allowEdit);
+
+        add(editLink);
         add(closeLink);
     }
 
