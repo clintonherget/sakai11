@@ -18,6 +18,7 @@
  * limitations under the License.
  *
  ******************************************************************************/
+
 var sakai = sakai || {};
 sakai.editor = sakai.editor || {};
 sakai.editor.editors = sakai.editor.editors || {};
@@ -239,6 +240,12 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         // We're going to combine together as much JS from the standard set
         // of plugins as possible and load it explicitly.  This saves going
         // out to the network multiple times for every plugin.
+        if (window.ckEditorCombinedAlreadyLoaded) {
+            return;
+        }
+
+        window.ckEditorCombinedAlreadyLoaded = true;
+
         var combined = new CKEDITOR.dom.element( 'script' );
         combined.setAttributes( {
             type: 'text/javascript',
