@@ -196,26 +196,29 @@ public void init()
       schedFactory = new StdSchedulerFactory(qrtzProperties);
       scheduler = schedFactory.getScheduler();
 
-      // loop through persisted jobs removing both the job and associated
-      // triggers for jobs where the associated job class is not found
-      Set<JobKey> jobKeys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(Scheduler.DEFAULT_GROUP));
-      for (JobKey key : jobKeys) {
-        try
-        {
-          JobDetail detail = scheduler.getJobDetail(key);
-          String bean = detail.getJobDataMap().getString(JobBeanWrapper.SPRING_BEAN_NAME);
-          Job job = (Job) ComponentManager.get(bean);
-          if (job == null) {
+      // NYU: Don't do anything if we're not the scheduler machine
+      if (isStartScheduler()) {
+        // loop through persisted jobs removing both the job and associated
+        // triggers for jobs where the associated job class is not found
+        Set<JobKey> jobKeys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(Scheduler.DEFAULT_GROUP));
+        for (JobKey key : jobKeys) {
+          try
+          {
+            JobDetail detail = scheduler.getJobDetail(key);
+            String bean = detail.getJobDataMap().getString(JobBeanWrapper.SPRING_BEAN_NAME);
+            Job job = (Job) ComponentManager.get(bean);
+            if (job == null) {
               LOG.warn("scheduler cannot load class for persistent job:" + key);
-        	  scheduler.deleteJob(key);
+              scheduler.deleteJob(key);
               LOG.warn("deleted persistent job:" + key);
+            }
           }
-        }
-        catch (SchedulerException e)
-        {
-          LOG.warn("scheduler cannot load class for persistent job:" + key);
-          scheduler.deleteJob(key);
-          LOG.warn("deleted persistent job:" + key);
+          catch (SchedulerException e)
+          {
+            LOG.warn("scheduler cannot load class for persistent job:" + key);
+            scheduler.deleteJob(key);
+            LOG.warn("deleted persistent job:" + key);
+          }
         }
       }
 
