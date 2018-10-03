@@ -195,46 +195,49 @@ public class SchedulerManagerImpl implements SchedulerManager, SchedulerFactory,
       scheduler = schedFactory.getScheduler();
       scheduler.setJobFactory(jobFactory);
 
-      // loop through persisted jobs removing both the job and associated
-      // triggers for jobs where the associated job class is not found
-      Set<JobKey> jobKeys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(Scheduler.DEFAULT_GROUP));
-      for (JobKey key : jobKeys) {
-        try
-        {
-          JobDetail detail = scheduler.getJobDetail(key);
-          String bean = detail.getJobDataMap().getString(JobBeanWrapper.SPRING_BEAN_NAME);
-          // We now have jobs that don't explicitly reference a spring bean
-          if (bean != null && !bean.isEmpty()) {
-            Job job = (Job) ComponentManager.get(bean);
-            if (job == null) {
-                // See if we should be migrating this job.
-                Class<? extends Job> newClass = migration.get(bean);
-                if (newClass != null) {
-                    JobDataMap jobDataMap = detail.getJobDataMap();
-                    jobDataMap.remove(JobBeanWrapper.SPRING_BEAN_NAME);
-                    JobDetail newJob = JobBuilder.newJob(newClass)
-                            .setJobData(jobDataMap)
-                            .requestRecovery(detail.requestsRecovery())
-                            .storeDurably(detail.isDurable())
-                            .withDescription(detail.getDescription())
-                            .withIdentity(key).build();
-                    // Update the existing job by replacing it with the same identity.
-                    scheduler.addJob(newJob, true);
-                    log.info("Migrated job of {} to {}", detail.getJobClass(), newClass);
-                } else {
-                    log.warn("scheduler cannot load class for persistent job:" + key);
-                    scheduler.deleteJob(key);
-                    log.warn("deleted persistent job:" + key);
-                }
-            }
+      // NYU: Don't do anything if we're not the scheduler machine
+      if (isStartScheduler()) {
+          // loop through persisted jobs removing both the job and associated
+          // triggers for jobs where the associated job class is not found
+          Set<JobKey> jobKeys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(Scheduler.DEFAULT_GROUP));
+          for (JobKey key : jobKeys) {
+              try
+              {
+                  JobDetail detail = scheduler.getJobDetail(key);
+                  String bean = detail.getJobDataMap().getString(JobBeanWrapper.SPRING_BEAN_NAME);
+                  // We now have jobs that don't explicitly reference a spring bean
+                  if (bean != null && !bean.isEmpty()) {
+                      Job job = (Job) ComponentManager.get(bean);
+                      if (job == null) {
+                          // See if we should be migrating this job.
+                          Class<? extends Job> newClass = migration.get(bean);
+                          if (newClass != null) {
+                              JobDataMap jobDataMap = detail.getJobDataMap();
+                              jobDataMap.remove(JobBeanWrapper.SPRING_BEAN_NAME);
+                              JobDetail newJob = JobBuilder.newJob(newClass)
+                                  .setJobData(jobDataMap)
+                                  .requestRecovery(detail.requestsRecovery())
+                                  .storeDurably(detail.isDurable())
+                                  .withDescription(detail.getDescription())
+                                  .withIdentity(key).build();
+                              // Update the existing job by replacing it with the same identity.
+                              scheduler.addJob(newJob, true);
+                              log.info("Migrated job of {} to {}", detail.getJobClass(), newClass);
+                          } else {
+                              log.warn("scheduler cannot load class for persistent job:" + key);
+                              scheduler.deleteJob(key);
+                              log.warn("deleted persistent job:" + key);
+                          }
+                      }
+                  }
+              }
+              catch (SchedulerException e)
+              {
+                  log.warn("scheduler cannot load class for persistent job:" + key);
+                  scheduler.deleteJob(key);
+                  log.warn("deleted persistent job:" + key);
+              }
           }
-        }
-        catch (SchedulerException e)
-        {
-          log.warn("scheduler cannot load class for persistent job:" + key);
-          scheduler.deleteJob(key);
-          log.warn("deleted persistent job:" + key);
-        }
       }
 
       for (TriggerListener tListener : globalTriggerListeners)
