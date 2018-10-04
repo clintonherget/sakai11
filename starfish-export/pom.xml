@@ -5,7 +5,7 @@
     <parent>
       <groupId>org.sakaiproject</groupId>
       <artifactId>master</artifactId>
-      <version>19-SNAPSHOT</version>
+      <version>11.4</version>
     </parent>
 
     <name>Starfish Export</name>
