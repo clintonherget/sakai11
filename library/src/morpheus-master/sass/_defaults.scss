@@ -1,7 +1,5 @@
 /* Global namespace */
 
-@import "customization"; //it is copied from the user supplied file by maven
-
 $namespace : "Mrphs-" !default;
 $skin-name : "morpheus-default" !default; // This is used for bootstrap font behaviour.
 
@@ -372,5 +370,7 @@ $instruction-background-color: #fff !default;
 
 $focus-outline-color: #5b9dd9;
 
+// NYU Move this here so we can override these variables!
+@import "customization"; //it is copied from the user supplied file by maven
 
 @import url(#{$font-family-url});
