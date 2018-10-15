@@ -20,7 +20,7 @@ def run_block(id, description, body)
 
     ps = DB.createStatement
     begin
-      puts "Updated %d rows" % [ps.executeUpdate(statement)]
+      puts "%s: Updated %d rows" % [statement[0..100], ps.executeUpdate(statement)]
     rescue
       puts "=" * 80
       puts "FAILED STATEMENT: #{statement}"
@@ -151,9 +151,11 @@ ALTER TABLE pasystem_popup_dismissed MODIFY user_id varchar2(99) NOT NULL;
 ALTER TABLE pasystem_banner_dismissed MODIFY user_id varchar2(99) NOT NULL;
 
 ALTER TABLE pasystem_popup_dismissed drop CONSTRAINT popup_dismissed_unique;
+DROP INDEX popup_dismissed_unique;
 ALTER TABLE pasystem_popup_dismissed add CONSTRAINT popup_dismissed_unique UNIQUE (user_id, state, uuid);
 
 ALTER TABLE pasystem_banner_dismissed drop CONSTRAINT banner_dismissed_unique;
+DROP INDEX banner_dismissed_unique;
 ALTER TABLE pasystem_banner_dismissed add CONSTRAINT banner_dismissed_unique UNIQUE (user_id, state, uuid);
 
 ALTER TABLE pasystem_popup_assign DROP COLUMN user_eid;
@@ -534,7 +536,7 @@ run_block(17, "SAK-33430 user_audits_log is queried against site_id",
           "
 ALTER TABLE user_audits_log MODIFY (site_id varchar2(99));
 ALTER TABLE user_audits_log MODIFY (role_name varchar2(99));
-DROP INDEX user_audits_log_index;
+ALTER INDEX user_audits_log_index rename to user_audits_log_index_s10;
 CREATE INDEX user_audits_log_index on user_audits_log (site_id);
 "
 )
