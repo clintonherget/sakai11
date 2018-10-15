@@ -10,7 +10,7 @@ public interface AssignmentConversionService {
      * @param numberOfAttributes maximum attributes per element in an xml document, 0 means use default
      * @param lengthOfAttribute maximum characters of an attribute, 0 means use default
      */
-    void runConversion(int numberOfAttributes, int lengthOfAttribute);
+    void runConversion(int numberOfAttributes, int lengthOfAttribute, List<String> assignmentsToConvert);
 
     Object serializeFromXml(String xml, Class clazz);
 }

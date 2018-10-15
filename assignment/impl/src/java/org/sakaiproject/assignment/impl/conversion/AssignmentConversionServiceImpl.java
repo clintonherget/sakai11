@@ -63,6 +63,8 @@ import org.sakaiproject.site.api.Group;
 import org.sakaiproject.util.BasicConfigItem;
 import static org.sakaiproject.assignment.api.AssignmentServiceConstants.*;
 
+import java.util.HashSet;
+
 @Slf4j
 public class AssignmentConversionServiceImpl implements AssignmentConversionService {
 
@@ -114,7 +116,7 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
     }
 
     @Override
-    public void runConversion(int numberOfAttributes, int lengthOfAttribute) {
+    public void runConversion(int numberOfAttributes, int lengthOfAttribute, List<String> convertAssignments) {
         int assignmentsTotal, progress = 0;
         assignmentsConverted = submissionsConverted = submissionsFailed = assignmentsFailed = 0;
 
@@ -152,13 +154,9 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                 true);
         serverConfigurationService.registerConfigItem(configItem);
 
-        List<String> preAssignments = dataProvider.fetchAssignmentsToConvert();
-        List<String> postAssignments = assignmentRepository.findAllAssignmentIds();
-        List<String> convertAssignments = new ArrayList<>(preAssignments);
-        convertAssignments.removeAll(postAssignments);
         assignmentsTotal = convertAssignments.size();
 
-        log.info("<===== Assignments pre 12 [{}] and post 12 [{}] to convert {} =====>", preAssignments.size(), postAssignments.size(), assignmentsTotal);
+        log.info("<===== Assignments to convert {} =====>", assignmentsTotal);
 
         for (String assignmentId : convertAssignments) {
             try {
@@ -276,8 +274,8 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                                 assignmentRepository.merge(assignment);
                                 assignmentsConverted++;
                                 submissionsConverted += assignment.getSubmissions().size();
-                            } catch (HibernateException he) {
-                                log.warn("could not persist assignment {}, {}", assignmentId, he.getMessage());
+                            } catch (Exception e) {
+                                log.warn("could not persist assignment {}, {}", assignmentId, e.getMessage());
                                 assignmentsFailed++;
                                 submissionsFailed += assignment.getSubmissions().size();
                             }
@@ -453,17 +451,28 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
             			if (assignment.getGroups().contains("/site/"+assignment.getContext()+"/group/"+submission.getSubmitterid())) {
             				s.setGroupId(submission.getSubmitterid());
             			} else {
-            				return null;
+                                    log.warn(String.format("Failed to find matching group '%s' in assignment %s",
+                                                           ("/site/"+assignment.getContext()+"/group/"+submission.getSubmitterid()),
+                                                           assignment.getId()));
+                                    return null;
             			}
             		} else {
             			Site assignmentSite = siteService.getSite(assignment.getContext());
             			if (assignmentSite.getGroup(submission.getSubmitterid())!=null) {
             				s.setGroupId(submission.getSubmitterid());
             			} else {
+                                    log.warn(String.format("Failed to find group in site %s for assignment %s: %s",
+                                                           assignmentSite.getId(),
+                                                           assignment.getId(),
+                                                           submission.getSubmitterid()));
             				return null;
             			}
             		}
             	} catch (Exception ex) {
+			log.warn("Got exception while reintegrating assignment %s: %s",
+				 assignment.getId(),
+				 ex);
+			ex.printStackTrace();
             		return null;
             	}
             } else {
