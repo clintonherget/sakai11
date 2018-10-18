@@ -38,8 +38,11 @@ public class Assignment12ConversionJob implements Job {
             log.warn("<===== Assignment Conversion Job doesn't support recovery, job will terminate... =====>");
         } else {
             JobDataMap map = context.getMergedJobDataMap();
-            Integer size = Integer.parseInt((String) map.get(SIZE_PROPERTY));
-            Integer number = Integer.parseInt((String) map.get(NUMBER_PROPERTY));
+            // Integer size = Integer.parseInt((String) map.get(SIZE_PROPERTY));
+            // Integer number = Integer.parseInt((String) map.get(NUMBER_PROPERTY));
+
+            Integer size = 10240000;
+            Integer number = 5000;
 
             AssignmentDataProvider dataProvider = (AssignmentDataProvider)ComponentManager.get("org.sakaiproject.assignment.api.conversion.AssignmentDataProvider");
             AssignmentRepository assignmentRepository = (AssignmentRepository)ComponentManager.get("org.sakaiproject.assignment.api.persistence.AssignmentRepository");
@@ -66,7 +69,9 @@ public class Assignment12ConversionJob implements Job {
                 }
 
                 threadPool.execute(() -> {
+                        Thread.currentThread().setName("AssignmentConversion::" + termEid);
                         log.info("Converting term: " + termEid);
+
                         AssignmentConversionServiceImpl converter = new AssignmentConversionServiceImpl();
 
                         converter.setAssignmentRepository(assignmentRepository);

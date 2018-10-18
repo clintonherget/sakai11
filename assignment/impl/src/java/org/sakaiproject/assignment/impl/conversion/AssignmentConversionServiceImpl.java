@@ -451,17 +451,28 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
             			if (assignment.getGroups().contains("/site/"+assignment.getContext()+"/group/"+submission.getSubmitterid())) {
             				s.setGroupId(submission.getSubmitterid());
             			} else {
-            				return null;
+                                    log.warn(String.format("Failed to find matching group '%s' in assignment %s",
+                                                           ("/site/"+assignment.getContext()+"/group/"+submission.getSubmitterid()),
+                                                           assignment.getId()));
+                                    return null;
             			}
             		} else {
             			Site assignmentSite = siteService.getSite(assignment.getContext());
             			if (assignmentSite.getGroup(submission.getSubmitterid())!=null) {
             				s.setGroupId(submission.getSubmitterid());
             			} else {
+                                    log.warn(String.format("Failed to find group in site %s for assignment %s: %s",
+                                                           assignmentSite.getId(),
+                                                           assignment.getId(),
+                                                           submission.getSubmitterid()));
             				return null;
             			}
             		}
             	} catch (Exception ex) {
+			log.warn("Got exception while reintegrating assignment %s: %s",
+				 assignment.getId(),
+				 ex);
+			ex.printStackTrace();
             		return null;
             	}
             } else {
