@@ -195,12 +195,6 @@
     <h:inputSecret id="baPassword" value="#{delivery.password}" size="20" rendered="#{delivery.settings.password ne ''}" />
 </h:panelGrid>
 
-<h:panelGrid columns="1" border="0">
-  <h:panelGroup>
-    <h:outputText value="#{deliveryMessages.auto_submit_info}" escape="false"/>
-  </h:panelGroup>
-</h:panelGrid>
-
  </div></div>
  
  <h:panelGroup layout="block" styleClass="honor-container" rendered="#{delivery.honorPledge && delivery.firstTimeTaking}">
