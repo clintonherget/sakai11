@@ -52,7 +52,7 @@ public class Assignment12ConversionJob implements Job {
             Map<String, List<String>> preAssignments = dataProvider.fetchAssignmentsToConvertByTerm();
             List<String> alreadyConvertedAssignments = assignmentRepository.findAllAssignmentIds();
 
-            ExecutorService threadPool = Executors.newFixedThreadPool(4);
+            ExecutorService threadPool = Executors.newFixedThreadPool(16);
 
             List<String> termsToProcess = new ArrayList<>();
             termsToProcess.addAll(Arrays.asList("Fall_2018", "Summer_2018", "Spring_2018", "January_2018",
@@ -68,20 +68,31 @@ public class Assignment12ConversionJob implements Job {
                     continue;
                 }
 
-                threadPool.execute(() -> {
-                        Thread.currentThread().setName("AssignmentConversion::" + termEid);
-                        log.info("Converting term: " + termEid);
+                int start = 0;
+                while (start < assignmentIds.size()) {
+                    int end = Math.min(start + 1000, assignmentIds.size());
 
-                        AssignmentConversionServiceImpl converter = new AssignmentConversionServiceImpl();
+                    List<String> sublist = assignmentIds.subList(start, end);
+                    final int jobStart = start;
+                    final int jobEnd = end;
 
-                        converter.setAssignmentRepository(assignmentRepository);
-                        converter.setDataProvider(dataProvider);
-                        converter.setServerConfigurationService(serverConfigurationService);
-                        converter.setSiteService(siteService);
+                    threadPool.execute(() -> {
+                            Thread.currentThread().setName("AssignmentConversion::" + termEid + "::" + jobStart);
+                            log.info(String.format("Converting term %s range %d--%d: ", termEid, jobStart, jobEnd));
 
-                        converter.init();
-                        converter.runConversion(number, size, setSubtract(assignmentIds, alreadyConvertedAssignments));
-                    });
+                            AssignmentConversionServiceImpl converter = new AssignmentConversionServiceImpl();
+
+                            converter.setAssignmentRepository(assignmentRepository);
+                            converter.setDataProvider(dataProvider);
+                            converter.setServerConfigurationService(serverConfigurationService);
+                            converter.setSiteService(siteService);
+
+                            converter.init();
+                            converter.runConversion(number, size, setSubtract(sublist, alreadyConvertedAssignments));
+                        });
+
+                    start = end;
+                }
             }
 
             threadPool.shutdown();
