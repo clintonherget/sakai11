@@ -274,8 +274,8 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                                 assignmentRepository.merge(assignment);
                                 assignmentsConverted++;
                                 submissionsConverted += assignment.getSubmissions().size();
-                            } catch (HibernateException he) {
-                                log.warn("could not persist assignment {}, {}", assignmentId, he.getMessage());
+                            } catch (Exception e) {
+                                log.warn("could not persist assignment {}, {}", assignmentId, e.getMessage());
                                 assignmentsFailed++;
                                 submissionsFailed += assignment.getSubmissions().size();
                             }

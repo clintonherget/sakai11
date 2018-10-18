@@ -70,7 +70,7 @@ public class Assignment12ConversionJob implements Job {
 
                 int start = 0;
                 while (start < assignmentIds.size()) {
-                    int end = Math.min(start + 1000, assignmentIds.size());
+                    int end = Math.min(start + 250, assignmentIds.size());
 
                     List<String> sublist = assignmentIds.subList(start, end);
                     final int jobStart = start;
