@@ -63,6 +63,8 @@ import org.sakaiproject.site.api.Group;
 import org.sakaiproject.util.BasicConfigItem;
 import static org.sakaiproject.assignment.api.AssignmentServiceConstants.*;
 
+import java.util.HashSet;
+
 @Slf4j
 public class AssignmentConversionServiceImpl implements AssignmentConversionService {
 
@@ -114,7 +116,7 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
     }
 
     @Override
-    public void runConversion(int numberOfAttributes, int lengthOfAttribute) {
+    public void runConversion(int numberOfAttributes, int lengthOfAttribute, List<String> convertAssignments) {
         int assignmentsTotal, progress = 0;
         assignmentsConverted = submissionsConverted = submissionsFailed = assignmentsFailed = 0;
 
@@ -152,13 +154,9 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                 true);
         serverConfigurationService.registerConfigItem(configItem);
 
-        List<String> preAssignments = dataProvider.fetchAssignmentsToConvert();
-        List<String> postAssignments = assignmentRepository.findAllAssignmentIds();
-        List<String> convertAssignments = new ArrayList<>(preAssignments);
-        convertAssignments.removeAll(postAssignments);
         assignmentsTotal = convertAssignments.size();
 
-        log.info("<===== Assignments pre 12 [{}] and post 12 [{}] to convert {} =====>", preAssignments.size(), postAssignments.size(), assignmentsTotal);
+        log.info("<===== Assignments to convert {} =====>", assignmentsTotal);
 
         for (String assignmentId : convertAssignments) {
             try {

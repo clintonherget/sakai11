@@ -1,7 +1,10 @@
 package org.sakaiproject.assignment.impl.conversion;
 
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +17,45 @@ import org.springframework.transaction.annotation.Transactional;
 public class AssignmentDataProvider11 implements AssignmentDataProvider{
 
     @Setter private SessionFactory sessionFactory;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, List<String>> fetchAssignmentsToConvertByTerm() {
+        Map<String, List<String>> result = new HashMap<>();
+        try {
+            List<Object[]> list = sessionFactory.getCurrentSession()
+                    // here we order the assignments based on the sites created date so newer sites will import first
+                    .createSQLQuery("SELECT aa.ASSIGNMENT_ID, to_char(ssp.value) v " +
+                                    "FROM ASSIGNMENT_ASSIGNMENT aa " +
+                                    "LEFT JOIN SAKAI_SITE ss ON (aa.CONTEXT = ss.SITE_ID) " +
+                                    "LEFT JOIN SAKAI_SITE_PROPERTY ssp ON (ssp.SITE_ID = ss.SITE_ID) AND (ssp.name = :term_eid) " +
+                                    "ORDER BY ss.CREATEDON DESC")
+                    .addScalar("ASSIGNMENT_ID")
+                    .addScalar("v")
+                    .setParameter("term_eid", "term_eid", StringType.INSTANCE)
+                    .list();
+
+            for (Object[] elts : list) {
+                String assignmentId = (String)elts[0];
+                String termEid = (String)elts[1];
+
+                if (termEid == null) {
+                    termEid = "(no term)";
+                }
+
+                if (!result.containsKey(termEid)) {
+                    result.put(termEid, new ArrayList<String>());
+                }
+
+                result.get(termEid).add(assignmentId);
+            }
+
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @Override
     @Transactional(readOnly = true)
