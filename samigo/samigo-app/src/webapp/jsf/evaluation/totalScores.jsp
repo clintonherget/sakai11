@@ -660,9 +660,6 @@ $(document).ready(function(){
 					&& !(totalScores.isTimedAssessment eq 'true' && totalScores.acceptLateSubmission eq 'false')}">
 			<f:verbatim><br/></f:verbatim>
 			<h:outputText style="color:red" value="#{evaluationMessages.late}"/>
-			<h:panelGroup rendered="#{description.isAutoSubmitted == 'true'}">
-				<h:outputText style="color:red" value=" / #{evaluationMessages.auto_submit}"/>
-			</h:panelGroup>
 		</h:panelGroup>
 
 		<h:panelGroup rendered="#{description.isAutoSubmitted == 'true' && description.isLate == 'false' && description.attemptDate != null
