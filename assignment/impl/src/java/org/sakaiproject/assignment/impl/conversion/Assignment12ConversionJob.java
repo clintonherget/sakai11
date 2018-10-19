@@ -29,6 +29,9 @@ public class Assignment12ConversionJob implements Job {
     @Setter
     private AssignmentConversionService assignmentConversionService;
 
+    private static final int THREAD_COUNT = 24;
+    private static final int ASSIGNMENTS_PER_THREAD = 128;
+
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         log.info("<===== Assignment Conversion Job start =====>");
@@ -52,7 +55,7 @@ public class Assignment12ConversionJob implements Job {
             Map<String, List<String>> preAssignments = dataProvider.fetchAssignmentsToConvertByTerm();
             List<String> alreadyConvertedAssignments = assignmentRepository.findAllAssignmentIds();
 
-            ExecutorService threadPool = Executors.newFixedThreadPool(16);
+            ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_COUNT);
 
             List<String> termsToProcess = new ArrayList<>();
             termsToProcess.addAll(Arrays.asList("Fall_2018", "Summer_2018", "Spring_2018", "January_2018",
@@ -70,7 +73,7 @@ public class Assignment12ConversionJob implements Job {
 
                 int start = 0;
                 while (start < assignmentIds.size()) {
-                    int end = Math.min(start + 250, assignmentIds.size());
+                    int end = Math.min(start + ASSIGNMENTS_PER_THREAD, assignmentIds.size());
 
                     List<String> sublist = assignmentIds.subList(start, end);
                     final int jobStart = start;
