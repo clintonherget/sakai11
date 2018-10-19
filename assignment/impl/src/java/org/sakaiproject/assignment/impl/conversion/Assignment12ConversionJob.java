@@ -18,6 +18,7 @@ import org.sakaiproject.assignment.api.persistence.AssignmentRepository;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 @Slf4j
 @DisallowConcurrentExecution
@@ -31,6 +32,31 @@ public class Assignment12ConversionJob implements Job {
 
     private static final int THREAD_COUNT = 24;
     private static final int ASSIGNMENTS_PER_THREAD = 128;
+
+    private class ProcessedCount {
+        public AtomicLong processedCount = new AtomicLong();
+        public int totalCount;
+
+        public ProcessedCount() {}
+
+        public ProcessedCount(int total) {
+            this.totalCount = total;
+        }
+
+        public String toString() {
+            if (totalCount == 0) {
+                return "Nothing to do";
+            }
+
+            int processed = this.processedCount.intValue();
+
+            return String.format("Processed %d of %d (%d%% complete)",
+                                 processed,
+                                 totalCount,
+                                 (((float)processed / totalCount) * 100));
+
+        }
+    }
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -64,6 +90,22 @@ public class Assignment12ConversionJob implements Job {
 
             termsToProcess.addAll(preAssignments.keySet());
 
+            // Track progress
+            ConcurrentHashMap<String, ProcessedCount> termProcessedCounts = new ConcurrentHashMap();
+            ProcessedCount totalProcessed = new ProcessedCount();
+
+            for (String termEid : termsToProcess) {
+                if (termProcessedCounts.contains(termEid) || !preAssignments.containsKey(termEid)) {
+                    continue;
+                }
+
+                // Record assignment count for the current term
+                termProcessedCounts.put(termEid, new ProcessedCount(preAssignments.get(termEid).size()));
+
+                // And add it to the total
+                totalProcessed.totalCount += preAssignments.get(termEid).size();
+            }
+
             for (String termEid : termsToProcess) {
                 List<String> assignmentIds = preAssignments.remove(termEid);
 
@@ -92,6 +134,9 @@ public class Assignment12ConversionJob implements Job {
 
                             converter.init();
                             converter.runConversion(number, size, setSubtract(sublist, alreadyConvertedAssignments));
+
+                            termProcessedCounts.get(termEid).processedCount.addAndGet(sublist.size());
+                            totalProcessed.processedCount.addAndGet(sublist.size());
                         });
 
                     start = end;
@@ -101,7 +146,20 @@ public class Assignment12ConversionJob implements Job {
             threadPool.shutdown();
 
             try {
-                threadPool.awaitTermination(365, java.util.concurrent.TimeUnit.DAYS);
+                while (!threadPool.awaitTermination(1, java.util.concurrent.TimeUnit.MINUTES)) {
+                    StringBuilder report = new StringBuilder();
+
+                    report.append("\n=== Assignment conversion progress report ===\n");
+
+                    termProcessedCounts.forEach((termEid, processedCount) -> {
+                            report.append(String.format("%s: %s\n", termEid, processedCount));
+                        });
+
+                    report.append(String.format("\nTOTAL: %s\n", totalProcessed));
+                    report.append("=== End assignment conversion progress report ===\n");
+
+                    log.info(report.toString());
+                }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
