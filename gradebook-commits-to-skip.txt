@@ -1,0 +1,130 @@
+commit f5e2ea866d3c3d1e5b5c830fb8dd09626581a955
+Author: Payten Giles <pg1025@nyu.edu>
+Date:   Mon Jun 25 14:42:22 2018 +1000
+
+    CLASSES-3341 rename New Gradebook to Gradebook
+
+commit 6a0e99ac11af51ba16077b185ea3251bc13bf32d
+Author: Payten Giles <pg1025@nyu.edu>
+Date:   Mon Jun 25 14:19:40 2018 +1000
+
+    CLASSES-3340 disable the gradebookng welcome popover introduced by CLASSES-2716
+
+commit 0e105bda480f021905d9cb194d2e93cb9cc22f3f
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Wed May 30 15:25:57 2018 +1000
+
+    CLASSES-3268 Backport one bit of sakai/master 3848c2b894e9a601fe43c8ed8acbd2580b2f87d2
+    
+    We don't want to skip empty comments.  Remove the check, which puts us
+    into line with sakai/master.
+
+commit b1761e6d3268ce0221b94eb8eb79e1cfb2f4c893
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Mon May 14 10:15:58 2018 +1000
+
+    CLASSES-3274 fix CSS prefix for tool icons in GradebookNG
+
+commit 23617aa445f9b2240d0fa3b38f7eafa073b5dd16
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Thu May 3 10:51:38 2018 +1000
+
+    SAK-39957 If an imported comment cell is blank, clear any existing comment
+
+commit 18d1dd3f02e7f12c8062f040241a6b832dd55a06
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Wed May 2 10:24:52 2018 +1000
+
+    CLASSES-3268 Incoming comment string can be NULL
+
+commit bdc2fae361f8cb85eaf73424b4b5a54bd8ff706d
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Fri Jan 26 08:21:57 2018 +1100
+
+    CLASSES-3166 Increase the size of the help icon
+
+commit d9cde3615013e5d3c04dc3838d9a1019f94767e5
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Mon Jan 22 13:14:29 2018 +1100
+
+    CLASSES-3166 Link to Grading Schema kbase article
+
+commit 970f1059114f628b21e9d8950fbeae1bf423f75c
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Mon Jan 22 12:53:43 2018 +1100
+
+    CLASSES-3157 Sort school-specific grading schemes lower down
+
+commit b93e176ca6d60096db00d293abcbdbf0ab645f2b
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Thu Dec 21 11:21:33 2017 +1100
+
+    CLASSES-3141 Fix up Gradebook to work with IE11
+
+commit e07b8b63b72eadcdc4ca7d410f88dbb63701c04e
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Thu Sep 28 13:27:00 2017 +1000
+
+    CLASSES-3015 show the assignments in gradebookng even if there are no students
+
+commit bf231493b3b23539799606fc2bc9327dfbd5d648
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Tue Nov 21 12:08:00 2017 +1100
+
+    CLASSES-3084 Add event tracking to the GradebookNG tool
+
+commit 19adc9985d9d2410a2b9dc623daa4e5c07f32eae
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Wed Nov 22 15:17:32 2017 +1100
+
+    CLASSES-3089 extend ConnectionPoll to handle timeout/recover callbacks and hook in to disable the table upon connection timeout
+
+commit ba75a9f9d2fada37e089e87bf236c5f1352a9e59
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Tue Nov 21 18:58:06 2017 +1100
+
+    CLASSES-3089 mark cell has errored when user sets score and connection is down. Also make connection error more in yo face
+
+commit ce681ddb0d7160f0cb3c9f8a913bc630bea6fa80
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Thu Nov 16 13:14:56 2017 +1100
+
+    CLASSES-2798 Apply NYU's gradebookng over the top of 11.4's version
+
+commit d0ab34a08c4df9356a971e9f586d8d9bf1b30360
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Tue Apr 18 14:42:05 2017 +1000
+
+    CLASSES-2746 Disable "Percentage" Grade Entry Mode and Hide "Grade Entry" accordion menu
+
+commit 26576dcf0df5b60aa7b98b7d4e430552380a41bc
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Tue Apr 18 11:57:30 2017 +1000
+
+    CLASSES-2716 Create "welcome" popover notification for GBNG users
+    - soft dismiss for 24 hours handled by a cookie
+    - hard dismiss stored as a user property
+
+commit df9cb13d67e09ecdc322e6b5f9539e289da8c329
+Author: Payten Giles <payten.giles@gmail.com>
+Date:   Fri Dec 16 12:44:54 2016 +1100
+
+    CLASSES-2466 rename the gradebook and gradebookng tools
+
+commit bf812f5d90be64378ef86ad9aa75b05fa5f6fbcc
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Wed Nov 16 15:09:09 2016 +1100
+
+    CLASSES-2365 Set default gradeable items to 50
+
+commit 09d4b30eb3df5183fd960669c26babac5f61687a
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Mon Nov 7 15:13:57 2016 +1100
+
+    CLASSES-2365 Increase default max gradable items to 20 for testing purposes
+
+commit 0f03253525fa28224acc83cc2c7815f98bea24c4
+Author: Mark Triggs <mark@dishevelled.net>
+Date:   Mon Oct 31 15:43:34 2016 +1100
+
+    CLASSES-2365 WIP - Limit the number of gradable items allowed
