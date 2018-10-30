@@ -7750,15 +7750,6 @@ Date:   Tue May 8 09:50:02 2018 +1000
 
     CLASSES-3060 fix exception for TAs when grading in assignment tool
 
-commit a6d4c60982197cc2f2aab0e9a131b595c2ad4de6
-Merge: 0b36acd629 0ec3a08b0b
-Author: Mark Triggs <mark@dishevelled.net>
-Date:   Tue May 8 10:09:37 2018 +1000
-
-    Merge pull request #22 from NYUeServ/CLASSES-3060
-    
-    CLASSES-3060 fix exception for TAs when grading in assignment tool
-
 commit 23617aa445f9b2240d0fa3b38f7eafa073b5dd16
 Author: Mark Triggs <mark@dishevelled.net>
 Date:   Thu May 3 10:51:38 2018 +1000
