@@ -48,8 +48,6 @@
                 <module>assignment</module>
                 <module>attendance</module>
                 <module>basiclti</module>
-                <module>bbb-tool</module>
-                <module>blogwow</module>
                 <module>calendar</module>
                 <module>chat</module>
                 <module>citations</module>
@@ -94,7 +92,7 @@
                 <module>oauth</module>
                 <module>pasystem</module>
                 <module>nyugrades</module>
-                <module>nyuhome-feed</module>
+                <!-- <module>nyuhome-feed</module> -->
                 <module>nyuroster-feed</module>
                 <module>nyuclasses-monitoring</module>
                 <module>nyuclasses-job-test</module>
@@ -137,7 +135,6 @@
                 <module>web</module>
                 <module>webjars</module>
                 <module>webservices</module>
-                <module>wiris</module>
             </modules>
         </profile>
         <profile>
