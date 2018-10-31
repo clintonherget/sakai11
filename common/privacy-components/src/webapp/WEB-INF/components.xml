@@ -43,6 +43,7 @@
 		<property name="sessionFactory" ref="org.sakaiproject.springframework.orm.hibernate.GlobalSessionFactory" />
 		<property name="authzGroupService" ref="org.sakaiproject.authz.api.AuthzGroupService" />
 		<property name="preferencesService" ref="org.sakaiproject.user.api.PreferencesService" />
+		<property name="transactionManager" ref="org.sakaiproject.springframework.orm.hibernate.GlobalTransactionManager"/>
 	</bean>
 	
 	<bean id="org.sakaiproject.api.privacy.PrivacyManager"

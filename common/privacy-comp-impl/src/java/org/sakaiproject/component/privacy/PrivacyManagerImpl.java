@@ -45,6 +45,12 @@ import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
+
 
 import java.sql.SQLException;
 import java.util.*;
@@ -68,6 +74,9 @@ public class PrivacyManagerImpl extends HibernateDaoSupport implements PrivacyMa
 	
 	private PreferencesService preferencesService;
 	private AuthzGroupService authzGroupService;
+	private PlatformTransactionManager transactionManager;
+	private TransactionTemplate transactionTemplate;
+
 	
 	protected boolean defaultViewable = true;
 	protected Boolean overrideViewable = null;
@@ -75,6 +84,11 @@ public class PrivacyManagerImpl extends HibernateDaoSupport implements PrivacyMa
 	protected int maxResultSetNumber = 1000;
 	
 	public void init() {
+		if (transactionManager == null) {
+			throw new RuntimeException("TransactionManager can't be null here");
+		}
+
+		transactionTemplate = new TransactionTemplate(transactionManager);
 		authzGroupService.addAuthzGroupAdvisor(this);
 	}
 
@@ -427,30 +441,36 @@ public class PrivacyManagerImpl extends HibernateDaoSupport implements PrivacyMa
 		
 		// only updating site level authz groups
 		if (gIdParts.length == 3 && "site".equals(gIdParts[1])) {
-			String context = "/site/" + gIdParts[2];
-			List<PrivacyRecordImpl> prList = getPrivacyByContextAndType(context, PrivacyManager.USER_RECORD_TYPE);
-			Set<String> grpMembers = new HashSet<String>();
-			
-			grpMembers.addAll(group.getUsers());
-			
-			// ignore members who already have a privacy record for this site
-			for (PrivacyRecordImpl record : prList) {
-				if(!grpMembers.remove(record.getUserId())) {
-					// user is no longer a member of this authz group remove their record
-					removePrivacyObject(record);
-				}
-			}
+			transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+				@Override
+				protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
 
-			// the remaining members will need to lookup their default preference
-			for (String member : grpMembers) {
-				// the default is visible so we only need to update those that are set to hidden
-				String privacy = getDefaultPrivacyState(member);
-				if (PrivacyManager.VISIBLE.equals(privacy)) {
-					setViewableState(context, member, true, PrivacyManager.USER_RECORD_TYPE);
-				} else if (PrivacyManager.HIDDEN.equals(privacy)) {
-					setViewableState(context, member, false, PrivacyManager.USER_RECORD_TYPE);
+					String context = "/site/" + gIdParts[2];
+					List<PrivacyRecordImpl> prList = getPrivacyByContextAndType(context, PrivacyManager.USER_RECORD_TYPE);
+					Set<String> grpMembers = new HashSet<String>();
+			
+					grpMembers.addAll(group.getUsers());
+			
+					// ignore members who already have a privacy record for this site
+					for (PrivacyRecordImpl record : prList) {
+						if(!grpMembers.remove(record.getUserId())) {
+							// user is no longer a member of this authz group remove their record
+							removePrivacyObject(record);
+						}
+					}
+
+					// the remaining members will need to lookup their default preference
+					for (String member : grpMembers) {
+						// the default is visible so we only need to update those that are set to hidden
+						String privacy = getDefaultPrivacyState(member);
+						if (PrivacyManager.VISIBLE.equals(privacy)) {
+							setViewableState(context, member, true, PrivacyManager.USER_RECORD_TYPE);
+						} else if (PrivacyManager.HIDDEN.equals(privacy)) {
+							setViewableState(context, member, false, PrivacyManager.USER_RECORD_TYPE);
+						}
+					}
 				}
-			}
+			});
 		}
 	}
 	
@@ -815,5 +835,9 @@ public class PrivacyManagerImpl extends HibernateDaoSupport implements PrivacyMa
 
 	public void setAuthzGroupService(AuthzGroupService authzGroupService) {
 		this.authzGroupService = authzGroupService;
+	}
+
+	public void setTransactionManager(PlatformTransactionManager transactionManager) {
+		this.transactionManager = transactionManager;
 	}
 }
