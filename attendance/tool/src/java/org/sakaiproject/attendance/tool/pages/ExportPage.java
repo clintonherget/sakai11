@@ -258,7 +258,7 @@ public class ExportPage extends BasePage{
                 eventHolder.add(attendanceLogic.getAttendanceEvent(attendanceEventlist.get(y).getId()));
             }
             HSSFFont boldFont = wb.createFont();
-            boldFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            boldFont.setBold(true);
             boldFont.setUnderline(HSSFFont.U_SINGLE);
             HSSFCellStyle boldStyle = wb.createCellStyle();
             boldStyle.setFont(boldFont);
