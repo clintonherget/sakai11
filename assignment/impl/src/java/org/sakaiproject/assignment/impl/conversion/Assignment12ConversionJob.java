@@ -50,7 +50,7 @@ public class Assignment12ConversionJob implements Job {
 
             int processed = this.processedCount.intValue();
 
-            return String.format("Processed %d of %d (%d%% complete)",
+            return String.format("Processed %d of %d (%.2f%% complete)",
                                  processed,
                                  totalCount,
                                  (((float)processed / totalCount) * 100));
