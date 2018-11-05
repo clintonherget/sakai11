@@ -873,8 +873,7 @@ declare
         'LESSON_BUILDER_QR_S',
         'LESSON_BUILDER_STPAGE_S',
         'LESSON_BUILDER_LOG_S',
-        'LESSON_BUILDER_QRES_S',
-        'SAM_FAVORITECOLCHOICES_S','SAM_FAVORITECOLCHOICESITEM_S')<<SEMICOLON>>
+        'LESSON_BUILDER_QRES_S')<<SEMICOLON>>
     tablenames ObjNames := ObjNames('lesson_builder_pages',
         'lesson_builder_comments',
         'lesson_builder_groups',
@@ -883,11 +882,9 @@ declare
         'lesson_builder_qr_totals',
         'lesson_builder_student_pages',
         'lesson_builder_log',
-        'lesson_builder_q_responses',
-        'SAM_FAVORITECOLCHOICES_T','SAM_FAVORITECOLCHOICESITEM_T')<<SEMICOLON>>
+        'lesson_builder_q_responses')<<SEMICOLON>>
     tablecolumns ObjNames := ObjNames('pageId',
-        'id','id','id','id','id','id','id','id',
-        'favoriteId','favoriteItemId')<<SEMICOLON>>
+        'id','id','id','id','id','id','id','id')<<SEMICOLON>>
     lnum number(10)<<SEMICOLON>>
     stc varchar2(1000)<<SEMICOLON>>
 begin
