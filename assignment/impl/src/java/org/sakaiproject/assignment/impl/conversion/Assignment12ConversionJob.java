@@ -86,7 +86,14 @@ public class Assignment12ConversionJob implements Job {
             List<String> termsToProcess = new ArrayList<>();
             termsToProcess.addAll(Arrays.asList("Fall_2018", "Summer_2018", "Spring_2018", "January_2018",
                                                 "Fall_2017", "Summer_2017", "Spring_2017", "January_2017",
-                                                "Fall_2016", "Summer_2016", "Spring_2016", "January_2016"));
+                                                "Fall_2016", "Summer_2016", "Spring_2016", "January_2016",
+                                                "Fall_2015", "Summer_2015", "Spring_2015", "January_2015",
+                                                "Fall_2014", "Summer_2014", "Spring_2014", "January_2014",
+                                                "Fall_2013", "Summer_2013", "Spring_2013", "January_2013",
+                                                "Fall_2012", "Summer_2012", "Spring_2012", "January_2012",
+                                                "Fall_2011", "Summer_2011", "Spring_2011", "January_2011"));
+
+
 
             termsToProcess.addAll(preAssignments.keySet());
 
