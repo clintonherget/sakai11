@@ -449,7 +449,9 @@ public class ServiceRequest {
 		
 		OutputStream out = connection.getOutputStream();
 		out.write(intro.toString().getBytes("utf8"));
-		Utils.bufferedCopyStream(new FileInputStream(file), out);
+		try (FileInputStream fh = new FileInputStream(file)) {
+		    Utils.bufferedCopyStream(fh, out);
+		}
 		out.write(outro.toString().getBytes("utf8"));
 		out.close();
 		
