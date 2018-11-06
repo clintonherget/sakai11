@@ -79,7 +79,7 @@
                 <module>hierarchy</module>
                 <module>jobscheduler</module>
                 <module>jsf</module>
-                <module>kaltura</module>
+                <!-- <module>kaltura</module> -->
                 <module>kernel</module>
                 <module>lessonbuilder</module>
                 <module>library</module>
