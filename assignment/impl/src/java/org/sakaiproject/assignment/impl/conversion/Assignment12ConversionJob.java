@@ -102,7 +102,7 @@ public class Assignment12ConversionJob implements Job {
             ProcessedCount totalProcessed = new ProcessedCount();
 
             for (String termEid : termsToProcess) {
-                if (termProcessedCounts.contains(termEid) || !preAssignments.containsKey(termEid)) {
+                if (termProcessedCounts.containsKey(termEid) || !preAssignments.containsKey(termEid)) {
                     continue;
                 }
 
