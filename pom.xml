@@ -137,6 +137,7 @@
                 <module>web</module>
                 <module>webjars</module>
                 <module>webservices</module>
+                <module>hedex</module>
             </modules>
         </profile>
         <profile>
