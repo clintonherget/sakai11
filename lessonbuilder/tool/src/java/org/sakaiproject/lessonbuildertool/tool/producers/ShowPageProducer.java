@@ -4346,7 +4346,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 	//CLASSES-1847 only show the Add External Tool menu option if an external tool is defined for that site
 	private boolean shouldShowExternalToolsLink() {
-		return ((BltiEntity)bltiEntity).hasToolsAvailable() || !bltiEntity.getEntitiesInSite().isEmpty();
+		return ((BltiEntity)bltiEntity).hasToolsAvailable(simplePageBean) || !bltiEntity.getEntitiesInSite(simplePageBean).isEmpty();
 	}
 
 	private GeneralViewParameters createToolBarLink(String viewID, UIContainer tofill, String ID, String message, SimplePage currentPage, String tooltip) {
