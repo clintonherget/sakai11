@@ -117,7 +117,7 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
 
     @Override
     public void runConversion(int numberOfAttributes, int lengthOfAttribute, List<String> convertAssignments) {
-        int assignmentsTotal, progress = 0;
+        int assignmentsTotal;
         assignmentsConverted = submissionsConverted = submissionsFailed = assignmentsFailed = 0;
 
         SimpleModule module = new SimpleModule().addDeserializer(String.class, new StdDeserializer<String>(String.class) {
@@ -132,8 +132,6 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
         // woodstox xml parser defaults we don't allow values smaller than the default
         if (numberOfAttributes < ReaderConfig.DEFAULT_MAX_ATTRIBUTES_PER_ELEMENT) numberOfAttributes = ReaderConfig.DEFAULT_MAX_ATTRIBUTES_PER_ELEMENT;
         if (lengthOfAttribute < ReaderConfig.DEFAULT_MAX_ATTRIBUTE_LENGTH) lengthOfAttribute = ReaderConfig.DEFAULT_MAX_ATTRIBUTE_LENGTH;
-
-        log.info("<===== Assignments conversion xml parser limits: number of attributes={}, attribute size={} =====>", numberOfAttributes, lengthOfAttribute);
 
         XMLInputFactory xmlInputFactory = XMLInputFactory.newFactory();
         xmlInputFactory.setProperty(WstxInputProperties.P_MAX_ATTRIBUTES_PER_ELEMENT, numberOfAttributes);
@@ -164,11 +162,6 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
             } catch (Exception e) {
                 log.warn("Assignment conversion exception for {}", assignmentId, e);
             }
-            int percent = new Double(((assignmentsConverted + assignmentsFailed) / (double) assignmentsTotal) * 100).intValue();
-            if (progress != percent) {
-                progress = percent;
-                log.info("<===== Assignments conversion completed {}% =====>", percent);
-            }
         }
 
         configItem = BasicConfigItem.makeConfigItem(
@@ -176,11 +169,6 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                 StringUtils.trimToEmpty(currentValue),
                 AssignmentConversionServiceImpl.class.getName());
         serverConfigurationService.registerConfigItem(configItem);
-
-        log.info("<===== Assignments converted {} =====>", assignmentsConverted);
-        log.info("<===== Submissions converted {} =====>", submissionsConverted);
-        log.info("<===== Assignments that failed to be converted {} =====>", assignmentsFailed);
-        log.info("<===== Submissions that failed to be converted {} =====>", submissionsFailed);
     }
 
     private String adjustXmlForGroups(String xml) {
@@ -451,7 +439,8 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
             			if (assignment.getGroups().contains("/site/"+assignment.getContext()+"/group/"+submission.getSubmitterid())) {
             				s.setGroupId(submission.getSubmitterid());
             			} else {
-                                    log.warn(String.format("Failed to find matching group '%s' in assignment %s",
+                                    log.warn(String.format("%sFailed to find matching group '%s' in assignment %s",
+                                                           ((submission.getIsUserSubmission() != null && !submission.getIsUserSubmission()) ? "IGNORABLE " : ""),
                                                            ("/site/"+assignment.getContext()+"/group/"+submission.getSubmitterid()),
                                                            assignment.getId()));
                                     return null;
@@ -461,7 +450,8 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
             			if (assignmentSite.getGroup(submission.getSubmitterid())!=null) {
             				s.setGroupId(submission.getSubmitterid());
             			} else {
-                                    log.warn(String.format("Failed to find group in site %s for assignment %s: %s",
+                                    log.warn(String.format("%sFailed to find group in site %s for assignment %s: %s",
+                                                           ((submission.getIsUserSubmission() != null && !submission.getIsUserSubmission()) ? "IGNORABLE " : ""),
                                                            assignmentSite.getId(),
                                                            assignment.getId(),
                                                            submission.getSubmitterid()));
@@ -477,6 +467,10 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
             	}
             } else {
                 // the submitterid must not be blank for a group submission
+                log.warn("%sthe submitterid must not be blank for a group submission.  assignment %s, submission %s",
+                         ((submission.getIsUserSubmission() != null && !submission.getIsUserSubmission()) ? "IGNORABLE " : ""),
+                         assignment.getId(), submission.getId());
+                         
                 return null;
             }
 
