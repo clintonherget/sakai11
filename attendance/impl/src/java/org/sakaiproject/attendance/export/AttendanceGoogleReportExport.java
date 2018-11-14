@@ -555,18 +555,14 @@ public class AttendanceGoogleReportExport {
             clearProtectedRanges(sheet);
             ProtectedRange range = protectSheet(sheet.getProperties().getSheetId());
 
-            try {
-                storeOverrides(pullOverrides(sheet));
-                Optional<DataTable> table = loadAllData(); // this must run after pulling the overrides
-                clearValidations(sheet);
-                clearSheet(sheet);
-                syncValuesToSheet(sheet, table.get());
-                applyColumnAndCellProperties(sheet, range);
-                deleteSheet(BACKUP_SHEET_NAME);
-            } finally {
-                unprotectRange(sheet, range);
-            }
-
+            storeOverrides(pullOverrides(sheet));
+            Optional<DataTable> table = loadAllData(); // this must run after pulling the overrides
+            clearValidations(sheet);
+            clearSheet(sheet);
+            syncValuesToSheet(sheet, table.get());
+            applyColumnAndCellProperties(sheet, range);
+            deleteSheet(BACKUP_SHEET_NAME);
+            unprotectRange(sheet, range);
         } catch (Exception e) {
             errorAndThrow("ERROR in AttendanceGoogleReportExport.export", e);
         } finally {
