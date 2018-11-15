@@ -899,3 +899,57 @@ begin
 end<<SEMICOLON>>
 "
 )
+
+run_block(33, "Add hedex tables",
+          "
+    create table hdx_assignment_submissions (
+        id number(19,0) not null,
+        agent varchar2(255 char) not null,
+        assignment_id varchar2(36 char) not null,
+        avg_score float,
+        due_date TIMESTAMP not null,
+        first_score varchar2(255 char),
+        highest_score number(10,0),
+        last_score varchar2(255 char),
+        lowest_score number(10,0),
+        num_gradings number(10,0),
+        num_submissions number(10,0) not null,
+        site_id varchar2(36 char) not null,
+        submission_id varchar2(36 char) not null,
+        title varchar2(255 char) not null,
+        user_id varchar2(36 char) not null,
+        primary key (id)
+    );
+
+    create table hdx_course_visits (
+        id number(19,0) not null,
+        agent varchar2(255 char) not null,
+        latest_visit TIMESTAMP not null,
+        num_visits number(19,0) not null,
+        site_id varchar2(36 char) not null,
+        user_id varchar2(36 char) not null,
+        primary key (id)
+    );
+
+    create table hdx_session_duration (
+        id number(19,0) not null,
+        agent varchar2(255 char) not null,
+        duration number(19,0),
+        session_id varchar2(36 char) not null,
+        start_time TIMESTAMP not null,
+        user_id varchar2(36 char) not null,
+        primary key (id)
+    );
+
+    alter table hdx_assignment_submissions
+        add constraint UK_d9169d3e85uuxyhir2xk2y0wj  unique (user_id, assignment_id);
+
+    alter table hdx_assignment_submissions
+        add constraint UK_8lmbji1w4k7rg1g7nyqcd3eaa  unique (submission_id);
+
+    alter table hdx_course_visits
+        add constraint UK_8u9vf93ajpq0142ekifvdol5m  unique (user_id, site_id);
+
+    alter table hdx_session_duration
+        add constraint UK_87n5hpjvluyl1daqejawni6ca  unique (session_id);
+")
