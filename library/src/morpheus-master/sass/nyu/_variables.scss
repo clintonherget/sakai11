@@ -212,6 +212,13 @@ $nyu-all-sites-close-action-hover-color:                      #4C4C4C;
 $nyu-all-sites-button-drag-color:                             #E5E5E5;
 $nyu-all-sites-button-drag-hover-color:                       #CECECE;
 
+// Overview (synoptic tools) portlet layout
+$nyu-overview-portlet-border-color:                           #E5E5E5;
+$nyu-overview-portlet-shadow:                                 1px 1px 5px rgba(0,0,0,0.2);
+$nyu-overview-portlet-title-color:                            #4C4C4C;
+$nyu-overview-portlet-title-background-color:                 #FAFAFA;
+$nyu-overview-portlet-title-text-size:                        1em;
+$nyu-overview-portlet-title-letter-spacing:                   normal;
 
 // Tablet Specific Variables ($nyu-breakpoint-mobile < viewport width < $nyu-breakpoint-tablet)
 // TODO all of these:
