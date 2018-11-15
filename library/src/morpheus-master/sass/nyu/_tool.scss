@@ -26,19 +26,6 @@
   z-index: 0 !important;
 }
 
-// exciting synoptic changes for announcements
-.nyu-synoptic-announcements.#{$namespace}multipleTools .#{$namespace}toolTitleNav {
-    padding-left: 0 !important;
-}
-
-.nyu-synoptic-announcements.#{$namespace}multipleTools .#{$namespace}toolTitleNav .#{$namespace}toolTitleNav__title {
-    padding: 0 0 20px 0 !important;
-}
-
-.#{$namespace}sakai-synoptic-announcement .#{$namespace}toolTitleNav.#{$namespace}container.#{$namespace}container--toolTitleNav {
-    display: none;
-}
-
 // -------------------------------------------------------------------------------------------------------------------
 //  Tool Tabs
 //   - restyle tabs with blue bar for current
@@ -227,10 +214,95 @@ form[name^='announcementListForm'] .instruction {
   border: 0 !important;
 }
 
-form#calendarForm > div {
-  margin-top: 0.5em !important;
-  border: solid $nyu-calendar-border-color 1px !important;
-  padding: 0.5em !important;
+.#{$namespace}multipleTools {
+  .#{$namespace}container {
+    border: 1px solid $nyu-overview-portlet-border-color;
+    box-shadow: $nyu-overview-portlet-shadow;
+    margin-bottom: 20px;
+
+    &.#{$namespace}toolTitleNav.#{$namespace}container.#{$namespace}container--toolTitleNav {
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      box-shadow: none;
+      margin: 0 !important;
+    }
+
+    .#{$namespace}container--toolTitleNav {
+      background-color: $nyu-overview-portlet-title-background-color;
+      border-bottom: 1px solid $nyu-overview-portlet-border-color;
+
+      .#{$namespace}toolTitleNav__title {
+        color: $nyu-overview-portlet-title-color !important;
+        text-transform: none !important;
+        font-size: $nyu-overview-portlet-title-text-size !important;
+        letter-spacing: $nyu-overview-portlet-title-letter-spacing !important;
+      }
+    }
+  }
+
+  // exciting synoptic changes for announcements
+  .#{$namespace}sakai-synoptic-announcement {
+    .#{$namespace}toolTitleNav.#{$namespace}container--toolTitleNav {
+        display: none;
+    }
+  }
+  &.nyu-synoptic-announcements {
+    // Fix alignment freak out on large screens (small widths as this refers to width of iframe)
+    @media only screen and (max-width: 770px) {
+      margin: -14px -14px 10px -14px;
+      padding-top: 10px;
+    }
+    @media only screen and (min-width: 771px) {
+      margin: -4px -14px 10px -14px;
+      padding-top: 0;
+    }
+
+    .#{$namespace}toolTitleNav.#{$namespace}container.#{$namespace}container--toolTitleNav {
+      background-color: $nyu-overview-portlet-title-background-color;
+      border-bottom: 1px solid $nyu-overview-portlet-border-color;
+
+      .#{$namespace}toolTitleNav__title {
+        color: $nyu-overview-portlet-title-color !important;
+        text-transform: none !important;
+        font-size: $nyu-overview-portlet-title-text-size !important;
+        letter-spacing: $nyu-overview-portlet-title-letter-spacing !important;
+      }
+    }
+
+    .#{$namespace}toolTitleNav__button_container {
+      font-size: inherit !important;
+
+      > span, > span > a {
+        display: inline-block;
+      }
+    }
+  }
+}
+// hide tool tab menu for calendar
+// and message center synoptic tools
+.nyu-synoptic-calendar-summary {
+  .navIntraTool.actionToolbar {
+    display: none !important;
+  }
+}
+body > .portletBody > #calendarForm {
+  .calHeader {
+    text-align: center;
+  }
+}
+#synopticForm {
+  #showOptions {
+    display: none !important;
+  }
+}
+.nyu-synoptic-chat-form {
+  .navIntraTool.actionToolbar {
+    display: none !important;
+  }
+}
+.#{$namespace}toolBody.#{$namespace}toolBody--sakai-iframe-site {
+  padding: 10px 0;
 }
 // allow synoptic tables to wrap and ensure content can fit within a narrow viewport
 body {
