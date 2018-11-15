@@ -31,9 +31,6 @@ body {
       justify-content: flex-start !important;
       border-bottom: $nyu-divider-width solid $nyu-purple;
     }
-    @media #{$phone} {
-      width: 160px !important;
-    }
 
     .#{$namespace}headerLogo--institution{
       background-size: 80% !important;
@@ -50,6 +47,11 @@ body {
         line-height: 44px;
       }
     }
+  }
+  #mastLogin {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
 }
 
@@ -72,6 +74,16 @@ body {
     .#{$namespace}userNav__submenuitem--profilepicture {
       background-repeat: no-repeat;
     }
+  }
+}
+
+// BUGFIX for SAK-30453
+body {
+  @media #{$phone}{
+  #mastLogin .has-avatar .#{$namespace}userNav__submenuitem--username,
+  #mastLogin .has-avatar .#{$namespace}userNav__submenuitem--userid {
+    display: flex !important;
+  }
   }
 }
 
