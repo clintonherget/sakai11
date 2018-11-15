@@ -272,7 +272,7 @@ $PBJQ(document).ready( function(){
   $PBJQ(window).scroll(function(){
 		var size = 0;
 		var stick = (($PBJQ(document).height() - $PBJQ(window).height()) > $PBJQ(header).height()) === true;
-		if($PBJQ(window).scrollTop() > 0) {
+		if($PBJQ(window).scrollTop() > $PBJQ(".Mrphs-portalWrapper").offset().top) {
 			if($PBJQ(header).data("sticked") === false && stick === true) {
 				$PBJQ(header).data("sticked",true);
 				$PBJQ(".Mrphs-mainHeader").addClass("is-fixed");
