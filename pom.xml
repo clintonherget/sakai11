@@ -138,6 +138,7 @@
                 <module>webjars</module>
                 <module>webservices</module>
                 <module>hedex</module>
+                <module>sakai-widgets</module>
             </modules>
         </profile>
         <profile>
