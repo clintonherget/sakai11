@@ -500,6 +500,17 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                                                            ((submission.getIsUserSubmission() != null && !submission.getIsUserSubmission()) ? "IGNORABLE " : determineMismatchCause(submission, assignment)),
                                                            ("/site/"+assignment.getContext()+"/group/"+submission.getSubmitterid()),
                                                            assignment.getId()));
+
+                                    if (!submission.getAny().containsKey("log0") &&
+                                        (submission.getSubmittedtext() == null || "".equals(submission.getSubmittedtext())) &&
+                                        (submission.getSubmittedtextHtml() == null || "".equals(submission.getSubmittedtextHtml())) &&
+                                        (submission.getFeedbacktext() == null || "".equals(submission.getFeedbacktext())) &&
+                                        (submission.getFeedbacktextHtml() == null || "".equals(submission.getFeedbacktextHtml())) &&
+                                        (submission.getGraded() == null || !submission.getGraded()) &&
+                                        (submission.getDatesubmitted() == null || "".equals(submission.getDatesubmitted()))) {
+                                        return SubmissionReintegrationResult.failed("BLANK_DUMMY_SUBMISSION");
+                                    }
+
                                     if (submission.getIsUserSubmission() != null && !submission.getIsUserSubmission()) {
                                         // Dummy submission
                                         return SubmissionReintegrationResult.failed("DUMMY_SUBMISSION");
@@ -517,6 +528,17 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                                                            assignmentSite.getId(),
                                                            assignment.getId(),
                                                            submission.getSubmitterid()));
+
+                                    if (!submission.getAny().containsKey("log0") &&
+                                        (submission.getSubmittedtext() == null || "".equals(submission.getSubmittedtext())) &&
+                                        (submission.getSubmittedtextHtml() == null || "".equals(submission.getSubmittedtextHtml())) &&
+                                        (submission.getFeedbacktext() == null || "".equals(submission.getFeedbacktext())) &&
+                                        (submission.getFeedbacktextHtml() == null || "".equals(submission.getFeedbacktextHtml())) &&
+                                        (submission.getGraded() == null || !submission.getGraded()) &&
+                                        (submission.getDatesubmitted() == null || "".equals(submission.getDatesubmitted()))) {
+                                        return SubmissionReintegrationResult.failed("BLANK_DUMMY_SUBMISSION");
+                                    }
+
 
                                     if (submission.getIsUserSubmission() != null && !submission.getIsUserSubmission()) {
                                         // Dummy submission
@@ -545,6 +567,17 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                     // Dummy submission
                     return SubmissionReintegrationResult.failed("DUMMY_SUBMISSION");
                 }
+
+                if (!submission.getAny().containsKey("log0") &&
+                    (submission.getSubmittedtext() == null || "".equals(submission.getSubmittedtext())) &&
+                    (submission.getSubmittedtextHtml() == null || "".equals(submission.getSubmittedtextHtml())) &&
+                    (submission.getFeedbacktext() == null || "".equals(submission.getFeedbacktext())) &&
+                    (submission.getFeedbacktextHtml() == null || "".equals(submission.getFeedbacktextHtml())) &&
+                    (submission.getGraded() == null || !submission.getGraded()) &&
+                    (submission.getDatesubmitted() == null || "".equals(submission.getDatesubmitted()))) {
+                    return SubmissionReintegrationResult.failed("BLANK_DUMMY_SUBMISSION");
+                }
+
 
                 // the submitterid must not be blank for a group submission
                 log.warn("%sthe submitterid must not be blank for a group submission.  assignment %s, submission %s",
@@ -629,6 +662,17 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                 // Dummy submission
                 return SubmissionReintegrationResult.failed("DUMMY_SUBMISSION");
             }
+
+            if (!submission.getAny().containsKey("log0") &&
+                (submission.getSubmittedtext() == null || "".equals(submission.getSubmittedtext())) &&
+                (submission.getSubmittedtextHtml() == null || "".equals(submission.getSubmittedtextHtml())) &&
+                (submission.getFeedbacktext() == null || "".equals(submission.getFeedbacktext())) &&
+                (submission.getFeedbacktextHtml() == null || "".equals(submission.getFeedbacktextHtml())) &&
+                (submission.getGraded() == null || !submission.getGraded()) &&
+                (submission.getDatesubmitted() == null || "".equals(submission.getDatesubmitted()))) {
+                return SubmissionReintegrationResult.failed("BLANK_DUMMY_SUBMISSION");
+            }
+
 
             return SubmissionReintegrationResult.failed("USER_ASSIGNMENT_BLANK_SUBMITTER");
         }
