@@ -329,6 +329,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         if (sakai.editor.sitePrintSkin) {
             ckconfig.contentsCss.push(sakai.editor.sitePrintSkin);
         } 
+
         CKEDITOR.dtd.$removeEmpty.span = false;
         CKEDITOR.dtd.$removeEmpty['i'] = false;
 
