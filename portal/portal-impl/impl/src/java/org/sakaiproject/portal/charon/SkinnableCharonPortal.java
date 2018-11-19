@@ -1439,6 +1439,8 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
                                 "});\n" +
                             "</script>\n");
                             headJs.append("<script src=\"").append(MATHJAX_SRC_PATH).append("\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
+                            headJs.append("<script src=\"/library/js/mathjax/extensions/asciimath2jax.js\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
+                            headJs.append("<script src=\"/library/js/mathjax/extensions/mml2jax.js\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
                             mathJaxIncluded = true;
                         }                     
                     }
