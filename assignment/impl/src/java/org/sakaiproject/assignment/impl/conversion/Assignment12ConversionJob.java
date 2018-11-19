@@ -1,5 +1,7 @@
 package org.sakaiproject.assignment.impl.conversion;
 
+import java.io.File;
+
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
@@ -62,6 +64,10 @@ public class Assignment12ConversionJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         log.info("<===== Assignment Conversion Job start =====>");
 
+        boolean dryRun = determineDryRun();
+
+        log.info("Running in dry run mode? {}", dryRun);
+
         // never run as a recovery
         if (context.isRecovering()) {
             log.warn("<===== Assignment Conversion Job doesn't support recovery, job will terminate... =====>");
@@ -80,6 +86,11 @@ public class Assignment12ConversionJob implements Job {
 
             Map<String, List<String>> preAssignments = dataProvider.fetchAssignmentsToConvertByTerm();
             List<String> alreadyConvertedAssignments = assignmentRepository.findAllAssignmentIds();
+
+            if (dryRun) {
+                // Force dry run mode to reprocess everything
+                alreadyConvertedAssignments.clear();
+            }
 
             ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_COUNT);
 
@@ -140,7 +151,7 @@ public class Assignment12ConversionJob implements Job {
                             converter.setSiteService(siteService);
 
                             converter.init();
-                            converter.runConversion(number, size, setSubtract(sublist, alreadyConvertedAssignments));
+                            converter.runConversion(number, size, setSubtract(sublist, alreadyConvertedAssignments), dryRun);
 
                             termProcessedCounts.get(termEid).processedCount.addAndGet(sublist.size());
                             totalProcessed.processedCount.addAndGet(sublist.size());
@@ -175,6 +186,15 @@ public class Assignment12ConversionJob implements Job {
 
         log.info("<===== Assignment Conversion Job end =====>");
     }
+
+    private boolean determineDryRun() {
+        if (new File("/tmp/assignments-conversion-dry-run.txt").exists()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     // a - b
     private List<String> setSubtract(List<String> a, List<String> b) {

@@ -118,7 +118,7 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
     }
 
     @Override
-    public void runConversion(int numberOfAttributes, int lengthOfAttribute, List<String> convertAssignments) {
+    public void runConversion(int numberOfAttributes, int lengthOfAttribute, List<String> convertAssignments, boolean dryRun) {
         int assignmentsTotal;
         assignmentsConverted = submissionsConverted = submissionsFailed = assignmentsFailed = 0;
 
@@ -160,7 +160,7 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
 
         for (String assignmentId : convertAssignments) {
             try {
-                convert(assignmentId);
+                convert(assignmentId, dryRun);
             } catch (Exception e) {
                 log.warn("Assignment conversion exception for {}", assignmentId, e);
             }
@@ -215,7 +215,7 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
         }
         return null;
     }
-    private void convert(String assignmentId) {
+    private void convert(String assignmentId, boolean dryRun) {
         String aXml = dataProvider.fetchAssignment(assignmentId);
         if (StringUtils.isNotBlank(aXml)) {
             O11Assignment o11a = (O11Assignment) serializeFromXml(aXml, O11Assignment.class);
@@ -263,7 +263,9 @@ public class AssignmentConversionServiceImpl implements AssignmentConversionServ
                             // at this point everything has been added to the persistence context
                             // so we just need to merge and flush so that every assignment is persisted
                             try {
-                                assignmentRepository.merge(assignment);
+                                if (!dryRun) {
+                                    assignmentRepository.merge(assignment);
+                                }
                                 assignmentsConverted++;
                                 submissionsConverted += assignment.getSubmissions().size();
                             } catch (Exception e) {
