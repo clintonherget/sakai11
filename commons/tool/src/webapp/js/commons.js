@@ -348,7 +348,7 @@ commons.switchState = function (state, arg) {
                 commons.utils.saveDetails({
                     title: newTitle
                 }, function() {
-                    $('#commons-title').closest('.Mrphs-sakai-commons').find('.Mrphs-toolTitleNav__title .Mrphs-toolTitleNav__text').html(newTitle);
+                    $('#commons-title').closest('.Mrphs-sakai-commons').find('.Mrphs-toolTitleNav__title').html(newTitle);
                     commons.switchState(commons.states.POSTS);
                 });
             });
