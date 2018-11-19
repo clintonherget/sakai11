@@ -330,6 +330,9 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
             ckconfig.contentsCss.push(sakai.editor.sitePrintSkin);
         } 
 
+        // Ensure contents.css is loaded too
+        ckconfig.contentsCss.push(CKEDITOR.basePath + 'contents.css');
+
         CKEDITOR.dtd.$removeEmpty.span = false;
         CKEDITOR.dtd.$removeEmpty['i'] = false;
 
