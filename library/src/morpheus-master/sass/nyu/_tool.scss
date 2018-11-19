@@ -479,6 +479,14 @@ body {
           top: 50%;
           margin-top: -50px;
   
+          button {
+            background: none !important;
+            border: none !important;
+            padding: 0 !important;
+            font-size: 1em;
+            margin: 0;
+          }
+
           &:before {
             content: "Choose files to upload";
             position: absolute;
