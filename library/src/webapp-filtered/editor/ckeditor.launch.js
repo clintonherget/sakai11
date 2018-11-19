@@ -344,6 +344,11 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         ckconfig.extraPlugins+=",nyuhelp";
         ckconfig.extraPlugins+=",kaltura";
 
+        if (sakai.editor.enableMathJax) {
+          ckconfig.mathJaxLib = sakai.editor.mathJaxPath;
+          ckconfig.extraPlugins+=",mathjax";
+          ckconfig.toolbar_Full = ckconfig.toolbar_Full.concat([["Mathjax"]]);
+        }
 
         // CLASSES-1937
         if (sakai.editor.siteId && sakai.editor.templates) {
