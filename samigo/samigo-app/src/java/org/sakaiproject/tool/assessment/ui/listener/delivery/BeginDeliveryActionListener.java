@@ -377,6 +377,9 @@ public class BeginDeliveryActionListener implements ActionListener
 
     // #3 - if this is a timed assessment, set the time limit in hr, min & sec.
     delivery.setDeadline();
+
+    // CLASSES-3440 ensure stable siteId on the delivery bean
+    delivery.setNyuSiteId(ownerSiteId);
   }
 
   private void setTimedAssessment(DeliveryBean delivery, PublishedAssessmentIfc pubAssessment, ExtendedTimeService extTimeService, AssessmentGradingData unSubmittedAssessmentGrading){
