@@ -2873,6 +2873,15 @@ public class DeliveryBean
     return siteId;
   }
 
+  // CLASSES-3440 maintain a stable siteId
+  private String nyuSiteId;
+  public void setNyuSiteId(String siteId) {
+    this.nyuSiteId = siteId;
+  }
+  public String getNyuSiteId() {
+    return this.nyuSiteId;
+  }
+
   public String getAgentAccessString()
   {
     return deliveryAgent.getAgentInstanceString();

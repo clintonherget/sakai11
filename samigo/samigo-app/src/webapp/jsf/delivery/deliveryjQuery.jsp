@@ -130,3 +130,16 @@
 	}
 	
 </script>
+
+<%-- CLASSES-3440 ensure siteId on the portal context --%>
+<script type="text/javascript">
+    $(document).ready(function() {
+        // bootstrap a portal object if no portal
+        if (typeof(parent.portal) == 'undefined') {
+            parent.portal = {};
+        }
+        if (typeof(parent.portal.siteId) == 'undefined') {
+            parent.portal.siteId = '<h:outputText value="#{delivery.nyuSiteId}"/>';
+        }
+  });
+</script>
