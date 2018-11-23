@@ -55,6 +55,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.util.regex.Pattern;
 
 public class NYUGradesWS extends HttpServlet
 {
@@ -102,7 +103,35 @@ public class NYUGradesWS extends HttpServlet
             this.response = response;
         }
 
+        private void reject() {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        }
+
         private void dispatch() throws ServletException, IOException {
+            String allowedPatterns = HotReloadConfigurationService.getString("webservices.allow", null);
+            String remoteIP = request.getRemoteAddr();
+
+            if (allowedPatterns == null) {
+                reject();
+                return;
+            }
+
+            boolean matched = false;
+            for (String pattern : allowedPatterns.split(" *, *")) {
+                Pattern expr = Pattern.compile(pattern.replace("\\\\", "\\"));
+
+                if (expr.matcher(remoteIP).matches()) {
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                reject();
+                return;
+            }
+
+
             // Served the WSDL if requested
             if (request.getQueryString() != null && request.getQueryString().toLowerCase().indexOf("wsdl") >= 0) {
                 try {
