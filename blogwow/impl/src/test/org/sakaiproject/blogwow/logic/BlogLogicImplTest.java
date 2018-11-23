@@ -13,24 +13,31 @@ package org.sakaiproject.blogwow.logic;
 
 import java.util.List;
 
-import junit.framework.Assert;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.sakaiproject.blogwow.dao.BlogWowDao;
 import org.sakaiproject.blogwow.logic.stubs.ExternalLogicStub;
 import org.sakaiproject.blogwow.logic.test.TestDataPreload;
 import org.sakaiproject.blogwow.model.BlogWowBlog;
-import org.springframework.test.AbstractTransactionalSpringContextTests;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
+
+import lombok.extern.slf4j.Slf4j;
+
 
 /**
  * Testing the Logic implementation methods
  * 
  * @author Sakai App Builder -AZ
  */
-public class BlogLogicImplTest extends AbstractTransactionalSpringContextTests {
-
-    private static Log log = LogFactory.getLog(BlogLogicImplTest.class);
+@DirtiesContext
+@ContextConfiguration(locations={
+			"/hibernate-test.xml", "/spring-hibernate.xml"})	
+@Slf4j
+public class BlogLogicImplTest extends AbstractTransactionalJUnit4SpringContextTests {
+    
 
     protected BlogLogicImpl logicImpl;
 
@@ -38,19 +45,10 @@ public class BlogLogicImplTest extends AbstractTransactionalSpringContextTests {
 
     private ExternalLogicStub logicStub = new ExternalLogicStub();
 
-    protected String[] getConfigLocations() {
-        // point to the needed spring config files, must be on the classpath
-        // (add component/src/webapp/WEB-INF to the build path in Eclipse),
-        // they also need to be referenced in the project.xml file
-        return new String[] { "hibernate-test.xml", "spring-hibernate.xml" };
-    }
 
     // run this before each test starts
-    protected void onSetUpBeforeTransaction() throws Exception {
-    }
-
-    // run this before each test starts and as part of the transaction
-    protected void onSetUpInTransaction() {
+    @Before
+    public void onSetUpBeforeTransaction() throws Exception {
         // load the spring created dao class bean from the Spring Application Context
         BlogWowDao dao = (BlogWowDao) applicationContext.getBean("org.sakaiproject.blogwow.dao.BlogWowDao");
         if (dao == null) {
@@ -77,29 +75,31 @@ public class BlogLogicImplTest extends AbstractTransactionalSpringContextTests {
      * Test method for
      * {@link org.sakaiproject.blogwow.logic.impl.BlogLogicImpl#canWriteBlog(org.sakaiproject.blogwow.model.BlogWowBlog, java.lang.String, java.lang.String)}.
      */
+    @Test
     public void testCanWriteBlog() {
-        assertTrue(logicImpl.canWriteBlog(tdp.blog1, TestDataPreload.LOCATION1_ID, TestDataPreload.USER_ID));
-        assertTrue(logicImpl.canWriteBlog(tdp.blog2, TestDataPreload.LOCATION1_ID, TestDataPreload.MAINT_USER_ID));
-        assertTrue(logicImpl.canWriteBlog(tdp.blog3, TestDataPreload.LOCATION2_ID, TestDataPreload.ADMIN_USER_ID));
+        Assert.assertTrue(logicImpl.canWriteBlog(tdp.blog1, TestDataPreload.LOCATION1_ID, TestDataPreload.USER_ID));
+        Assert.assertTrue(logicImpl.canWriteBlog(tdp.blog2, TestDataPreload.LOCATION1_ID, TestDataPreload.MAINT_USER_ID));
+        Assert.assertTrue(logicImpl.canWriteBlog(tdp.blog3, TestDataPreload.LOCATION2_ID, TestDataPreload.ADMIN_USER_ID));
 
         // make sure we cannot write in other sites
-        assertFalse(logicImpl.canWriteBlog(tdp.blog1, TestDataPreload.LOCATION2_ID, TestDataPreload.USER_ID));
-        assertFalse(logicImpl.canWriteBlog(tdp.blog2, TestDataPreload.LOCATION2_ID, TestDataPreload.MAINT_USER_ID));
+        Assert.assertFalse(logicImpl.canWriteBlog(tdp.blog1, TestDataPreload.LOCATION2_ID, TestDataPreload.USER_ID));
+        Assert.assertFalse(logicImpl.canWriteBlog(tdp.blog2, TestDataPreload.LOCATION2_ID, TestDataPreload.MAINT_USER_ID));
 
         // make sure we cannot write other blogs
-        assertFalse(logicImpl.canWriteBlog(tdp.blog2, TestDataPreload.LOCATION1_ID, TestDataPreload.USER_ID));
-        assertFalse(logicImpl.canWriteBlog(tdp.blog3, TestDataPreload.LOCATION2_ID, TestDataPreload.MAINT_USER_ID));
+        Assert.assertFalse(logicImpl.canWriteBlog(tdp.blog2, TestDataPreload.LOCATION1_ID, TestDataPreload.USER_ID));
+        Assert.assertFalse(logicImpl.canWriteBlog(tdp.blog3, TestDataPreload.LOCATION2_ID, TestDataPreload.MAINT_USER_ID));
 
         // make sure admin can write all of them
-        assertTrue(logicImpl.canWriteBlog(tdp.blog1, TestDataPreload.LOCATION1_ID, TestDataPreload.ADMIN_USER_ID));
-        assertTrue(logicImpl.canWriteBlog(tdp.blog2, TestDataPreload.LOCATION1_ID, TestDataPreload.ADMIN_USER_ID));
-        assertTrue(logicImpl.canWriteBlog(tdp.blog3, TestDataPreload.LOCATION2_ID, TestDataPreload.ADMIN_USER_ID));
+        Assert.assertTrue(logicImpl.canWriteBlog(tdp.blog1, TestDataPreload.LOCATION1_ID, TestDataPreload.ADMIN_USER_ID));
+        Assert.assertTrue(logicImpl.canWriteBlog(tdp.blog2, TestDataPreload.LOCATION1_ID, TestDataPreload.ADMIN_USER_ID));
+        Assert.assertTrue(logicImpl.canWriteBlog(tdp.blog3, TestDataPreload.LOCATION2_ID, TestDataPreload.ADMIN_USER_ID));
     }
 
     /**
      * Test method for
      * {@link org.sakaiproject.blogwow.logic.impl.BlogLogicImpl#makeBlogByLocationAndUser(java.lang.String, java.lang.String)}.
      */
+    @Test
     public void testGetBlogByLocationAndUser() {
         BlogWowBlog blog = null;
 
@@ -136,39 +136,41 @@ public class BlogLogicImplTest extends AbstractTransactionalSpringContextTests {
     /**
      * Test method for {@link org.sakaiproject.blogwow.logic.impl.BlogLogicImpl#getAllVisibleBlogs(java.lang.String)}.
      */
+    @Test
     public void testGetAllVisibleBlogs() {
         List<BlogWowBlog> l = null;
-
+        
         l = logicImpl.getAllVisibleBlogs(TestDataPreload.LOCATION1_ID, null, false, 0, 0);
-        assertNotNull(l);
-        assertEquals(2, l.size());
-        assertTrue(l.contains(tdp.blog1));
-        assertTrue(l.contains(tdp.blog2));
+        Assert.assertNotNull(l);
+        Assert.assertEquals(2, l.size());
+        Assert.assertTrue(l.contains(tdp.blog1));
+        Assert.assertTrue(l.contains(tdp.blog2));
 
         l = logicImpl.getAllVisibleBlogs(TestDataPreload.LOCATION2_ID, null, false, 0, 0);
-        assertNotNull(l);
-        assertEquals(1, l.size());
-        assertTrue(l.contains(tdp.blog3));
+        Assert.assertNotNull(l);
+        Assert.assertEquals(1, l.size());
+        Assert.assertTrue(l.contains(tdp.blog3));
 
         // test limiting the results
         l = logicImpl.getAllVisibleBlogs(TestDataPreload.LOCATION1_ID, "title", true, 0, 1);
-        assertNotNull(l);
-        assertEquals(1, l.size());
-        assertTrue(l.contains(tdp.blog1));
+        Assert.assertNotNull(l);
+        Assert.assertEquals(1, l.size());
+        Assert.assertTrue(l.contains(tdp.blog1));
 
         l = logicImpl.getAllVisibleBlogs(TestDataPreload.LOCATION1_ID, "title", false, 0, 1);
-        assertNotNull(l);
-        assertEquals(1, l.size());
-        assertTrue(l.contains(tdp.blog2));
+        Assert.assertNotNull(l);
+        Assert.assertEquals(1, l.size());
+        Assert.assertTrue(l.contains(tdp.blog2));
 
         l = logicImpl.getAllVisibleBlogs(TestDataPreload.INVALID_LOCATION_ID, null, false, 0, 0);
-        assertNotNull(l);
-        assertEquals(0, l.size());
+        Assert.assertNotNull(l);
+        Assert.assertEquals(0, l.size());
     }
 
     /**
      * Test method for {@link org.sakaiproject.blogwow.logic.impl.BlogLogicImpl#getBlogById(java.lang.Long)}.
      */
+    @Test
     public void testGetBlogById() {
         BlogWowBlog blog = null;
 
@@ -185,10 +187,11 @@ public class BlogLogicImplTest extends AbstractTransactionalSpringContextTests {
     /**
      * Test method for {@link org.sakaiproject.blogwow.logic.impl.BlogLogicImpl#saveBlog(org.sakaiproject.blogwow.model.BlogWowBlog)}.
      */
+    @Test
     public void testSaveBlog() {
         BlogWowBlog blog = new BlogWowBlog(TestDataPreload.USER_ID, TestDataPreload.LOCATION1_ID, "blog");
         logicImpl.saveBlog(blog, TestDataPreload.LOCATION1_ID);
-        assertNotNull(blog.getId());
+        Assert.assertNotNull(blog.getId());
 
         // test update
         tdp.blog1.setTitle("my blog");

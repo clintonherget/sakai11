@@ -21,6 +21,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.sakaiproject.blogwow.constants.BlogConstants;
 import org.sakaiproject.blogwow.dao.BlogWowDao;
 import org.sakaiproject.blogwow.model.BlogWowEntry;
@@ -50,7 +51,7 @@ public class BlogWowDaoImpl extends HibernateGeneralGenericDao implements BlogWo
    public List<String> getLocationsForBlogsIds(String[] blogIds) {
       String hql = "select distinct blog.location from BlogWowBlog as blog where blog.id in " + arrayToInString(blogIds)
       + " order by blog.location";
-      return getHibernateTemplate().find(hql);
+      return  (List<String>)getHibernateTemplate().find(hql);
 
       // alternate method using detached criteria
       // if (blogIds.length == 0) { return new ArrayList(); }
@@ -150,7 +151,8 @@ public class BlogWowDaoImpl extends HibernateGeneralGenericDao implements BlogWo
             hql += " order by entry." + sortProperty + " desc";
          }
       }
-      Query query = getSession().createQuery(hql);
+      Session session = getSessionFactory().getCurrentSession();
+      Query query = session.createQuery(hql);
       query.setFirstResult(start);
       if (limit > 0) {
          query.setMaxResults(limit);
@@ -324,7 +326,9 @@ public class BlogWowDaoImpl extends HibernateGeneralGenericDao implements BlogWo
             hql += " order by entry." + sortProperty + " desc";
          }
       }
-      Query query = getSession().createQuery(hql);
+      
+      Session session = getSessionFactory().getCurrentSession();
+      Query query = session.createQuery(hql);
 
       if (limit > 0) {
          query.setMaxResults(limit);

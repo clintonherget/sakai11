@@ -38,7 +38,7 @@ import org.w3c.dom.Element;
 /**
  * @author Aaron Zeckoski (aaronz@vt.edu)
  */
-@SuppressWarnings("unchecked")
+
 public class TSite implements Site {
 
     private static final long serialVersionUID = 4761288804996964705L;
@@ -907,4 +907,14 @@ public class TSite implements Site {
 		return null;
 	}
 
+	@Override
+	public Collection<Group> getGroupsWithMembers(String[] userIds) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+        @Override
+        public void deleteGroup(Group group) {
+		// TODO Auto-generated method stub
+        }
 }
