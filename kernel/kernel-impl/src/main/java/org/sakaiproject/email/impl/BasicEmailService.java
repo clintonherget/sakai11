@@ -71,6 +71,10 @@ import org.sakaiproject.email.api.EmailService;
 import org.sakaiproject.email.api.NoRecipientsException;
 import org.sakaiproject.user.api.User;
 
+import java.util.regex.Pattern;
+import java.util.Locale;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
 /**
  * <p>
  * BasicEmailService implements the EmailService.
@@ -629,11 +633,100 @@ public class BasicEmailService implements EmailService
 			}
 
 
+	private static InternetAddress addressFor(String address, String name) {
+		if (address == null || "".equals(address)) {
+			return null;
+		}
+
+		try {
+			return (name == null || "".equals(name)) ?
+				new InternetAddress(address) :
+				new InternetAddress(address, name);
+		} catch (AddressException e) {
+			e.printStackTrace();
+			return null;
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private void nyuCheckFrom(MimeMessage msg) {
+		// Behavior we want:
+		//
+		//  * If the user is sending from an @nyu.edu address, rewrite
+		//    the SMTP envelope From address to match theirs.  Ensures
+		//    that any bounce messages go back to the original user.
+		//
+
+		//  * If the from address looks dodgy (i.e. not a user's email
+		//    address, but something system-generated), write it back to
+		//    the generic address (and do the Envelope from too)
+		//
+		// * reply to?
+
+		Pattern fromAddressesToRewrite = Pattern.compile(HotReloadConfigurationService.getString("nyu.generic-from-addresses", "postmaster@.*nyu.edu"));
+
+		InternetAddress fromAddress = null;
+
+		try {
+			if (msg.getFrom().length != 1 || !(msg.getFrom()[0] instanceof InternetAddress)) {
+				log.warn("Weird from address for message: {}", msg);
+				return;
+			}
+
+			fromAddress = (InternetAddress) msg.getFrom()[0];
+		} catch (MessagingException e) {
+			log.warn("Exception while trying to determine message From address.  Ignoring: {}", e);
+			e.printStackTrace();
+			return;
+		}
+
+		// Email was from a system-generated address.  Rewrite to the
+		// generic no-reply address for both SMTP envelope and message.
+		if (fromAddressesToRewrite.matcher(fromAddress.getAddress()).matches()) {
+			InternetAddress genericFromAddress =
+				addressFor(HotReloadConfigurationService.getString("nyu.overrideFromAddress", null),
+					   HotReloadConfigurationService.getString("nyu.overrideFromName", null));
+
+			InternetAddress genericReplyToAddress =
+				addressFor(HotReloadConfigurationService.getString("nyu.overrideReplyToAddress", null),
+					   HotReloadConfigurationService.getString("nyu.overrideReplyToName", null));
+
+			try {
+				if (genericFromAddress != null) {
+					msg.getSession().getProperties().put("mail.smtp.from", genericFromAddress.getAddress());
+					msg.setFrom(genericFromAddress);
+				}
+
+				if (genericReplyToAddress != null) {
+					msg.setReplyTo(new Address[] { genericReplyToAddress });
+				}
+			} catch (MessagingException e) {
+				e.printStackTrace();
+			}
+
+			return;
+		}
+
+
+		// Otherwise, we've got a message addresses from a real user.
+		// Set the SMTP envelope from address if they're sending from
+		// our domain.
+		if (fromAddress.getAddress().toLowerCase(Locale.ROOT).matches("^.*@[^ ]*nyu\\.edu[^.]*")) {
+			msg.getSession().getProperties().put("mail.smtp.from", fromAddress.getAddress());
+		}
+	}
+
 
 	/**
 	 * fix up From and ReplyTo if we need it to be from Postmaster
 	 */
 	private void checkFrom(MimeMessage msg) {
+	    if (1 == 1) {
+		nyuCheckFrom(msg);
+		return;
+	    }
 
 	    String sendFromSakai = serverConfigurationService.getString(MAIL_SENDFROMSAKAI, "true");
 	    String sendExceptions = serverConfigurationService.getString(MAIL_SENDFROMSAKAI_EXCEPTIONS, null);
