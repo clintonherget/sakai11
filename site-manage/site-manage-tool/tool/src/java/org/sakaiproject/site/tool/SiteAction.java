@@ -2078,6 +2078,11 @@ public class SiteAction extends PagedResourceActionII {
                                   }
                                 }
 
+				if (siteProperties.getProperty("imported_from_sites") != null) {
+					context.put("importedFromSites", siteProperties.getProperty("imported_from_sites"));
+				}
+
+
 				context.put("siteFriendlyUrls", getSiteUrlsForSite(site));
 				context.put("siteDefaultUrl", getDefaultSiteUrl(siteId));
 				
@@ -9719,13 +9724,23 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				if (existingSite != null) {
 					// revising a existing site's tool
 					if (select_import_tools(params, state)) {
+						final List<String> importFromSiteIds = new ArrayList<>();
+
+						Hashtable importFromSites = (Hashtable) state.getAttribute(STATE_IMPORT_SITES);
+						if (importFromSites != null) {
+							for (Object site : importFromSites.keySet()) {
+								importFromSiteIds.add(((Site) site).getId());
+							}
+						}
+
+
 						// list of tools that were selected for import
 						Map<String, List<String>> importTools = (Map<String, List<String>>) state.getAttribute(STATE_IMPORT_SITE_TOOL);
 
 						//list of existing tools in the destination site
 						List<String> existingTools = originalToolIds((List<String>) state.getAttribute(STATE_TOOL_REGISTRATION_SELECTED_LIST), state);
 
-						boolean importTaskStarted = siteManageService.importToolsIntoSiteThread(existingSite, existingTools, importTools, false);
+						boolean importTaskStarted = siteManageService.importToolsIntoSiteThread(existingSite, existingTools, importTools, false, importFromSiteIds);
 						if (importTaskStarted) {
 							// ***** import tools here
 							state.setAttribute(IMPORT_QUEUED, rb.get("importQueued"));
@@ -9760,6 +9775,15 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				if (existingSite != null) {
 					// revising a existing site's tool
 					if (select_import_tools(params, state)) {
+						final List<String> importFromSiteIds = new ArrayList<>();
+
+						Hashtable importFromSites = (Hashtable) state.getAttribute(STATE_IMPORT_SITES);
+						if (importFromSites != null) {
+							for (Object site : importFromSites.keySet()) {
+								importFromSiteIds.add(((Site) site).getId());
+							}
+						}
+
 						// list of tools that were selected for import
 						Map<String, List<String>> importTools = (Map<String, List<String>>) state.getAttribute(STATE_IMPORT_SITE_TOOL);
 
@@ -9767,7 +9791,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 						List<String> existingTools = originalToolIds((List<String>) state.getAttribute(STATE_TOOL_REGISTRATION_SELECTED_LIST), state);
 
 
-						boolean importTaskStarted = siteManageService.importToolsIntoSiteThread(existingSite, existingTools, importTools, true);
+						boolean importTaskStarted = siteManageService.importToolsIntoSiteThread(existingSite, existingTools, importTools, true, importFromSiteIds);
 						if (importTaskStarted) {
 							// ***** import tools here
 							state.setAttribute(IMPORT_QUEUED, rb.get("importQueued"));

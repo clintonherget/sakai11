@@ -56,6 +56,12 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.Arrays;
+import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.entity.api.ResourcePropertiesEdit;
+
+
+
 @Slf4j
 public class SiteManageServiceImpl implements SiteManageService {
 
@@ -100,8 +106,81 @@ public class SiteManageServiceImpl implements SiteManageService {
         }
     }
 
+    private void inheritSelectedSiteProperties(String existingSiteId, List<String> importFromSiteIds) {
+        if (importFromSiteIds.size() != 1) {
+            // We're only interested in storing properties if the import is from a single site
+            return;
+        }
+
+        try {
+            Site existingSite = siteService.getSite(existingSiteId);
+
+            ResourcePropertiesEdit existingSiteProperties = existingSite.getPropertiesEdit();
+
+            Site importFromSite = siteService.getSite(importFromSiteIds.get(0));
+            ResourceProperties importFromSiteProperties = importFromSite.getProperties();
+
+            for (String property : new String[] { "mathJaxAllowed", "lessons_submenu" }) {
+                String sourceValue = importFromSiteProperties.getProperty(property);
+                String targetValue = existingSiteProperties.getProperty(property);
+
+                if (sourceValue != null && targetValue == null) {
+                    existingSiteProperties.addProperty(property, sourceValue);
+                }
+            }
+
+            siteService.save(existingSite);
+        } catch (IdUnusedException | PermissionException e) {
+            log.warn("Failed to inherit properties for site: " + existingSiteId + " due to error: " + e);
+            e.printStackTrace();
+        }
+    }
+
+    final String IMPORT_LINEAGE_PROPERTY = "imported_from_sites";
+
+    private void recordImportLineage(String existingSiteId, List<String> importFromSiteIds) {
+        try {
+            Site site = siteService.getSite(existingSiteId);
+
+            ResourcePropertiesEdit properties = site.getPropertiesEdit();
+
+            String existingLineage = properties.getProperty(IMPORT_LINEAGE_PROPERTY);
+
+            List<String> siteIds = new ArrayList<>();
+
+            if (existingLineage != null) {
+                siteIds.addAll(Arrays.asList(existingLineage.split(", *")));
+            }
+
+            for (String newSiteId : importFromSiteIds) {
+                if (!siteIds.contains(newSiteId)) {
+                    siteIds.add(newSiteId);
+                }
+            }
+
+            StringBuilder value = new StringBuilder();
+            for (String siteId : siteIds) {
+                if (value.length() > 0) {
+                    value.append(", ");
+                }
+
+                value.append(siteId);
+            }
+
+            properties.removeProperty(IMPORT_LINEAGE_PROPERTY);
+            properties.addProperty(IMPORT_LINEAGE_PROPERTY, value.toString());
+
+            siteService.save(site);
+        } catch (IdUnusedException | PermissionException e) {
+            log.warn("Failed to record import lineage for site: " + existingSiteId + " due to error: " + e);
+            e.printStackTrace();
+        }
+    }
+
+
     @Override
-    public boolean importToolsIntoSiteThread(final Site site, final List<String> existingTools, final Map<String, List<String>> importTools, final boolean cleanup) {
+    public boolean importToolsIntoSiteThread(final Site site, final List<String> existingTools, final Map<String, List<String>> importTools, final boolean cleanup,
+                                             List<String> importFromSiteIds) {
         final User user = userDirectoryService.getCurrentUser();
         final Locale locale = preferencesService.getLocale(user.getId());
         final Session session = sessionManager.getCurrentSession();
@@ -115,6 +194,10 @@ public class SiteManageServiceImpl implements SiteManageService {
 
             try {
                 importToolsIntoSite(site, existingTools, importTools, cleanup);
+
+                // NYU
+                recordImportLineage(id, importFromSiteIds);
+                inheritSelectedSiteProperties(id, importFromSiteIds);
             } catch (Exception e) {
                 log.warn("Site Import Task encountered an exception for site {}, {}", id, e.getMessage());
             } finally {
