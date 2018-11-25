@@ -52,21 +52,21 @@ $tool-menu-background-color: $nyu-tool-nav-background-color;
 $tool-menu-color: $nyu-tool-nav-item-text-color;
 $tool-border-color: $nyu-tool-tab-border-color;
 
-//$tool-tab-height:                                         32px !default;
+$tool-tab-height:                                         $nyu-tool-tab-height;
 //$tool-tab-text-color:                                     $tool-menu-color !default;
-//$tool-tab-text-size:                                      12px !default;
+$tool-tab-text-size:                                      $nyu-tool-tab-text-size;
 //$tool-tab-text-weight:                                    normal !default;
-//$tool-tab-text-transform:                                 none !default;
-//$tool-tab-text-letter-spacing:                            normal !default;
-$tool-tab-background-color: $nyu-tool-tab-background-color;
+$tool-tab-text-transform:                                 $nyu-tool-tab-text-transform;
+$tool-tab-text-letter-spacing:                            $nyu-tool-tab-text-letter-spacing;
+$tool-tab-background-color:                               $nyu-tool-tab-background-color;
 //$tool-tab-border-color:                                   #E5E5E5 !default;
-//$tool-tab-hover-text-color:                               #191919 !default;
-//$tool-tab-hover-background-color:                         #ECECEC !default;
-//$tool-tab-hover-highlight-color:                          #7F7F7F !default;
-//$tool-tab-active-text-color:                              #15597e !default;
-//$tool-tab-active-text-size:                               12.5px !default;
-$tool-tab-active-background-color: $nyu-tool-nav-item-selected-background-color;
-//$tool-tab-active-highlight-color:                         #15597e !default;
+$tool-tab-hover-text-color:                               $nyu-tool-tab-hover-text-color;
+$tool-tab-hover-background-color:                         $nyu-tool-tab-hover-background-color;
+$tool-tab-hover-highlight-color:                          $nyu-tool-tab-hover-highlight-color;
+$tool-tab-active-text-color:                              $nyu-tool-tab-active-text-color;
+$tool-tab-active-text-size:                               $nyu-tool-tab-active-text-size;
+$tool-tab-active-background-color:                        $nyu-tool-tab-active-background-color;
+$tool-tab-active-highlight-color:                         $nyu-tool-tab-active-highlight-color;
 
 //$tool-nav-link-color: #666 !default;
 

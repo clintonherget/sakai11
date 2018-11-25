@@ -60,59 +60,7 @@
     }
   }
   .navIntraTool {
-    padding-left: 0 !important;
-    padding-right: 1em !important;
     li {
-      margin-right: -5px !important;
-
-      a {
-        height: $nyu-tool-tab-height;
-        margin-right: 0 !important;
-        font-size: $nyu-tool-tab-text-size !important;
-        padding: 0 10px !important;
-        line-height: $nyu-tool-tab-height;
-        letter-spacing: $nyu-tool-tab-text-letter-spacing !important;
-        text-transform: $nyu-tool-tab-text-transform !important;
-
-        &:hover {
-          background-color: $nyu-tool-tab-hover-background-color !important;
-          color: $nyu-tool-tab-hover-text-color !important;
-          text-decoration: none !important;
-          position: relative;
-
-          &:before {
-            border-top: 4px solid $nyu-tool-tab-hover-highlight-color !important;
-            content: '';
-            display: block;
-            position: absolute;
-            left: -1px;
-            right: -1px;
-            top: -1px;
-          }
-        }
-      }
-
-      span.current {
-        margin: 0 !important;
-        padding: 0 10px !important;
-        color: $nyu-tool-tab-active-text-color !important;
-        height: $nyu-tool-tab-height + 1;
-        line-height: $nyu-tool-tab-height + 1;
-        font-size: $nyu-tool-tab-active-text-size !important;
-        background-color: $nyu-tool-tab-active-background-color !important;
-        text-transform: $nyu-tool-tab-text-transform !important;
-
-        &:before {
-          border-top: 4px solid $nyu-tool-tab-active-highlight-color !important;
-          content: '';
-          display: block;
-          position: absolute;
-          left: -1px;
-          right: -1px;
-          top: -1px;
-        }
-      }
-
       .formItem {
         input[type="submit"] {
           margin: 0;
@@ -925,7 +873,6 @@ body {
       margin-top: 20px;
       border-color: #CCC;
     }
-  }
 
     // CLASSES-3249 Kyle's sweet new styles
     .right-col {
@@ -1044,6 +991,12 @@ body {
       }
     }
 
+    .navIntraTool li.contentButton a {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      text-transform: $tool-tab-text-transform !important;
+    }
+  }
 
 }
 
