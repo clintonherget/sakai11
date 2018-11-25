@@ -987,7 +987,7 @@ public class AttendanceGoogleReportExport {
         return null;
     }
 
-    private void applyColumnAndCellProperties(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws IOException {
+    private void applyColumnAndCellProperties(Sheet targetSheet, ProtectedRange sheetProtectedRange) throws Exception {
         LOG.debug("Apply column and cell properties");
 
         // All requests to apply to the spreadsheet
@@ -1096,17 +1096,39 @@ public class AttendanceGoogleReportExport {
             requests.add(request);
         }
 
-        // Do the request!
-        LOG.debug("- do the batch request");
-        BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
-        batchUpdateSpreadsheetRequest.setRequests(requests);
-        Sheets.Spreadsheets.BatchUpdate batchUpdateRequest =
-            service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest);
-
-        BatchUpdateSpreadsheetResponse batchUpdateSpreadsheetResponse = batchUpdateRequest.execute();
-        LOG.debug(batchUpdateSpreadsheetResponse.toString());
+        runRequestsInSmallBatches(requests);
     }
 
+    // Break `requests` into small batches, and try each batch up to 5 times before bailing out.
+    private void runRequestsInSmallBatches(List<Request> requests) throws Exception {
+        int maxRetries = 5;
+        int batchSize = 16;
+        List<Request> batch = new ArrayList(batchSize);
+
+        for (int i = 0; i < requests.size(); i += batchSize) {
+            BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest();
+            batchUpdateSpreadsheetRequest.setRequests(requests.subList(i, Math.min(i + batchSize, requests.size())));
+
+            Exception lastException = null;
+            for (int retry = 0; retry < maxRetries; retry++) {
+                try {
+                    lastException = null;
+                    service.spreadsheets().batchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest).execute();
+                    break;
+                } catch (Exception e) {
+                    lastException = e;
+                    try {
+                        Thread.sleep((long)(Math.pow(2, retry) * 1000) +
+                                     (long)(Math.random() * 1000));
+                    } catch (InterruptedException e2) {}
+                }
+            }
+
+            if (lastException != null) {
+                throw lastException;
+            }
+        }
+    }
 
     private class ErrorReporter {
         private String recipientAddress;
