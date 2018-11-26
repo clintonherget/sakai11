@@ -22,7 +22,7 @@ var ckeditorId;
                 }
 
                 CKEDITOR.dialog.addIframe(pluginName,
-                    'Kaltura',
+                    'NYU Stream',
                     '/media-gallery-tool/ckeditor.htm?siteid=' + siteId,
                     width,
                     height,
@@ -40,7 +40,7 @@ var ckeditorId;
                 editor.addCommand(pluginName, new CKEDITOR.dialogCommand( 'kaltura' ) );
 
                 editor.ui.addButton(pluginName, {
-                    label: pluginName,
+                    label: 'Add NYU Stream Video',
                     command: pluginName,
                     icon: this.path + 'images/kaltura.png'
                 });
