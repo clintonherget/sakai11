@@ -40,7 +40,7 @@
     <dependency>
       <groupId>edu.nyu.clases</groupId>
       <artifactId>nyudirectory-provider</artifactId>
-      <version>12.4</version>
+      <version>12.5</version>
     </dependency>
 <!--
       This has been relocated to sakai-kernel-util

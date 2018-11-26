@@ -4,7 +4,7 @@
   <parent>
     <artifactId>jobtest-base</artifactId>
     <groupId>edu.nyu.classes.jobtest</groupId>
-    <version>12.4</version>
+    <version>12.5</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <name>jobtest-pack</name>
@@ -18,7 +18,7 @@
     <dependency>
       <groupId>edu.nyu.classes.jobtest</groupId>
       <artifactId>jobtest-impl</artifactId>
-      <version>12.4</version>
+      <version>12.5</version>
     </dependency>
   </dependencies>
   <build>
