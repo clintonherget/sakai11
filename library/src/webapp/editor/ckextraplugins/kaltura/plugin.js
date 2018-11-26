@@ -13,9 +13,17 @@ var ckeditorId;
                 ckeditorId = editor.name;
                 var height = 480;
                 var width = 770;
+                var siteId = "";
+                if (typeof(parent.portal) != "undefined") {
+                    siteId = parent.portal.siteId;
+                }
+                else if (typeof(parent.parent.portal) != "undefined") {
+                    siteId = parent.parent.portal.siteId;
+                }
+
                 CKEDITOR.dialog.addIframe(pluginName,
-                    'NYU Stream',
-                    '/media-gallery-tool/ckeditor.htm?siteid=' + parent.portal.siteId,
+                    'Kaltura',
+                    '/media-gallery-tool/ckeditor.htm?siteid=' + siteId,
                     width,
                     height,
                     function() {
@@ -32,7 +40,7 @@ var ckeditorId;
                 editor.addCommand(pluginName, new CKEDITOR.dialogCommand( 'kaltura' ) );
 
                 editor.ui.addButton(pluginName, {
-                    label: 'Add NYU Stream Video',
+                    label: pluginName,
                     command: pluginName,
                     icon: this.path + 'images/kaltura.png'
                 });

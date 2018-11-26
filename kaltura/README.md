@@ -1,6 +1,8 @@
 # Kaltura Video Tool for Sakai
 This tool is built on top of the Kaltura Application Framework (KAF), a feature-rich framework that allows flexible and streamlined integration of Kaltura’s video solutions and products. KAF is hosted and served directly from the Kaltura cloud servers and integrated into your Sakai environment presenting different video components and workflows to users that will enjoy new features as they are released.
 
+The Kaltura Application Framework (KAF) is proprietary software and is mandatory to use in conjunction with Kaltura LMS integrations. The Sakai plugin must have the KAF software to work properly. If you are an existing client, please contact your Kaltura representative to receive a KAF instance to work with Sakai, or contact [Kaltura sales team](https://corp.kaltura.com/company/contact-us) for purchasing options.
+
 This tool also exposes an enhanced LTI role-mapping capability to get better granularity than what Sakai provides by default.
 
 *The formally supported releases appear under [releases](https://github.com/kaltura/sakai-extension/releases), It is advised to only use releases marked as "latest release". Using code from any branch (including "master") is not recommended and not officially supported.*
@@ -10,6 +12,7 @@ This tool also exposes an enhanced LTI role-mapping capability to get better gra
 * [Release Notes](http://knowledge.kaltura.com/node/1654) 
 * [Installation Guide](http://knowledge.kaltura.com/node/1643)
 * [Setup Guide](http://knowledge.kaltura.com/node/1658/attachment/field_media)
+* [CKEditor Setup](ckeditor/README.md)
 * [User Guide](http://knowledge.kaltura.com/node/1657/attachment/field_media)
 * [Key Highlights](http://knowledge.kaltura.com/node/549)
 
@@ -37,6 +40,3 @@ All code in this project is released under the [AGPLv3 license](http://www.gnu.o
 
 Copyright © Kaltura Inc. All rights reserved.   
 Authors and contributors: See [GitHub contributors list](https://github.com/kaltura/sakai-extension/graphs/contributors).  
-
-### Open Source Libraries
-Review the [list of Open Source 3rd party libraries](open-source-libraries.md) used in this project.
