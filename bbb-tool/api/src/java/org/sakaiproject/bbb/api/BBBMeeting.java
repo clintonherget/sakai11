@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2009 The Sakai Foundation
+ * Copyright (c) 2010 onwards - The Sakai Foundation
  *
  * Licensed under the Educational Community License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,9 +48,11 @@ public class BBBMeeting implements Entity {
 	private Date startDate = null;
 	private Date endDate = null;
 	private Boolean waitForModerator = null;
-    private Boolean multipleSessionsAllowed = null;
+	private Boolean multipleSessionsAllowed = null;
+	private String presentation = null;
+	private Boolean groupSessions = null;
 	private Boolean deleted = null;
-	private Boolean recording = null; 
+	private Boolean recording = null;
 	private Long recordingDuration = null;
 	private String recordingEmail = null;
 	

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2009 The Sakai Foundation
+ * Copyright (c) 2010 onwards - The Sakai Foundation
  *
  * Licensed under the Educational Community License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyFactoryRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
@@ -104,7 +103,7 @@ import org.sakaiproject.util.ResourceLoader;
 
 /**
  * BBBMeetingManager is the API for managing BigBlueButton meetings.
- * 
+ *
  * @author Adrian Fish,Nuno Fernandes
  */
 public class BBBMeetingManagerImpl implements BBBMeetingManager {
@@ -216,7 +215,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
     // -----------------------------------------------------------------------
     // --- BBB Implementation related methods --------------------------------
     // -----------------------------------------------------------------------
-    public BBBMeeting getMeeting(String meetingId) 
+    public BBBMeeting getMeeting(String meetingId)
     		throws SecurityException, Exception {
         BBBMeeting meeting = storageManager.getMeeting(meetingId);
         meeting = processMeeting(meeting);
@@ -253,7 +252,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         if (storageManager.storeMeeting(meeting)) {
             // send email notifications to participants
             if (notifyParticipants) {
-                notifyParticipants(meeting, true, iCalAttached, iCalAlarmMinutes);
+                notifyParticipants(meeting, true, iCalAttached, iCalAlarmMinutes, false);
             }
 
             // add start date to Calendar
@@ -272,7 +271,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         }
     }
 
-    public boolean updateMeeting(BBBMeeting meeting, boolean notifyParticipants, boolean addToCalendar, boolean iCalAttached, Long iCalAlarmMinutes)
+    public boolean updateMeeting(BBBMeeting meeting, boolean notifyParticipants, boolean addToCalendar, boolean iCalAttached, Long iCalAlarmMinutes, boolean meetingOnly)
             throws SecurityException, BBBException {
         if (!getCanEdit(meeting.getSiteId(), meeting)) {
             throw new SecurityException("You are not allow to update this meeting");
@@ -280,23 +279,27 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
 
         // store locally, in DB
         if (storageManager.updateMeeting(meeting, true)) {
-            // send email notifications to participants
-            if (notifyParticipants) {
-                notifyParticipants(meeting, false, iCalAttached, iCalAlarmMinutes);
-            }
-
-            // add start date to Calendar
-            if (addToCalendar && meeting.getStartDate() != null) {
-                addEditCalendarEvent(meeting);
-            }
-            // or remove it, if 'add to calendar' was unselected
-            else if (meeting.getProps().getCalendarEventId() != null && !addToCalendar) {
-                removeCalendarEvent(meeting);
-                storageManager.updateMeeting(meeting, false);
+            //if meetingOnly is true, only update meeting properties
+            if (!meetingOnly) {
+                // send email notifications to participants
+                if (notifyParticipants) {
+                    notifyParticipants(meeting, false, iCalAttached, iCalAlarmMinutes, false);
+                }
+                // add start date to Calendar
+                if (addToCalendar && meeting.getStartDate() != null) {
+                    addEditCalendarEvent(meeting);
+                }
+                // or remove it, if 'add to calendar' was unselected
+                else if (meeting.getProps().getCalendarEventId() != null && !addToCalendar) {
+                    removeCalendarEvent(meeting);
+                    storageManager.updateMeeting(meeting, false);
+                }
             }
 
             // set meeting join url (for moderator, which is current user)
-            meeting.setJoinUrl(bbbAPI.getJoinMeetingURL(meeting.getId(), userDirectoryService.getCurrentUser(), meeting.getModeratorPassword()));
+            User user = userDirectoryService.getCurrentUser();
+            String joinURL = bbbAPI.getJoinMeetingURL(meeting, user, true);
+            meeting.setJoinUrl(joinURL);
 
             // log event
             logEvent(EVENT_MEETING_EDIT, meeting);
@@ -308,74 +311,163 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         }
     }
 
-    public boolean isMeetingRunning(String meetingID) 
+    public boolean isMeetingRunning(String meetingID)
             throws BBBException {
         return bbbAPI.isMeetingRunning(meetingID);
     }
 
-    public Map<String, Object> getMeetingInfo(String meetingID)
+    public Map<String, Object> getMeetings()
+            throws BBBException {
+        return bbbAPI.getMeetings();
+    }
+
+    public Map<String, Object> getMeetingInfo(String meetingID, String groupId)
             throws BBBException {
         BBBMeeting meeting = storageManager.getMeeting(meetingID);
+
+        if(meeting.getGroupSessions() && groupId != "" && groupId != null)
+            return bbbAPI.getMeetingInfo(meeting.getId() + "[" + groupId + "]", meeting.getModeratorPassword());
+
         return bbbAPI.getMeetingInfo(meeting.getId(), meeting.getModeratorPassword());
     }
 
-    public Map<String, Object> getRecordings(String meetingID)
+    public Map<String, Object> getRecordings(String meetingID, String groupId, String siteId)
             throws BBBException {
         BBBMeeting meeting = storageManager.getMeeting(meetingID);
-        return bbbAPI.getRecordings(meeting.getId());
-    }
 
-    public Map<String, Object> getSiteRecordings(String siteId) 
-            throws SecurityException, Exception {
-        
-        Map<String, Object> response = new HashMap<String, Object>();
-        //Set an empty List of recordings and a SUCCESS key as default response values
-        response.put("recordings", new ArrayList<Object>() );
-        response.put("returncode", "SUCCESS");
+        Map<String, Object> recordings;
+        if (!meeting.getRecording()) {
+            //Mimic empty recordings object
+            recordings = new HashMap<String, Object>();
+            recordings.put("recordings", "");
+            return recordings;
+        }
 
-        String meetingIDs = "";
+        Map<String, String> ownerIDs = new HashMap<String, String>();
+        String ownerID =  meeting.getOwnerId();
+        ownerIDs.put(meetingID, ownerID);
+        String meetingIDs = meetingID;
+        if (meeting.getGroupSessions() && groupId != null && groupId != "") {
+            ownerIDs.put(meetingID + "[" + groupId + "]", ownerID);
+            meetingIDs += "," + meetingID + "[" + groupId + "]";
 
-        List<BBBMeeting> meetings = storageManager.getSiteMeetings(siteId, INCLUDE_DELETED_MEETINGS);
-        if( meetings.size() > 0 ) {
-            for (BBBMeeting meeting : meetings) {
-                if( !meetingIDs.equals("") )
-                    meetingIDs += ",";
-                meetingIDs += meeting.getId();
-            }
-
-            Map<String, Object> recordingsResponse = bbbAPI.getSiteRecordings(meetingIDs);
-
-            String returncode = (String)recordingsResponse.get("returncode");
-            Object recordings = recordingsResponse.get("recordings");
-            
-            if ( "SUCCESS".equals(returncode) && recordings!= null && recordings.getClass().equals(java.util.ArrayList.class) ){
-                List<Map<String,Object>> recordingList = (List<Map<String,Object>>)recordingsResponse.get("recordings");
-                for (Map<String,Object> recordingItem : recordingList) {
-                    recordingItem.put("ownerId", locateOwnerIdOnMeetingList((String)recordingItem.get("meetingID"), meetings));
+        }
+        recordings = bbbAPI.getRecordings(meetingIDs);
+        // Post-process recordings
+        Object recordingList = recordings.get("recordings");
+        if ("SUCCESS".equals(recordings.get("returncode")) && recordingList != null && recordingList.getClass().equals(ArrayList.class)) {
+            boolean recordingFilterEnabled = this.isRecordingFormatFilterEnabled();
+            User user = userDirectoryService.getCurrentUser();
+            String userId = user.getId();
+            for (Map<String, Object> recordingItem : (List<Map<String, Object>>)recordingList) {
+                // Add meeting ownerId to the recording
+                recordingItem.put("ownerId", ownerIDs.get((String)recordingItem.get("meetingID")));
+                // Filter formats that are not allowed to be shown, only if filter is enabled.
+                if (recordingFilterEnabled) {
+                    recordingsFilterFormats(recordingItem, siteId, userId);
                 }
-                response = recordingsResponse;
-                
             }
-            
         }
-        
-        return response;
+        return recordings;
     }
-        
-    private String locateOwnerIdOnMeetingList(String meetingId, List<BBBMeeting> meetings){
 
+    public Map<String, Object> getSiteRecordings(String siteId)
+            throws SecurityException, Exception {
+        List<BBBMeeting> meetings = storageManager.getSiteMeetings(siteId, INCLUDE_DELETED_MEETINGS);
+        if (meetings.size() == 0 || !bbbAPI.isRecordingEnabled()) {
+            // Set an empty List of recordings and a SUCCESS key as default response values.
+            Map<String, Object> response = new HashMap<String, Object>();
+            response.put("recordings", new ArrayList<Object>());
+            response.put("returncode", "SUCCESS");
+            response.put("messageKey", "noRecordings");
+            return response;
+        }
+
+        Map<String, String> ownerIDs = new HashMap<String, String>();
+        String meetingID;
+        String ownerID;
+        String meetingIDs = "";
         for (BBBMeeting meeting : meetings) {
-            if( meetingId.equals(meeting.getId()) ){
-            	return meeting.getOwnerId();
+            if (!meeting.getRecording()) {
+                // Meeting is not set to be recorded
+                continue;
+            }
+            meetingID = meeting.getId();
+            ownerID = meeting.getOwnerId();
+            ownerIDs.put(meetingID, ownerID);
+            if (!meetingIDs.equals("")) {
+                meetingIDs += ",";
+            }
+            meetingIDs += meetingID;
+            if (meeting.getGroupSessions()) {
+                try {
+                    Site site = siteService.getSite(siteId);
+                    Collection<Group> userGroups = site.getGroups();
+                    for (Group g : userGroups) {
+                        ownerIDs.put(meetingID + "[" + g.getId() + "]", ownerID);
+                        meetingIDs += "," + meetingID + "[" + g.getId() + "]";
+                    }
+                } catch (IdUnusedException e) {
+                    logger.error("Unable to get recordings for group sessions in meeting '" + meeting.getName() + "'.", e);
+                }
             }
         }
-        return "";
 
+        Map<String, Object> recordings = bbbAPI.getRecordings(meetingIDs);
+        // Post-process recordings
+        Object recordingList = recordings.get("recordings");
+        if ("SUCCESS".equals(recordings.get("returncode")) && recordingList != null && recordingList.getClass().equals(ArrayList.class)) {
+            boolean recordingFilterEnabled = this.isRecordingFormatFilterEnabled();
+            User user = userDirectoryService.getCurrentUser();
+            String userId = user.getId();
+            for (Map<String, Object> recordingItem : (List<Map<String, Object>>)recordingList) {
+                // Add meeting ownerId to the recording
+                recordingItem.put("ownerId", ownerIDs.get((String)recordingItem.get("meetingID")));
+                // Filter formats that are not allowed to be shown, only if filter is enabled.
+                if (recordingFilterEnabled) {
+                    recordingsFilterFormats(recordingItem, siteId, userId);
+                }
+            }
+        }
+        return recordings;
     }
 
-    public Map<String, Object> getAllRecordings() 
-    		throws BBBException {
-    	return bbbAPI.getAllRecordings();
+    private void recordingsFilterFormats(Map<String, Object> recordingItem, String siteId, String userId) {
+        List<Map<String, Object>> playback = (List<Map<String, Object>>)recordingItem.get("playback");
+        for (Iterator<Map<String, Object>> iterator = playback.iterator(); iterator.hasNext(); ) {
+            Map<String, Object> format = iterator.next();
+            if ( recordingsFilterFormatRemovable( (String)format.get("type"), siteId, (String)recordingItem.get("ownerId"), userId ) ) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private boolean recordingsFilterFormatRemovable(String type, String siteId, String ownerId, String userId) {
+        // Validate if type is whitelisted.
+        List<String> whiltelist = Arrays.asList(this.getRecordingFormatFilterWhitelist().split(","));
+        if (whiltelist.contains(type)) {
+            // It is whitelisted, don't remove.
+            return false;
+        }
+        // Validate if user is allowed to view extended formats
+        if (ownerId.equals(userId)) {
+            if (isUserAllowedInLocation(userId, FN_RECORDING_EXTENDEDFORMATS_OWN, siteId)) {
+                // User allowed, don't remove.
+                return false;
+            }
+        }
+        if (isUserAllowedInLocation(userId, FN_RECORDING_EXTENDEDFORMATS_ANY, siteId)) {
+            // User allowed, don't remove.
+            return false;
+        }
+        // Remove it
+        return true;
+    }
+
+    public Map<String, Object> getAllRecordings()
+        throws BBBException {
+        Map<String, Object> recordings = bbbAPI.getRecordings("");
+        return recordings;
     }
 
     public void logMeetingJoin(String meetingId) {
@@ -383,24 +475,41 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         logEvent(EVENT_MEETING_JOIN, meeting);
     }
 
-    public boolean endMeeting(String meetingId) 
+    public boolean endMeeting(String meetingId, String groupId, boolean endAll)
     		throws SecurityException, BBBException {
         BBBMeeting meeting = storageManager.getMeeting(meetingId);
 
-        if (!getCanDelete(meeting.getSiteId(), meeting)) {
-            throw new SecurityException("You are not allow to end this meeting");
+        if (!getCanEdit(meeting.getSiteId(), meeting)) {
+            throw new SecurityException("You are not allowed to end this meeting");
         }
 
         // end meeting on server, if running
-        bbbAPI.endMeeting(meetingId, meeting.getModeratorPassword());
+        if (meeting.getGroupSessions() && groupId != "" && groupId != null) {
+            bbbAPI.endMeeting(meetingId + "[" + groupId + "]", meeting.getModeratorPassword());
+        } else {
+            bbbAPI.endMeeting(meetingId, meeting.getModeratorPassword());
 
+            if(meeting.getGroupSessions() && endAll){
+                //End all group sessions that could be running
+                Site site;
+                try {
+                    site = siteService.getSite(meeting.getSiteId());
+                    Collection<Group> userGroups = site.getGroups();
+                    for (Group g : userGroups)
+                        bbbAPI.endMeeting(meetingId + "[" + g.getId() + "]", meeting.getModeratorPassword());
+                } catch (IdUnusedException e) {
+                    logger.error("Unable to end all group sessions for meeting '" + meeting.getName() + "'.", e);
+                    return false;
+                }
+            }
+        }
         // log event
         logEvent(EVENT_MEETING_END, meeting);
 
         return true;
     }
 
-    public boolean deleteMeeting(String meetingId) 
+    public boolean deleteMeeting(String meetingId)
     		throws SecurityException, BBBException {
         BBBMeeting meeting = storageManager.getMeeting(meetingId);
 
@@ -413,7 +522,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
             if(bbbAPI.isMeetingRunning(meetingId))
                 bbbAPI.endMeeting(meetingId, meeting.getModeratorPassword());
         } catch( Exception e) {
-            
+
         }
 
         // log event
@@ -427,15 +536,21 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         return true;
     }
 
-    public boolean deleteRecordings(String meetingID, String recordID) 
+    public boolean deleteRecordings(String meetingID, String recordID)
     		throws SecurityException, BBBException {
         return bbbAPI.deleteRecordings(meetingID, recordID);
     }
 
-    public boolean publishRecordings(String meetingID, String recordID, String publish) 
+    public boolean publishRecordings(String meetingID, String recordID, String publish)
     		throws SecurityException, BBBException {
         // publish or unpublish the recording
         return bbbAPI.publishRecordings(meetingID, recordID, publish);
+    }
+
+    public boolean protectRecordings(String meetingID, String recordID, String protect)
+            throws SecurityException, BBBException {
+        // protect or unprotect the recording
+        return bbbAPI.protectRecordings(meetingID, recordID, protect);
     }
 
     public void checkJoinMeetingPreConditions(BBBMeeting meeting)
@@ -451,7 +566,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
 
         Map<String, Object> serverTimeInDefaultTimezone = getServerTimeInDefaultTimezone();
         Date now = new Date(Long.parseLong((String) serverTimeInDefaultTimezone.get("timestamp")));
-        
+
         boolean startOk = meeting.getStartDate() == null || meeting.getStartDate().before(now);
         boolean endOk = meeting.getEndDate() == null || meeting.getEndDate().after(now);
 
@@ -475,9 +590,9 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         /*
          * //////////////////////////////////////////////////////////////////////////////////////////////////
          * //This implementation will work only for a small number of users enrolled (teachers or students)
-         * //this is beacuse the long a GET call can be is limited by the configuration of the Webserver 
+         * //this is beacuse the long a GET call can be is limited by the configuration of the Webserver
          * //////////////////////////////////////////////////////////////////////////////////////////////////
-         * 
+         *
 
         Map<String, User> attendees = new HashMap<String, User>();
         Map<String, User> moderators = new HashMap<String, User>();
@@ -519,8 +634,8 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         // check if is running, (re)create it if not
         bbbAPI.makeSureMeetingExists(meeting);
     }
-    
-    
+
+
 
     // -----------------------------------------------------------------------
     // --- BBB Security related methods --------------------------------------
@@ -566,6 +681,10 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
 
     public boolean getCanParticipate(String siteId) {
         return isUserAllowedInLocation(userDirectoryService.getCurrentUser().getId(), FN_PARTICIPATE, siteId);
+    }
+
+    public boolean getCanView(String siteId) {
+        return isUserAllowedInLocation(userDirectoryService.getCurrentUser().getId(), FN_RECORDING_VIEW, siteId);
     }
 
     public void checkPermissions(String siteId) {
@@ -638,41 +757,41 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
     public Map<String, Object> getServerTimeInUserTimezone() {
 
         Map<String, Object> responseMap = new HashMap<String,Object>();
-        
+
         Preferences prefs = preferencesService.getPreferences(userDirectoryService.getCurrentUser().getId());
         TimeZone timeZone = TimeZone.getDefault();
         if (prefs != null) {
             ResourceProperties props = prefs.getProperties(TimeService.APPLICATION_ID);
             String timeZoneStr = props.getProperty(TimeService.TIMEZONE_KEY);
-            if( timeZoneStr != null ) 
+            if( timeZoneStr != null )
                 timeZone = TimeZone.getTimeZone(timeZoneStr);
         }
 
         long timeMs = getTimeInTimezone(new Date(System.currentTimeMillis()), timeZone).getTime();
-        
+
         responseMap.put("timestamp", "" + timeMs);
         responseMap.put("timezone", "" + timeZone.getDisplayName() );
         responseMap.put("timezoneID", "" + timeZone.getID() );
         responseMap.put("timezoneOffset", "" + timeZone.getOffset(timeMs));
         responseMap.put("defaultOffset", "" + TimeZone.getDefault().getOffset(timeMs));
-        
+
         return responseMap;
     }
 
     public Map<String, Object> getServerTimeInDefaultTimezone() {
-        
+
         Map<String, Object> responseMap = new HashMap<String,Object>();
-        
+
         TimeZone timeZone = TimeZone.getDefault();
 
         long timeMs = getTimeInTimezone(new Date(System.currentTimeMillis()), timeZone).getTime();
-        
+
         responseMap.put("timestamp", "" + timeMs);
         responseMap.put("timezone", "" + timeZone.getDisplayName() );
         responseMap.put("timezoneID", "" + timeZone.getID() );
         responseMap.put("timezoneOffset", "" + timeZone.getOffset(timeMs));
         responseMap.put("defaultOffset", "" + TimeZone.getDefault().getOffset(timeMs));
-        
+
         return responseMap;
     }
 
@@ -683,7 +802,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         if (prefs != null) {
             ResourceProperties props = prefs.getProperties(TimeService.APPLICATION_ID);
             String timeZoneStr = props.getProperty(TimeService.TIMEZONE_KEY);
-            if( timeZoneStr != null ) 
+            if( timeZoneStr != null )
                 timeZone = TimeZone.getTimeZone(timeZoneStr);
         }
 
@@ -703,26 +822,26 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         timeMs =  timeMs                                   // server time in millis
                 + timeZone.getOffset(timeMs)               // user timezone offset
                 - TimeZone.getDefault().getOffset(timeMs); // server timezone offset
-        
+
         return new Date(timeMs);
     }
 
-    
+
     public Map<String, Object> getToolVersion() {
-        
+
         Map<String, Object> responseMap = new HashMap<String,Object>();
-        
+
         ResourceLoader toolParameters = new ResourceLoader("Tool");
         responseMap.put("version", toolParameters.getString("bbb_version") );
         responseMap.put("buildSerial", toolParameters.getString("bbb_buildSerial") );
-        
+
         return responseMap;
     }
 
     public String getAutorefreshForMeetings() {
     	return "" + bbbAPI.getAutorefreshForMeetings();
     }
-    
+
     public String getAutorefreshForRecordings() {
     	return "" + bbbAPI.getAutorefreshForRecordings();
     }
@@ -730,7 +849,11 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
     public String isRecordingEnabled(){
         return "" + bbbAPI.isRecordingEnabled();
     }
-    
+
+    public String isRecordingEditable(){
+        return "" + bbbAPI.isRecordingEditable();
+    }
+
     public String getRecordingDefault(){
         return "" + bbbAPI.getRecordingDefault();
     }
@@ -747,6 +870,10 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         return "" + bbbAPI.isWaitModeratorEnabled();
     }
 
+    public String isWaitModeratorEditable(){
+        return "" + bbbAPI.isWaitModeratorEditable();
+    }
+
     public String getWaitModeratorDefault(){
         return "" + bbbAPI.getWaitModeratorDefault();
     }
@@ -755,8 +882,28 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         return "" + bbbAPI.isMultipleSessionsAllowedEnabled();
     }
 
+    public String isMultipleSessionsAllowedEditable(){
+        return "" + bbbAPI.isMultipleSessionsAllowedEditable();
+    }
+
     public String getMultipleSessionsAllowedDefault(){
         return "" + bbbAPI.getMultipleSessionsAllowedDefault();
+    }
+
+    public String isGroupSessionsEnabled(){
+        return "" + bbbAPI.isGroupSessionsEnabled();
+    }
+
+    public String isGroupSessionsEditable(){
+        return "" + bbbAPI.isGroupSessionsEditable();
+    }
+
+    public String getGroupSessionsDefault(){
+        return "" + bbbAPI.getGroupSessionsDefault();
+    }
+
+    public String isPreuploadPresentationEnabled(){
+        return "" + bbbAPI.isPreuploadPresentationEnabled();
     }
 
     public String getMaxLengthForDescription(){
@@ -779,7 +926,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         storageManager.deleteMeeting(meeting.getId(), true);
         return false;
     }
-    
+
     public String getNoticeText() {
         String bbbNoticeText = serverConfigurationService.getString(CFG_NOTICE_TEXT, null);
         if (bbbNoticeText != null && "".equals(bbbNoticeText.trim()))
@@ -791,22 +938,50 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         return serverConfigurationService.getString(CFG_NOTICE_LEVEL, "info").trim().toLowerCase();
     }
 
-    public String getJoinUrl(BBBMeeting meeting)
+    public String getJoinUrl(BBBMeeting meeting, User user)
             throws SecurityException, Exception {
         if (meeting == null) return null;
-        
+
         Participant p = getParticipantFromMeeting(meeting, userDirectoryService.getCurrentUser().getId());
 
         // Case #1: is participant
         if (getCanParticipate(meeting.getSiteId()) && p != null) {
             // build join url
-            boolean isModerator = Participant.MODERATOR.equals(p.getRole());
-            String password = isModerator ? meeting.getModeratorPassword(): meeting.getAttendeePassword();
-            String joinURL = bbbAPI.getJoinMeetingURL(meeting.getId(), userDirectoryService.getCurrentUser(), password);
+            String joinURL = bbbAPI.getJoinMeetingURL(meeting, user, Participant.MODERATOR.equals(p.getRole()));
             return joinURL;
         }
-        
+
         return null;
+    }
+
+    public boolean recordingReady(String meetingId) {
+        String meetingID = null;
+        String groupID = null;
+        if (meetingId.contains("[")) {
+            meetingID = meetingId.substring(0, meetingId.indexOf("["));
+            groupID = meetingId.substring(meetingId.indexOf("[") + 1, meetingId.indexOf("]"));
+        }
+
+        BBBMeeting meeting = null;
+        if (meetingID != null && groupID != null) {
+            meeting = storageManager.getMeeting(meetingID);
+
+            Site site;
+            try {
+                site = siteService.getSite(meeting.getSiteId());
+            } catch (IdUnusedException e) {
+                logger.error("Unable to send recording ready notifications for meeting '" + meeting.getName() + "'.", e);
+                return false;
+            }
+            Group group = site.getGroup(groupID);
+            meeting.setName(meeting.getName() + " (" + group.getTitle() + ")");
+        } else {
+            meeting = storageManager.getMeeting(meetingId);
+        }
+
+        if (meeting == null) return false;
+        notifyParticipants(meeting, false, false, 0L, true);
+        return true;
     }
 
     // -----------------------------------------------------------------------
@@ -851,7 +1026,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         return null;
     }
 
-    private void notifyParticipants(BBBMeeting meeting, boolean isNewMeeting, boolean iCalAttached, long iCalAlarmMinutes) {
+    private void notifyParticipants(BBBMeeting meeting, boolean isNewMeeting, boolean iCalAttached, long iCalAlarmMinutes, boolean recordingReady) {
         // Site title, url and directtool (universal) url for joining meeting
         Site site;
         try {
@@ -862,7 +1037,6 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         }
         String siteTitle = site.getTitle();
         String directToolJoinUrl = getDirectToolJoinUrl(meeting);
-
         // Meeting participants
         Set<User> meetingUsers = new HashSet<User>();
         for (Participant p : meeting.getParticipants()) {
@@ -918,10 +1092,12 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
 
             if (true == isNewMeeting) {
                 msgs = new ResourceLoader(userId, "EmailNotification");
+            } else if (true == recordingReady){
+                msgs = new ResourceLoader(userId, "EmailNotificationRecordingReady");
             } else {
                 msgs = new ResourceLoader(userId, "EmailNotificationUpdate");
             }
-            
+
             // Email message
             final String emailTitle = msgs.getFormattedMessage("email.title", new Object[] { siteTitle, meeting.getName() });
             StringBuilder msg = new StringBuilder();
@@ -983,9 +1159,9 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
             } catch (Exception e) {
                 logger.error("Unable to send " + userLocale + " notifications for '" + meeting.getName() + "' meeting participants.", e);
             }
-            
+
         }
-        
+
     }
 
     private String getUserLocale(String userId) {
@@ -1018,6 +1194,10 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         }
     }
 
+    private String getMeetingDescription(BBBMeeting meeting) {
+        return meeting.getProps().getWelcomeMessage().replaceAll("\\<.*?>","");
+    }
+
     @SuppressWarnings("deprecation")
     private boolean addEditCalendarEvent(BBBMeeting meeting) {
         logger.debug("addEditCalendarEvent");
@@ -1039,7 +1219,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
                     calendarService, new Object[] { calendarRef });
 
             // build time range (with dates on user timezone - calendar does conversion)
-            
+
             Time startTime = timeService.newTime(meeting.getStartDate().getTime());
             TimeRange range = null;
             if (meeting.getEndDate() != null) {
@@ -1072,7 +1252,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
 
             // commit event
             calendar.getClass().getMethod( "commitEvent",
-                    new Class[] { Class.forName("org.sakaiproject.calendar.api.CalendarEventEdit") }).invoke(calendar, 
+                    new Class[] { Class.forName("org.sakaiproject.calendar.api.CalendarEventEdit") }).invoke(calendar,
                     new Object[] { event });
 
             // update calendar eventId locally, in DB
@@ -1120,7 +1300,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
 
                 // commit event
                 calendar.getClass().getMethod("removeEvent",
-                        new Class[] { Class.forName("org.sakaiproject.calendar.api.CalendarEventEdit") }).invoke(calendar, 
+                        new Class[] { Class.forName("org.sakaiproject.calendar.api.CalendarEventEdit") }).invoke(calendar,
                         new Object[] { event });
 
                 meeting.getProps().setCalendarEventId(null);
@@ -1302,7 +1482,7 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         return userRoleInSite;
     }
 
-    private List<String> getUserGroupIdsInSite(String userId, String siteId) {
+    public List<String> getUserGroupIdsInSite(String userId, String siteId) {
         List<String> groupIds = new ArrayList<String>();
         if (siteId != null) {
             try {
@@ -1317,6 +1497,14 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
             }
         }
         return groupIds;
+    }
+
+    public boolean isRecordingFormatFilterEnabled() {
+        return bbbAPI.isRecordingFormatFilterEnabled();
+    }
+
+    public String getRecordingFormatFilterWhitelist() {
+        return "" + bbbAPI.getRecordingFormatFilterWhitelist();
     }
 
     /**
@@ -1378,9 +1566,10 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
         }
 
         // add description & url
+        String meetingDescription = getMeetingDescription(meeting);
         String meetingUrl = getDirectToolJoinUrl(meeting);
         try {
-            vEvent.getProperties().add(new Description(meeting.getProps().getWelcomeMessage()));
+            vEvent.getProperties().add(new Description(meetingDescription));
         } catch (Exception e1) {
             // ignore - no harm
         }
@@ -1431,43 +1620,43 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
 
         return filename;
     }
-    
+
     //Get participant permissions converted to a User Map
     private Map<String, User> getUsersParticipating(String selectionType, String selectionId, Site site) {
         Map<String, User> response = new HashMap<String, User>();
-        
+
         if( selectionType.equals(Participant.SELECTION_USER)){
             try{
                 User user = userDirectoryService.getUser(selectionId);
-                
+
                 response.put(selectionId, user);
-                
+
             } catch (Exception e) {
                 logger.error("Failed on getUser() for " + selectionId, e);
             }
 
         } else if( selectionType.equals(Participant.SELECTION_ROLE)){
-            
+
             Set users = getSiteUsersInRole(site, selectionId);
             Iterator<String> usersIter = users.iterator();
-            
+
             while ( usersIter.hasNext() ){
                 String userId = usersIter.next();
                 try{
                     User user = userDirectoryService.getUser(userId);
                     response.put(userId, user);
-                    
+
                 } catch (Exception e) {
                     logger.error("Failed on getUser() for " + selectionId, e);
                 }
             }
-            
+
         }
 
         return response;
-        
+
     }
-    
+
     //Get users in a role for an specific site
     private Set getSiteUsersInRole(Site site, String role) {
         Set users = null;
@@ -1476,15 +1665,15 @@ public class BBBMeetingManagerImpl implements BBBMeetingManager {
             String siteReference = site.getReference();
             AuthzGroup authzGroup = authzGroupService.getAuthzGroup(siteReference);
             users = site.getUsersHasRole(role);
-            
+
         } catch (Exception e) {
             logger.error("Failed on getAuthzGroup() for " + role, e);
-            
+
         }
-        
+
         return users;
     }
-    
+
 
     /** Inner class to execute code as Sakai Administrator */
     abstract class AdminExecution {

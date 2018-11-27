@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2009 The Sakai Foundation
+ * Copyright (c) 2010 onwards - The Sakai Foundation
  *
  * Licensed under the Educational Community License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -33,10 +34,12 @@ import org.apache.velocity.app.VelocityEngine;
 
 import org.apache.log4j.Logger;
 
+import org.sakaiproject.velocity.util.SLF4JLogChute;
+
 /**
  * Bootstraps the bbb tool by rendering a Velocity template with the apps JS
  * variables prebuilt.
- * 
+ *
  * @author Adrian Fish
  */
 public class BBBTool extends HttpServlet {
@@ -50,26 +53,22 @@ public class BBBTool extends HttpServlet {
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-
-        if (logger.isDebugEnabled())
-            logger.debug("init");
-
+        logger.debug("init");
         try {
             sakaiProxy = SakaiProxy.getInstance();
-            VelocityEngine ve = new VelocityEngine();
-            Properties props = new Properties();
-            props.setProperty("file.resource.loader.path",config.getServletContext().getRealPath("/WEB-INF"));
-            ve.init(props);
-            bootstrapTemplate = ve.getTemplate("bootstrap.vm");
+            VelocityEngine vengine = new VelocityEngine();
+            vengine.setApplicationAttribute(ServletContext.class.getName(), config.getServletContext());
+            vengine.setProperty(VelocityEngine.RUNTIME_LOG_LOGSYSTEM, new SLF4JLogChute());
+            vengine.addProperty("file.resource.loader.path", config.getServletContext().getRealPath("/WEB-INF"));
+            vengine.init();
+            bootstrapTemplate = vengine.getTemplate("bootstrap.vm");
         } catch (Throwable t) {
             throw new ServletException("Failed to initialise BBBTool servlet.", t);
         }
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (logger.isDebugEnabled())
-            logger.debug("doGet()");
-
+        logger.debug("doGet()");
         // check if Sakai proxy was successfully initialized
         if (sakaiProxy == null)
             throw new ServletException("sakaiProxy MUST be initialized.");
@@ -104,6 +103,7 @@ public class BBBTool extends HttpServlet {
         ctx.put("state", state);
         ctx.put("timezoneOffset", sakaiProxy.getUserTimezoneOffset());
         ctx.put("sakaiVersion", sakaiProxy.getSakaiVersion());
+        ctx.put("maxFileSizeInBytes", sakaiProxy.getFileSizeMax());
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("text/html");
