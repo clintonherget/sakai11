@@ -6693,7 +6693,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 							newTool.description = (String) tool.get("description");
 							newTool.group = groupName;
 							relativeWebPath = getMoreInfoUrl(moreInfoDir, ltiToolId);
-							Integer order = (Integer) tool.get("toolorder");
+							Integer order = (tool.get("toolorder") == null) ? null : ((Number)tool.get("toolorder")).intValue();
 							if (order != null) {
 								toolOrder.put(newTool.id, order);
 							}
