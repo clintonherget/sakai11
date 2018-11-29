@@ -1679,6 +1679,7 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
                                 withFeedbackText,
                                 withFeedbackComment,
                                 withFeedbackAttachment,
+                                withoutFolders,
                                 gradeFileFormat,
                                 includeNotSubmitted);
 
@@ -3001,7 +3002,7 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
     }
 
     // TODO zipSubmissions and zipGroupSubmissions should be combined
-    protected void zipGroupSubmissions(String assignmentReference, String assignmentTitle, String gradeTypeString, Assignment.SubmissionType typeOfSubmission, Iterator submissions, OutputStream outputStream, StringBuilder exceptionMessage, boolean withStudentSubmissionText, boolean withStudentSubmissionAttachment, boolean withGradeFile, boolean withFeedbackText, boolean withFeedbackComment, boolean withFeedbackAttachment, String gradeFileFormat, boolean includeNotSubmitted) {
+    protected void zipGroupSubmissions(String assignmentReference, String assignmentTitle, String gradeTypeString, Assignment.SubmissionType typeOfSubmission, Iterator submissions, OutputStream outputStream, StringBuilder exceptionMessage, boolean withStudentSubmissionText, boolean withStudentSubmissionAttachment, boolean withGradeFile, boolean withFeedbackText, boolean withFeedbackComment, boolean withFeedbackAttachment, boolean withoutFolders, String gradeFileFormat, boolean includeNotSubmitted) {
         ZipOutputStream out = null;
         try {
             out = new ZipOutputStream(outputStream);
@@ -3078,7 +3079,8 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
                             submittersName.append(StringUtils.trimToNull(submitterString));
                             final String submittedText = s.getSubmittedText();
 
-                            submittersName.append("/");
+                            String pathDelimiter = withoutFolders ? "_" : "/";
+                            submittersName.append(pathDelimiter);
 
                             // record submission timestamp
                             if (s.getSubmitted() && s.getDateSubmitted() != null) {
@@ -3104,9 +3106,11 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
                             if (typeOfSubmission != Assignment.SubmissionType.TEXT_ONLY_ASSIGNMENT_SUBMISSION && typeOfSubmission != Assignment.SubmissionType.NON_ELECTRONIC_ASSIGNMENT_SUBMISSION && withStudentSubmissionAttachment) {
                                 // include student submission attachment
                                 // create a attachment folder for the submission attachments
-                                final String sSubAttachmentFolder = submittersName + resourceLoader.getString("stuviewsubm.submissatt") + "/";
+                                final String sSubAttachmentFolder = submittersName + resourceLoader.getString("stuviewsubm.submissatt") + pathDelimiter;
                                 final ZipEntry sSubAttachmentFolderEntry = new ZipEntry(sSubAttachmentFolder);
-                                out.putNextEntry(sSubAttachmentFolderEntry);
+                                if (!withoutFolders) {
+                                    out.putNextEntry(sSubAttachmentFolderEntry);
+                                }
                                 // add all submission attachment into the submission attachment folder
                                 zipAttachments(out, submittersName.toString(), sSubAttachmentFolder, s.getAttachments());
                                 out.closeEntry();
@@ -3121,9 +3125,11 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
 
                             if (withFeedbackAttachment) {
                                 // create an attachment folder for the feedback attachments
-                            	final String feedbackSubAttachmentFolder = submittersName + resourceLoader.getString("download.feedback.attachment") + "/";
+                            	final String feedbackSubAttachmentFolder = submittersName + resourceLoader.getString("download.feedback.attachment") + pathDelimiter;
                             	final ZipEntry feedbackSubAttachmentFolderEntry = new ZipEntry(feedbackSubAttachmentFolder);
-                                out.putNextEntry(feedbackSubAttachmentFolderEntry);
+                                if (!withoutFolders) {
+                                    out.putNextEntry(feedbackSubAttachmentFolderEntry);
+                                }
                                 // add all feedback attachment folder
                                 zipAttachments(out, submittersName.toString(), feedbackSubAttachmentFolder, s.getFeedbackAttachments());
                                 out.closeEntry();
