@@ -81,7 +81,8 @@
                             {if categoryExtraCredit}
                                 <span class="gb-flag-extra-credit" wicket:message="title:label.gradeitem.extracreditcategory"></span>
                             {/if}
-                            <span>${categoryName}</span>
+                            {var tooltip = categoryName.replace(/"/g, '&quot;')}
+                            <span title="${tooltip}">${abbrevCategoryName}</span>
                             {if settings.isCategoryTypeWeighted}
                                 <span class="gb-category-weight">[${categoryWeight}]</span>
                             {/if}

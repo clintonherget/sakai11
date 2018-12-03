@@ -177,13 +177,13 @@ public class FormatHelper {
 	/**
 	 * Abbreviate a string via {@link StringUtils#abbreviateMiddle(String, String, int)}
 	 *
-	 * Set at 45 chars
+	 * Set at 40 chars
 	 *
 	 * @param s String to abbreviate
 	 * @return abbreviated string or full string if it was shorter than the setting
 	 */
 	public static String abbreviateMiddle(final String s) {
-		return StringUtils.abbreviateMiddle(s, "...", 45);
+		return StringUtils.abbreviateMiddle(s, "...", 40);
 	}
 
 	/**
