@@ -24,10 +24,10 @@ $skin-name : "morpheus-nyu";
 $font-family-url: "nyu/nyu_fonts.css?version=1499201593";
 
 //Typography variables
-$font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-family: "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 //$default-font-size: 14px !default;
 //$default-font-weight: 400 !default;										// 400 or 700 as you wish
-//$header-font-family: $font-family;
+$header-font-family: $font-family;
 //$header-font-weight: 700 !default;										// 400 or 700 as you wish
 
 /* Color palette */
