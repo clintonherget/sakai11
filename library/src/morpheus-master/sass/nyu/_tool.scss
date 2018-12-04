@@ -155,6 +155,20 @@ a.cke_dialog_ui_button {
 //  Changes to Overview (synoptic tools)
 // -------------------------------------------------------------------------------------------------------------------
 
+body {
+  .nyu-hide-breadcrumb-on-desktop {
+    @media #{$nonPhone} {
+      .#{$namespace}siteHierarchy {
+        display: none;
+      }
+    }
+
+    #content {
+      padding-top: 10px !important;
+    }
+  }
+}
+
 .#{$namespace}toolBody--sakai-iframe-site {
   border-bottom: none !important;
 }
