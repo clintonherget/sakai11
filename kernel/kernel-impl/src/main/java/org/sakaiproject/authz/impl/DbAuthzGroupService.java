@@ -2225,9 +2225,15 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 			if ((lock == null) || (realms == null) || (realms.isEmpty())) return new HashSet<String>();
 
 			String sql = dbAuthzGroupSql.getSelectRealmRoleUserIdSql(orInClause(realms.size(), "SR.REALM_ID"));
-			Object[] fields = new Object[1 + realms.size()];
+
+			// CLASSES-3453 Inline the lock value to give the Oracle query planner a better chance
+			sql = sql.replaceFirst("\\?", String.format("'%s'", lock.replaceAll("[^a-zA-Z._-]", "")));
+
+			System.err.println("REWROTE SQL: " + sql);
+
+			Object[] fields = new Object[realms.size()];
 			int pos = 0;
-			fields[pos++] = lock;
+			// fields[pos++] = lock;
 			for (String roleRealm : realms)
 			{
 				fields[pos++] = roleRealm;
@@ -2256,9 +2262,15 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 
 			if (realms != null) {
 				sql = dbAuthzGroupSql.getSelectRealmRoleGroupUserIdSql(orInClause(realms.size(), "REALM_ID"));
-				fields = new Object[realms.size() + 1];
+
+				// CLASSES-3453 Inline the lock value to give the Oracle query planner a better chance
+				sql = sql.replaceFirst("\\?", String.format("'%s'", lock.replaceAll("[^a-zA-Z._-]", "")));
+
+				System.err.println("REWROTE SQL: " + sql);
+
+				fields = new Object[realms.size()];
 				int pos = 0;
-				fields[pos++] = lock;
+				// fields[pos++] = lock;
 				for (Iterator i = realms.iterator(); i.hasNext();)
 				{
 					String roleRealm = (String) i.next();
@@ -2266,8 +2278,13 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 				}
 			} else {
 				sql = dbAuthzGroupSql.getSelectRealmRoleGroupUserIdSql("true");
-				fields = new Object[1];
-				fields[0] = lock;
+
+				// CLASSES-3453 Inline the lock value to give the Oracle query planner a better chance
+				sql = sql.replaceFirst("\\?", String.format("'%s'", lock.replaceAll("[^a-zA-Z._-]", "")));
+
+				System.err.println("REWROTE SQL: " + sql);
+
+				fields = new Object[0];
 			}
 
 			// read the strings
@@ -2308,9 +2325,15 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 
 			if (azGroups != null) {
 				sql = dbAuthzGroupSql.getSelectRealmRoleGroupUserCountSql(orInClause(azGroups.size(), "REALM_ID"));
+
+				// CLASSES-3453 Inline the lock value to give the Oracle query planner a better chance
+				sql = sql.replaceFirst("\\?", String.format("'%s'", function.replaceAll("[^a-zA-Z._-]", "")));
+
+				System.err.println("REWROTE SQL: " + sql);
+
 				fields = new Object[azGroups.size() + 1];
 				int pos = 0;
-				fields[pos++] = function;
+				// fields[pos++] = function;
 
 				for (Iterator i = azGroups.iterator(); i.hasNext();)
 				{
@@ -2319,8 +2342,13 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 				}
 			} else {
 				sql = dbAuthzGroupSql.getSelectRealmRoleGroupUserCountSql("true");
-				fields = new Object[1];
-				fields[0] = function;
+
+				// CLASSES-3453 Inline the lock value to give the Oracle query planner a better chance
+				sql = sql.replaceFirst("\\?", String.format("'%s'", function.replaceAll("[^a-zA-Z._-]", "")));
+
+				System.err.println("REWROTE SQL: " + sql);
+
+				fields = new Object[0];
 			}
 
 			// read the realm size counts
