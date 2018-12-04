@@ -467,7 +467,7 @@
 			<!-- These plugins can't be part of the standard build -->
 			<id>ckeditor-extras</id>
 			<activation>
-				<activeByDefault>false</activeByDefault>
+				<activeByDefault>true</activeByDefault>
 				<property>
 					<name>ckeditor-extras</name>
 				</property>
