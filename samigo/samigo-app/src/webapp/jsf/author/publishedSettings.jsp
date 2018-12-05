@@ -144,6 +144,13 @@
   </div>
 	<br/>
   
+
+  <p class="information">Note: For best practices around setting up your assessment, see the following article:
+    <a target="_blank" href="https://www.nyu.edu/servicelink/KB0017290" title="Best practices for Tests &amp; Quizzes">Best practices for Tests &amp; Quizzes</a>
+  </p>
+
+  <br/>
+
   <p>
     <h:messages styleClass="messageSamigo" rendered="#{! empty facesContext.maximumSeverity}" layout="table"/>
   </p>
