@@ -97,8 +97,11 @@ function disableLinks(clickedLink){
 
     <div>
       <h:outputText rendered="#{select.isThereAssessmentToTake eq 'true'}" value="#{selectIndexMessages.take_assessment_notes}" />
+      <h:outputText rendered="#{select.isThereAssessmentToTake eq 'true'}" escape="false" value="#{selectIndexMessages.best_practices_notes}" />
       <h:outputText rendered="#{select.isThereAssessmentToTake eq 'false'}" value="#{selectIndexMessages.take_assessment_notAvailable}" />
     </div>
+
+
 
 <%--
 sorting actions for table:
