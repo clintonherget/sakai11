@@ -264,6 +264,19 @@ body {
   padding: 10px 14px !important;
 }
 
+// CLASSES-3458 Reduce height of left menu collapse button
+body {
+  #toolMenu, #subSites, .floatingToolMenu {
+    .#{$namespace}collapseTools {
+      height: $nyu-tool-nav-item-height !important;
+
+      .#{$namespace}toggleNav {
+        height: $nyu-tool-nav-item-height !important;
+      }
+    }
+  }
+}
+
 // -------------------------------------------------------------------------------------------------------------------
 //  Sites navigation
 // -------------------------------------------------------------------------------------------------------------------
