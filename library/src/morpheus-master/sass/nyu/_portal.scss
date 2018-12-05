@@ -231,6 +231,19 @@ body.active-more-sites {
   }
 }
 
+// CLASSES-3459 Add padding between home icon and Home text
+body {
+  .#{$namespace}sitesNav__menu {
+    .#{$namespace}sitesNav__menuitem.#{$namespace}sitesNav__menuitem--myworkspace {
+      .link-container {
+        .fa.fa-home {
+          padding-right: 5px;
+        }
+      }
+    }
+  }
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 //  Timeout Alert
 // --------------------------------------------------------------------------------------------------------------------
