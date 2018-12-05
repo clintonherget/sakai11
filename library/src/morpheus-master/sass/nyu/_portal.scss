@@ -290,6 +290,25 @@ body {
   }
 }
 
+// CLASSES-3460 Tool icon alignment changes when expanding / collapsing left menu
+body {
+  #toolMenu, #subSites, .floatingToolMenu {
+    .#{$namespace}toolsNav__menuitem--link {
+      .#{$namespace}toolsNav__menuitem--icon {
+        text-align: left !important;
+        padding-left: 9px !important;
+      }
+    }
+  }
+  &.Mrphs-toolMenu-collapsed {
+    #toolMenu, #subSites, .floatingToolMenu {
+      .#{$namespace}toolsNav__menuitem--link {
+        text-align: left !important;
+      }
+    }
+  }
+}
+
 // -------------------------------------------------------------------------------------------------------------------
 //  Sites navigation
 // -------------------------------------------------------------------------------------------------------------------
