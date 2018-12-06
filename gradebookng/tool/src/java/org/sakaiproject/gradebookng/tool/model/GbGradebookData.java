@@ -109,6 +109,7 @@ public class GbGradebookData {
     private class CategoryAverageDefinition implements ColumnDefinition {
         private Long categoryId;
         private String categoryName;
+        private String abbrevCategoryName;
         private String title;
         private String weight;
         private boolean isExtraCredit; 
@@ -497,6 +498,7 @@ public class GbGradebookData {
                 (a2 == null || !a1.getCategoryId().equals(a2.getCategoryId()))) {
                 result.add(new CategoryAverageDefinition(a1.getCategoryId(),
                                                          a1.getCategoryName(),
+                                                        FormatHelper.abbreviateMiddle(a1.getCategoryName()),
                                                         (new StringResourceModel("label.gradeitem.categoryaverage", null, new Object[] { a1.getCategoryName() })).getString(),
                                                          nullable(categoryWeight),
                                                          a1.isCategoryExtraCredit(),
@@ -517,6 +519,7 @@ public class GbGradebookData {
                     result.add(new CategoryAverageDefinition(
                         category.getId(),
                         category.getName(),
+                        FormatHelper.abbreviateMiddle(category.getName()),
                         (new StringResourceModel("label.gradeitem.categoryaverage", null, new Object[] { category.getName() })).getString(),
                         nullable(categoryWeight),
                         category.isExtraCredit(),
