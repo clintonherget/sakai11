@@ -43,6 +43,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * <p>
  * ClusterEventTracking is the implmentation for the EventTracking service for use in a clustered multi-app server configuration.<br />
@@ -101,6 +103,8 @@ public abstract class ClusterEventTracking extends BaseEventTrackingService impl
     private Cache eventLastCache;
     /** is caching enabled? - KNL-1184 */
     private boolean cachingEnabled;
+
+	private AtomicBoolean tomcatStarted = new AtomicBoolean(false);
 
 	/**
 	 * @return the MemoryService collaborator.
@@ -223,6 +227,8 @@ public abstract class ClusterEventTracking extends BaseEventTrackingService impl
 			// startup the event checking
 			if (m_checkDb)
 			{
+				waitForTomcatStartup();
+
 				initLastEvent();
 
 				scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -522,11 +528,46 @@ public abstract class ClusterEventTracking extends BaseEventTrackingService impl
 	 * Runnable
 	 ************************************************************************************************************************************************/
 
+	private void waitForTomcatStartup() {
+		Thread tomcatStartupMonitor = new Thread(() -> {
+				Thread[] allThreads = new Thread[4096];
+				while (true) {
+					int threadCount = Thread.enumerate(allThreads);
+
+					boolean startingUp = false;
+					for (int i = 0; i < threadCount; i++) {
+						if (allThreads[i].getName().indexOf("-startStop-") >= 0) {
+							startingUp = true;
+						}
+					}
+
+					if (!startingUp) {
+						break;
+					}
+
+					try {
+						M_log.info("Waiting for Tomcat to start up before enabling ClusterEventTracking thread");
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {}
+				}
+
+				tomcatStarted.set(true);
+				M_log.info("Tomcat started: ClusterEventTracking now enabled.");
+		});
+
+		tomcatStartupMonitor.start();
+	}
+
 	/**
 	 * Run the event checking thread.
 	 */
 	public void run()
 	{
+		if (!tomcatStarted.get()) {
+			M_log.info("Skipping run of ClusterEventTracking while Tomcat starts up.");
+			return;
+		}
+
 		try
 		{
 			Thread.currentThread().setName(this.getClass().getName());
