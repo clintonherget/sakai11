@@ -157,6 +157,7 @@ public class StarfishExport implements Job {
 					Map<String, Set<String>> providerUserMap = new HashMap<>();
 
 					if (useProvider) {
+					    try {
 						String unpackedProviderId = StringUtils.trimToNull(s.getProviderGroupId());
 						if (unpackedProviderId == null) continue;
 						String[] providers = groupProvider.unpackId(unpackedProviderId);
@@ -172,6 +173,13 @@ public class StarfishExport implements Job {
 							}
 							providerUserMap.put(providerId, providerUsers);
 						}
+					    } catch (Exception e) {
+						log.error("Failed while fetching provider information for site: " +
+							  siteId +
+							  ". Skipping this site.",
+							  e);
+						continue;
+					    }
 					}
 					log.debug("Processing site: {} - {}, useProvider: {}", siteId, s.getTitle(), useProvider);
 
