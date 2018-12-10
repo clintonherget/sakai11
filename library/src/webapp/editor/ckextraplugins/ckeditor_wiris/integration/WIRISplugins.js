@@ -759,6 +759,7 @@ com.wiris.js.JsOSData.prototype = {
 }
 com.wiris.js.JsBrowser = $hxClasses["com.wiris.js.JsBrowser"] = function() {
 	this.dataBrowser = new Array();
+	this.addBrowser("navigator.userAgent",null,"Edge",null,"Edge");
 	this.addBrowser("navigator.userAgent",null,"Chrome",null,"Chrome");
 	this.addBrowser("navigator.userAgent",null,"OmniWeb",null,"OmniWeb");
 	this.addBrowser("navigator.vendor",null,"Apple","Version","Safari");
@@ -769,6 +770,7 @@ com.wiris.js.JsBrowser = $hxClasses["com.wiris.js.JsBrowser"] = function() {
 	this.addBrowser("navigator.vendor",null,"Camino",null,"Camino");
 	this.addBrowser("navigator.userAgent",null,"Netscape",null,"Netscape");
 	this.addBrowser("navigator.userAgent",null,"MSIE","MSIE","Explorer");
+	this.addBrowser("navigator.userAgent",null,"Trident","rv","Explorer");
 	this.addBrowser("navigator.userAgent",null,"Gecko","rv","Mozilla");
 	this.addBrowser("navigator.userAgent",null,"Mozilla","Mozilla","Netscape");
 	this.dataOS = new Array();
@@ -780,11 +782,18 @@ com.wiris.js.JsBrowser = $hxClasses["com.wiris.js.JsBrowser"] = function() {
 	this.addOS("navigator.platform","Linux","Linux");
 	this.setBrowser();
 	this.setOS();
+	this.setTouchable();
 };
 com.wiris.js.JsBrowser.__name__ = ["com","wiris","js","JsBrowser"];
 com.wiris.js.JsBrowser.prototype = {
-	isAndroid: function() {
+	isTouchable: function() {
+		return this.touchable;
+	}
+	,isAndroid: function() {
 		return this.os == "Android";
+	}
+	,isMac: function() {
+		return this.os == "Mac";
 	}
 	,isIOS: function() {
 		return this.os == "iOS";
@@ -792,8 +801,14 @@ com.wiris.js.JsBrowser.prototype = {
 	,isFF: function() {
 		return this.browser == "Firefox";
 	}
+	,isSafari: function() {
+		return this.browser == "Safari";
+	}
 	,isChrome: function() {
 		return this.browser == "Chrome";
+	}
+	,isEdge: function() {
+		return this.browser == "Edge";
 	}
 	,isIE: function() {
 		return this.browser == "Explorer";
@@ -812,6 +827,13 @@ com.wiris.js.JsBrowser.prototype = {
 		var index = str.indexOf(search);
 		if(index == -1) return null;
 		return "" + Std.parseFloat(HxOverrides.substr(str,index + search.length + 1,null));
+	}
+	,setTouchable: function() {
+		if(this.isIOS() || this.isAndroid()) {
+			this.touchable = true;
+			return;
+		}
+		this.touchable = false;
 	}
 	,setOS: function() {
 		var i = HxOverrides.iter(this.dataOS);
@@ -858,12 +880,20 @@ com.wiris.js.JsBrowser.prototype = {
 		b.identity = identity;
 		this.dataBrowser.push(b);
 	}
+	,touchable: null
 	,os: null
 	,ver: null
 	,browser: null
 	,dataOS: null
 	,dataBrowser: null
 	,__class__: com.wiris.js.JsBrowser
+}
+com.wiris.js.JsPluginListener = $hxClasses["com.wiris.js.JsPluginListener"] = function() { }
+com.wiris.js.JsPluginListener.__name__ = ["com","wiris","js","JsPluginListener"];
+com.wiris.js.JsPluginListener.prototype = {
+	afterParseLatex: null
+	,afterParse: null
+	,__class__: com.wiris.js.JsPluginListener
 }
 com.wiris.js.JsPluginTools = $hxClasses["com.wiris.js.JsPluginTools"] = function() {
 	this.tryReady();
@@ -908,7 +938,11 @@ com.wiris.js.JsPluginTools.prototype = {
 com.wiris.js.JsPluginViewer = $hxClasses["com.wiris.js.JsPluginViewer"] = function() {
 	this._wrs_conf_imageFormat = null;
 	this.javaServicePath = "/pluginwiris_engine/app";
+	this.wiriseditormathmlattribute = null;
 	this.performanceenabled = null;
+	this.eventListenersArray = [];
+	this.callsShowImageNumber = 0;
+	this.callsLatexToMathml = 0;
 	this.params = new Hash();
 	this.mode = com.wiris.js.JsPluginViewer.USE_CREATE_IMAGE;
 	this.zoom = 1;
@@ -940,7 +974,14 @@ com.wiris.js.JsPluginViewer.bypassEncapsulation = function() {
 	if(window.com.wiris.js.JsPluginViewer == null) window.com.wiris.js.JsPluginViewer = com.wiris.js.JsPluginViewer.getInstance();
 }
 com.wiris.js.JsPluginViewer.prototype = {
-	getBaseURL: function() {
+	removeViewerListener: function(listener) {
+		while(HxOverrides.remove(this.eventListenersArray,listener)) {
+		}
+	}
+	,addViewerListener: function(listener) {
+		this.eventListenersArray.push(listener);
+	}
+	,getBaseURL: function() {
 		return this.baseURL;
 	}
 	,queryToParams: function(query) {
@@ -986,14 +1027,59 @@ com.wiris.js.JsPluginViewer.prototype = {
 		data += "&metrics=true&centerbaseline=false&mml=" + StringTools.urlEncode(mml);
 		data += "&lang=" + this.lang;
 		if(this.zoom != 1) data += "&zoom=" + this.zoom;
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Calling: " + url,{ fileName : "JsPluginViewer.hx", lineNumber : 535, className : "com.wiris.js.JsPluginViewer", methodName : "callService"});
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("POST:" + data,{ fileName : "JsPluginViewer.hx", lineNumber : 537, className : "com.wiris.js.JsPluginViewer", methodName : "callService"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Calling: " + url,{ fileName : "JsPluginViewer.hx", lineNumber : 843, className : "com.wiris.js.JsPluginViewer", methodName : "callService"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("POST:" + data,{ fileName : "JsPluginViewer.hx", lineNumber : 845, className : "com.wiris.js.JsPluginViewer", methodName : "callService"});
 		con.open("POST",url,false);
 		con.setRequestHeader("Content-type","application/x-www-form-urlencoded; charset=utf-8");
 		con.send(data);
 		return con.responseText;
 	}
-	,callShowimage: function(mml,img) {
+	,latexToMathml: function(latex,nodeAfter,asynchronously,callbackFunc) {
+		var _g = this;
+		var con = new js.XMLHttpRequest();
+		var url = (this.absoluteURL.length > 0?this.absoluteURL:this.baseURL + this.localpath) + "/service" + this.extension;
+		var data = "service=latex2mathml";
+		data += "&latex=" + StringTools.urlEncode(latex);
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Calling: " + url,{ fileName : "JsPluginViewer.hx", lineNumber : 777, className : "com.wiris.js.JsPluginViewer", methodName : "latexToMathml"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("POST:" + data,{ fileName : "JsPluginViewer.hx", lineNumber : 779, className : "com.wiris.js.JsPluginViewer", methodName : "latexToMathml"});
+		var onloadFunc = function(e) {
+			try {
+				var mathml = haxe.Json.parse(con.responseText).result.text;
+				var newMathml = js.Lib.document.createElement("math");
+				var mathmlSpan = js.Lib.document.createElement("span");
+				mathmlSpan.appendChild(newMathml);
+				e.target.wiris.nodeAfter.parentElement.insertBefore(mathmlSpan,e.target.wiris.nodeAfter.nextSibling);
+				newMathml.outerHTML = mathml;
+				if(--_g.callsLatexToMathml == 0) {
+					var _g2 = 0, _g1 = _g.eventListenersArray.length;
+					while(_g2 < _g1) {
+						var i = _g2++;
+						try {
+							_g.eventListenersArray[i].afterParseLatex();
+						} catch( e1 ) {
+						}
+					}
+				}
+				e.target.wiris.callbackFunc(mathmlSpan);
+				_g.parseElement(mathmlSpan,asynchronously);
+			} catch( e1 ) {
+				if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("LatexToMathml call failed!",{ fileName : "JsPluginViewer.hx", lineNumber : 805, className : "com.wiris.js.JsPluginViewer", methodName : "latexToMathml"});
+			}
+		};
+		con.open("POST",url,asynchronously);
+		var newDynamic = { };
+		con.wiris = newDynamic;
+		con.wiris.nodeAfter = nodeAfter;
+		con.wiris.callbackFunc = callbackFunc;
+		con.setRequestHeader("Content-type","application/x-www-form-urlencoded; charset=utf-8");
+		con.onload = onloadFunc;
+		con.onerror = function(e) {
+			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("LatexToMathml call failed!",{ fileName : "JsPluginViewer.hx", lineNumber : 818, className : "com.wiris.js.JsPluginViewer", methodName : "latexToMathml"});
+		};
+		con.send(data);
+	}
+	,callShowimage: function(container,mml,img,asynchronously,callbackFunc) {
+		var _g = this;
 		var con;
 		var height = 0;
 		var width = 0;
@@ -1004,8 +1090,8 @@ com.wiris.js.JsPluginViewer.prototype = {
 		con = new js.XMLHttpRequest();
 		var mmlEntities;
 		mmlEntities = "";
-		var _g1 = 0, _g = mml.length;
-		while(_g1 < _g) {
+		var _g1 = 0, _g2 = mml.length;
+		while(_g1 < _g2) {
 			var i = _g1++;
 			var character;
 			character = mml.charAt(i);
@@ -1013,36 +1099,90 @@ com.wiris.js.JsPluginViewer.prototype = {
 		}
 		var md5 = haxe.Md5.encode("centerbaseline=false\nmml=" + mmlEntities + "\n");
 		url = (this.absoluteURL.length > 0?this.absoluteURL:this.baseURL + this.localpath) + "/showimage" + this.extension;
-		data = "?formula=" + md5 + "&lang=" + this.lang;
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Calling: " + url,{ fileName : "JsPluginViewer.hx", lineNumber : 474, className : "com.wiris.js.JsPluginViewer", methodName : "callShowimage"});
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("GET:" + data,{ fileName : "JsPluginViewer.hx", lineNumber : 476, className : "com.wiris.js.JsPluginViewer", methodName : "callShowimage"});
-		con.open("GET",url + data,false);
+		if(new com.wiris.js.JsBrowser().isIE()) data = "?formula=" + md5 + "&lang=" + this.lang + "&useragent=IE"; else data = "?formula=" + md5 + "&lang=" + this.lang;
+		data += "&version=" + com.wiris.js.JsPluginViewer.VERSION;
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Calling: " + url,{ fileName : "JsPluginViewer.hx", lineNumber : 655, className : "com.wiris.js.JsPluginViewer", methodName : "callShowimage"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("GET:" + data,{ fileName : "JsPluginViewer.hx", lineNumber : 657, className : "com.wiris.js.JsPluginViewer", methodName : "callShowimage"});
+		con.open("GET",url + data,asynchronously);
 		con.setRequestHeader("Content-type","application/x-www-form-urlencoded; charset=utf-8");
+		var onloadFunc = function(e) {
+			var getResultFunc = function(e1) {
+				var result = { };
+				try {
+					result = haxe.Json.parse(con.responseText).result;
+				} catch( e2 ) {
+					console.warn("Formula is malformed and it can't be rendered");
+					return;
+				}
+				e1.target.wiris.img.src = result.format == "svg"?"data:image/svg+xml;charset=utf8,":"data:image/png;base64,";
+				e1.target.wiris.img.src = e1.target.wiris.img.src + StringTools.urlEncode(result.content);
+				var dpi = result.dpi == null?96:result.dpi;
+				var scaleDpi = _g.zoom * (96 / dpi);
+				var scaledHeight = result.height * scaleDpi | 0;
+				var scaledWitdh = result.width * scaleDpi | 0;
+				var scaledBaseLine = result.baseline * scaleDpi | 0;
+				if(result.height > 0) {
+					if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(_g.calculateAlignment(height,baseline),{ fileName : "JsPluginViewer.hx", lineNumber : 681, className : "com.wiris.js.JsPluginViewer", methodName : "callShowimage"});
+					e1.target.wiris.img.style.verticalAlign = "-" + _g.calculateAlignment(scaledHeight,scaledBaseLine) + "px";
+					e1.target.wiris.img.style.height = "" + scaledHeight + "px";
+					e1.target.wiris.img.style.width = "" + scaledWitdh + "px";
+				}
+				if(_g.wiriseditormathmlattribute == null) {
+					var wirisEditorMathmlAttributeCall = haxe.Json.parse(_g.callGetVariableKeys("wiriseditormathmlattribute"));
+					if(wirisEditorMathmlAttributeCall.status != "ok") _g.wiriseditormathmlattribute = "data-mathml"; else _g.wiriseditormathmlattribute = wirisEditorMathmlAttributeCall.result.wiriseditormathmlattribute;
+				}
+				e1.target.wiris.img.setAttribute(_g.wiriseditormathmlattribute,e1.target.wiris.mml);
+				e1.target.wiris.img.setAttribute("class","Wirisformula");
+				e1.target.wiris.img.setAttribute("role","math");
+				if(result.alt != null) e1.target.wiris.img.alt = result.alt; else {
+					var accessibilityResponse = _g.callService(e1.target.wiris.mml,"mathml2accessible");
+					if(haxe.Json.parse(accessibilityResponse).status != "error") e1.target.wiris.img.alt = haxe.Json.parse(accessibilityResponse).result.text;
+				}
+				if(--_g.callsShowImageNumber == 0) {
+					var _g2 = 0, _g1 = _g.eventListenersArray.length;
+					while(_g2 < _g1) {
+						var i = _g2++;
+						try {
+							_g.eventListenersArray[i].afterParse();
+						} catch( e2 ) {
+						}
+					}
+				}
+				callbackFunc();
+			};
+			if(haxe.Json.parse(con.responseText).status == "warning") {
+				con.open("POST",url,e.target.wiris.asynchronously);
+				con.setRequestHeader("Content-type","application/x-www-form-urlencoded; charset=utf-8");
+				var onloadFunc1 = function(e1) {
+					getResultFunc(e1);
+				};
+				if(new com.wiris.js.JsBrowser().isIE()) data = "centerbaseline=false&mml=" + StringTools.urlEncode(e.target.wiris.mml) + "&useragent=IE"; else data = "centerbaseline=false&mml=" + StringTools.urlEncode(e.target.wiris.mml);
+				var newDynamic = { };
+				con.wiris = newDynamic;
+				con.wiris.callbackFunc = callbackFunc;
+				con.wiris.getResultFunc = getResultFunc;
+				con.wiris.mml = mml;
+				con.wiris.img = img;
+				con.wiris.container = container;
+				con.onload = onloadFunc1;
+				con.onerror = function(e1) {
+					if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("ShowImage call failed!",{ fileName : "JsPluginViewer.hx", lineNumber : 745, className : "com.wiris.js.JsPluginViewer", methodName : "callShowimage"});
+				};
+				con.send(data);
+			} else getResultFunc(e);
+		};
+		var newDynamic = { };
+		con.wiris = newDynamic;
+		con.wiris.callbackFunc = callbackFunc;
+		con.wiris.mml = mml;
+		con.wiris.img = img;
+		con.wiris.container = container;
+		con.wiris.asynchronously = asynchronously;
+		con.onload = onloadFunc;
+		con.onerror = function(e) {
+			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("ShowImage call failed!",{ fileName : "JsPluginViewer.hx", lineNumber : 765, className : "com.wiris.js.JsPluginViewer", methodName : "callShowimage"});
+		};
 		con.send(null);
-		var s = con.responseText;
-		if(haxe.Json.parse(con.responseText).status == "warning") {
-			con.open("POST",url,false);
-			con.setRequestHeader("Content-type","application/x-www-form-urlencoded; charset=utf-8");
-			data = "centerbaseline=false&mml=" + StringTools.urlEncode(mml);
-			con.send(data);
-			s = con.responseText;
-		}
-		var result = haxe.Json.parse(con.responseText).result;
-		img.src = result.format == "svg"?"data:image/svg+xml;base64,":"data:image/png;base64,";
-		img.src = img.src + Std.string(result.base64);
-		if(result.height > 0) {
-			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(this.calculateAlignment(height,baseline),{ fileName : "JsPluginViewer.hx", lineNumber : 498, className : "com.wiris.js.JsPluginViewer", methodName : "callShowimage"});
-			img.style.verticalAlign = "-" + this.calculateAlignment(result.height,result.baseline) + "px";
-			img.style.height = "" + Std.string(result.height) + "px";
-			img.style.width = "" + Std.string(result.width) + "px";
-		}
-		img.setAttribute("data-mathml",mml);
-		img.setAttribute("class","Wirisformula");
-		img.setAttribute("role","math");
-		if(result.alt != null) img.alt = result.alt; else {
-			var accessibility = this.callService(mml,"mathml2accessible");
-			if(accessibility != null) img.alt = accessibility;
-		}
 	}
 	,callCreateImage: function(mml,img) {
 		var con;
@@ -1057,8 +1197,8 @@ com.wiris.js.JsPluginViewer.prototype = {
 		data = "metrics=true&centerbaseline=false&mml=" + StringTools.urlEncode(mml);
 		data += "&lang=" + this.lang;
 		if(this.zoom != 1) data += "&zoom=" + this.zoom;
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Calling: " + url,{ fileName : "JsPluginViewer.hx", lineNumber : 400, className : "com.wiris.js.JsPluginViewer", methodName : "callCreateImage"});
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("POST:" + data,{ fileName : "JsPluginViewer.hx", lineNumber : 402, className : "com.wiris.js.JsPluginViewer", methodName : "callCreateImage"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Calling: " + url,{ fileName : "JsPluginViewer.hx", lineNumber : 584, className : "com.wiris.js.JsPluginViewer", methodName : "callCreateImage"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("POST:" + data,{ fileName : "JsPluginViewer.hx", lineNumber : 586, className : "com.wiris.js.JsPluginViewer", methodName : "callCreateImage"});
 		con.open("POST",url,false);
 		con.setRequestHeader("Content-type","application/x-www-form-urlencoded; charset=utf-8");
 		con.send(data);
@@ -1067,7 +1207,7 @@ com.wiris.js.JsPluginViewer.prototype = {
 		if(i >= 0) {
 			var scaleDpi = 1;
 			var h = this.queryToParams(HxOverrides.substr(s,i + 1,null));
-			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(h.get("formula"),{ fileName : "JsPluginViewer.hx", lineNumber : 425, className : "com.wiris.js.JsPluginViewer", methodName : "callCreateImage"});
+			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(h.get("formula"),{ fileName : "JsPluginViewer.hx", lineNumber : 596, className : "com.wiris.js.JsPluginViewer", methodName : "callCreateImage"});
 			if(h.exists("dpi")) scaleDpi = this.zoom * (Std.parseInt(h.get("dpi")) / 96);
 			baseline = Std.parseInt(h.get("cb")) / scaleDpi | 0;
 			height = Std.parseInt(h.get("ch")) / scaleDpi | 0;
@@ -1076,7 +1216,7 @@ com.wiris.js.JsPluginViewer.prototype = {
 		}
 		img.src = con.responseText;
 		if(height > 0) {
-			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(this.calculateAlignment(height,baseline),{ fileName : "JsPluginViewer.hx", lineNumber : 436, className : "com.wiris.js.JsPluginViewer", methodName : "callCreateImage"});
+			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(this.calculateAlignment(height,baseline),{ fileName : "JsPluginViewer.hx", lineNumber : 607, className : "com.wiris.js.JsPluginViewer", methodName : "callCreateImage"});
 			img.style.verticalAlign = "-" + this.calculateAlignment(height,baseline) + "px";
 			img.style.height = "" + height + "px";
 			img.style.width = "" + width + "px";
@@ -1085,14 +1225,12 @@ com.wiris.js.JsPluginViewer.prototype = {
 		img.setAttribute("class","Wirisformula");
 		img.setAttribute("role","math");
 		var accessibility = this.callService(mml,"mathml2accessible");
-		if(accessibility != null) img.alt = accessibility;
+		if(accessibility != null) img.alt = haxe.Json.parse(accessibility).result.text;
 	}
 	,calculateAlignment: function(height,baseline) {
 		var result;
 		result = 0;
-		var ALIGN_CONSTANT = 0.5;
-		if(this._wrs_conf_imageFormat == null) this._wrs_conf_imageFormat = haxe.Json.parse(this.callGetVariableKeys("wirisimageformat")).result.wirisimageformat;
-		if(this._wrs_conf_imageFormat == "svg") result = height - baseline - ALIGN_CONSTANT; else result = height - baseline;
+		result = height - baseline;
 		return result;
 	}
 	,getTechnology: function() {
@@ -1105,13 +1243,13 @@ com.wiris.js.JsPluginViewer.prototype = {
 			return StringTools.trim(s.split("#")[0]);
 		} else return com.wiris.js.JsPluginViewer.TECH;
 	}
-	,processMathML: function(mml,container) {
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(mml,{ fileName : "JsPluginViewer.hx", lineNumber : 336, className : "com.wiris.js.JsPluginViewer", methodName : "processMathML"});
+	,processMathML: function(mml,container,asynchronously,callbackFunc) {
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(mml,{ fileName : "JsPluginViewer.hx", lineNumber : 529, className : "com.wiris.js.JsPluginViewer", methodName : "processMathML"});
 		var img = js.Lib.document.createElement("img");
 		if(this.performanceenabled == null) this.performanceenabled = this.isPerformanceEnabled();
-		if(this.mode == com.wiris.js.JsPluginViewer.USE_CREATE_IMAGE && this.performanceenabled) this.callShowimage(mml,img); else if(this.mode == com.wiris.js.JsPluginViewer.USE_CREATE_IMAGE && !this.performanceenabled) this.callCreateImage(mml,img); else img.src = this.baseURL + this.localpath + "/showimage" + this.extension + "?mml=" + StringTools.urlEncode(mml);
+		if(this.mode == com.wiris.js.JsPluginViewer.USE_CREATE_IMAGE && this.performanceenabled) this.callShowimage(container,mml,img,asynchronously,callbackFunc); else if(this.mode == com.wiris.js.JsPluginViewer.USE_CREATE_IMAGE && !this.performanceenabled) this.callCreateImage(mml,img); else img.src = this.baseURL + this.localpath + "/showimage" + this.extension + "?mml=" + StringTools.urlEncode(mml);
 		container.appendChild(img);
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(img.src,{ fileName : "JsPluginViewer.hx", lineNumber : 350, className : "com.wiris.js.JsPluginViewer", methodName : "processMathML"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(img.src,{ fileName : "JsPluginViewer.hx", lineNumber : 543, className : "com.wiris.js.JsPluginViewer", methodName : "processMathML"});
 	}
 	,getMathML_IE7: function(mathNode0) {
 		var mathml = "";
@@ -1147,17 +1285,29 @@ com.wiris.js.JsPluginViewer.prototype = {
 		mathml += "</math>";
 		return mathml;
 	}
-	,replaceNodes: function(mathNodes,n) {
+	,removeSemanticsMathml: function(mathml) {
+		var mathTagEnd = "<" + "/math" + ">";
+		var openSemantics = "<" + "semantics" + ">";
+		var openAnnotation = "<annotation encoding=\"LaTeX\">";
+		var mathmlWithoutSemantics = null;
+		var startSemantics = mathml.indexOf(openSemantics);
+		if(startSemantics != -1) {
+			var startAnnotation = mathml.indexOf(openAnnotation,startSemantics + openSemantics.length);
+			if(startAnnotation != -1) mathmlWithoutSemantics = mathml.substring(0,startSemantics) + mathml.substring(startSemantics + openSemantics.length,startAnnotation) + mathTagEnd;
+		}
+		return mathmlWithoutSemantics == null?mathml:mathmlWithoutSemantics;
+	}
+	,replaceNodes: function(mathNodes,n,asynchronously,callbackFunc) {
 		if(n >= mathNodes.length) return;
 		var mathNode = mathNodes[n];
 		var mathml = null;
 		var browser = new com.wiris.js.JsBrowser();
 		if(browser.getBrowser() == "Explorer" && (browser.getVersion() == "6" || browser.getVersion() == "7") && navigator.appVersion.indexOf("Trident") == -1) {
-			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Is ie7",{ fileName : "JsPluginViewer.hx", lineNumber : 235, className : "com.wiris.js.JsPluginViewer", methodName : "replaceNodes"});
+			if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Is ie7",{ fileName : "JsPluginViewer.hx", lineNumber : 397, className : "com.wiris.js.JsPluginViewer", methodName : "replaceNodes"});
 			mathml = this.getMathML_IE7(mathNode);
 		}
 		var container = js.Lib.document.createElement("span");
-		mathNode.parentNode.replaceChild(container,mathNode);
+		if(mathNode.parentNode != null) mathNode.parentNode.replaceChild(container,mathNode);
 		if(mathml == null) {
 			container.appendChild(mathNode);
 			mathml = container.innerHTML;
@@ -1165,11 +1315,101 @@ com.wiris.js.JsPluginViewer.prototype = {
 		}
 		var index = mathml.indexOf("<math");
 		mathml = HxOverrides.substr(mathml,index,mathml.length - index);
-		this.processMathML(mathml,container);
+		var containerMath = js.Lib.document.createElement("span");
+		var containerMathElement = js.Lib.document.createElement("math");
+		containerMath.appendChild(containerMathElement);
+		containerMathElement.outerHTML = mathml;
+		mathml = new XMLSerializer().serializeToString(containerMath.children[0]);
+		mathml = this.removeSemanticsMathml(mathml);
+		this.processMathML(mathml,container,asynchronously,callbackFunc);
 		var self = this;
-		haxe.Timer.delay(function() {
-			self.replaceNodes(mathNodes,n + 1);
-		},1);
+		self.replaceNodes(mathNodes,n + 1,asynchronously,callbackFunc);
+	}
+	,replaceLatexInTextNode: function(pos,node,asynchronously,callbackFunc) {
+		var textContent;
+		textContent = node.textContent;
+		if(pos < textContent.length) {
+			var nextLatexPosistion = this.getNextLatexPos(pos,textContent);
+			if(nextLatexPosistion != null) {
+				var leftText = textContent.substring(pos,nextLatexPosistion.start);
+				var leftTextNode = js.Lib.document.createTextNode(leftText);
+				node.parentNode.insertBefore(leftTextNode,node);
+				var latex = textContent.substring(nextLatexPosistion.start + "$$".length,nextLatexPosistion.end);
+				this.latexToMathml(latex,leftTextNode,asynchronously,callbackFunc);
+				this.replaceLatexInTextNode(nextLatexPosistion.end + "$$".length,node,asynchronously,callbackFunc);
+			} else {
+				var text = textContent.substring(pos);
+				var textNode = js.Lib.document.createTextNode(text);
+				node.parentNode.insertBefore(textNode,node);
+				node.parentNode.removeChild(node);
+			}
+		} else node.parentNode.removeChild(node);
+	}
+	,getNextLatexPos: function(pos,text) {
+		var firstLatexTags = text.indexOf("$$",pos);
+		var secondLatexTags = firstLatexTags == -1?-1:text.indexOf("$$",firstLatexTags + "$$".length);
+		return firstLatexTags != -1 && secondLatexTags != -1?{ start : firstLatexTags, end : secondLatexTags}:null;
+	}
+	,findLatex: function(node) {
+		var foundLatex = false;
+		var dollarIndex = node.nodeValue.indexOf("$$");
+		if(dollarIndex != -1) {
+			dollarIndex = node.nodeValue.indexOf("$$",dollarIndex + 2);
+			if(dollarIndex != -1) foundLatex = true;
+		}
+		return foundLatex;
+	}
+	,parseLatexDocument: function(asynchronously,callbackFunc) {
+		this.parseLatexElement(js.Lib.document,asynchronously,callbackFunc);
+	}
+	,parseLatexElement: function(element,asynchronously,callbackFunc) {
+		if(callbackFunc == null) callbackFunc = function() {
+		};
+		if(asynchronously == null) {
+			if(this.asyncParam) asynchronously = this.asyncParam;
+		}
+		var domTextNodes = this.findTextNodes(element);
+		var latexToProcess = [];
+		var i = 0;
+		while(i < domTextNodes.length) {
+			var node = domTextNodes[i];
+			if(this.findLatex(node)) latexToProcess.push(node);
+			i++;
+		}
+		if(latexToProcess.length == 0) {
+			var _g1 = 0, _g = this.eventListenersArray.length;
+			while(_g1 < _g) {
+				var i1 = _g1++;
+				try {
+					this.eventListenersArray[i1].afterParseLatex();
+				} catch( e ) {
+				}
+			}
+		} else {
+			this.callsLatexToMathml = latexToProcess.length;
+			var _g1 = 0, _g = latexToProcess.length;
+			while(_g1 < _g) {
+				var i1 = _g1++;
+				var node = latexToProcess[i1];
+				this.replaceLatexInTextNode(0,node,asynchronously,callbackFunc);
+			}
+		}
+	}
+	,findTextNodes: function(el) {
+		var textNodes = [];
+		var walk = document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null,false);
+		var node;
+		while(node = walk.nextNode()) if(!this.thereIsParentTextArea(node)) textNodes.push(node);
+		return textNodes;
+	}
+	,thereIsParentTextArea: function(el) {
+		var thereIs = false;
+		var parentNode = el.parentNode;
+		while(!thereIs && parentNode != null) {
+			if(parentNode.nodeName == "TEXTAREA") thereIs = true;
+			parentNode = parentNode.parentNode;
+		}
+		return thereIs;
 	}
 	,isEditable: function(element) {
 		while(element != null) {
@@ -1178,8 +1418,13 @@ com.wiris.js.JsPluginViewer.prototype = {
 		}
 		return false;
 	}
-	,parseElement: function(element) {
+	,parseElement: function(element,asynchronously,callbackFunc) {
 		if(!this.ready) throw "Document is not loaded.";
+		if(callbackFunc == null) callbackFunc = function() {
+		};
+		if(asynchronously == null) {
+			if(this.asyncParam) asynchronously = this.asyncParam;
+		}
 		var mathNodes = element.getElementsByTagName("math");
 		var arr = new Array();
 		var _g1 = 0, _g = mathNodes.length;
@@ -1187,13 +1432,24 @@ com.wiris.js.JsPluginViewer.prototype = {
 			var x = _g1++;
 			if(!this.isEditable(mathNodes[x])) arr.push(mathNodes[x]);
 		}
-		this.replaceNodes(arr,0);
+		this.callsShowImageNumber = arr.length;
+		if(this.callsShowImageNumber == 0) {
+			var _g1 = 0, _g = this.eventListenersArray.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				try {
+					this.eventListenersArray[i].afterParse();
+				} catch( e ) {
+				}
+			}
+		}
+		this.replaceNodes(arr,0,asynchronously,callbackFunc);
 	}
-	,parseDocument: function() {
-		this.parseElement(js.Lib.document);
+	,parseDocument: function(asynchronously,callbackFunc) {
+		this.parseElement(js.Lib.document,asynchronously,callbackFunc);
 	}
 	,doLoad: function() {
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("doLoad",{ fileName : "JsPluginViewer.hx", lineNumber : 104, className : "com.wiris.js.JsPluginViewer", methodName : "doLoad"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("doLoad",{ fileName : "JsPluginViewer.hx", lineNumber : 118, className : "com.wiris.js.JsPluginViewer", methodName : "doLoad"});
 		this.scriptName = "WIRISplugins.js";
 		var col;
 		col = js.Lib.document.getElementsByTagName("script");
@@ -1212,7 +1468,7 @@ com.wiris.js.JsPluginViewer.prototype = {
 					var query = HxOverrides.substr(src,k + 1,null);
 					this.params = this.queryToParams(query);
 				}
-				if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(this.baseURL,{ fileName : "JsPluginViewer.hx", lineNumber : 123, className : "com.wiris.js.JsPluginViewer", methodName : "doLoad"});
+				if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace(this.baseURL,{ fileName : "JsPluginViewer.hx", lineNumber : 137, className : "com.wiris.js.JsPluginViewer", methodName : "doLoad"});
 			}
 		}
 		this.tech = this.getTechnology();
@@ -1241,14 +1497,18 @@ com.wiris.js.JsPluginViewer.prototype = {
 			this.absoluteURL = "/wirispluginengine/integration";
 		}
 		this.ready = true;
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Tech:" + this.tech,{ fileName : "JsPluginViewer.hx", lineNumber : 154, className : "com.wiris.js.JsPluginViewer", methodName : "doLoad"});
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Tech:" + this.tech,{ fileName : "JsPluginViewer.hx", lineNumber : 168, className : "com.wiris.js.JsPluginViewer", methodName : "doLoad"});
 		if(this.params.exists("viewer")) this.viewer = this.params.get("viewer");
+		this.asyncParam = this.params.exists("async") && this.params.get("async") == "true"?true:false;
 		if(this.params.exists("zoom")) this.zoom = Std.parseFloat(this.params.get("zoom"));
 		if(this.params.exists("dpi")) this.zoom *= Std.parseFloat(this.params.get("dpi")) / 96;
 		if(this.params.exists("lang")) this.lang = this.params.get("lang"); else this.lang = "en";
 		if(this.lang == "inherit") this.lang = js.Lib.document.getElementsByTagName("html")[0].lang;
-		if(this.viewer == "image") this.parseDocument();
-		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Language:" + this.lang,{ fileName : "JsPluginViewer.hx", lineNumber : 185, className : "com.wiris.js.JsPluginViewer", methodName : "doLoad"});
+		if(this.viewer == "image") this.parseDocument(); else if(this.viewer == "latex") this.parseLatexDocument(this.asyncParam); else if(this.viewer == "all") {
+			this.parseLatexDocument(this.asyncParam);
+			this.parseDocument(this.asyncParam);
+		}
+		if(com.wiris.js.JsPluginViewer.DEBUG) haxe.Log.trace("Language:" + this.lang,{ fileName : "JsPluginViewer.hx", lineNumber : 198, className : "com.wiris.js.JsPluginViewer", methodName : "doLoad"});
 		com.wiris.js.JsPluginViewer.instance = this;
 		com.wiris.js.JsPluginViewer.bypassEncapsulation();
 	}
@@ -1260,12 +1520,17 @@ com.wiris.js.JsPluginViewer.prototype = {
 		}
 		if(!this.ready) haxe.Timer.delay($bind(this,this.tryReady),100);
 	}
+	,eventListenersArray: null
+	,callsLatexToMathml: null
+	,callsShowImageNumber: null
 	,_wrs_conf_imageFormat: null
 	,ready: null
 	,javaServicePath: null
 	,tech: null
 	,lang: null
+	,wiriseditormathmlattribute: null
 	,performanceenabled: null
+	,asyncParam: null
 	,viewer: null
 	,zoom: null
 	,absoluteURL: null
@@ -1276,6 +1541,705 @@ com.wiris.js.JsPluginViewer.prototype = {
 	,scriptName: null
 	,baseURL: null
 	,__class__: com.wiris.js.JsPluginViewer
+}
+if(!com.wiris.system) com.wiris.system = {}
+com.wiris.system.JsBrowserData = $hxClasses["com.wiris.system.JsBrowserData"] = function() {
+};
+com.wiris.system.JsBrowserData.__name__ = ["com","wiris","system","JsBrowserData"];
+com.wiris.system.JsBrowserData.prototype = {
+	identity: null
+	,versionSearch: null
+	,subString: null
+	,prop: null
+	,string: null
+	,__class__: com.wiris.system.JsBrowserData
+}
+com.wiris.system.JsOSData = $hxClasses["com.wiris.system.JsOSData"] = function() {
+};
+com.wiris.system.JsOSData.__name__ = ["com","wiris","system","JsOSData"];
+com.wiris.system.JsOSData.prototype = {
+	identity: null
+	,subString: null
+	,string: null
+	,__class__: com.wiris.system.JsOSData
+}
+com.wiris.system.JsBrowser = $hxClasses["com.wiris.system.JsBrowser"] = function() {
+	this.dataBrowser = new Array();
+	this.addBrowser("navigator.userAgent",null,"Edge",null,"Edge");
+	this.addBrowser("navigator.userAgent",null,"Chrome",null,"Chrome");
+	this.addBrowser("navigator.userAgent",null,"OmniWeb",null,"OmniWeb");
+	this.addBrowser("navigator.vendor",null,"Apple","Version","Safari");
+	this.addBrowser(null,"window.opera",null,"Version","Opera");
+	this.addBrowser("navigator.vendor",null,"iCab",null,"iCab");
+	this.addBrowser("navigator.vendor",null,"KDE",null,"Konkeror");
+	this.addBrowser("navigator.userAgent",null,"Firefox",null,"Firefox");
+	this.addBrowser("navigator.vendor",null,"Camino",null,"Camino");
+	this.addBrowser("navigator.userAgent",null,"Netscape",null,"Netscape");
+	this.addBrowser("navigator.userAgent",null,"MSIE","MSIE","Explorer");
+	this.addBrowser("navigator.userAgent",null,"Trident","rv","Explorer");
+	this.addBrowser("navigator.userAgent",null,"Gecko","rv","Mozilla");
+	this.addBrowser("navigator.userAgent",null,"Mozilla","Mozilla","Netscape");
+	this.dataOS = new Array();
+	this.addOS("navigator.platform","Win","Windows");
+	this.addOS("navigator.platform","Mac","Mac");
+	this.addOS("navigator.userAgent","iPhone","iOS");
+	this.addOS("navigator.userAgent","iPad","iOS");
+	this.addOS("navigator.userAgent","Android","Android");
+	this.addOS("navigator.platform","Linux","Linux");
+	this.setBrowser();
+	this.setOS();
+	this.setTouchable();
+};
+com.wiris.system.JsBrowser.__name__ = ["com","wiris","system","JsBrowser"];
+com.wiris.system.JsBrowser.prototype = {
+	isTouchable: function() {
+		return this.touchable;
+	}
+	,isAndroid: function() {
+		return this.os == "Android";
+	}
+	,isMac: function() {
+		return this.os == "Mac";
+	}
+	,isIOS: function() {
+		return this.os == "iOS";
+	}
+	,isFF: function() {
+		return this.browser == "Firefox";
+	}
+	,isSafari: function() {
+		return this.browser == "Safari";
+	}
+	,isChrome: function() {
+		return this.browser == "Chrome";
+	}
+	,isEdge: function() {
+		return this.browser == "Edge";
+	}
+	,isIE: function() {
+		return this.browser == "Explorer";
+	}
+	,getVersion: function() {
+		return this.ver;
+	}
+	,getOS: function() {
+		return this.os;
+	}
+	,getBrowser: function() {
+		return this.browser;
+	}
+	,searchVersion: function(prop,search) {
+		var str = js.Boot.__cast(eval(prop) , String);
+		var index = str.indexOf(search);
+		if(index == -1) return null;
+		return "" + Std.parseFloat(HxOverrides.substr(str,index + search.length + 1,null));
+	}
+	,setTouchable: function() {
+		if(this.isIOS() || this.isAndroid()) {
+			this.touchable = true;
+			return;
+		}
+		this.touchable = false;
+	}
+	,setOS: function() {
+		var i = HxOverrides.iter(this.dataOS);
+		while(i.hasNext()) {
+			var s = i.next();
+			var str = js.Boot.__cast(eval(s.string) , String);
+			if(str.indexOf(s.subString) != -1) {
+				this.os = s.identity;
+				return;
+			}
+		}
+	}
+	,setBrowser: function() {
+		var i = HxOverrides.iter(this.dataBrowser);
+		while(i.hasNext()) {
+			var b = i.next();
+			if(b.string != null) {
+				var obj = eval(b.string);
+				if(obj != null) {
+					var str = js.Boot.__cast(obj , String);
+					if(str.indexOf(b.subString) != -1) {
+						this.browser = b.identity;
+						this.ver = this.searchVersion("navigator.userAgent",b.versionSearch);
+						if(this.ver == null) this.ver = this.searchVersion("navigator.appVersion",b.versionSearch);
+						return;
+					}
+				}
+			}
+		}
+	}
+	,addOS: function(string,subString,identity) {
+		var s = new com.wiris.system.JsOSData();
+		s.string = string;
+		s.subString = subString;
+		s.identity = identity;
+		this.dataOS.push(s);
+	}
+	,addBrowser: function(string,prop,subString,versionSearch,identity) {
+		var b = new com.wiris.system.JsBrowserData();
+		b.string = string;
+		b.prop = prop;
+		b.subString = subString;
+		b.versionSearch = versionSearch != null?versionSearch:identity;
+		b.identity = identity;
+		this.dataBrowser.push(b);
+	}
+	,touchable: null
+	,os: null
+	,ver: null
+	,browser: null
+	,dataOS: null
+	,dataBrowser: null
+	,__class__: com.wiris.system.JsBrowser
+}
+com.wiris.system.JsDOMUtils = $hxClasses["com.wiris.system.JsDOMUtils"] = function() { }
+com.wiris.system.JsDOMUtils.__name__ = ["com","wiris","system","JsDOMUtils"];
+com.wiris.system.JsDOMUtils.ieTouchEvents = null;
+com.wiris.system.JsDOMUtils.init = function() {
+	if(com.wiris.system.JsDOMUtils.initialized) return;
+	com.wiris.system.JsDOMUtils.ieTouchEvents = new Hash();
+	com.wiris.system.JsDOMUtils.ieTouchEvents.set("touchstart","MSPointerDown");
+	com.wiris.system.JsDOMUtils.ieTouchEvents.set("touchmove","MSPointerMove");
+	com.wiris.system.JsDOMUtils.ieTouchEvents.set("touchend","MSPointerUp");
+	com.wiris.system.JsDOMUtils.initialized = true;
+	com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"MSPointerDown",function(e) {
+		com.wiris.system.JsDOMUtils.internetExplorerPointers.set("" + e.pointerId,e);
+	});
+	com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"MSPointerUp",function(e) {
+		com.wiris.system.JsDOMUtils.internetExplorerPointers = new Hash();
+	});
+	com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"scroll",function(e) {
+		com.wiris.system.JsDOMUtils.internetExplorerPointers = new Hash();
+	});
+	var touched = false;
+	var triggerEvents = function(listeners) {
+		var i = HxOverrides.iter(listeners);
+		while(i.hasNext()) {
+			var callbackFunction = i.next();
+			callbackFunction();
+		}
+	};
+	com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"touchstart",function(e) {
+		if(!com.wiris.system.JsDOMUtils.browser.touchable) {
+			com.wiris.system.JsDOMUtils.browser.touchable = true;
+			triggerEvents(com.wiris.system.JsDOMUtils.touchDeviceListeners);
+		}
+		touched = true;
+	});
+	var onTouchEnd = function(e) {
+		if(!com.wiris.system.JsDOMUtils.browser.touchable) {
+			com.wiris.system.JsDOMUtils.browser.touchable = true;
+			triggerEvents(com.wiris.system.JsDOMUtils.touchDeviceListeners);
+		}
+		touched = true;
+		setTimeout(function() {
+			touched = false;
+		},500);
+	};
+	com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"touchend",onTouchEnd);
+	com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"touchleave",onTouchEnd);
+	com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"touchcancel",onTouchEnd);
+	com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"mousemove",function(e) {
+		if(!touched) {
+			if(com.wiris.system.JsDOMUtils.browser.touchable) {
+				com.wiris.system.JsDOMUtils.browser.touchable = false;
+				triggerEvents(com.wiris.system.JsDOMUtils.mouseDeviceListeners);
+			}
+		}
+	});
+}
+com.wiris.system.JsDOMUtils.addEventListener = function(element,eventName,handler) {
+	return com.wiris.system.JsDOMUtils.addEventListenerImpl(element,eventName,handler,false);
+}
+com.wiris.system.JsDOMUtils.addEventListenerImpl = function(element,eventName,handler,useCapture) {
+	if(navigator.msPointerEnabled && com.wiris.system.JsDOMUtils.ieTouchEvents.exists(eventName)) {
+		eventName = com.wiris.system.JsDOMUtils.ieTouchEvents.get(eventName);
+		return com.wiris.system.JsDOMUtils.addEventListenerImpl(element,eventName,function(e) {
+			if(e.pointerType == "touch") {
+				if(eventName == "MSPointerUp") com.wiris.system.JsDOMUtils.internetExplorerPointers.remove("" + e.pointerId); else com.wiris.system.JsDOMUtils.internetExplorerPointers.set("" + e.pointerId,e);
+				e.touches = new Array();
+				var i = com.wiris.system.JsDOMUtils.internetExplorerPointers.iterator();
+				while(i.hasNext()) e.touches.push(i.next());
+				handler(e);
+			}
+		},useCapture);
+	}
+	if(eventName == "touchhold" && com.wiris.system.JsDOMUtils.browser.isTouchable()) {
+		var timeout = null;
+		var startX = -1;
+		var startY = -1;
+		var descriptor = com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"touchstart",function(e) {
+			touching = true;
+			startX = e.touches[0].clientX;
+			startY = e.touches[0].clientY;
+			timeout = setTimeout(function() {
+				timeout = null;
+				handler(e);
+			},500);
+		},useCapture);
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"touchmove",function(e) {
+			if(timeout != null) {
+				if(Math.abs(e.touches[0].clientX - startX) > com.wiris.system.JsDOMUtils.TOUCHHOLD_MOVE_MARGIN || Math.abs(e.touches[0].clientY - startY) > com.wiris.system.JsDOMUtils.TOUCHHOLD_MOVE_MARGIN) {
+					clearTimeout(timeout);
+					timeout = null;
+				} else com.wiris.system.JsDOMUtils.cancelEvent(e);
+			}
+		},useCapture));
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"touchend",function(e) {
+			if(timeout != null) {
+				clearTimeout(timeout);
+				timeout = null;
+			}
+		},useCapture));
+		return descriptor;
+	}
+	var descriptor = { };
+	descriptor.element = element;
+	descriptor.eventName = eventName;
+	descriptor.handler = handler;
+	descriptor.useCapture = useCapture;
+	descriptor.subDescriptors = new Array();
+	if(eventName == "dblclick") {
+		var event = null;
+		var touching = false;
+		var firstClickTimestamp = null;
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"touchstart",function(e) {
+			touching = true;
+			event = e;
+		},useCapture));
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"touchmove",function(e) {
+			touching = false;
+		},useCapture));
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"touchend",function(e) {
+			if(touching) {
+				touching = false;
+				var currentTimestamp = new Date().getTime();
+				if(firstClickTimestamp == null || currentTimestamp > firstClickTimestamp + 500) firstClickTimestamp = currentTimestamp; else {
+					event._wrs_dealAsTouch = true;
+					handler(e);
+				}
+			}
+		},useCapture));
+	} else if(eventName == "fullscreenchange") {
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"webkitfullscreenchange",handler,useCapture));
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"mozfullscreenchange",handler,useCapture));
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"MSFullscreenChange",handler,useCapture));
+		descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListenerImpl(element,"wrs_fullscreenchange",handler,useCapture));
+	}
+	if(element.attachEvent) element.attachEvent("on" + eventName,function() {
+		handler(window.event);
+	}); else element.addEventListener(eventName,handler,useCapture);
+	return descriptor;
+}
+com.wiris.system.JsDOMUtils.removeEventListener = function(descriptor) {
+	if(com.wiris.system.JsDOMUtils.browser.isIE() && descriptor.element.detachEvent) descriptor.element.detachEvent("on" + Std.string(descriptor.eventName),descriptor.handler); else descriptor.element.removeEventListener(descriptor.eventName,descriptor.handler,descriptor.useCapture);
+	var i = $iterator(descriptor.subDescriptors)();
+	while(i.hasNext()) com.wiris.system.JsDOMUtils.removeEventListener(i.next());
+}
+com.wiris.system.JsDOMUtils.cancelEvent = function(e) {
+	if(e.preventDefault) e.preventDefault(); else e.returnValue = false;
+}
+com.wiris.system.JsDOMUtils.fireEvent = function(element,eventName) {
+	var event;
+	if(document.createEvent) {
+		event = document.createEvent("HTMLEvents");
+		event.initEvent(eventName,true,true);
+		event.eventName = eventName;
+		element.dispatchEvent(event);
+	} else {
+		event = document.createEventObject();
+		event.eventType = eventName;
+		event.eventName = eventName;
+		element.fireEvent("on" + eventName,event);
+	}
+}
+com.wiris.system.JsDOMUtils.getComputedStyle = function(element) {
+	if(element.currentStyle) return element.currentStyle;
+	return document.defaultView.getComputedStyle(element,null);
+}
+com.wiris.system.JsDOMUtils.getComputedStyleProperty = function(element,name) {
+	var value;
+	if(document.defaultView && document.defaultView.getComputedStyle) {
+		var computedStyle = document.defaultView.getComputedStyle(element,null);
+		value = computedStyle == null?null:computedStyle.getPropertyValue(name);
+	} else if(com.wiris.system.JsDOMUtils.browser.isIE() && element.currentStyle) {
+		var camelName = com.wiris.system.JsDOMUtils.camelize(name);
+		value = element.currentStyle[camelName];
+		if(value != null && value.length > 0 && camelName != "zoom") {
+			var firstChar = HxOverrides.cca(value,0);
+			if(firstChar >= 48 && firstChar <= 57 && !StringTools.endsWith(value,"px")) {
+				var originalLeft = element.style.left;
+				var originalRuntimeLeft = element.runtimeStyle?element.runtimeStyle.left:null;
+				if(originalRuntimeLeft != null) element.runtimeStyle.left = element.currentStyle.left;
+				element.style.left = camelName == "fontSize"?"1em":value;
+				value = element.style.pixelLeft + "px";
+				element.style.left = originalLeft;
+				if(originalRuntimeLeft != null) element.runtimeStyle.left = originalRuntimeLeft;
+			}
+		}
+	} else value = element.style[com.wiris.system.JsDOMUtils.camelize(name)];
+	return value;
+}
+com.wiris.system.JsDOMUtils.camelize = function(str) {
+	var start = 0;
+	var pos;
+	var sb = new StringBuf();
+	while((pos = str.indexOf("-",start)) != -1) {
+		sb.b += Std.string(HxOverrides.substr(str,start,pos - start));
+		sb.b += Std.string(str.charAt(pos + 1).toUpperCase());
+		start = pos + 2;
+	}
+	sb.b += Std.string(HxOverrides.substr(str,start,null));
+	return sb.b;
+}
+com.wiris.system.JsDOMUtils.getElementsByClassName = function(parent,className,recursive) {
+	var returnValue = new Array();
+	var _g1 = 0, _g = parent.childNodes.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		if(com.wiris.system.JsDOMUtils.hasClass(parent.childNodes[i],className)) returnValue.push(parent.childNodes[i]);
+		if(recursive) returnValue = returnValue.concat(com.wiris.system.JsDOMUtils.getElementsByClassName(parent.childNodes[i],className,true));
+	}
+	return returnValue;
+}
+com.wiris.system.JsDOMUtils.getEventTarget = function(event) {
+	if(event.srcElement) return event.srcElement;
+	return event.target;
+}
+com.wiris.system.JsDOMUtils.getLeft = function(element) {
+	return element.getBoundingClientRect().left;
+}
+com.wiris.system.JsDOMUtils.getRelativeLeft = function(element,parent) {
+	if(parent == null) return com.wiris.system.JsDOMUtils.getLeft(element);
+	return com.wiris.system.JsDOMUtils.getLeft(element) - com.wiris.system.JsDOMUtils.getLeft(parent);
+}
+com.wiris.system.JsDOMUtils.getTop = function(element) {
+	return element.getBoundingClientRect().top;
+}
+com.wiris.system.JsDOMUtils.getRelativeTop = function(element,parent) {
+	if(parent == null) return com.wiris.system.JsDOMUtils.getTop(element);
+	return com.wiris.system.JsDOMUtils.getTop(element) - com.wiris.system.JsDOMUtils.getTop(parent);
+}
+com.wiris.system.JsDOMUtils.getWindowScroll = function() {
+	var scroll = new Array();
+	if(js.Lib.window.pageYOffset == undefined) {
+		scroll[0] = js.Lib.document.documentElement.scrollLeft;
+		scroll[1] = js.Lib.document.documentElement.scrollTop;
+	} else {
+		scroll[0] = js.Lib.window.pageXOffset;
+		scroll[1] = js.Lib.window.pageYOffset;
+	}
+	return scroll;
+}
+com.wiris.system.JsDOMUtils.setWindowScroll = function(scroll) {
+	js.Lib.window.scrollTo(js.Boot.__cast(scroll[0] , Int),js.Boot.__cast(scroll[1] , Int));
+}
+com.wiris.system.JsDOMUtils.isLeftBidiAware = function(keyCode,rtl) {
+	return keyCode == 37 && !rtl || keyCode == 39 && rtl;
+}
+com.wiris.system.JsDOMUtils.getFirstDisplayedChild = function(parent) {
+	var child = parent != null?parent.firstChild:parent;
+	while(child != null) {
+		if(com.wiris.system.JsDOMUtils.getComputedStyleProperty(child,"display") != "none") return child;
+		child = child.nextSibling;
+	}
+	return null;
+}
+com.wiris.system.JsDOMUtils.isDescendant = function(parent,possibleDescendant) {
+	if(possibleDescendant.parentNode == null) return false;
+	if(possibleDescendant.parentNode == parent) return true;
+	return com.wiris.system.JsDOMUtils.isDescendant(parent,possibleDescendant.parentNode);
+}
+com.wiris.system.JsDOMUtils.parseDimension = function(x) {
+	return x < 0 || x == null?0:x;
+}
+com.wiris.system.JsDOMUtils.removeChildren = function(element) {
+	while(element.firstChild != null) element.removeChild(element.firstChild);
+}
+com.wiris.system.JsDOMUtils.hasClass = function(element,className) {
+	if(element == null || element.className == null || !(element.className.split)) return false;
+	var classes = element.className.split(" ");
+	var i = HxOverrides.iter(classes);
+	while(i.hasNext()) if(i.next() == className) return true;
+	return false;
+}
+com.wiris.system.JsDOMUtils.addClass = function(element,className) {
+	if(element == null) return;
+	if(element.className == "") element.className = className; else if(!com.wiris.system.JsDOMUtils.hasClass(element,className)) element.className += " " + className;
+}
+com.wiris.system.JsDOMUtils.removeClass = function(element,className) {
+	if(element == null || element.className == null || !(element.className.split)) return;
+	var classes = element.className.split(" ");
+	HxOverrides.remove(classes,className);
+	element.className = classes.join(" ");
+}
+com.wiris.system.JsDOMUtils.toggleClass = function(element,className) {
+	if(com.wiris.system.JsDOMUtils.hasClass(element,className)) com.wiris.system.JsDOMUtils.removeClass(element,className); else com.wiris.system.JsDOMUtils.addClass(element,className);
+}
+com.wiris.system.JsDOMUtils.activateClass = function(element,className) {
+	if(!com.wiris.system.JsDOMUtils.hasClass(element,className)) com.wiris.system.JsDOMUtils.addClass(element,className);
+}
+com.wiris.system.JsDOMUtils.setCaretPosition = function(element,position,end) {
+	if(element.setSelectionRange) element.setSelectionRange(position,end); else if(element.createTextRange) {
+		var range = element.createTextRange();
+		range.collapse(true);
+		range.moveStart("character",position);
+		range.moveEnd("character",end);
+		range.select();
+	}
+}
+com.wiris.system.JsDOMUtils.getSelectionBounds = function(element) {
+	var bounds = new Array();
+	if(element.selectionStart != null) {
+		bounds[0] = element.selectionStart;
+		bounds[1] = element.selectionEnd;
+		return bounds;
+	}
+	var range = document.selection.createRange();
+	if(range && range.parentElement() == element) {
+		var length = element.value.length;
+		var normalizedValue = element.value.split("\r\n").join("\n");
+		var textInputRange = element.createTextRange();
+		textInputRange.moveToBookmark(range.getBookmark());
+		var endRange = element.createTextRange();
+		endRange.collapse(false);
+		if(textInputRange.compareEndPoints("StartToEnd",endRange) > -1) bounds[0] = bounds[1] = length; else {
+			bounds[0] = -textInputRange.moveStart("character",-length);
+			bounds[0] += normalizedValue.slice(0,bounds[0]).split("\n").length - 1;
+			if(textInputRange.compareEndPoints("EndToEnd",endRange) > -1) bounds[1] = length; else {
+				bounds[1] = -textInputRange.moveEnd("character",-length);
+				bounds[1] += normalizedValue.slice(0,bounds[1]).split("\n").length - 1;
+			}
+		}
+		return bounds;
+	}
+	return null;
+}
+com.wiris.system.JsDOMUtils.getMousePosition = function(target,e) {
+	if(e._wrs_dealAsTouch) return com.wiris.system.JsDOMUtils.getTouchPosition(target,e.touches[0]);
+	var elementScroll = new Array();
+	elementScroll[0] = target.scrollLeft;
+	elementScroll[1] = target.scrollTop;
+	return com.wiris.system.JsDOMUtils.getMousePositionImpl(target,e,elementScroll,0);
+}
+com.wiris.system.JsDOMUtils.getMousePositionImpl = function(target,e,elementScroll,border) {
+	var position = new Array();
+	position[0] = e.clientX - com.wiris.system.JsDOMUtils.getLeft(target) - border + elementScroll[0];
+	position[1] = e.clientY - com.wiris.system.JsDOMUtils.getTop(target) - border + elementScroll[1];
+	return position;
+}
+com.wiris.system.JsDOMUtils.inFixedParent = function(element) {
+	while(element != null) {
+		if(com.wiris.system.JsDOMUtils.getComputedStyleProperty(element,"position") == "fixed") return true;
+		element = element.offsetParent;
+	}
+	return false;
+}
+com.wiris.system.JsDOMUtils.getTouchPosition = function(target,touch) {
+	var elementScroll = new Array();
+	elementScroll[0] = target.scrollLeft;
+	elementScroll[1] = target.scrollTop;
+	return com.wiris.system.JsDOMUtils.getTouchPositionImpl(target,touch,elementScroll,0);
+}
+com.wiris.system.JsDOMUtils.getTouchPositionImpl = function(target,touch,elementScroll,border) {
+	var position = new Array();
+	position[0] = touch.clientX - com.wiris.system.JsDOMUtils.getLeft(target) - border + elementScroll[0];
+	position[1] = touch.clientY - com.wiris.system.JsDOMUtils.getTop(target) - border + elementScroll[1];
+	return position;
+}
+com.wiris.system.JsDOMUtils.getStandardButton = function(e) {
+	if(com.wiris.system.JsDOMUtils.browser.isTouchable()) return 0;
+	var button = e.button;
+	if(com.wiris.system.JsDOMUtils.browser.isIE()) {
+		if(button == 1) button = 0; else if(button == 4) button = 1;
+	}
+	return button;
+}
+com.wiris.system.JsDOMUtils.vibrate = function(milliseconds) {
+	if(navigator.vibrate) navigator.vibrate(milliseconds);
+}
+com.wiris.system.JsDOMUtils.onTouchDeviceDetected = function(callbackFunction) {
+	com.wiris.system.JsDOMUtils.init();
+	com.wiris.system.JsDOMUtils.touchDeviceListeners.push(callbackFunction);
+}
+com.wiris.system.JsDOMUtils.onMouseDeviceDetected = function(callbackFunction) {
+	com.wiris.system.JsDOMUtils.init();
+	com.wiris.system.JsDOMUtils.mouseDeviceListeners.push(callbackFunction);
+}
+com.wiris.system.JsDOMUtils.findScriptElement = function(reg) {
+	var scripts = js.Lib.document.getElementsByTagName("script");
+	var n = scripts.length;
+	var i = 0;
+	while(i < n) {
+		var src = scripts[i].getAttribute("src");
+		if(reg.match(src)) return scripts[i];
+		++i;
+	}
+	return null;
+}
+com.wiris.system.JsDOMUtils.rewriteDefaultPaths = function(contextPath) {
+	if(window.com.wiris.js.defaultServicePath != null && StringTools.startsWith(window.com.wiris.js.defaultServicePath,"http://")) {
+		var protocol = js.Lib.window.location.protocol;
+		var defaultServicePathWithoutProtocol = window.com.wiris.js.defaultServicePath.substr("http:".length);
+		var reg = new EReg("(http:|https:)" + defaultServicePathWithoutProtocol + "/" + contextPath,"");
+		if(com.wiris.system.JsDOMUtils.findScriptElement(reg) != null) protocol = reg.matched(1);
+		if(protocol == "https:") {
+			window.com.wiris.js.defaultServicePath = "https:" + defaultServicePathWithoutProtocol;
+			if(window.com.wiris.js.defaultBasePath != null) window.com.wiris.js.defaultBasePath = "https:" + window.com.wiris.js.defaultBasePath.substr("http:".length);
+		}
+	}
+}
+com.wiris.system.JsDOMUtils.createCSSRules = function(selector,rules) {
+	var style = js.Lib.document.createElement("style");
+	style.type = "text/css";
+	js.Lib.document.getElementsByTagName("head")[0].appendChild(style);
+	if(style.sheet != null && style.sheet.insertRule != null) style.sheet.insertRule(selector + "{" + rules + "}",0); else if(style.styleSheet != null) style.styleSheet.addRule(selector,rules); else if(style.sheet != null) style.sheet.addRule(selector,rules);
+}
+com.wiris.system.JsDOMUtils.enterFullscreen = function(element) {
+	document.wrs_fullscreen = true;
+	document.wrs_fullscreenElement = element;
+	com.wiris.system.JsDOMUtils.addClass(element,"wrs_aux_fullscreen");
+	com.wiris.system.JsDOMUtils.fireEvent(document,"wrs_fullscreenchange");
+}
+com.wiris.system.JsDOMUtils.exitFullscreen = function() {
+	if(document.wrs_fullscreenElement != null) com.wiris.system.JsDOMUtils.removeClass(document.wrs_fullscreenElement,"wrs_aux_fullscreen");
+	document.wrs_fullscreenElement = null;
+	document.wrs_fullscreen = false;
+	com.wiris.system.JsDOMUtils.fireEvent(document,"wrs_fullscreenchange");
+}
+com.wiris.system.JsDOMUtils.isFullscreen = function(element) {
+	if(element == null) return document.wrs_fullscreen || document.fullscreen || document.mozFullScreen || document.webkitIsFullScreen || document.msFullscreenElement;
+	return document.wrs_fullscreenElement == element || document.fullscreenElement == element || document.mozFullScreenElement == element || document.webkitFullscreenElement || document.msFullscreenElement == element;
+}
+com.wiris.system.JsDOMUtils.execCommand = function(command) {
+	return document.execCommand(command);
+}
+com.wiris.system.JsDOMUtils.findServicePath = function(scriptName) {
+	var scriptTags = js.Lib.document.getElementsByTagName("script");
+	var servicePath = null;
+	var _g1 = 0, _g = scriptTags.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		var src = scriptTags[i].src;
+		var j = src.lastIndexOf("/" + scriptName);
+		if(j >= 0) servicePath = HxOverrides.substr(src,0,j); else if(src == scriptName) servicePath = "";
+	}
+	if(servicePath != null && StringTools.startsWith(servicePath,"http://") && js.Lib.window.location.protocol == "https:") servicePath = "https://" + HxOverrides.substr(servicePath,"http://".length,null);
+	return servicePath;
+}
+com.wiris.system.JsDOMUtils.loadTextFile = function(elem,func) {
+	var w = js.Lib.window;
+	if(w.File && w.FileReader && w.FileList && w.Blob) {
+		var d = elem.ownerDocument;
+		var fileInput = d.createElement("input");
+		fileInput.setAttribute("name","data");
+		fileInput.setAttribute("type","file");
+		elem.appendChild(fileInput);
+		com.wiris.system.JsDOMUtils.init();
+		com.wiris.system.JsDOMUtils.addEventListener(fileInput,"change",function(e) {
+			if(fileInput.files.length) {
+				var file = fileInput.files[0];
+				var reader = new FileReader();
+				reader.onload = function(le) {
+					func(le.target.result);
+				};
+				reader.readAsText(file);
+			}
+			elem.removeChild(fileInput);
+		});
+		fileInput.click();
+	} else throw "Browser incompatible with JavaScript File API.";
+}
+com.wiris.system.JsDOMUtils.saveTextFile = function(elem,filename,filetype,contents) {
+	var d = elem.ownerDocument;
+	var w = js.Lib.window;
+	if(w.Blob) {
+		var blob = new Blob([contents], {'type': filetype});
+		var a = d.createElement("a");
+		if('download' in a && w.URL) {
+			a.href = w.URL.createObjectURL(blob);
+			a.download = filename;
+			elem.appendChild(a);
+			a.click();
+			elem.removeChild(a);
+			return;
+		}
+	}
+	throw "Browser incompatible with HTML object download anchors.";
+}
+com.wiris.system.JsDOMUtils.trapFocus = function(disabledFocusContainer,focusableContainer) {
+	var lastScroll = com.wiris.system.JsDOMUtils.getWindowScroll();
+	var previousFocused = focusableContainer;
+	var descriptor = com.wiris.system.JsDOMUtils.addEventListener(js.Lib.document,"focusin",function(e) {
+		previousFocused = com.wiris.system.JsDOMUtils.getEventTarget(e);
+	});
+	descriptor.subDescriptors.push(com.wiris.system.JsDOMUtils.addEventListener(disabledFocusContainer,"focusin",function(e) {
+		var focusedElement = com.wiris.system.JsDOMUtils.getEventTarget(e);
+		if(!com.wiris.system.JsDOMUtils.isDescendant(focusableContainer,focusedElement)) {
+			com.wiris.system.JsDOMUtils.setWindowScroll(lastScroll);
+			var focusableElements = com.wiris.system.JsDOMUtils.getFocusableElements(js.Lib.document.body);
+			var focusedElementIndex = 0;
+			while(focusedElementIndex < focusableElements.length) {
+				if(focusableElements[focusedElementIndex] == focusedElement) break;
+				++focusedElementIndex;
+			}
+			var direction = previousFocused == focusedElement || com.wiris.system.JsDOMUtils.elementIsBefore(previousFocused,focusedElement)?1:-1;
+			com.wiris.system.JsDOMUtils.findFocusableAlternative(focusableElements,disabledFocusContainer,focusableContainer,focusedElementIndex,direction).focus();
+			e.stopPropagation();
+		} else lastScroll = com.wiris.system.JsDOMUtils.getWindowScroll();
+	}));
+	return descriptor;
+}
+com.wiris.system.JsDOMUtils.findFocusableAlternative = function(focusableElements,disabledFocusContainer,focusableContainer,focusedElementIndex,direction) {
+	focusedElementIndex += direction;
+	while(focusedElementIndex >= 0 && focusedElementIndex < focusableElements.length && com.wiris.system.JsDOMUtils.isDescendant(disabledFocusContainer,focusableElements[focusedElementIndex]) && !com.wiris.system.JsDOMUtils.isDescendant(focusableContainer,focusableElements[focusedElementIndex])) focusedElementIndex += direction;
+	if(focusedElementIndex < 0) return com.wiris.system.JsDOMUtils.findFocusableAlternative(focusableElements,disabledFocusContainer,focusableContainer,focusableElements.length - 1,-1);
+	if(focusedElementIndex >= focusableElements.length) return com.wiris.system.JsDOMUtils.findFocusableAlternative(focusableElements,disabledFocusContainer,focusableContainer,0,1);
+	return focusableElements[focusedElementIndex];
+}
+com.wiris.system.JsDOMUtils.untrapFocus = function(descriptor) {
+	com.wiris.system.JsDOMUtils.removeEventListener(descriptor);
+}
+com.wiris.system.JsDOMUtils.getFocusableElements = function(container) {
+	var elements = container.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex=\"-1\"])");
+	var focusableElements = new Array();
+	var i = 0;
+	while(i < elements.length) {
+		if(com.wiris.system.JsDOMUtils.getComputedStyleProperty(elements[i],"display") != "none" && com.wiris.system.JsDOMUtils.getComputedStyleProperty(elements[i],"visibility") != "hidden") focusableElements.push(elements[i]);
+		++i;
+	}
+	return focusableElements;
+}
+com.wiris.system.JsDOMUtils.elementIsBefore = function(elementA,elementB) {
+	if(elementA == elementB) throw "Trying to compare the same element.";
+	var pathA = com.wiris.system.JsDOMUtils.getElementPath(elementA);
+	var pathB = com.wiris.system.JsDOMUtils.getElementPath(elementB);
+	var i = 1;
+	var n = Math.min(pathA.length,pathB.length) | 0;
+	while(i < n) {
+		if(pathA[i] != pathB[i]) return com.wiris.system.JsDOMUtils.getElementChildIndex(pathA[i]) < com.wiris.system.JsDOMUtils.getElementChildIndex(pathB[i]);
+		++i;
+	}
+	return false;
+}
+com.wiris.system.JsDOMUtils.getElementPath = function(element) {
+	var path = new Array();
+	while(element != null) {
+		path.splice(0,0,element);
+		element = element.parentNode;
+	}
+	return path;
+}
+com.wiris.system.JsDOMUtils.getElementChildIndex = function(element) {
+	if(element.parentNode == null) return -1;
+	var i = 0;
+	while(i < element.parentNode.childNodes.length) {
+		if(element.parentNode.childNodes[i] == element) return i;
+		++i;
+	}
+	return -1;
 }
 var haxe = haxe || {}
 haxe.Http = $hxClasses["haxe.Http"] = function(url) {
@@ -2759,6 +3723,7 @@ js.Lib.eval = function(code) {
 js.Lib.setErrorHandler = function(f) {
 	js.Lib.onerror = f;
 }
+function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
 var $_;
 function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
 if(Array.prototype.indexOf) HxOverrides.remove = function(a,o) {
@@ -2821,6 +3786,13 @@ js.XMLHttpRequest = window.XMLHttpRequest?XMLHttpRequest:window.ActiveXObject?fu
 com.wiris.js.JsPluginViewer.USE_CREATE_IMAGE = 1;
 com.wiris.js.JsPluginViewer.DEBUG = false;
 com.wiris.js.JsPluginViewer.TECH = "java";
+com.wiris.js.JsPluginViewer.VERSION = "7.8.0.1398";
+com.wiris.system.JsDOMUtils.TOUCHHOLD_MOVE_MARGIN = 10;
+com.wiris.system.JsDOMUtils.browser = new com.wiris.system.JsBrowser();
+com.wiris.system.JsDOMUtils.initialized = false;
+com.wiris.system.JsDOMUtils.touchDeviceListeners = new Array();
+com.wiris.system.JsDOMUtils.mouseDeviceListeners = new Array();
+com.wiris.system.JsDOMUtils.internetExplorerPointers = new Hash();
 haxe.Serializer.USE_CACHE = false;
 haxe.Serializer.USE_ENUM_INDEX = false;
 haxe.Serializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";

@@ -72,7 +72,7 @@ function updateHTMLCode(){
 
 
 /**
- * Changes WIRIS plugin save mode.
+ * Changes MathType integration save mode.
  * 1.- xml: default mode, stores formulas as mathml.
  * 2.- image: stores formulas as images.
  * 3.- base64: stores formulas as base64 images.
@@ -109,8 +109,12 @@ function updateHTMLCode(){
  * the background color and the formula color.
  */
  function setParameters() {
-	// We set WIRIS editor parameters on editor_parameters textarea.
+	// We set MathType Web parameters on editor_parameters textarea.
 	var e = document.getElementById("editor_parameters");
+
+	if (typeof _wrs_modalWindow != undefined) {
+		_wrs_modalWindow = undefined;
+	}
 
 	// Auxiliary method to check a valid JSON. For demo purposes only.
 	if (checkValidJson()) {
@@ -119,6 +123,28 @@ function updateHTMLCode(){
 		setParametersSpecificPlugin(jsonParams);
 	}
 }
+
+/**
+* This code sets body in rtl mode when language is rtl
+**/
+if(typeof _wrs_int_langCode !== 'undefined') {
+	if (_wrs_int_langCode == "ar" || _wrs_int_langCode == "he" ) {
+		document.body.style.direction = 'rtl';
+	}
+}
+/**
+* When body is load, we set language value to select language element.
+**/
+window.addEventListener('DOMContentLoaded', function() {
+    // When lang code is setted
+    if (typeof _wrs_int_langCode !== 'undefined') {
+        var selectLang = document.getElementById('lang_select');
+        // If select exists
+        if (selectLang != 'undefined') {
+            selectLang.value = _wrs_int_langCode;
+        }
+    }
+}, false);
 
 /**
  * Auxiliary functions. For demo purposes.
@@ -158,7 +184,7 @@ function updateHTMLCode(){
 
 
 /**
- * Changes WIRIS plugin language and - if it possible - WYSIWYG editor language. For demo purposes.
+ * Changes MathType integration language and - if it possible - WYSIWYG editor language. For demo purposes.
  */
  function changeLanguage() {
  	var e = document.getElementById("lang_select");
@@ -173,7 +199,8 @@ function updateHTMLCode(){
 	}
 
 	// We need to reset the WYSIWYG editor to change the language.
-	resetEditor(lang, getWirisEditorParameters());
+	// resetEditor(lang, getWirisEditorParameters());
+	window.location.search = 'language=' + lang;
 }
 
 /**
@@ -230,7 +257,7 @@ function updateHTMLCode(){
  function highlightCode() {
 
  	var htmlcode_div = document.getElementById("htmlcode_div");
- 	
+
  	var html_content = htmlcode_div.innerHTML;
  	var open_highlight = "<pre class='language-xml wrs_inline' style='word-wrap:break-word;background-color:white'><code>";
  	var close_highlight = "</code></pre>";
@@ -238,8 +265,7 @@ function updateHTMLCode(){
  	if (_wrs_conf_saveMode == "xml") {
 
  		/* Format the MATH tags */
- 		console.log("MATH MODE");
- 		
+
  		var indexs_end = html_content.getMatchIndices("&lt;/math&gt;");
 
  		for (var i = indexs_end.length - 1; i >= 0; i--) {
@@ -254,8 +280,6 @@ function updateHTMLCode(){
  			html_content = html_content.splice(actual_index_start, 0, open_highlight);
  		}
 
- 		console.log("	indexs_end: " + indexs_end.length);
- 		console.log("	indexs_start: " + indexs_start.length);
 
  	}
  	else if (_wrs_conf_saveMode == "image" || _wrs_conf_saveMode == "base64") {
@@ -278,7 +302,7 @@ function updateHTMLCode(){
  					break;
  				}
  			}
- 			
+
  			html_content = html_content.splice(actual_index_start, 0, open_highlight);
  		}
 
@@ -292,7 +316,7 @@ function updateHTMLCode(){
 
 /**
  * Set atitles for images. For demo purposes.
- * 
+ *
  */
  function imgSetTitle(preview_div) {
  	var imgs = preview_div.getElementsByTagName("img");
@@ -324,8 +348,8 @@ function updateHTMLCode(){
 
 /**
  * Creates a CKEditor instance on "example" div.
- * @param  {string} lang              CKEditor language. WIRIS plugin read this variable to set the editor lang.
- * @param  {string} wiriseditorparameters JSON containing WIRIS editor parameters.
+ * @param  {string} lang CKEditor language. MathType read this variable to set the editor lang.
+ * @param  {string} wiriseditorparameters JSON containing MathType Web parameters.
  */
  function createEditorInstance(lang, wiriseditorparameters) {
 
@@ -364,6 +388,7 @@ function updateHTMLCode(){
 		language: lang,
 		toolbar:'Full',
 		langCode: lang,
+		height: '365px',
 		// Editor parameters. Not mandatory.
 		wiriseditorparameters: wiriseditorparameters
 	});
@@ -378,11 +403,15 @@ function updateHTMLCode(){
 }
 
 // Creating CKEditor demo instance.
-createEditorInstance('en', {});
+if (typeof _wrs_int_langCode !== 'undefined') {
+	createEditorInstance(_wrs_int_langCode, {});
+} else {
+	createEditorInstance('en', {});
+}
 
 /**
  * Getting data from editor using getData CKEditor method.
- * Using WIRIS formulas are parsed to WIRIS save mode format (mathml, image or base64)
+ * formulas are parsed to save mode format (mathml, image or base64)
  * For more information see: http://www.wiris.com/es/plugins/docs/full-mathml-mode.
  * @return {string} CKEditor parsed data.
  */
@@ -393,7 +422,7 @@ createEditorInstance('en', {});
 
 /**
  * Changes dynamically wiriseditorparameters CKEditor config variable.
- * @param {json} json_params WIRIS editor parameters.
+ * @param {json} json_params MathType Web editor parameters.
  */
  function setParametersSpecificPlugin(wiriseditorparameters) {
  	var lang = CKEDITOR.instances.example.config.langCode;
@@ -403,7 +432,7 @@ createEditorInstance('en', {});
 /**
  * Resets CKEDITOR instance.
  * @param  {lang} lang CKEditor language.
- * @param  {json} wiriseditorparameters JSON containing WIRIS editor parameters.
+ * @param  {json} wiriseditorparameters JSON containing MathType Web parameters.
  */
  function resetEditor(lang, wiriseditorparameters){
  	if (typeof wiriseditorparameters === 'undefined') {
@@ -413,12 +442,14 @@ createEditorInstance('en', {});
 	CKEDITOR.instances.example.destroy();
 	// New CKEditor instance.
 	createEditorInstance(lang, wiriseditorparameters);
+	// Reset modal window.
+	_wrs_modalWindow = undefined;
 }
 
 
 /**
  * Gets wiriseditorparameters from CKEditor.
- * @return {object} WIRIS editor parameters as JSON. An empty JSON if is not defined.
+ * @return {object} MathType web parameters as JSON. An empty JSON if is not defined.
  */
  function getWirisEditorParameters() {
  	if (typeof CKEDITOR.instances.example.config != 'undefined' && typeof CKEDITOR.instances.example.config.wiriseditorparameters != 'undefined') {

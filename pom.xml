@@ -140,6 +140,7 @@
                 <module>webservices</module>
                 <module>hedex</module>
                 <module>sakai-widgets</module>
+                <module>wiris</module>
             </modules>
         </profile>
         <profile>

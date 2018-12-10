@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-	<title>CKEDITOR 4 on Java | Math & Science</title>
+	<title>MathType for CKEditor | Math & Science</title>
 
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -11,7 +11,27 @@
 	<meta name="description" content="Rich HTML editor to create">
 	<meta name="author" content="WIRIS">
 
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.3.0/codemirror.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.3.0/mode/xml/xml.min.js"></script>
+    <script type="text/javascript">
+		if (window.location.search !== '') {
+		    var urlParams = window.location.search;
+		    if (urlParams[0] == '?') {
+		        urlParams = urlParams.substr(1, urlParams.length);
+		        urlParams = urlParams.split('&');
+		        for (i = 0; i < urlParams.length; i = i + 1) {
+		            var paramVariableName = urlParams[i].split('=')[0];
+		            if (paramVariableName === 'language') {
+		                _wrs_int_langCode = urlParams[i].split('=')[1];
+		                break;
+		            }
+		        }
+		    }
+		}
+    </script>
 	<!-- Editor Plugin -->
+	<link type="text/css" rel="stylesheet" href="${param.build.test.editor.stylesheet}"/>
 	<script type="text/javascript" src="../../../.././ckeditor4/ckeditor.js"></script>
 
 	<!-- Style for html code -->
@@ -22,6 +42,9 @@
 
 	<!-- Roboto Font -->
 	<link href='https://fonts.googleapis.com/css?family=Roboto:400,300' rel='stylesheet' type='text/css'>
+
+	<!-- Extra -->
+
 
 </head>
 
@@ -34,25 +57,25 @@
 					<div class="wrs_col wrs_s12 wrs_m7 wrs_l8">
 						<div class="wrs_col wrs_s12">
 							<div class="wrs_col wrs_s3 wrs_m2">
-								<a href="http://www.wiris.com/"><img id="w_logo" src="img/w.svg" alt="WIRIS Maths & Science"></a>
+								<a href="http://www.wiris.com/"><img id="w_logo" src="img/w.svg" alt="WIRIS"></a>
 							</div>
 							<div class="wrs_col wrs_s9 wrs_m10">
-								<h1>CKEDITOR 4 on Java</h1></div>
+								<h1>MathType for CKEditor</h1></div>
 							</div>
 						</div>
 						<div class="wrs_col wrs_s12 wrs_m5 wrs_l4">
 							<div class="wrs_row">
 								<div class="wrs_col wrs_s3 wrs_center">
-									<a href="http://www.wiris.com/plugins/demo/ckeditor/java" title="Java"><img id="java_logo" class="wrs_tech_logo" src="img/java_white.svg" alt="Java"></a>
+									<a href="http://www.wiris.com/plugins/demo/ckeditor4/java" title="Java"><img id="java_logo" class="wrs_tech_logo" src="img/java_white.svg" alt="Java"></a>
 								</div>
 								<div class="wrs_col wrs_s3 wrs_center">
-									<a href="http://www.wiris.com/plugins/demo/ckeditor/php" title="PHP"><img id="php_logo" class="wrs_tech_logo" src="img/php_white.svg" alt="PHP"></a>
+									<a href="http://www.wiris.com/plugins/demo/ckeditor4/php" title="PHP"><img id="php_logo" class="wrs_tech_logo" src="img/php_white.svg" alt="PHP"></a>
 								</div>
 								<div class="wrs_col wrs_s3 wrs_center">
-									<a href="http://www.wiris.com/plugins/demo/ckeditor/aspx" title=".NET"><img id="aspx_logo" class="wrs_tech_logo" src="img/net_white.svg" alt=".NET"></a>
+									<a href="http://www.wiris.com/plugins/demo/ckeditor4/aspx" title=".NET"><img id="aspx_logo" class="wrs_tech_logo" src="img/net_white.svg" alt=".NET"></a>
 								</div>
 								<div class="wrs_col wrs_s3 wrs_center">
-									<a href="http://www.wiris.com/plugins/demo/ckeditor/ruby" title="Ruby on Rails"><img id="ruby_logo" class="wrs_tech_logo" src="img/rails_white.svg" alt="Ruby on Rails"></a>
+									<a href="http://www.wiris.com/plugins/demo/ckeditor4/ruby" title="Ruby on Rails"><img id="ruby_logo" class="wrs_tech_logo" src="img/rails_white.svg" alt="Ruby on Rails"></a>
 								</div>
 							</div>
 						</div>
@@ -65,7 +88,7 @@
 			<div class="wrs_container">
 				<div class="wrs_row">
 					<div class="wrs_col wrs_s12">
-						<p>Press the WIRIS EDITOR icons <i class="wrs_icon_editor"></i> or <i class="wrs_icon_chem"></i> to create and edit equations and formulas</p>
+						<p>Press the MathType icon <i class="wrs_icon_editor"></i> or the ChemType icon <i class="wrs_icon_chem"></i> to create and edit equations and formulas</p>
 					</div>
 					<div class="wrs_col wrs_s12">
 						<div id="editorContainer">
@@ -73,8 +96,10 @@
 							<div id="example" class="wrs_div_box" contenteditable="true" tabindex="0" spellcheck="false" role="textbox" aria-label="Rich Text Editor, example" title="Rich Text Editor, example">
 								<p>In elementary algebra, the <b>quadratic formula</b> is the solution of the quadratic equation.</p>
 								<p style="text-align: center;"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mfrac><mrow><mo>-</mo><mi>b</mi><mo>&#x000B1;</mo><msqrt><msup><mi>b</mi><mn>2</mn></msup><mo>-</mo><mn>4</mn><mi>a</mi><mi>c</mi></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac></math></p>
-								<p><b>Water is made from two molecules</b> - Hydrogen and Oxygen. If you put the two gasses together, along with energy, you can make water.</p>
-								<p style="text-align: center;"><math class="wrs_chemistry" xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi mathvariant="normal">H</mi><mn>2</mn></msub><mo>(</mo><mi mathvariant="normal">g</mi><mo>)</mo><mo>+</mo><msub><mi mathvariant="normal">O</mi><mn>2</mn></msub><mo>(</mo><mi mathvariant="normal">g</mi><mo>)</mo><mo>&#8652;</mo><mn>2</mn><msub><mi mathvariant="normal">H</mi><mn>2</mn></msub><mi mathvariant="normal">O</mi><mo>(</mo><mi mathvariant="normal">l</mi><mo>)</mo></math></p>
+								<p><b>Water is made from two elements</b> - Hydrogen and Oxygen. If you put the two gases together, along with energy, you can make water.</p>
+								<p style="text-align: center;"><math class="wrs_chemistry" xmlns="http://www.w3.org/1998/Math/MathML"><mn>2</mn><msub><mi mathvariant="normal">H</mi><mn>2</mn></msub><mfenced><mi mathvariant="normal">g</mi></mfenced><mo>+</mo><msub><mi mathvariant="normal">O</mi><mn>2</mn></msub><mfenced><mi mathvariant="normal">g</mi></mfenced><mo>&#x21CC;</mo><mn>2</mn><msub><mi mathvariant="normal">H</mi><mn>2</mn></msub><mi mathvariant="normal">O</mi><mfenced><mi mathvariant="normal">l</mi></mfenced></math></p>
+								<br>
+								<p>The entire formula for the surface area of a cylinder is <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>2</mn><msup><mi>&#x3C0;r</mi><mn>2</mn></msup><mo>+</mo><mn>2</mn><mi>&#x3C0;rh</mi></math></p>
 							</div>
 						</div>
 					</div>
@@ -105,13 +130,13 @@
 					</div>
 				</div>
 
-				<div id="options">
+				<div id="options" style="direction: ltr;">
 					<div class="wrs_row wrs_padding">
-						<div class="wrs_col wrs_s12 wrs_m4 wrs_option_label">
+						<div class="wrs_col wrs_s12 wrs_m6 wrs_option_label">
 							<p class="wrs_bold wrs_title_options">Language</p>
 							<a target="_blank" href="http://www.wiris.com/editor/languages"><img src="img/info_icon.png" width="16" height="16" title="Language documentation" alt="Language documentation"></a>
 						</div>
-						<div class="wrs_col wrs_s12 wrs_m8">
+						<div class="wrs_col wrs_s12 wrs_m6">
 							<div class="wrs_row wrs_padding_small">
 								<div class="wrs_col wrs_s12">
 									<select name="lang_select" id="lang_select" onchange="changeLanguage()">
@@ -130,11 +155,11 @@
 					</div>
 
 					<div class="wrs_row wrs_padding">
-						<div class="wrs_col wrs_s12 wrs_m4 wrs_option_label">
+						<div class="wrs_col wrs_s12 wrs_m6 wrs_option_label">
 							<p class="wrs_bold wrs_title_options"><label for="advanced_options_checkbox">Show advanced options</label></p>
 						</div>
 
-						<div class="wrs_col wrs_s12 wrs_m8">
+						<div class="wrs_col wrs_s12 wrs_m6">
 							<div class="wrs_row wrs_padding_small">
 								<div class="wrs_col wrs_xs1"><input type="checkbox" id="advanced_options_checkbox" onclick="advancedOptions()"/></div>
 								<div class="wrs_col wrs_xs11">&nbsp;</div>
@@ -143,38 +168,6 @@
 					</div>
 
 					<div id="advanced_options" style="display:none">
-						<div class="wrs_row wrs_padding">
-							<div class="wrs_col wrs_s12 wrs_m4 wrs_option_label">
-								<p class="wrs_bold wrs_title_options">Mode</p>
-								<a target="_blank" href="http://www.wiris.com/plugins/docs/full-mathml-mode"><img src="img/info_icon.png" width="16" height="16" title="Modes documentation" alt="Modes documentation"></a>
-							</div>
-							<div class="wrs_col wrs_s12 wrs_m8">
-								<div class="wrs_row wrs_padding_small">
-									<div class="wrs_col wrs_xs1">
-										<input type='radio' id="full_mode_radio" name='mode_radio' value='full_mode' checked onclick="changeMode('xml');">
-									</div>
-									<div class="wrs_col wrs_xs11">
-										<label for="full_mode_radio">MathML.<span>&nbsp;Formulas are represented as MathML.</span></label>
-									</div>
-								</div>
-								<div class="wrs_row wrs_padding_small">
-									<div class="wrs_col wrs_xs1">
-										<input type='radio' id="image_mode_radio" name='mode_radio' value='image_mode' onclick="changeMode('image');">
-									</div>
-									<div class="wrs_col wrs_xs11">
-										<label for="image_mode_radio">Image.<span>&nbsp;Formulas are represented as image files. MathML is stored for edition only.</span></label>
-									</div>
-								</div>
-								<div class="wrs_row wrs_padding_small">
-									<div class="wrs_col wrs_xs1">
-										<input type='radio' id="base64_mode_radio" name='mode_radio' value='base64_mode' onclick="changeMode('base64');">
-									</div>
-									<div class="wrs_col wrs_xs11">
-										<label for="base64_mode_radio">Base64.<span>&nbsp;Formulas are represented as base64 images. MathML is stored for edition only.</span></label>
-									</div>
-								</div>
-							</div>
-						</div>
 
 						<div class="wrs_row wrs_padding" style="display: none;">
 							<div class="wrs_col wrs_s12 wrs_m4 wrs_option_label">
@@ -211,7 +204,7 @@
 							<div class="wrs_col wrs_s12 wrs_m8">
 								<div class="wrs_row wrs_padding_small wrs_no_line_height">
 									<div class="wrs_col wrs_s12 wrs_m10">
-										<textarea wrap="hard" wrap="off" name="editor_parameters" id="editor_parameters" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" cols="30" rows="5">{toolbar:'quizzes',fontsize:'20px',backgroundColor:'#3B653D',color:'#FEFEFE'}</textarea>
+										<textarea wrap="hard" wrap="off" name="editor_parameters" id="editor_parameters" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" cols="30" rows="5">{toolbar:'quizzes',fontsize:'20px',backgroundColor:'#3B653D',color:'#FEFEFE', hand: 'true'}</textarea>
 										<div id="notification_set_parameters" class="wrs_display_none"></div>
 									</div>
 									<div class="wrs_col wrs_s12 wrs_m2 wrs_center">
@@ -232,18 +225,18 @@
 						<div class="wrs_col wrs_s12 wrs_m3">
 							<h3>Language</h3>
 							<ul>
-								<li><a href="http://www.wiris.com/plugins/demo/ckeditor/java">Java</a></li>
-								<li><a href="http://www.wiris.com/plugins/demo/ckeditor/php">PHP</a></li>
-								<li><a href="http://www.wiris.com/plugins/demo/ckeditor/aspx">.NET</a></li>
-								<li><a href="http://www.wiris.com/plugins/demo/ckeditor/ruby">Ruby</a></li>
+								<li><a href="http://www.wiris.com/plugins/demo/ckeditor4/java">Java</a></li>
+								<li><a href="http://www.wiris.com/plugins/demo/ckeditor4/php">PHP</a></li>
+								<li><a href="http://www.wiris.com/plugins/demo/ckeditor4/aspx">.NET</a></li>
+								<li><a href="http://www.wiris.com/plugins/demo/ckeditor4/ruby">Ruby</a></li>
 							</ul>
 						</div>
 						<div class="wrs_col wrs_s12 wrs_m3">
 							<h3>Links</h3>
 							<ul>
-								<li><a href="http://www.wiris.com/plugins/editors/download?filter=ckeditor">Download plugin</a></li>
-								<li><a href="http://www.wiris.com/plugins/docs/demo-download?filter=ckeditor">Download this demo</a></li>
-								<li><a href="http://www.wiris.com/plugins/docs/ckeditor">Documentation</a></li>
+								<li><a href="http://www.wiris.com/plugins/editors/download?filter=ckeditor4">Download plugin</a></li>
+								<li><a href="http://www.wiris.com/plugins/docs/demo-download?filter=ckeditor4">Download this demo</a></li>
+								<li><a href="http://www.wiris.com/plugins/docs/ckeditor4">Documentation</a></li>
 							</ul>
 						</div>
 						<div class="wrs_col wrs_s12 wrs_m3">
@@ -273,14 +266,21 @@
 			</div>
 		</footer>
 
-		<!-- WIRIS script -->
-		<script type="text/javascript" src="js/wirislib.js"></script>
-
 		<!-- Prism JS script to beautify the HTML code -->
 		<script type="text/javascript" src="js/prism.js"></script>
 
+		<!-- WIRIS script -->
+		<script type="text/javascript" src="js/wirislib.js"></script>
+
 		<!-- Google Analytics -->
 		<script src="js/google_analytics.js"></script>
+
+		<script>
+			if(typeof urlParams !== 'undefined') {
+				var selectLang = document.getElementById('lang_select');
+				selectLang.value = urlParams[1];
+			}
+		</script>
 
 	</body>
 

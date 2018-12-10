@@ -1,7 +1,7 @@
 /**
  * Creates a CKEditor instance on "example" div.
- * @param  {string} lang              CKEditor language. WIRIS plugin read this variable to set the editor lang.
- * @param  {string} wiriseditorparameters JSON containing WIRIS editor parameters.
+ * @param  {string} lang CKEditor language. MathType read this variable to set the editor lang.
+ * @param  {string} wiriseditorparameters JSON containing MathType Web parameters.
  */
  function createEditorInstance(lang, wiriseditorparameters) {
 
@@ -40,6 +40,7 @@
 		language: lang,
 		toolbar:'Full',
 		langCode: lang,
+		height: '365px',
 		// Editor parameters. Not mandatory.
 		wiriseditorparameters: wiriseditorparameters
 	});
@@ -54,11 +55,15 @@
 }
 
 // Creating CKEditor demo instance.
-createEditorInstance('en', {});
+if (typeof _wrs_int_langCode !== 'undefined') {
+	createEditorInstance(_wrs_int_langCode, {});
+} else {
+	createEditorInstance('en', {});
+}
 
 /**
  * Getting data from editor using getData CKEditor method.
- * Using WIRIS formulas are parsed to WIRIS save mode format (mathml, image or base64)
+ * formulas are parsed to save mode format (mathml, image or base64)
  * For more information see: http://www.wiris.com/es/plugins/docs/full-mathml-mode.
  * @return {string} CKEditor parsed data.
  */
@@ -69,7 +74,7 @@ createEditorInstance('en', {});
 
 /**
  * Changes dynamically wiriseditorparameters CKEditor config variable.
- * @param {json} json_params WIRIS editor parameters.
+ * @param {json} json_params MathType Web editor parameters.
  */
  function setParametersSpecificPlugin(wiriseditorparameters) {
  	var lang = CKEDITOR.instances.example.config.langCode;
@@ -79,7 +84,7 @@ createEditorInstance('en', {});
 /**
  * Resets CKEDITOR instance.
  * @param  {lang} lang CKEditor language.
- * @param  {json} wiriseditorparameters JSON containing WIRIS editor parameters.
+ * @param  {json} wiriseditorparameters JSON containing MathType Web parameters.
  */
  function resetEditor(lang, wiriseditorparameters){
  	if (typeof wiriseditorparameters === 'undefined') {
@@ -89,12 +94,14 @@ createEditorInstance('en', {});
 	CKEDITOR.instances.example.destroy();
 	// New CKEditor instance.
 	createEditorInstance(lang, wiriseditorparameters);
+	// Reset modal window.
+	_wrs_modalWindow = undefined;
 }
 
 
 /**
  * Gets wiriseditorparameters from CKEditor.
- * @return {object} WIRIS editor parameters as JSON. An empty JSON if is not defined.
+ * @return {object} MathType web parameters as JSON. An empty JSON if is not defined.
  */
  function getWirisEditorParameters() {
  	if (typeof CKEDITOR.instances.example.config != 'undefined' && typeof CKEDITOR.instances.example.config.wiriseditorparameters != 'undefined') {
