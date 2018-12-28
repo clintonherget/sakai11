@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import java.util.Objects;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.function.ClassicAvgFunction;
@@ -37,8 +39,16 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 
+import org.hibernate.EmptyInterceptor;
+import org.hibernate.Transaction;
+import org.hibernate.type.Type;
+import org.hibernate.type.StringType;
+import org.hibernate.type.MaterializedClobType;
+import java.io.Serializable;
+
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
 
 /**
  * AddableSessionFactoryBean is the way sakai configures hibernate with all the mappings that
@@ -60,6 +70,8 @@ public class AddableSessionFactoryBean extends LocalSessionFactoryBean implement
 		config.addSqlFunction("count", new ClassicCountFunction());
 		config.addSqlFunction("avg", new ClassicAvgFunction());
 		config.addSqlFunction("sum", new ClassicSumFunction());
+
+		config.setInterceptor(new OracleInterceptor());
 	}
 
 	@Override
@@ -86,5 +98,39 @@ public class AddableSessionFactoryBean extends LocalSessionFactoryBean implement
 		sfb.getIdentifierGeneratorFactory().register("uuid2", AssignableUUIDGenerator.class);
 
 		return sfb.buildSessionFactory();
+	}
+
+	private class OracleInterceptor extends EmptyInterceptor {
+		public int[] findDirty(Object entity,
+				       Serializable id,
+				       Object[] currentState,
+				       Object[] previousState,
+				       String[] propertyNames,
+				       Type[] types) {
+
+			if (currentState == null || previousState == null) {
+				return null;
+			}
+
+			if (!"org.sakaiproject.lessonbuildertool.SimplePageItemImpl".equals(entity.getClass().getName())) {
+				// Default behavior
+				return null;
+			}
+
+			for (int i = 0; i < types.length; i++) {
+				if ((types[i].getClass() == StringType.class || types[i].getClass() == MaterializedClobType.class) &&
+				    ((previousState[i] == null && "".equals(currentState[i])) ||
+				     (currentState[i] == null && "".equals(previousState[i])))) {
+					continue;
+				}
+
+				if (!Objects.equals(previousState[i], currentState[i])) {
+					return null;
+				}
+			}
+
+			// Clean!
+			return new int[0];
+		}
 	}
 }
