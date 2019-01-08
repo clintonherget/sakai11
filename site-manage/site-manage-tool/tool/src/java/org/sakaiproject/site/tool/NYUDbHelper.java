@@ -122,6 +122,42 @@ public class NYUDbHelper {
 		return getPropertyFromCourseCatalog(sectionEid, "instruction_mode");
 	}
 
+	protected String getTermEid(String sectionEid) {
+		String result = getTerm(sectionEid);
+
+		if (result == null) {
+			return null;
+		} else {
+			return result.replace(" ", "_");
+		}
+	}
+
+	protected String getTerm(String sectionEid) {
+		try {
+			Connection db = sqlService.borrowConnection();
+
+			try {
+				PreparedStatement ps = db.prepareStatement("select s.descr from nyu_t_acad_session s inner join nyu_t_course_catalog cc on cc.strm = s.strm AND s.acad_career = cc.acad_career where cc.stem_name = ?");
+				ps.setString(1, sectionEid.replace("_", ":"));
+
+				ResultSet rs = ps.executeQuery();
+				try {
+					if (rs.next()) {
+						return rs.getString(1);
+					}
+				} finally {
+					rs.close();
+				}
+			} finally {
+				sqlService.returnConnection(db);
+			}
+		} catch (SQLException e) {
+			M_log.warn(this + ".getTerm: " + e);
+		}
+
+		return null;
+	}
+
 	/**
 	 * Helper to do the DB calls for us onto nyu_t_course_catalog table, given a sectionEid and a column name. 
 	 * The sectionEid is the stem_name with separators replaced.

@@ -175,6 +175,8 @@ import org.sakaiproject.util.Validator;
 import org.sakaiproject.util.Web;
 import org.sakaiproject.util.api.LinkMigrationHelper;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
 /**
  * <p>
  * SiteAction controls the interface for worksite setup.
@@ -1436,6 +1438,10 @@ public class SiteAction extends PagedResourceActionII {
 	 *            is the number contained in the template's template_index
 	 */
 
+	private boolean allowNYUTermEdit() {
+		return SecurityService.unlock("site.visit", "/site/" + HotReloadConfigurationService.getString("nyu.allow-term-edit-site", "9491cf2e-9700-493c-9bcc-66762bb303ed"));
+	}
+
 	private String buildContextForTemplate(String preIndex, int index, VelocityPortlet portlet,
 			Context context, RunData data, SessionState state) {
 		String realmId = "";
@@ -2611,6 +2617,10 @@ public class SiteAction extends PagedResourceActionII {
 			context.put("type", siteType);
 			context.put("siteTitleEditable", Boolean.valueOf(siteTitleEditable(state, siteType)));
 			context.put("titleMaxLength", state.getAttribute(STATE_SITE_TITLE_MAX));
+
+                        setTermListForContext(context, state, true, false);
+
+                        context.put("allowTermEdit", allowNYUTermEdit());
 
 			if (SiteTypeUtil.isCourseSite(siteType)) {
 				context.put("isCourseSite", Boolean.TRUE);
@@ -7310,6 +7320,51 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		}
 	}
 
+	private void nyuApplySitePropertiesForNewRoster(SessionState state, String siteId, ResourcePropertiesEdit rp, AcademicSession term)
+		throws Exception {
+		List addedSections = state.getAttribute(STATE_ADD_CLASS_PROVIDER_CHOSEN) == null ? new ArrayList() : (List) state.getAttribute(STATE_ADD_CLASS_PROVIDER_CHOSEN);
+
+		if (addedSections.isEmpty()) {
+			return;
+		}
+
+		AuthzGroup realm = authzGroupService.getAuthzGroup(SiteService.siteReference(siteId));
+		List<String> realmProviders = Arrays.asList(groupProvider.unpackId(realm.getProviderGroupId()));
+
+		if (!addedSections.containsAll(realmProviders)) {
+			// There was already a roster on this site.  Nothing to do.
+			return;
+		}
+
+		String sectionEid = (String)addedSections.get(0);
+
+		// We want to make sure the standard set of course site properties are present:
+		//
+		// term_eid, term, Department, Location, School, InstructionMode
+		NYUDbHelper db = new NYUDbHelper();
+		String termEid = db.getTermEid(sectionEid);
+		String termName = db.getTerm(sectionEid);
+		String school = db.getSiteSchool(sectionEid);
+		String department = db.getSiteDepartment(sectionEid);
+		String location = db.getSiteLocation(sectionEid);
+		String instructionMode = db.getSiteInstructionMode(sectionEid);
+
+		if (termEid == null) {
+			log.info("Couldn't find a term for section: {}.  Skipping remaining properties.", sectionEid);
+			return;
+		}
+
+		log.info("Assigning properties for site {} based on roster {}",
+			 siteId, sectionEid);
+
+		rp.addProperty("term_eid", termEid);
+		rp.addProperty("term", termName);
+		rp.addProperty("School", school);
+		rp.addProperty("Department", department);
+		rp.addProperty("Location", location);
+		rp.addProperty("InstructionMode", instructionMode);
+        }
+
 	/**
 	 * Update course site and related realm based on the roster chosen or requested
 	 * @param state
@@ -8467,6 +8522,19 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		if (siteTitleEditable(state, SiteTypeUtil.getTargetSiteType(site_type))) 
 		{
 			Site.setTitle(siteInfo.title);
+		}
+
+		if (allowNYUTermEdit()) {
+			if (siteInfo.term != null) {
+				siteProperties.addProperty("term_eid", siteInfo.term);
+
+				if (cms != null && cms.isAcademicSessionDefined(siteInfo.term)) {
+					AcademicSession term = cms.getAcademicSession(siteInfo.term);
+					siteProperties.addProperty("term", term.getTitle());
+				} else {
+					siteProperties.addProperty("term", siteInfo.term.replace("_", " "));
+				}
+			}
 		}
 
 		//Process description so it doesn't give an error on home
@@ -10223,6 +10291,13 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				
 				// update the course site property and realm based on the selection
 				updateCourseSiteSections(state, site.getId(), pEdit, a);
+
+				try {
+					nyuApplySitePropertiesForNewRoster(state, site.getId(), pEdit, a);
+				} catch (Exception e) {
+					log.error("Failure while resetting properties for site: " + site.getId(), e);
+				}
+
 				try
 				{
 					SiteService.save(site);
@@ -10800,6 +10875,12 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			}
 		}
 				
+		if (allowNYUTermEdit()) {
+			if (params.getString("edit-term") != null) {
+				siteInfo.term = params.getString("edit-term");
+			}
+		}
+
 		if (params.getString("description") != null) {
 			StringBuilder alertMsg = new StringBuilder();
 			String description = params.getString("description");

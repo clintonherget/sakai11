@@ -195,7 +195,19 @@
 					$tlang.getString("sitediinf.term")
 				</label>
 				<div class="col-sm-6">
-					$!selectedTerm
+					#if ( $!allowTermEdit )
+						<select name="edit-term" class="indnt2" id="locales" >
+							<option value="" #if ($selectedTerm == "")selected="true" #end></option>
+							<option value="Sandboxes" #if ($selectedTerm == "Sandboxes")selected="true" #end>Sandboxes</option>
+
+							#foreach($term in $termList)
+								<option value="$term.getEid()" #if ($selectedTerm == $term.getTitle())selected="true" #end>$term.getTitle()</option>
+							#end
+
+						</select>
+					#else
+						$!selectedTerm
+					#end
 				</div>
 			</div>	
 		#end
