@@ -60,6 +60,26 @@
       </datalist>
     </div>
   </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label" for="distribution">{{{t this "Distribution"}}}</label>
+    <div class="col-sm-10">
+        <div>
+            <label>
+                <input id="open-campaign-radio" class="campaign-visibility" type="radio" name="open-campaign" value="open-campaign" {{#if banner.openCampaign}}checked="checked"{{/if}}>
+                {{{t this "distribution_everyone"}}}
+            </label>
+        </div>
+        <div>
+            <label>
+                <input id="closed-campaign-radio" class="campaign-visibility" type="radio" name="open-campaign" value="selected-users" {{#unless banner.openCampaign}}checked="checked"{{/unless}}>
+                {{{t this "distribution_selected_users"}}}
+            </label>
+        </div>
+
+        <textarea class="form-control" name="distribution" id="distribution" {{#if banner.openCampaign}}disabled="true"{{/if}}>{{#each banner.assignToEids}}{{this}}
+{{/each}}</textarea>
+    </div>
+  </div>
 
   <div class="col-sm-offset-2 col-sm-10">
     <input class="btn btn-primary" type="submit" name="save" value="{{{t this "Save Banner"}}}">

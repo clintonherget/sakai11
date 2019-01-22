@@ -174,7 +174,8 @@ public class PASystemAdminEntityProvider implements EntityProvider, AutoRegister
                 return respondWithError(errors);
             }
 
-            String uuid = paSystem().getBanners().createBanner(banner);
+            String uuid = paSystem().getBanners().createBanner(banner,
+                    Optional.ofNullable(wp.getCommaList("assign_to_users")));
 
             JSONObject result = new JSONObject();
             result.put("status", "OK");

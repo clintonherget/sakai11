@@ -70,7 +70,7 @@ public class BannersHandler extends CrudHandler {
         Optional<Banner> banner = paSystem.getBanners().getForId(uuid);
 
         if (banner.isPresent()) {
-            showEditForm(BannerForm.fromBanner(banner.get()), context, CrudMode.UPDATE);
+            showEditForm(BannerForm.fromBanner(banner.get(), paSystem), context, CrudMode.UPDATE);
         } else {
             log.warn("No banner found for UUID: " + uuid);
             sendRedirect("");
@@ -97,10 +97,10 @@ public class BannersHandler extends CrudHandler {
         }
 
         if (CrudMode.CREATE.equals(mode)) {
-            paSystem.getBanners().createBanner(bannerForm.toBanner());
+            paSystem.getBanners().createBanner(bannerForm.toBanner(), Optional.of(bannerForm.getAssignToEids()));
             flash("info", "banner_created");
         } else {
-            paSystem.getBanners().updateBanner(bannerForm.toBanner());
+            paSystem.getBanners().updateBanner(bannerForm.toBanner(), Optional.of(bannerForm.getAssignToEids()));
             flash("info", "banner_updated");
         }
 

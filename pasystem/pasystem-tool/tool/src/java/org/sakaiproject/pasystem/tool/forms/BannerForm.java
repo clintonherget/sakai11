@@ -29,6 +29,10 @@ import lombok.Data;
 import org.sakaiproject.pasystem.api.Banner;
 import org.sakaiproject.pasystem.api.Errors;
 import org.sakaiproject.pasystem.api.MissingUuidException;
+import org.sakaiproject.pasystem.api.PASystem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Maps to and from the banner HTML form and a banner data object.
@@ -40,8 +44,10 @@ public class BannerForm extends BaseForm {
     private final String hosts;
     private final String type;
     private final boolean active;
+    private final boolean isOpenCampaign;
+    private final List<String> assignToEids;
 
-    private BannerForm(String uuid, String message, String hosts, long startTime, long endTime, boolean active, String type) {
+    private BannerForm(String uuid, String message, String hosts, long startTime, long endTime, boolean active, String type, boolean isOpenCampaign, List<String> assignToEids) {
         this.uuid = uuid;
         this.message = message;
         this.hosts = hosts;
@@ -49,11 +55,14 @@ public class BannerForm extends BaseForm {
         this.endTime = endTime;
         this.active = active;
         this.type = type;
+        this.isOpenCampaign = isOpenCampaign;
+        this.assignToEids = assignToEids;
     }
 
-    public static BannerForm fromBanner(Banner existingBanner) {
+    public static BannerForm fromBanner(Banner existingBanner, PASystem paSystem) {
         try {
             String uuid = existingBanner.getUuid();
+            List<String> assignToEids = paSystem.getBanners().getAssigneeEids(uuid);
 
             return new BannerForm(uuid,
                     existingBanner.getMessage(),
@@ -61,7 +70,9 @@ public class BannerForm extends BaseForm {
                     existingBanner.getStartTime(),
                     existingBanner.getEndTime(),
                     existingBanner.isActive(),
-                    existingBanner.getType());
+                    existingBanner.getType(),
+                    existingBanner.isOpenCampaign(),
+                    assignToEids);
         } catch (MissingUuidException e) {
             throw new RuntimeException(e);
         }
@@ -71,13 +82,23 @@ public class BannerForm extends BaseForm {
         String message = request.getParameter("message");
         String hosts = request.getParameter("hosts");
         String type = request.getParameter("type");
+        boolean isOpenCampaign = "open-campaign".equals(request.getParameter("open-campaign"));
 
         long startTime = "".equals(request.getParameter("start_time")) ? 0 : parseTime(request.getParameter("start_time_selected_datetime"));
         long endTime = "".equals(request.getParameter("end_time")) ? 0 : parseTime(request.getParameter("end_time_selected_datetime"));
 
         boolean active = "on".equals(request.getParameter("active"));
 
-        return new BannerForm(uuid, message, hosts, startTime, endTime, active, type);
+        List<String> assignToEids = new ArrayList<String>();
+        if (request.getParameter("distribution") != null) {
+            for (String user : request.getParameter("distribution").split("[\r\n]+")) {
+                if (!user.isEmpty()) {
+                    assignToEids.add(user);
+                }
+            }
+        }
+
+        return new BannerForm(uuid, message, hosts, startTime, endTime, active, type, isOpenCampaign, assignToEids);
     }
 
     public Errors validate() {
@@ -97,7 +118,7 @@ public class BannerForm extends BaseForm {
     }
 
     public Banner toBanner() {
-        return new Banner(uuid, message, hosts, active, startTime, endTime, type);
+        return new Banner(uuid, message, hosts, active, startTime, endTime, type, isOpenCampaign);
     }
 
 }
