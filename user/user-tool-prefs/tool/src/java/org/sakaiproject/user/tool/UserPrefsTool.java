@@ -403,16 +403,16 @@ public class UserPrefsTool
 
 				//NYU override for Dubai to Abu Dhabi
 				if(StringUtils.equals(tzt, "Asia/Dubai")) {
-					tzt = "Asia/Abu Dhabi";
-				}
-
-				if (StringUtils.contains(tzt, '/') && StringUtils.indexOf(tzt, "SystemV/") != 0) {
-					String id = tzt;
-					String name = tzt;
-					if (StringUtils.contains(tzt, '_')) {
-						name = StringUtils.replace(tzt, "_", " ");
+					prefTimeZones.add(new SelectItem("Asia/Dubai", "Asia/Abu Dhabi"));
+				} else {
+					if (StringUtils.contains(tzt, '/') && StringUtils.indexOf(tzt, "SystemV/") != 0) {
+						String id = tzt;
+						String name = tzt;
+						if (StringUtils.contains(tzt, '_')) {
+							name = StringUtils.replace(tzt, "_", " ");
+						}
+						prefTimeZones.add(new SelectItem(id, name));
 					}
-					prefTimeZones.add(new SelectItem(id, name));
 				}
 			}
 		}
