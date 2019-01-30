@@ -5144,10 +5144,12 @@ public class SimplePageBean {
 
 		Collection<String>itemGroups = null;
 		SecurityAdvisor advisor = null;
+		boolean pushed = false;
 		try {
 		    // need to do this before pushing the advisor, or we get bad results
 		    boolean canSeeAll = canSeeAll();
 		    advisor = pushAdvisorAlways();
+		    pushed = true;
 		    LessonEntity entity = null;
 		    if (!canSeeAll && !item.isRequired()) {
 			switch (item.getType()) {
@@ -5172,6 +5174,9 @@ public class SimplePageBean {
 				return false;
 			}
 		    }
+		    // CLASSES-3607 Pop the advisor before getItemGroups so anon test works correctly in getResourceGroups
+		    popAdvisor(advisor);
+		    pushed = false;
 		    // entity can be null. passing the actual entity just avoids a second lookup
 		    itemGroups = getItemGroups(item, entity, false);
 		} catch (IdUnusedException exc) {
@@ -5181,7 +5186,7 @@ public class SimplePageBean {
 		    visibleCache.put(item.getId(), item.isRequired());
 		    return item.isRequired();
 		} finally {
-		    popAdvisor(advisor);
+		    if (pushed) popAdvisor(advisor);
 		}
 		if (itemGroups == null || itemGroups.isEmpty()) {
 		    // this includes items for which for which visibility doesn't apply
