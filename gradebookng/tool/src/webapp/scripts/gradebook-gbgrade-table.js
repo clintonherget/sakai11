@@ -250,6 +250,7 @@ GbGradeTable.cellRenderer = function (instance, td, row, col, prop, value, cellP
   var $td = $(td);
   var index = col - GbGradeTable.FIXED_COLUMN_OFFSET;
   var student = instance.getDataAtCell(row, GbGradeTable.STUDENT_COLUMN_INDEX);
+
   var column = instance.view.settings.columns[col]._data_;
 
   // key needs to contain all values the cell requires for render
@@ -1491,11 +1492,10 @@ GbGradeTable.redrawTable = function(force) {
 
     GbGradeTable.currentSortColumn = 0;
     GbGradeTable.currentSortDirection = 'desc';
-
-    GbGradeTable.instance.loadData(GbGradeTable.getFilteredData());
     GbGradeTable.instance.updateSettings({
       columns: GbGradeTable.getFilteredColumns()
     });
+    GbGradeTable.instance.loadData(GbGradeTable.getFilteredData());
     GbGradeTable.refreshSummaryLabels();
     GbGradeTable.forceRedraw = false;
   }, 100);
