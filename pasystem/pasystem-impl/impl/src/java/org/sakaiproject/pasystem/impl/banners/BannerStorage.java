@@ -46,6 +46,8 @@ import org.sakaiproject.pasystem.impl.common.DB;
 import org.sakaiproject.pasystem.impl.common.DBAction;
 import org.sakaiproject.pasystem.impl.common.DBConnection;
 import org.sakaiproject.pasystem.impl.common.DBResults;
+import org.sakaiproject.user.api.User;
+import org.sakaiproject.user.cover.UserDirectoryService;
 
 /**
  * Query and store Banner objects in the database.
@@ -70,7 +72,8 @@ public class BannerStorage implements Banners, Acknowledger {
                                                 (result.getInt("active") == 1),
                                                 result.getLong("start_time"),
                                                 result.getLong("end_time"),
-                                                result.getString("banner_type")));
+                                                result.getString("banner_type"),
+                                                (result.getInt("open_campaign") == 1)));
                                     }
 
                                     return banners;
@@ -97,7 +100,8 @@ public class BannerStorage implements Banners, Acknowledger {
                                                 (result.getInt("active") == 1),
                                                 result.getLong("start_time"),
                                                 result.getLong("end_time"),
-                                                result.getString("banner_type")));
+                                                result.getString("banner_type"),
+                                                (result.getInt("open_campaign") == 1)));
                                     }
 
                                     return Optional.empty();
@@ -113,13 +117,19 @@ public class BannerStorage implements Banners, Acknowledger {
                 " from pasystem_banner_alert alert" +
                 " LEFT OUTER JOIN pasystem_banner_dismissed dismissed on dismissed.uuid = alert.uuid" +
                 "  AND ((? = '') OR dismissed.user_id = ?)" +
+                " LEFT OUTER JOIN pasystem_banner_assign assign on assign.uuid = alert.uuid" +
+                "  AND assign.user_id = ?" +
+
                 " where ACTIVE = 1 AND" +
 
                 // And either hasn't been dismissed yet
                 " (dismissed.state is NULL OR" +
 
                 // Or was dismissed temporarily
-                "  (dismissed.state = ?))" +
+                "  (dismissed.state = ?)) AND" +
+
+                // And is assigned or is an open campaign for all users
+                " ((assign.uuid IS NOT NULL) OR (alert.open_campaign = 1))" +
 
                 " ORDER BY start_time");
 
@@ -130,6 +140,7 @@ public class BannerStorage implements Banners, Acknowledger {
                             public List<Banner> call(DBConnection db) throws SQLException {
                                 List<Banner> banners = new ArrayList<Banner>();
                                 try (DBResults results = db.run(sql)
+                                        .param((userId == null) ? "" : userId)
                                         .param((userId == null) ? "" : userId)
                                         .param((userId == null) ? "" : userId)
                                         .param(AcknowledgementType.TEMPORARY.dbValue())
@@ -146,7 +157,8 @@ public class BannerStorage implements Banners, Acknowledger {
                                                 result.getLong("start_time"),
                                                 result.getLong("end_time"),
                                                 result.getString("banner_type"),
-                                                hasBeenDismissed);
+                                                hasBeenDismissed,
+                                               (result.getInt("open_campaign") == 1));
 
                                         if (banner.isActiveForHost(serverId)) {
                                             banners.add(banner);
@@ -167,14 +179,14 @@ public class BannerStorage implements Banners, Acknowledger {
     }
 
     @Override
-    public String createBanner(Banner banner) {
+    public String createBanner(Banner banner, Optional<List<String>> assignToEids) {
         return DB.transaction("Create an banner",
                 new DBAction<String>() {
                     @Override
                     public String call(DBConnection db) throws SQLException {
                         String id = UUID.randomUUID().toString();
 
-                        db.run("INSERT INTO pasystem_banner_alert (uuid, message, hosts, active, start_time, end_time, banner_type) VALUES (?, ?, ?, ?, ?, ?, ?)")
+                        db.run("INSERT INTO pasystem_banner_alert (uuid, message, hosts, active, start_time, end_time, banner_type, open_campaign) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
                                 .param(id)
                                 .param(banner.getMessage())
                                 .param(banner.getHosts())
@@ -182,7 +194,10 @@ public class BannerStorage implements Banners, Acknowledger {
                                 .param(banner.getStartTime())
                                 .param(banner.getEndTime())
                                 .param(banner.getType())
+                                .param(Integer.valueOf(banner.isOpenCampaign() ? 1 : 0))
                                 .executeUpdate();
+
+                        setBannerAssignees(db, id, assignToEids);
 
                         db.commit();
 
@@ -193,7 +208,7 @@ public class BannerStorage implements Banners, Acknowledger {
     }
 
     @Override
-    public void updateBanner(Banner banner) {
+    public void updateBanner(Banner banner, Optional<List<String>> assignToEids) {
         try {
             final String uuid = banner.getUuid();
 
@@ -201,15 +216,18 @@ public class BannerStorage implements Banners, Acknowledger {
                     new DBAction<Void>() {
                         @Override
                         public Void call(DBConnection db) throws SQLException {
-                            db.run("UPDATE pasystem_banner_alert SET message = ?, hosts = ?, active = ?, start_time = ?, end_time = ?, banner_type = ? WHERE uuid = ?")
+                            db.run("UPDATE pasystem_banner_alert SET message = ?, hosts = ?, active = ?, start_time = ?, end_time = ?, banner_type = ?, open_campaign = ? WHERE uuid = ?")
                                     .param(banner.getMessage())
                                     .param(banner.getHosts())
                                     .param(Integer.valueOf(banner.isActive() ? 1 : 0))
                                     .param(banner.getStartTime())
                                     .param(banner.getEndTime())
                                     .param(banner.getType())
+                                    .param(Integer.valueOf(banner.isOpenCampaign() ? 1 : 0))
                                     .param(uuid)
                                     .executeUpdate();
+
+                            setBannerAssignees(db, uuid, assignToEids);
 
                             db.commit();
 
@@ -231,6 +249,10 @@ public class BannerStorage implements Banners, Acknowledger {
                         db.run("DELETE FROM pasystem_banner_dismissed WHERE uuid = ?")
                                 .param(uuid)
                                 .executeUpdate();
+
+                        db.run("DELETE FROM pasystem_banner_assign where uuid = ?")
+                            .param(uuid)
+                            .executeUpdate();
 
                         db.run("DELETE FROM pasystem_banner_alert WHERE uuid = ?")
                                 .param(uuid)
@@ -267,5 +289,65 @@ public class BannerStorage implements Banners, Acknowledger {
     @Override
     public void clearTemporaryDismissedForUser(String userId) {
         new AcknowledgementStorage(AcknowledgementStorage.NotificationType.BANNER).clearTemporaryDismissedForUser(userId);
+    }
+
+    private void setBannerAssignees(DBConnection db, String uuid, Optional<List<String>> assignToEids) throws SQLException {
+        if (assignToEids.isPresent()) {
+            db.run("DELETE FROM pasystem_banner_assign where uuid = ? AND user_id is not NULL")
+                .param(uuid)
+                .executeUpdate();
+
+            for (String userId : eidsToUserIds(assignToEids.get())) {
+                db.run("INSERT INTO pasystem_banner_assign (uuid, user_id) VALUES (?, ?)")
+                    .param(uuid)
+                    .param(userId)
+                    .executeUpdate();
+            }
+        }
+    }
+
+    private static List<String> userIdsToEids(List<String> userIds) {
+        List<String> eids = new ArrayList<String>();
+
+        for (User user : (List<User>) UserDirectoryService.getUsers(userIds)) {
+            eids.add(user.getEid());
+        }
+
+        return eids;
+    }
+
+    @Override
+    public List<String> getAssigneeEids(final String uuid) {
+        List<String> userIds = DB.transaction
+            ("Find a list of assignees by banner uuid",
+                new DBAction<List<String>>() {
+                    @Override
+                    public List<String> call(DBConnection db) throws SQLException {
+                        final List<String> userIds = new ArrayList<String>();
+
+                        try (DBResults results = db.run("SELECT user_id from pasystem_banner_assign WHERE UUID = ? AND user_id is not NULL")
+                            .param(uuid)
+                            .executeQuery()) {
+                            for (ResultSet result : results) {
+                                userIds.add(result.getString("user_id"));
+                            }
+                        }
+
+                        return userIds;
+                    }
+                }
+            );
+
+        return userIdsToEids(userIds);
+    }
+
+    private static List<String> eidsToUserIds(List<String> eids) {
+        List<String> userIds = new ArrayList<String>();
+
+        for (User user : UserDirectoryService.getUsersByEids(eids)) {
+            userIds.add(user.getId());
+        }
+
+        return userIds;
     }
 }

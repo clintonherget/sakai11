@@ -8,6 +8,7 @@
     @extend .fa;
   }
 
+  .icon-sakai--nyu-ares,
   .icon-sakai--nyu-libraries {
     font-family: 'nyu-classes-icons' !important;
     &:before {
@@ -124,8 +125,7 @@
   .icon-sakai--nyu-webassign,
   .icon-sakai--nyu-webex,
   .icon-sakai--nyu-torsh-talent,
-  .icon-sakai--nyu-piazza,
-  .icon-sakai--nyu-ares {
+  .icon-sakai--nyu-piazza {
     @extend .fa-globe;
   }
 

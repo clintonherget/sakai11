@@ -33,7 +33,17 @@ PASystemBannerAlerts.prototype.handleBannerAlertClose = function($alert) {
       document.cookie = "pasystem_timezone_warning_dismissed=true; path=/;";
     } else {
       self.acknowledge(alertId);
-      self.$toggle.show();
+
+      if ($alert.is('.pasystem-banner-low')) {
+        for (var i=0; i < self.json.length; i++) {
+          if (self.json[i].id == alertId) {
+            self.json.splice(i, 1)
+            break;
+          }
+        }
+      } else {
+        self.$toggle.show();
+      }
     }
   });
 };

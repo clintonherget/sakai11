@@ -2678,6 +2678,8 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 			catch(PermissionException e)
 			{
 				isAllowed = false;
+                                log.info("*** NYU: allowUpdateCollection(): result got overridden due to PermissionException.  Turns out this isn't dead code after all!",
+                                         e);
 			}
 		}
 

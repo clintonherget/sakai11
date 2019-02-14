@@ -1,7 +1,8 @@
 package edu.nyu.classes.telemetry;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.*;
+import java.text.SimpleDateFormat;
 
 import java.io.IOException;
 import javax.servlet.ServletConfig;
@@ -21,8 +22,6 @@ import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 
 import org.sakaiproject.telemetry.cover.Telemetry;
-
-
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,8 +60,16 @@ public class TelemetryServlet extends HttpServlet {
             List<LineChart> lineCharts = new ArrayList<>();
             List<HistogramChart> histogramCharts = new ArrayList<>();
 
+            List<String> excluded = Arrays.asList(ServerConfigurationService.getString("telemetry.metrics.excluded_from_report", "help_views").split(", *"));
+
             for (String metricName : groupedReadings.keySet()) {
+                if (excluded.indexOf(metricName) >= 0) {
+                    // Don't show this one.
+                    continue;
+                }
+
                 List<Telemetry.TelemetryReading> readings = groupedReadings.get(metricName);
+                Collections.sort(readings, (Telemetry.TelemetryReading a, Telemetry.TelemetryReading b) -> { return Long.compare(a.getTime(), b.getTime()); } );
 
                 if (readings.get(0).getMetricType().equals(Telemetry.MetricType.TIMER) ||
                     readings.get(0).getMetricType().equals(Telemetry.MetricType.COUNTER)) {
@@ -73,7 +80,9 @@ public class TelemetryServlet extends HttpServlet {
                     // Histogram
                     Map<Long, List<Telemetry.TelemetryReading>> histogramsByTime = readings.stream().collect(Collectors.groupingBy(Telemetry.TelemetryReading::getTime));
 
-                    histogramCharts.add(new HistogramChart(metricName, histogramsByTime));
+                    if (histogramsByTime.size() > 1) {
+                        histogramCharts.add(new HistogramChart(metricName, histogramsByTime));
+                    }
                 }
             }
 
@@ -115,6 +124,27 @@ public class TelemetryServlet extends HttpServlet {
         public String getName() { return name; }
         public List<Reading> getReadings() { return readings; }
 
+        public TreeMap<String, Long> getCountsByDay() {
+            TreeMap<String, Long> countsByDay = new TreeMap<>();
+
+            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+            sdf.setCalendar(Calendar.getInstance(TimeZone.getTimeZone("America/New_York")));
+
+            for (Reading reading : readings) {
+                String label = sdf.format(reading.getX());
+
+                if (!countsByDay.containsKey(label)) {
+                    countsByDay.put(label, 0L);
+                }
+
+                countsByDay.put(label, (countsByDay.get(label) + 1));
+            }
+
+            return countsByDay;
+        }
+
+
+
         private class Reading {
             private long x;
             private long y;
@@ -146,16 +176,39 @@ public class TelemetryServlet extends HttpServlet {
 
     private class HistogramChart {
         private String name;
+        private long timeStep;
         private TreeMap<String, List<Reading>> bucketsMap = new TreeMap<>();
 
         public String getName() { return name; }
         public TreeMap<String, List<Reading>> getBucketsMap() { return bucketsMap; }
+
+        public TreeMap<String, Long> getCountsByDay() {
+            TreeMap<String, Long> countsByDay = new TreeMap<>();
+
+            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+            sdf.setCalendar(Calendar.getInstance(TimeZone.getTimeZone("America/New_York")));
+
+            for (List<Reading> readings : bucketsMap.values()) {
+                for (Reading reading : readings) {
+                    String label = sdf.format(reading.getTime());
+
+                    if (!countsByDay.containsKey(label)) {
+                        countsByDay.put(label, 0L);
+                    }
+
+                    countsByDay.put(label, (countsByDay.get(label) + reading.getCount()));
+                }
+            }
+
+            return countsByDay;
+        }
 
         private class Reading {
             private long time;
             private long count;
 
             public long getTime() { return time; }
+            public long getTimeStep() { return timeStep; }
             public long getCount() { return count; }
 
             public Reading(long time, long count) {
@@ -181,6 +234,7 @@ public class TelemetryServlet extends HttpServlet {
                                  bits[1].replaceAll("^0*([0-9])", "$1"));
         }
 
+
         public HistogramChart(String name, Map<Long, List<Telemetry.TelemetryReading>> rawReadings) {
             this.name = name;
 
@@ -192,13 +246,10 @@ public class TelemetryServlet extends HttpServlet {
             // Want something like {bucket => [[time1, count1], [time2, count2], ...]}
 
             List<String> buckets = new ArrayList<>();
-            List<Long> times = new ArrayList<>();
             Map<String, Long> frequencies = new HashMap<>();
 
             // Extract all known times and buckets
             for (long time : rawReadings.keySet()) {
-                times.add(time);
-
                 List<Telemetry.TelemetryReading> telemetryReadings = rawReadings.get(time);
 
                 for (Telemetry.TelemetryReading rawReading : telemetryReadings) {
@@ -210,7 +261,31 @@ public class TelemetryServlet extends HttpServlet {
             }
 
             Collections.sort(buckets);
-            Collections.sort(times);
+
+            // Determine our list of timestamps.  We'll take the min & max
+            // timestamps from our incoming data and fill out the range
+            // ourselves to ensure there isn't any gaps.
+            long firstTime = rawReadings.keySet().stream().min(Long::compare).get();
+            long lastTime = rawReadings.keySet().stream().max(Long::compare).get();
+
+            long step = Long.MAX_VALUE;
+            List<Long> readingTimes = new ArrayList(rawReadings.keySet());
+            Collections.sort(readingTimes);
+
+            for (int i = 1; i < readingTimes.size(); i++) {
+                long diff = readingTimes.get(i) - readingTimes.get(i - 1);
+
+                if (diff < step) {
+                    step = diff;
+                }
+            }
+
+            List<Long> times = new ArrayList<>();
+            for (long time = firstTime; time <= lastTime; time += step) {
+                times.add(time);
+            }
+
+            this.timeStep = step;
 
             // Build up our final structure
             for (String bucket : buckets) {

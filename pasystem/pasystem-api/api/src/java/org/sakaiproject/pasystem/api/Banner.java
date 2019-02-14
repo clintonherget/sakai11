@@ -51,6 +51,9 @@ public class Banner implements Comparable<Banner> {
     @Getter
     private final boolean isDismissed;
 
+    @Getter
+    private final boolean isOpenCampaign;
+
     enum BannerType {
         HIGH,
         MEDIUM,
@@ -58,14 +61,18 @@ public class Banner implements Comparable<Banner> {
     }
 
     public Banner(String message, String hosts, boolean active, long startTime, long endTime, String type) {
-        this(null, message, hosts, active, startTime, endTime, type, false);
+        this(null, message, hosts, active, startTime, endTime, type, false, true);
     }
 
     public Banner(String uuid, String message, String hosts, boolean active, long startTime, long endTime, String type) {
-        this(uuid, message, hosts, active, startTime, endTime, type, false);
+        this(uuid, message, hosts, active, startTime, endTime, type, false, true);
     }
 
-    public Banner(String uuid, String message, String hosts, boolean active, long startTime, long endTime, String type, boolean isDismissed) {
+    public Banner(String uuid, String message, String hosts, boolean active, long startTime, long endTime, String type, boolean isOpenCampaign) {
+        this(uuid, message, hosts, active, startTime, endTime, type, false, isOpenCampaign);
+    }
+
+    public Banner(String uuid, String message, String hosts, boolean active, long startTime, long endTime, String type, boolean isDismissed, boolean isOpenCampaign) {
         this.uuid = uuid;
         this.message = message;
         this.hosts = hosts;
@@ -74,6 +81,7 @@ public class Banner implements Comparable<Banner> {
         this.endTime = endTime;
         this.type = BannerType.valueOf(type.toUpperCase(Locale.ROOT));
         this.isDismissed = isDismissed;
+        this.isOpenCampaign = isOpenCampaign;
     }
 
     /**

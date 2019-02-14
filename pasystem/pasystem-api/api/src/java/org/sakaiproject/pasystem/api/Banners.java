@@ -37,9 +37,9 @@ public interface Banners extends Acknowledger {
      */
     public List<Banner> getRelevantBanners(String serverId, String userId);
 
-    public String createBanner(Banner banner);
+    public String createBanner(Banner banner, Optional<List<String>> assignToEids);
 
-    public void updateBanner(Banner banner);
+    public void updateBanner(Banner banner, Optional<List<String>> assignToEids);
 
     public void deleteBanner(String uuid);
 
@@ -51,5 +51,7 @@ public interface Banners extends Acknowledger {
     public void clearTemporaryDismissedForUser(String userId);
 
     public Optional<Banner> getForId(String uuid);
+
+    public List<String> getAssigneeEids(final String uuid);
 }
     

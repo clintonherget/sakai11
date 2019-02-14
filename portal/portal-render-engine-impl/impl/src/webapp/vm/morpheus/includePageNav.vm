@@ -41,7 +41,7 @@
 						#set( $breadToolName  = $page.pageTitle )
 	
 						<li class="Mrphs-toolsNav__menuitem is-current">
-							<a class="Mrphs-toolsNav__menuitem--link #if(${page.hidden})is-invisible#end" href="${page.pageResetUrl}" title="${page.pageTitle}">
+							<a class="Mrphs-toolsNav__menuitem--link #if(${page.hidden})is-invisible#end" href="${page.pageResetUrl}" title="${page.pageTitle} #if(${page.hidden})(Hidden from site members)#end">
 								<span class="Mrphs-toolsNav__menuitem--icon ${page.menuClass} $!{page.menuClassOverride} icon-active"></span>
 								<span class="Mrphs-toolsNav__menuitem--title">${page.pageTitle}</span>
 							</a>
@@ -52,7 +52,7 @@
 						#if (${page.toolpopup})
 	
 							<li>
-								<a class="Mrphs-toolsNav__menuitem--link #if(${page.hidden})is-invisible#end" href="${page.pageRefUrl}?sakai.popup=yes" title="${page.pageTitle}" onclick="window.open('${page.toolpopupurl}');">
+								<a class="Mrphs-toolsNav__menuitem--link #if(${page.hidden})is-invisible#end" href="${page.pageRefUrl}?sakai.popup=yes" title="${page.pageTitle} #if(${page.hidden})(Hidden from site members)#end" onclick="window.open('${page.toolpopupurl}');">
 									<span class="Mrphs-toolsNav__menuitem--icon ${page.menuClass} $!{page.menuClassOverride}"></span>
 									<span class="Mrphs-toolsNav__menuitem--title">${page.pageTitle}</span>
 								</a>
@@ -63,7 +63,7 @@
 							#if (${page.ispopup})
 	
 								<li>
-									<a class="Mrphs-toolsNav__menuitem--link #if(${page.hidden})is-invisible#end" href="javascript:;" title="${page.pageTitle}" onclick="window.open( '${page.pagePopupUrl}${page.pageId}','${page.jsPageTitle}','resizable=yes,toolbar=no,scrollbars=yes, width=1024,height=768' )">
+									<a class="Mrphs-toolsNav__menuitem--link #if(${page.hidden})is-invisible#end" href="javascript:;" title="${page.pageTitle} #if(${page.hidden})(Hidden from site members)#end" onclick="window.open( '${page.pagePopupUrl}${page.pageId}','${page.jsPageTitle}','resizable=yes,toolbar=no,scrollbars=yes, width=1024,height=768' )">
 										<span class="Mrphs-toolsNav__menuitem--icon ${page.menuClass} $!{page.menuClassOverride}"></span>
 										<span class="Mrphs-toolsNav__menuitem--title">${page.pageTitle}</span>
 									</a>
@@ -72,7 +72,7 @@
 							#else
 	
 								<li>
-									<a class="Mrphs-toolsNav__menuitem--link #if(${page.hidden})is-invisible#end" href="${page.pageRefUrl}" title="${page.pageTitle}">
+									<a class="Mrphs-toolsNav__menuitem--link #if(${page.hidden})is-invisible#end" href="${page.pageRefUrl}" title="${page.pageTitle} #if(${page.hidden})(Hidden from site members)#end">
 										<span class="Mrphs-toolsNav__menuitem--icon ${page.menuClass} $!{page.menuClassOverride}"></span>
 										<span class="Mrphs-toolsNav__menuitem--title">${page.pageTitle}</span>
 									</a>

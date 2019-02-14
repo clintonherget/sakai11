@@ -7423,7 +7423,7 @@ public class AssignmentAction extends PagedResourceActionII {
         Assignment.Access aOldAccess = null;
 
         // assignment old group setting
-        Collection<String> aOldGroups;
+        Collection<String> aOldGroups = new ArrayList<String>();
 
         // assignment old open date setting
         Instant oldOpenTime;
@@ -7644,7 +7644,10 @@ public class AssignmentAction extends PagedResourceActionII {
 
                 aOldAccess = a.getTypeOfAccess();
 
-                aOldGroups = a.getGroups();
+// CLASSES-3608 force hibernate to evaluate lookup so picks up any groups
+// assigned to the assignment before they change
+//                aOldGroups = a.getGroups();
+                aOldGroups.addAll(a.getGroups());
 
                 // old open time
                 oldOpenTime = a.getOpenDate();
