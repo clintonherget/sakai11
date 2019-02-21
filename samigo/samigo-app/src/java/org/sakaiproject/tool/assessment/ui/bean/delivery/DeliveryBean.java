@@ -2686,6 +2686,14 @@ public class DeliveryBean
     return publishedAssessment;
   }
 
+  public void setPublishedAssessmentAndResetExtendedTimeDeliveryService(PublishedAssessmentFacade publishedAssessment)
+  {
+    if (publishedAssessment != null && publishedAssessment.getPublishedAssessmentId() != null) {
+      extendedTimeDeliveryService = null;
+    }
+    setPublishedAssessment(publishedAssessment);
+  }
+
   public void setPublishedAssessment(PublishedAssessmentFacade publishedAssessment)
   {
 	  this.publishedAssessment = publishedAssessment;
