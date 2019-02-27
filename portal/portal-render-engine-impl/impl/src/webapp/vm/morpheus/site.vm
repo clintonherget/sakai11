@@ -270,5 +270,6 @@
         #parse("/vm/morpheus/connection-manager.vm")
         #end
 
+        <script>$PBJQ(document).ready(function() { $PBJQ(document).trigger('allsakairesourcesloaded'); });</script>
     </body>
 </html>

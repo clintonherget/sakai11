@@ -63,9 +63,9 @@ function setupAccordion(iframId, isInstructor, msgs, openDataId){
 		}
 	});
 	if(isInstructor){
-		$( "#accordion span" ).sortable({
+		$( "#accordion span" ).keyboardSortable({
 			axis: "y",
-			handle: "h3 span.handleIcon",
+			handle: ".syllabus-drag",
 			start: function(event, ui){
 			dragStartIndex = ui.item.index();
 		},

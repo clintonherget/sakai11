@@ -43,7 +43,7 @@
 		}
 	}
 	
-	$(function() {
+	$(window).on('allsakairesourcesloaded', function() {
 		msgs = {
 				syllabus_title: $("#messages #syllabus_title").html(),
 				syllabus_content: $("#messages #syllabus_content").html(),
@@ -223,11 +223,10 @@
 					<t:dataList value="#{SyllabusTool.entries}" var="eachEntry" layout="simple" styleClass="accordion-items-container">
 						<f:verbatim><div><div class="group" syllabusItem="</f:verbatim>
 						<h:outputText value="#{eachEntry.entry.syllabusId}"/>
-						<f:verbatim>"><h3></f:verbatim>
+						<f:verbatim>"></f:verbatim>
+						<f:verbatim rendered="#{SyllabusTool.editAble == 'true'}"><a href="javascript:void(0);" class="syllabus-drag"></a></f:verbatim>
+						<f:verbatim><h3></f:verbatim>
 						<f:subview id="actionIcons" rendered="#{SyllabusTool.editAble == 'true'}">
-							<f:verbatim><span class="syllabus-drag"></f:verbatim>
-							<h:graphicImage url="/images/cursor_drag_arrow.png" title="#{msgs.dragToReorder}"  styleClass="actionIcon"/>
-							<f:verbatim></span></f:verbatim>
 							<f:verbatim><span class="edit-actions"></f:verbatim>
 							<h:commandLink action="#{eachEntry.processListRead}" title="#{msgs.edit_details}" styleClass="actionIcon editDetails">
                                                           <f:param name="returnToMain" value="true"></f:param>

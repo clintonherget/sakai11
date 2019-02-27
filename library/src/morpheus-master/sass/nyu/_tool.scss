@@ -1177,6 +1177,34 @@ body {
         .ui-accordion {
           margin-bottom: 20px;
 
+          .syllabus-drag {
+            @extent .fa-snowflake-o;
+            font-size: 18px;
+            position: absolute;
+            color: #AAA;
+            left: 4px;
+            cursor: move;
+            width: 20px;
+            text-align: center;
+
+            z-index: 1000000;
+            display: block;
+            height: 44px;
+            line-height: 44px;
+            border-right: 1px dotted #CCC;
+
+            &:before {
+              font-family: 'nyu-classes-icons' !important;
+              content: '\f1c5' !important;
+              width: 10px;
+              display: inline-block;
+            }
+
+            img {
+              display: none;
+            }
+          }
+
           .ui-accordion-header {
             min-height: 42px;
             padding: 12px 10px;
@@ -1199,28 +1227,6 @@ body {
 
               .editItemTitle {
                 margin-left: 0;
-              }
-            }
-
-            .syllabus-drag {
-              @extent .fa-snowflake-o;
-              font-size: 18px;
-              position: absolute;
-              color: #AAA;
-              left: 4px;
-              cursor: move;
-              width: 20px;
-              text-align: center;
-
-              &:before {
-                font-family: 'nyu-classes-icons' !important;
-                content: '\f1c5' !important;
-                width: 10px;
-                display: inline-block;
-              }
-
-              img {
-                display: none;
               }
             }
 
@@ -1294,6 +1300,12 @@ body {
 
           .ui-accordion-content {
             border-color: #E5E5E5;
+          }
+        }
+
+        .ui-sortable {
+          .ui-accordion-header {
+            padding: 12px 10px 12px 20px;
           }
         }
       }
