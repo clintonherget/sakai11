@@ -23,7 +23,19 @@ function GoogleDrive(rootElt, baseURL, options, onLoading, onLoaded) {
   this.onLoaded = onLoaded || $.noop;
 
   this.getFiles();
+
+  this.setupResetOauthAction();
 };
+
+GoogleDrive.prototype.setupResetOauthAction = function() {
+  var self = this;
+
+  $('#resetOauthCredential').off('click').on('click', function() {
+    $.get(self.baseURL + '/reset-oauth', function() {
+      location.reload();
+    });
+  });
+}
 
 GoogleDrive.prototype.setupList = function() {
   this.listOverlay = $('<div class="list-overlay" />');
@@ -57,6 +69,18 @@ GoogleDrive.prototype.showNoMatches = function () {
 
 GoogleDrive.prototype.hideNoMatches = function () {
   this.root.find('.no-matches-msg').hide();
+};
+
+GoogleDrive.prototype.showAuthError = function () {
+  this.root.find('.auth-error').show();
+};
+
+GoogleDrive.prototype.showError = function (errorText) {
+  this.root.find('.unknown-error').html(errorText).show();
+};
+
+GoogleDrive.prototype.hideErrors = function () {
+  this.root.find('.auth-error, .unknown-error').hide();
 };
 
 // FIXME now that scrollbar is on the window, we need to rework this one :(
@@ -175,10 +199,12 @@ GoogleDrive.prototype.getFiles = function(pageToken, options) {
 
   self.onLoading();
 
+
   $.getJSON(self.baseURL + this.options.path,
             self._currentPageData,
             function(json) {
               self.hideNoMatches();
+              self.hideErrors();
 
               if (options.replaceList) {
                 self.list.empty();
@@ -198,6 +224,12 @@ GoogleDrive.prototype.getFiles = function(pageToken, options) {
               options.complete();
 
               self.onLoaded();
+            }).fail(function( jqxhr, textStatus, error ) {
+                if (jqxhr.status >= 400 && jqxhr.status < 500) {
+                  self.showAuthError();
+                } else {
+                  self.showError(textStatus + ", " + error);
+                }
             });
 };
 

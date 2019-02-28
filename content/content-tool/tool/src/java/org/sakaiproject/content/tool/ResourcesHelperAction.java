@@ -45,6 +45,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
@@ -383,7 +385,26 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 	}
 
 	protected String buildNewGoogleDriveContext(VelocityPortlet portlet, Context context, RunData data, SessionState state) {
-		return "resources/sakai_google_drive";
+		HttpServletRequest request = data.getRequest();
+		String callbackURL = request.getRequestURL().toString();
+
+		GoogleClient google = new GoogleClient();
+		if (google.getCredential() != null) {
+			return "resources/sakai_google_drive";
+		} else {
+			try {
+				String redirectURL = GoogleClient.getRedirectURL();
+
+				GoogleAuthorizationCodeFlow flow = google.getAuthFlow();
+				context.put("googleRedirect", flow.newAuthorizationUrl()
+												.setRedirectUri(redirectURL)
+												.setState(callbackURL)
+												.build());
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return "resources/sakai_google_drive_auth";
+		}
 	}
 
 	protected String buildNewUrlsContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)

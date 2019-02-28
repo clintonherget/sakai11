@@ -11,9 +11,7 @@
   <div class="row">
     <div class="col-sm-12">
       <div style="text-align: right;">
-        <form method="POST" action="/direct/google-drive/reset-oauth">
-          <input type="submit" class="btn btn-danger" value="Relink my Google account" />
-        </form>
+        <button id="resetOauthCredential">Relink my Google account</button>
       </div>
     </div>
   </div>
@@ -40,6 +38,8 @@
               <ul class="file-list">
               </ul>
               <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+              <div class="alertMessage auth-error" style="display: none;">Unable to authenticate with Google Drive. Please "Relink my Google account" to refresh your credentials.</div>
+              <div class="alertMessage unknown-error" style="display: none;"></div>
             </div>
           </form>
         </div>

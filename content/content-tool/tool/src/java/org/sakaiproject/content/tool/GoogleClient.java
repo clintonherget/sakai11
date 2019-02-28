@@ -56,6 +56,8 @@ public class GoogleClient {
     private static final Logger LOG = LoggerFactory.getLogger(GoogleClient.class);
     private static final String APPLICATION = "Sakai Drive";
 
+    private static final String GOOGLE_DOMAIN = "gqa.nyu.edu";
+
     private int requestsPerBatch = 100;
 
     // FIXME: What should this number be?
@@ -95,6 +97,10 @@ public class GoogleClient {
 
     public void rateLimitHit() {
         rateLimiter.rateLimitHit();
+    }
+
+    public Credential getCredential() {
+        return getCredential(GoogleClient.getCurrentGoogleUser());
     }
 
     public Credential getCredential(String user) {
@@ -138,6 +144,10 @@ public class GoogleClient {
         }
     }
 
+    public boolean deleteCredential() throws Exception {
+        return deleteCredential(getCurrentGoogleUser());
+    }
+
     public boolean deleteCredential(String user) throws Exception {
         GoogleAuthorizationCodeFlow flow = getAuthFlow();
 
@@ -155,6 +165,15 @@ public class GoogleClient {
 
     public LimitedBatchRequest getBatch(AbstractGoogleClient client) throws Exception {
         return new LimitedBatchRequest(client);
+    }
+
+    public static String getCurrentGoogleUser() {
+        return org.sakaiproject.user.cover.UserDirectoryService.getCurrentUser().getEid() + "@" + GOOGLE_DOMAIN;
+    }
+
+    public static String getRedirectURL() {
+        // FIXME name? actual URL?
+        return "https://dishevelled.net/nyuclassesoauthdev";
     }
 
     public class LimitedBatchRequest {

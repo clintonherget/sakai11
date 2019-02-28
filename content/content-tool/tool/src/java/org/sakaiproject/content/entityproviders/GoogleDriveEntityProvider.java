@@ -1,5 +1,7 @@
 package org.sakaiproject.content.entityproviders;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,8 +44,6 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 	public static final String AUTH_MODE_HANDLE = "handle";
 	public static final String AUTH_MODE_RESET = "reset";
 
-	private static final String GOOGLE_DOMAIN = "gqa.nyu.edu";
-
 	@Override
 	public String getEntityPrefix() {
 		return ENTITY_PREFIX;
@@ -51,7 +51,7 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 
 	@Override
 	public String[] getHandledOutputFormats() {
-		return new String[] {Formats.JSON};
+		return new String[]{Formats.JSON};
 	}
 
 	@EntityCustomAction(action = "drive-data", viewKey = EntityView.VIEW_LIST)
@@ -65,7 +65,7 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 			RequestParams p = new RequestParams(request);
 			String mode = p.getString("mode", DRIVE_MODE_RECENT);
 
-			String user = getCurrentGoogleUser();
+			String user = GoogleClient.getCurrentGoogleUser();
 
 			FileList fileList = null;
 
@@ -99,34 +99,38 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 		}
 	}
 
-//	@EntityCustomAction(action = "auth", viewKey = EntityView.VIEW_LIST)
-//	public void auth(EntityView view, Map<String, Object> params) {
-//		HttpServletRequest request = requestGetter.getRequest();
-//		HttpServletResponse response = requestGetter.getResponse();
-//
-//		RequestParams p = new RequestParams(request);
-//		String mode = p.getString("mode", null);
-//
-//		try {
-//			GoogleClient google = new GoogleClient();
-//
-//			if (AUTH_MODE_HANDLE.equals(mode)) {
-//				handleOAuth(request, response, context);
-//			} else if (AUTH_MODE_SEND_TO_GOOGLE.equals(mode)) {
-//				sendToGoogle(request, response, context);
-//			} else if (AUTH_MODE_RESET.equals(mode)) {
-//				String googleUser = getCurrentGoogleUser();
-//
-//				if (googleUser != null) {
-//					google.deleteCredential(googleUser);
-//				}
-//
-//				// WHAT TO DO?
-//			}
-//		} catch (Exception e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
+	@EntityCustomAction(action = "reset-oauth", viewKey = EntityView.VIEW_LIST)
+	public void resetOauthCredential(EntityView view, Map<String, Object> params) {
+		try {
+			GoogleClient google = new GoogleClient();
+			google.deleteCredential();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@EntityCustomAction(action = "handle-google-login", viewKey = EntityView.VIEW_LIST)
+	public void handleGoogleLogin(EntityView view, Map<String, Object> params) {
+		HttpServletRequest request = requestGetter.getRequest();
+		HttpServletResponse response = requestGetter.getResponse();
+
+		try {
+			GoogleClient google = new GoogleClient();
+			GoogleAuthorizationCodeFlow flow = google.getAuthFlow();
+
+			GoogleTokenResponse googleResponse = flow.newTokenRequest((String) params.get("code"))
+				.setRedirectUri(GoogleClient.getRedirectURL())
+				.execute();
+
+			flow.createAndStoreCredential(googleResponse, GoogleClient.getCurrentGoogleUser());
+
+			String state = (String) params.get("state");
+
+			response.sendRedirect(state);
+		} catch  (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	private FileList getRecentFiles(GoogleClient google, String user, RequestParams p) {
 		try {
@@ -237,10 +241,6 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 		public String getThumbnailLink() { return thumbnailLink; }
 		public String getViewLink() { return viewLink; }
 		public boolean isFolder() { return mimeType.equals("application/vnd.google-apps.folder"); }
-	}
-
-	private String getCurrentGoogleUser() {
-		return org.sakaiproject.user.cover.UserDirectoryService.getCurrentUser().getEid() + "@" + GOOGLE_DOMAIN;
 	}
 
 	private RequestGetter requestGetter;
