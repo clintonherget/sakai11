@@ -32,14 +32,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -47,12 +40,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
+import com.google.api.client.googleapis.json.GoogleJsonError;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.services.drive.Drive;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
 
 import org.sakaiproject.exception.IdLengthException;
-import org.sakaiproject.util.FileItem;
+import org.sakaiproject.util.*;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.cheftool.JetspeedRunData;
 import org.sakaiproject.cheftool.RunData;
@@ -84,10 +81,6 @@ import org.sakaiproject.tool.api.ToolException;
 import org.sakaiproject.tool.api.ToolSession;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
-import org.sakaiproject.util.FormattedText;
-import org.sakaiproject.util.ParameterParser;
-import org.sakaiproject.util.ResourceLoader;
-import org.sakaiproject.util.Validator;
 import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.event.api.NotificationEdit;
 
@@ -2385,7 +2378,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 	public void doAddGoogleItems(RunData data) {
 		log.debug(this + ".soAddUrls()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
-		ParameterParser params = data.getParameters ();
+		ParameterParser params = data.getParameters();
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
 
 		int requestStateId = params.getInt("requestStateId", 0);
@@ -2410,9 +2403,81 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			return;
 		}
 
-		String[] googleItemIds = params.getStrings("googleitemid[]");
+		ContentEntity entity = mfp.getContentEntity();
+		ContentCollection containingCollection = null;
+		if(entity != null && entity instanceof ContentCollection) {
+			containingCollection = (ContentCollection) entity;
+		} else {
+			addAlert(state, "Not a valid collection");
+			return;
+		}
 
-		addAlert(state, "TODO got these just need to save them: " + String.join(",", googleItemIds));
+		try {
+			GoogleClient google = new GoogleClient();
+			Drive drive = google.getDrive(GoogleClient.getCurrentGoogleUser());
+
+			String[] googleItemIds = params.getStrings("googleitemid[]");
+
+			GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
+
+			org.sakaiproject.content.api.ContentHostingService chs = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
+			String collectionId = containingCollection.getId();
+
+			for (String id : googleItemIds) {
+				batch.queue(drive.files().get(id).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
+					new GoogleFileImporter(google, id, chs, collectionId));
+			}
+
+			batch.execute();
+
+			mfp.setActionCanceled(false);
+			mfp.setErrorEncountered(false);
+			mfp.setActionCompleted(true);
+
+			toolSession.setAttribute(ResourceToolAction.DONE, Boolean.TRUE);
+		} catch (Exception e) {
+			addAlert(state, e.getMessage());
+		}
+	}
+
+	private class GoogleFileImporter extends JsonBatchCallback<com.google.api.services.drive.model.File> {
+		private GoogleClient google;
+		private String fileId;
+		private org.sakaiproject.content.api.ContentHostingService chs;
+		private String collectionId;
+
+		public GoogleFileImporter(GoogleClient google, String fileId, org.sakaiproject.content.api.ContentHostingService chs, String collectionId) {
+			this.google = google;
+			this.fileId = fileId;
+			this.chs = chs;
+			this.collectionId = collectionId;
+		}
+
+		public void onSuccess(com.google.api.services.drive.model.File googleFile, HttpHeaders responseHeaders) {
+			ResourceProperties properties = new BaseResourcePropertiesEdit();
+			properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, googleFile.getName());
+			properties.addProperty("google-id", fileId);
+			properties.addProperty("google-view-link", googleFile.getWebViewLink());
+			properties.addProperty("google-icon-link", googleFile.getIconLink());
+
+			try {
+				ContentResource r = chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
+				ContentResourceEdit redit = chs.editResource(r.getId());
+				redit.setResourceType(ResourceType.TYPE_GOOGLE_DRIVE_ITEM);
+				chs.commitResource(redit);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
+			if (e.getCode() == 403) {
+				google.rateLimitHit();
+			}
+
+			throw new RuntimeException("Failed during Google lookup for file: " + fileId + " " + e);
+		}
+
 	}
 
 }
