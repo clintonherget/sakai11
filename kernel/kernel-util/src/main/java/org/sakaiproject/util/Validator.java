@@ -655,6 +655,8 @@ public class Validator
 		// need to check for any other MIME types which can be opened by browser plug-ins? %%%zqian
 		if (lType.indexOf("vrml") != -1 || lType.indexOf("cc3d") != -1) return true;
 
+		if (lType.equals("x-nyu-google/item")) return true;
+
 		// check additional inline types for this instance specified in sakai.properties
 		String moreInlineTypes[] = ServerConfigurationService.getStrings("content.mime.inline");  
 		

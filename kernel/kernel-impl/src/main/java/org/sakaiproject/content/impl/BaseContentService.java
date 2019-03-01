@@ -6093,7 +6093,7 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
         m_ignoreExtensions = Arrays.asList(ArrayUtils.nullToEmpty(m_serverConfigurationService.getStrings("content.mimeMagic.ignorecontent.extensions")));
         m_ignoreMimeTypes = Arrays.asList(ArrayUtils.nullToEmpty(m_serverConfigurationService.getStrings("content.mimeMagic.ignorecontent.mimetypes")));
 
-        if (m_useMimeMagic && DETECTOR != null && !ResourceProperties.TYPE_URL.equals(currentContentType) && !hasContentTypeAlready) {
+        if (m_useMimeMagic && DETECTOR != null && !ResourceProperties.TYPE_URL.equals(currentContentType) && !ResourceType.MIME_TYPE_GOOGLE_DRIVE_ITEM.equals(currentContentType) && !hasContentTypeAlready) {
             try (
                     TikaInputStream buff = TikaInputStream.get(edit.streamContent());
             ) {
@@ -7072,7 +7072,7 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 			}
 
 			// for url content type, encode a redirect to the body URL
-			if (contentType.equalsIgnoreCase(ResourceProperties.TYPE_URL))
+			if (contentType.equalsIgnoreCase(ResourceProperties.TYPE_URL) || contentType.equalsIgnoreCase(ResourceType.MIME_TYPE_GOOGLE_DRIVE_ITEM))
 			{
 				if (len < MAX_URL_LENGTH) {
 	
