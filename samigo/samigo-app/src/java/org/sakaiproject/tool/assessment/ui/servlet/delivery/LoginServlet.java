@@ -136,7 +136,7 @@ public class LoginServlet
     delivery.setAssessmentTitle(pub.getTitle());
     Boolean honorPledge = BooleanUtils.toBoolean(pub.getAssessmentAccessControl().getHonorPledge());
     delivery.setHonorPledge(honorPledge);
-    delivery.setPublishedAssessment(pub);
+    delivery.setPublishedAssessmentAndResetExtendedTimeDeliveryService(pub);
 
     BeginDeliveryActionListener listener = new BeginDeliveryActionListener();
     listener.populateBeanFromPub(delivery, pub);

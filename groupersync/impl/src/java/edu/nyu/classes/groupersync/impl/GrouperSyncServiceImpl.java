@@ -14,6 +14,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.sakaiproject.telemetry.cover.Telemetry;
+
 public class GrouperSyncServiceImpl implements GrouperSyncService {
 
     private static final Log log = LogFactory.getLog(GrouperSyncServiceImpl.class);
@@ -188,7 +190,9 @@ public class GrouperSyncServiceImpl implements GrouperSyncService {
                     ps.executeUpdate();
                     ps.close();
 
+                    Telemetry.TelemetryTimer timer = Telemetry.startTimer("commit_time");
                     connection.commit();
+                    Telemetry.finishTimer(timer);
                 }
             });
         } catch (SQLException e) {

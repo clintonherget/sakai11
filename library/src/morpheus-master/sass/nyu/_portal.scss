@@ -252,6 +252,24 @@ body {
   }
 }
 
+// CLASSES-3592 Lessons subnav top link allow wrapping (truncated using JavaScript see lessons-subnav.js)
+body {
+  #toolMenu ul li .Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--title,
+  #subSites ul li .Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--title,
+  .floatingToolMenu ul li .Mrphs-toolsNav__menuitem--link .Mrphs-toolsNav__menuitem--title {
+    white-space: normal;
+    word-break: break-word;
+    text-overflow: unset;
+  }
+  #toolMenu li.has-lessons-sub-pages ul.lessons-sub-page-menu li a.has-prerequisite:hover:after {
+    content: ' \f05e' !important;
+    position: static !important;
+    top: initial !important;
+    right: initial !important;
+    display: contents !important;
+  }
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 //  Timeout Alert
 // --------------------------------------------------------------------------------------------------------------------

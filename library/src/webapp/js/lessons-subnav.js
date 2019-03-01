@@ -1,5 +1,6 @@
 (function() {
     var LESSONS_SUBPAGE_TOOLTIP_MAX_LENGTH = 90;
+    var LESSON_TITLE_TRUNCATE_AT_LENGTH = 35;
 
     function LessonsSubPageNavigation(data) {
         if (!data.hasOwnProperty('pages')) {
@@ -52,7 +53,7 @@
             var $submenu_action = document.createElement('a');
 
             $submenu_action.href = self.build_sub_page_url_for(sub_page);
-            $submenu_action.innerText = sub_page.name;
+            $submenu_action.innerHTML = self.truncateTitle(sub_page.name);
             $submenu_action.setAttribute('data-sendingPage', sub_page.sendingPage);
 
             var title_string = sub_page.name;
@@ -171,6 +172,14 @@
         // add a wrapper CSS class so we can style things fancy-like
         $li.classList.add('has-lessons-sub-pages');
 
+        // create truncated title
+        var $expandedTitle = $menu.querySelector('.Mrphs-toolsNav__menuitem--title');
+        var title = $expandedTitle.innerHTML.trim()
+        var truncatedTitle = self.truncateTitle(title);
+        if (title != truncatedTitle) {
+          $expandedTitle.innerHTML = truncatedTitle;
+        }
+
         // create a span to replace the original top level icon
         // it will contain two links, one to collapse the menu and another to visit the lessons page
         var $expandedMenuPlaceholder = document.createElement('span');
@@ -195,9 +204,9 @@
         // create a link to go to the top level page (only visible when expanded)
         var $expandedGoToTopItem = document.createElement('a');
         $expandedGoToTopItem.setAttribute('href', topLevelPageHref);
-        $expandedGoToTopItem.setAttribute('title', self.i18n.open_top_level_page);
+        $expandedGoToTopItem.setAttribute('title', title + ' - ' + self.i18n.open_top_level_page);
         $expandedGoToTopItem.classList.add("lessons-goto-top-page");
-        $expandedGoToTopItem.innerHTML = $menu.querySelector('.Mrphs-toolsNav__menuitem--title').outerHTML;
+        $expandedGoToTopItem.innerHTML = $expandedTitle.outerHTML;
         $expandedMenuPlaceholder.appendChild($expandedGoToTopItem);
 
         // insert the placeholder menu item before the $menu link
@@ -207,7 +216,7 @@
         $menu.setAttribute('aria-controls', submenu_id);
         $menu.setAttribute('aria-expanded', false);
         $menu.setAttribute('aria-hidden', false);
-        $menu.setAttribute('title', self.i18n.expand);
+        $menu.setAttribute('title', title + ' - ' + self.i18n.expand);
 
         $menu.addEventListener('click', function(event) {
             event.preventDefault();
@@ -425,6 +434,16 @@
             }
         }
     };
+
+
+    LessonsSubPageNavigation.prototype.truncateTitle = function(title) {
+        if (title.length > LESSON_TITLE_TRUNCATE_AT_LENGTH) {
+          return title.substring(0, LESSON_TITLE_TRUNCATE_AT_LENGTH) + '&hellip;';
+        } else {
+          return title;
+        }
+    };
+
 
     window.LessonsSubPageNavigation = LessonsSubPageNavigation;
 })();

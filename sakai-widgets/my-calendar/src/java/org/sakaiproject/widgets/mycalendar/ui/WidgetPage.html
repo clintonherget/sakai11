@@ -13,10 +13,20 @@
 
 <!--  layout -->
 <div class="my-calendar"></div>
+<div id="myCalendarEvents" aria-live="polite" aria-atomic="true">
 <div class="my-calendar-event-heading"></div>
 <div class="my-calendar-events-div">
-	<table class="my-calendar-events"> 
+	<table class="my-calendar-events">
+		<caption class="sr-only">Event listing</caption>
+		<thead class="sr-only">
+			<tr>
+				<th>Event Time</th>
+				<th>Event Details</th>
+			</tr>
+		</thead>
+		<tbody></tbody>
 	</table>
+</div>
 </div>
 
 <script type="text/javascript" src="/library/webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
@@ -28,16 +38,12 @@
 <!--  templates -->
 <script id="my-calendar-event-template" type="text/x-jsrender">
 		<tr> 
-			<td class="my-calendar-event-time"> {{:eventTime}} </td>
-			<td class="my-calendar-event-type"> {{:eventType}} </td>
-		</tr>
-		<tr> 
-			<td></td>
-			<td> {{if eventUrl}} <a href="{{:eventUrl}}" target="{{:target}}">{{:eventTitle}}</a> {{else}} {{:eventTitle}} {{/if}} </td>
-		</tr>
-		<tr> 
-			<td></td>
-			<td> (<a href="{{:siteUrl}}" target="_top">{{:siteName}}</a>) </td>
+			<td class="my-calendar-event-time" style="vertical-align: top;"> {{:eventTime}} </td>
+			<td>
+				<span class="my-calendar-event-type">{{:eventType}}</span> <br>
+				{{if eventUrl}} <a href="{{:eventUrl}}" target="{{:target}}">{{:eventTitle}}</a> {{else}} {{:eventTitle}} {{/if}} <br>
+				(<a href="{{:siteUrl}}" target="_top">{{:siteName}}</a>) <br>
+			</td>
 		</tr>
 </script>
 
@@ -88,9 +94,9 @@ $(document).ready(function() {
 		onSelect: function(date) {
 			// format the date
 			var formattedDate = getISO8601Date(date);
-			
 			// display events
 			displayEvents(formattedDate, moment().format('YYYY-MM-DD') === formattedDate);
+			setTimeout(nyuImproveAccessibilityOfMyCalendar);
 	    },
 	    onChangeMonthYear: function(year, month) {
 			// The -1 is because javascript dates are numbered from 0
@@ -99,6 +105,7 @@ $(document).ready(function() {
 			var monthFirst = year + "-" + (month > 9 ? month : "0" + month) + "-01";
 	    	eventList = getEvents(monthFirst);
 			displayEvents(monthFirst, moment().format('YYYY-MM-DD') === monthFirst);
+			setTimeout(nyuImproveAccessibilityOfMyCalendar);
 	    },
 	    // config
 	    showOtherMonths: true,
@@ -109,11 +116,103 @@ $(document).ready(function() {
 	    dayNamesShort: moment.weekdaysShort(),
 	    dayNamesMin: moment.weekdaysMin()
 	});
-	
+
 	//show heading and events for today
 	displayEvents(moment().format('YYYY-MM-DD'), true);
 
+	nyuImproveAccessibilityOfMyCalendar();
 });
+
+var retainContext = null;
+function nyuImproveAccessibilityOfMyCalendar() {
+	// ARIA labels
+	var currentMonthYear = $('.my-calendar .ui-datepicker-inline .ui-datepicker-title').text().trim();
+	var currentSelectedDate = $('#my-calendar-event-heading-text').text().trim();
+
+	$('.my-calendar')
+		.attr('tabindex', 0)
+		.attr('aria-live', 'polite')
+		.attr('aria-atomic', 'true')
+		.attr('aria-label', 'Displaying ' + currentMonthYear + ' and ' + currentSelectedDate);
+
+	$('.my-calendar .ui-datepicker-header .ui-datepicker-prev').attr('aria-label', 'Show previous month');
+	$('.my-calendar .ui-datepicker-header .ui-datepicker-next').attr('aria-label', 'Show next month');
+	var currentDayLinkId = null;
+	$('.my-calendar .ui-datepicker-calendar td a.ui-state-default').each(function() {
+		var date = $(this).text().trim();
+		$(this).attr('aria-label','View events on ' + date + ' ' + currentMonthYear);
+
+		var id = 'day'+$(this).text().trim();
+		$(this)
+			.attr('id', id)
+			.attr('aria-controls', 'myCalendarEvents');
+
+		if ($(this).closest('td').is('.ui-datepicker-current-day')) {
+			currentDayLinkId = id;
+		}
+	});
+
+	$('.my-calendar-event-heading .left-arrow').attr('aria-label', 'Show events on previous day');
+	$('.my-calendar-event-heading .right-arrow').attr('aria-label', 'Show events on next day');
+
+	$('.my-calendar .ui-datepicker-calendar')
+		.attr('role', 'grid')
+		.attr('aria-activedescendant', currentDayLinkId)
+		.attr('aria-label', 'Use arrows to navigate and press enter to select a day');
+
+	// Keyboard Control
+	$('.my-calendar .ui-datepicker-header').find('.ui-datepicker-prev, .ui-datepicker-next')
+		.attr('tabindex', 0)
+		.on('keydown', function(event) {
+			if (event.keyCode == 13) {
+				if ($(this).is('.ui-datepicker-prev')) {
+					retainContext = '.my-calendar .ui-datepicker-header .ui-datepicker-prev';
+				} else {
+					retainContext = '.my-calendar .ui-datepicker-header .ui-datepicker-next';
+				}
+				$(this).trigger('click');
+			}
+		});
+
+	$('.my-calendar-event-heading').find('.left-arrow, .right-arrow')
+		.attr('tabindex', 0)
+		.on('keydown', function(event) {
+			if (event.keyCode == 13) {
+				if ($(this).is('.left-arrow')) {
+					retainContext = '.my-calendar-event-heading .left-arrow';
+				} else {
+					retainContext = '.my-calendar-event-heading .right-arrow';
+				}
+				$(this).trigger('click');
+			}
+		});
+
+	$('.my-calendar .ui-datepicker-calendar').on('keydown', 'a.ui-state-default', function(event) {
+		var $tr = $(this).closest("tr")
+		var rowIndex = $(this).closest("tr").index() + 1;
+		var cellIndex = $(this).closest("td").index() + 1;
+		if (event.keyCode == 13) {
+			retainContext = '.my-calendar .ui-datepicker-calendar tr:nth-child('+rowIndex+') td:nth-child('+cellIndex+') a'; 
+		} else if (event.keyCode == 37 && cellIndex > 1) { //left
+			event.preventDefault();
+			$('.my-calendar .ui-datepicker-calendar tr:nth-child('+rowIndex+') td:nth-child('+(cellIndex-1)+') a').focus()
+		} else if (event.keyCode == 38 && rowIndex > 1) { //up
+			event.preventDefault();
+			$('.my-calendar .ui-datepicker-calendar tr:nth-child('+(rowIndex-1)+') td:nth-child('+cellIndex+') a').focus()
+		} else if (event.keyCode == 39 && cellIndex < 7) { //right
+			event.preventDefault();
+			$('.my-calendar .ui-datepicker-calendar tr:nth-child('+rowIndex+') td:nth-child('+(cellIndex+1)+') a').focus()
+		} else if (event.keyCode == 40 && rowIndex < $(this).closest('tbody').find('tr').length) { //down
+			event.preventDefault();
+			$('.my-calendar .ui-datepicker-calendar tr:nth-child('+(rowIndex+1)+') td:nth-child('+cellIndex+') a').focus()
+		}
+	})
+
+	if (retainContext != null) {
+		$(retainContext).focus();
+		retainContext = null;
+	}
+}
 
 //change the day when arrow buttons are selected
 // DRY
@@ -128,6 +227,8 @@ function doCalendarArrow(sign) {
 	$('.my-calendar').datepicker("setDate", newDate);
 	var formattedDate = moment(newDate).format('YYYY-MM-DD');
 	displayEvents(formattedDate, moment().format('YYYY-MM-DD') === formattedDate);
+
+	setTimeout(nyuImproveAccessibilityOfMyCalendar);
 }
 
 $(document).on("click", '.left-arrow', function () {
@@ -159,15 +260,15 @@ function displayEvents(formattedDate, today) {
 	// show the events
 	var selectedDayEvents = getEvents(formattedDate, true);
 	if (selectedDayEvents.length > 0) {
-		$(".my-calendar-events").text("");
+		$(".my-calendar-events tbody").html("");
 		var eventsDisplay = getEventsDisplay(selectedDayEvents);
 		
 		var template = $.templates("#my-calendar-event-template");
 		var rendered = template.render(eventsDisplay);
-		$(".my-calendar-events").html(rendered);
+		$(".my-calendar-events tbody").html(rendered);
 		
 	} else {
-		 $(".my-calendar-events").html("<tr><td>"+jQuery.i18n.prop('no_events')+"</td></tr>");
+		 $(".my-calendar-events tbody").html("<tr><td colspan='2'>"+jQuery.i18n.prop('no_events')+"</td></tr>");
 	}
 	
 	setMainFrameHeightNow(window.name, -1);

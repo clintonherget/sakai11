@@ -3149,6 +3149,14 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					}
 					
 					Status questionStatus = getQuestionStatus(i, response);
+
+					// CLASSES-3615 only show X if shortanswer has correct answers specified and answer was incorrect
+					if ("shortanswer".equals(i.getAttribute("questionType")) && response != null) {
+						if (correctAnswers.isEmpty()) {
+							questionStatus = Status.COMPLETED;
+						}
+					}
+
 					addStatusImage(questionStatus, tableRow, "questionStatus", null);
 					String statusNote = getStatusNote(questionStatus);
 					if (statusNote != null) // accessibility version of icon

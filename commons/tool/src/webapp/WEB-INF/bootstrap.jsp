@@ -27,9 +27,17 @@
     </head>
     <body>
 
-        <script src="/library/webjars/jquery/1.12.4/jquery.min.js"></script>
+        <script>
+          // NYU don't whack jQuery as plugins may have already been loaded
+          if (typeof window.$ == 'undefined') {
+            document.write('\x3Cscript src="/library/webjars/jquery/1.12.4/jquery.min.js">\x3C/script>');
+          }
+        </script>
         <script src="/library/webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
         <script src="/library/webjars/momentjs/2.11.1/min/moment-with-locales.min.js"></script>
+        <!-- NYU if whacking moment, then need timezones too -->
+        <script src="/my-calendar/scripts/moment-timezone-with-data.js"></script>
+        <!-- End NYU patch -->
         <script src="/library/js/jquery/qtip/jquery.qtip-latest.min.js"></script>
         <script src="/commons-tool/lib/handlebars.runtime-v4.0.5.js"></script>
         <script src="/commons-tool/templates/templates.js"></script>
