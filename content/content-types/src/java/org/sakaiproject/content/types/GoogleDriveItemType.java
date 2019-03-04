@@ -32,6 +32,7 @@ import org.sakaiproject.content.util.BaseResourceAction.Localizer;
 import org.sakaiproject.content.util.BaseResourceType;
 import org.sakaiproject.content.util.BaseServiceLevelAction;
 import org.sakaiproject.entity.api.Reference;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.util.Resource;
 import org.sakaiproject.util.ResourceLoader;
@@ -127,6 +128,11 @@ public class GoogleDriveItemType extends BaseResourceType
 
 	public String getIconClass(ContentEntity entity)
 	{
+		ResourceProperties properties = entity.getProperties();
+		if (properties.get("google-mime-type") != null) {
+			return getIconClassForGoogleMimeType((String) properties.get("google-mime-type"));
+		}
+
 		return null;
 	}
 
@@ -187,5 +193,10 @@ public class GoogleDriveItemType extends BaseResourceType
     {
 		return false;
     }
+
+	private String getIconClassForGoogleMimeType(String googleMimeType) {
+		String googleMimeTypeCSSClass = googleMimeType.replaceAll("[^A-Za-z0-9]", "-");
+		return "fa fa-google " + googleMimeTypeCSSClass;
+	}
 
 }

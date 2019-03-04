@@ -2459,6 +2459,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			properties.addProperty("google-id", fileId);
 			properties.addProperty("google-view-link", googleFile.getWebViewLink());
 			properties.addProperty("google-icon-link", googleFile.getIconLink());
+			properties.addProperty("google-mime-type", googleFile.getMimeType());
 
 			try {
 				ContentResource r = chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
