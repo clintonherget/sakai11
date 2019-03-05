@@ -579,7 +579,7 @@ public class ResourcesAction
 	
 	protected static final String MODE_MAKE_SITE_PAGE = "make_site_page";
 
-	
+	protected static final String MODE_REVISE_GOOGLE_DRIVE_ITEM_SETTINGS = "revise_google_drive_item_settings";
 
 	/** The null/empty string */
 	private static final String NULL_STRING = "";
@@ -922,6 +922,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		ACTIONS_ON_RESOURCES.add(ActionType.MOVE);
 		ACTIONS_ON_RESOURCES.add(ActionType.DELETE);
 		ACTIONS_ON_RESOURCES.add(ActionType.PRINT_FILE);
+		ACTIONS_ON_RESOURCES.add(ActionType.REVISE_GOOGLE_DRIVE_ITEM_SETTINGS);
 
 		ACTIONS_ON_MULTIPLE_ITEMS.add(ActionType.COPY);
 		ACTIONS_ON_MULTIPLE_ITEMS.add(ActionType.MOVE);
@@ -4966,6 +4967,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		{
 			template = buildMakeSitePageContext(portlet, context, data, state);
 		}
+		else if(mode.equals(MODE_REVISE_GOOGLE_DRIVE_ITEM_SETTINGS))
+		{
+			template = buildReviseGoogleDriveItemSettingsContext(portlet, context, data, state);
+		}
 
 		return template;
 
@@ -5591,6 +5596,10 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		context.put("noti", ServerConfigurationService.getString("content.default.notification", "n"));
 		
 		return TEMPLATE_REVISE_METADATA;
+	}
+
+	public String buildReviseGoogleDriveItemSettingsContext(VelocityPortlet portlet, Context context, RunData data, SessionState state) {
+		return "resources/sakai_google_drive_settings";
 	}
 
 	/**
@@ -6774,6 +6783,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				case NEW_URLS:
 					break;
 				case NEW_GOOGLE_DRIVE_ITEMS:
+					break;
+				case REVISE_GOOGLE_DRIVE_ITEM_SETTINGS:
+					sAction.initializeAction(reference);
+					state.setAttribute(STATE_REVISE_PROPERTIES_ENTITY_ID, selectedItemId);
+					state.setAttribute(STATE_REVISE_PROPERTIES_ACTION, action);
+					state.setAttribute (STATE_MODE, MODE_REVISE_GOOGLE_DRIVE_ITEM_SETTINGS);
+					state.setAttribute(STATE_REVISE_PROPERTIES_ITEM, getListItem(state));
+					conditionsHelper.loadConditionData(state);
 					break;
 				case CREATE:
 					break;

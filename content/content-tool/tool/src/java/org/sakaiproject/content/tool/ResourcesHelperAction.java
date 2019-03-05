@@ -2376,7 +2376,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 */
 
 	public void doAddGoogleItems(RunData data) {
-		log.debug(this + ".soAddUrls()");
+		log.debug(this + ".doAddGoogleItems()");
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		ParameterParser params = data.getParameters();
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
@@ -2464,6 +2464,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			try {
 				ContentResource r = chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
 				ContentResourceEdit redit = chs.editResource(r.getId());
+				redit.setAvailability(true, null, null);
 				redit.setResourceType(ResourceType.TYPE_GOOGLE_DRIVE_ITEM);
 				chs.commitResource(redit);
 			} catch (Exception e) {

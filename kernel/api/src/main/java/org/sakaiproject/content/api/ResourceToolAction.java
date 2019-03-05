@@ -74,6 +74,7 @@ public interface ResourceToolAction
 		 * Add Google Drive items
 		 */
 		NEW_GOOGLE_DRIVE_ITEMS,
+		REVISE_GOOGLE_DRIVE_ITEM_SETTINGS,
 		
 		/**
 		 * Create other -- Handled by helper and Resources tool.  Can create one item at a time.  
