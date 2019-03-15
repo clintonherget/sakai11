@@ -228,7 +228,10 @@
   height: 20px;
   color: #AAA;
 }
-#gradeTableWrapper .gb-comment-notification:before,
+#gradeTableWrapper .gb-comment-notification:before {
+  font-family: "gradebook-icons";
+  content: '\f075';
+}
 
 #gradeTableWrapper .gb-notification {
   position: absolute;

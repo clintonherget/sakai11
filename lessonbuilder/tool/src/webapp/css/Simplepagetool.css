@@ -1006,7 +1006,6 @@ a.peer-eval-stats {
 }
 .Mrphs-siteHierarchy .breadcrumb-link, .Mrphs-siteHierarchy .lessons-siteHierarchy-title {
   display: inline-block;
-  margin-top: 1em;
   padding-top: 4px;
 }
 
@@ -1015,14 +1014,21 @@ a.peer-eval-stats {
   font-weight: normal;
 }
 
-.Mrphs-siteHierarchy .Mrphs-hierarchy--separator {
-  margin-left: 0.5em;
-  margin-top: 1.2em;
+/* Reset all inherited padding */
+.Mrphs-siteHierarchy * {
+  margin-top: 0 !important;
+  padding: 0 !important;
 }
 
-.Mrphs-siteHierarchy span.nextprev {
-  margin-top: 1.2em;
+/* And apply consistent padding */
+.Mrphs-siteHierarchy {
+  padding: 1.2em !important;
 }
+
+.Mrphs-siteHierarchy .Mrphs-hierarchy--separator {
+  margin-left: 0.5em;
+}
+
 .lessons-siteHierarchy-title {
    font-weight: bold;
    margin-left: 0;

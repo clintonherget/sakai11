@@ -101,3 +101,15 @@ function whichradio(el) {
 
 	return allowChange;
 }
+
+// CLASSES-3623 hijack "What's this?" links and open a dialog
+$(function() {
+  var MARK_FOR_REVIEW_POPUP_WORDING =
+      "<p>Checking Mark for Review will bookmark questions you would like to review before submitting the assessment. Click on the Table of Contents link at the top of the page to find a full list of questions (click on Part name to see questions). The question mark symbol will appear next to any question you have marked.</p>" +
+      "<p>This feature is optional and has no impact on your submission.</p>";
+
+  $('a[onclick*="markForReviewPopUp.faces"]').removeAttr('keypress').removeAttr("onclick").on('click', function(event) {
+    event.preventDefault();
+    $("<div>" + MARK_FOR_REVIEW_POPUP_WORDING + "</div>").dialog();
+  });
+});
