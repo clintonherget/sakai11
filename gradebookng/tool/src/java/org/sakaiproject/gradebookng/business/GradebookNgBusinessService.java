@@ -226,26 +226,30 @@ public class GradebookNgBusinessService {
 					// get list of sections and groups this TA has access to
 					final List<CourseSection> courseSections = this.gradebookService.getViewableSections(gradebook.getUid());
 
-					//for each section TA has access to, grab student Id's
-					List<String> viewableStudents = new ArrayList();
+					final List<String> viewableStudents = this.gradebookPermissionService.getViewableStudentsForUser(
+						gradebook.getUid(), user.getId(), new ArrayList<>(userUuids), courseSections);
 
-					Map<String, Set<Member>> groupMembers = getGroupMembers();
-					
-					//iterate through sections available to the TA and build a list of the student members of each section
-					if(courseSections != null && !courseSections.isEmpty() && groupMembers!=null){
-						for(CourseSection section:courseSections){
-							if(groupMembers.containsKey(section.getUuid())) {
-								Set<Member> members = groupMembers.get(section.getUuid());
-								for(Member member:members){
-									if(givenSiteId!=null && member.getUserId()!=null && securityService.unlock(member.getUserId(), GbPortalPermission.VIEW_OWN_GRADES.getValue(), siteService.siteReference(givenSiteId))/*member.getRole().equals("S")*/){
-											viewableStudents.add(member.getUserId());
-									}
-								}
-							}
-						}
-					}
-
-					if (!viewableStudents.isEmpty()) {
+//					//for each section TA has access to, grab student Id's
+//					List<String> viewableStudents = new ArrayList();
+//
+//					Map<String, Set<Member>> groupMembers = getGroupMembers();
+//					
+//					//iterate through sections available to the TA and build a list of the student members of each section
+//					if(courseSections != null && !courseSections.isEmpty() && groupMembers!=null){
+//						for(CourseSection section:courseSections){
+//							if(groupMembers.containsKey(section.getUuid())) {
+//								Set<Member> members = groupMembers.get(section.getUuid());
+//								for(Member member:members){
+//									if(givenSiteId!=null && member.getUserId()!=null && securityService.unlock(member.getUserId(), GbPortalPermission.VIEW_OWN_GRADES.getValue(), siteService.siteReference(givenSiteId))/*member.getRole().equals("S")*/){
+//											viewableStudents.add(member.getUserId());
+//									}
+//								}
+//							}
+//						}
+//					}
+//
+//					if (!viewableStudents.isEmpty()) {
+					if (viewableStudents != null) {
 						userUuids.retainAll(viewableStudents); // retain only
 																// those that
 																// are visible
@@ -1517,7 +1521,7 @@ public class GradebookNgBusinessService {
 
 			//FIXME: Another realms hack. The above method only returns groups from gb_permission_t. If this list is empty,
 			//need to check realms to see if user has privilege to grade any groups. This is already done in 
-			if(viewableGroupIds.isEmpty()){
+			if(viewableGroupIds == null || viewableGroupIds.isEmpty()){
 				List<PermissionDefinition> realmsPerms = this.getPermissionsForUser(user.getId());
 				if(!realmsPerms.isEmpty()){
 					for(PermissionDefinition permDef : realmsPerms){
