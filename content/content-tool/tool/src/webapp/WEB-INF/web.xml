@@ -11,6 +11,11 @@
         <filter-class>org.sakaiproject.util.RequestFilter</filter-class>
     </filter>
 
+    <filter>
+        <filter-name>sakai.googledrive.request</filter-name>
+        <filter-class>org.sakaiproject.content.googledrive.GoogleDriveFilter</filter-class>
+    </filter>
+
    <filter-mapping>
        <filter-name>sakai.request</filter-name>
        <servlet-name>sakai.filepicker</servlet-name>
@@ -18,6 +23,14 @@
        <dispatcher>FORWARD</dispatcher>
        <dispatcher>INCLUDE</dispatcher>
    </filter-mapping>
+
+    <filter-mapping>
+      <filter-name>sakai.googledrive.request</filter-name>
+      <servlet-name>sakai.resources</servlet-name>
+      <dispatcher>REQUEST</dispatcher>
+      <dispatcher>FORWARD</dispatcher>
+      <dispatcher>INCLUDE</dispatcher>
+    </filter-mapping>
 
     <filter-mapping>
         <filter-name>sakai.request</filter-name>
