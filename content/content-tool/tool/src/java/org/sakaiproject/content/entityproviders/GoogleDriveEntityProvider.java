@@ -54,50 +54,50 @@ public class GoogleDriveEntityProvider extends AbstractEntityProvider implements
 		return new String[]{Formats.JSON};
 	}
 
-	@EntityCustomAction(action = "drive-data", viewKey = EntityView.VIEW_LIST)
-	public List<GoogleItem> getGoogleDriveItems(EntityView view, Map<String, Object> params) {
-		HttpServletRequest request = requestGetter.getRequest();
-		HttpServletResponse response = requestGetter.getResponse();
-
-		try {
-			GoogleClient google = new GoogleClient();
-
-			RequestParams p = new RequestParams(request);
-			String mode = p.getString("mode", DRIVE_MODE_RECENT);
-
-			String user = GoogleClient.getCurrentGoogleUser();
-
-			FileList fileList = null;
-
-			if (DRIVE_MODE_RECENT.equals(mode)) {
-				fileList = getRecentFiles(google, user, p);
-			} else if (DRIVE_MODE_MY_DRIVE.equals(mode)) {
-				fileList = getChildrenForContext(google, user, p);
-			} else if (DRIVE_MODE_STARRED.equals(mode)) {
-				fileList = getChildrenForContext(google, user, p, true);
-			} else {
-				throw new RuntimeException("DriveHandler mode not supported: " + mode);
-			}
-
-			List<GoogleItem> items = new ArrayList<>();
-
-			for (File entry : fileList.getFiles()) {
-				items.add(new GoogleItem(entry.getId(),
-					entry.getName(),
-					entry.getIconLink(),
-					entry.getThumbnailLink(),
-					entry.getWebViewLink(),
-					entry.getMimeType()));
-			}
-
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.writeValue(response.getOutputStream(), new GoogleItemPage(items, fileList.getNextPageToken()));
-
-			return items;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+//	@EntityCustomAction(action = "drive-data", viewKey = EntityView.VIEW_LIST)
+//	public List<GoogleItem> getGoogleDriveItems(EntityView view, Map<String, Object> params) {
+//		HttpServletRequest request = requestGetter.getRequest();
+//		HttpServletResponse response = requestGetter.getResponse();
+//
+//		try {
+//			GoogleClient google = new GoogleClient();
+//
+//			RequestParams p = new RequestParams(request);
+//			String mode = p.getString("mode", DRIVE_MODE_RECENT);
+//
+//			String user = GoogleClient.getCurrentGoogleUser();
+//
+//			FileList fileList = null;
+//
+//			if (DRIVE_MODE_RECENT.equals(mode)) {
+//				fileList = getRecentFiles(google, user, p);
+//			} else if (DRIVE_MODE_MY_DRIVE.equals(mode)) {
+//				fileList = getChildrenForContext(google, user, p);
+//			} else if (DRIVE_MODE_STARRED.equals(mode)) {
+//				fileList = getChildrenForContext(google, user, p, true);
+//			} else {
+//				throw new RuntimeException("DriveHandler mode not supported: " + mode);
+//			}
+//
+//			List<GoogleItem> items = new ArrayList<>();
+//
+//			for (File entry : fileList.getFiles()) {
+//				items.add(new GoogleItem(entry.getId(),
+//					entry.getName(),
+//					entry.getIconLink(),
+//					entry.getThumbnailLink(),
+//					entry.getWebViewLink(),
+//					entry.getMimeType()));
+//			}
+//
+//			ObjectMapper mapper = new ObjectMapper();
+//			mapper.writeValue(response.getOutputStream(), new GoogleItemPage(items, fileList.getNextPageToken()));
+//
+//			return items;
+//		} catch (Exception e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
 
 	@EntityCustomAction(action = "reset-oauth", viewKey = EntityView.VIEW_LIST)
 	public void resetOauthCredential(EntityView view, Map<String, Object> params) {

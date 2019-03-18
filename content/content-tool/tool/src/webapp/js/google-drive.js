@@ -338,7 +338,7 @@ GoogleDriveContainer.prototype.setupTabs = function() {
 
     // Recent/Search
     self.recentDrive = new GoogleDrive(self.$container.find('#googledriverecent'), self.baseURL, {
-      path: '/drive-data?mode=recent',
+      path: '/drive-data',
     }, $.proxy(self.onLoading, self), $.proxy(self.onLoaded, self));
 
     self.$container.find('.google-drive-menu a[href="?mode=recent#googledriverecent"]').on('show.bs.tab', function() {
@@ -354,7 +354,7 @@ GoogleDriveContainer.prototype.setupTabs = function() {
         if (self.myDrive == null) {
           // load my drive (for root context)
           self.myDrive = new GoogleDrive($('#googledrivehome'), self.baseURL, {
-            path: '/drive-data?mode=home',
+            path: '/my-drive-data',
           }, $.proxy(self.onLoading, self), $.proxy(self.onLoaded, self));
 
 
@@ -393,7 +393,7 @@ GoogleDriveContainer.prototype.setupTabs = function() {
         if (self.starredDrive == null) {
           // load my drive (for root context)
           self.starredDrive = new GoogleDrive($('#googledrivestarred'), self.baseURL, {
-            path: '/drive-data?mode=starred',
+            path: '/starred-drive-data',
           }, $.proxy(self.onLoading, self), $.proxy(self.onLoaded, self));
 
 
@@ -443,4 +443,37 @@ GoogleDriveContainer.prototype.onLoaded = function() {
     this._spinner = undefined;
   }
   this.handleCheckboxChange();
+}
+
+
+function GoogleDriveListing() {
+  var self = this;
+
+  $("table.resourcesList a[onclick*='org.sakaiproject.content.types.GoogleDriveItemType:create']").removeAttr('onclick').on('click', function(event) {
+    event.preventDefault();
+
+    $("<div id='googleDriveModal' class='drive-body'>Loading...</div>").appendTo(document.body)
+    $("#googleDriveModal").dialog();
+
+    $(window).on('resize', function () {
+       $('.ui-dialog.ui-dialog-full-screen').css({
+            'width': $(window).width() - 40,
+            'height': $(window).height() - 40,
+            'left': '20px',
+            'top':'20px'
+       });
+    });
+
+    $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen');
+    $(window).trigger('resize');
+
+    $.ajax({
+      url: window.location.pathname + "/google-drive/show-google-drive",
+      dataType: 'html',
+      success: function(html) {
+        $("#googleDriveModal").html(html);
+        new GoogleDriveContainer($("#googleDriveModal"), window.location.pathname + "/google-drive");
+      }
+    });
+  });
 }

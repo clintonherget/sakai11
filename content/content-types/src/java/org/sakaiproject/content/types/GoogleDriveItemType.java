@@ -78,7 +78,6 @@ public class GoogleDriveItemType extends BaseResourceType
 
 	public GoogleDriveItemType() {
 		actions.put(CREATE, new BaseInteractionAction(CREATE, ActionType.NEW_GOOGLE_DRIVE_ITEMS, typeId, helperId, localizer("create.googledriveitems")));
-		actions.put(REVISE_METADATA, new BaseServiceLevelAction(REVISE_METADATA, ActionType.REVISE_METADATA, typeId, false, localizer("action.props")));
 		actions.put(DELETE, new BaseServiceLevelAction(DELETE, ActionType.DELETE, typeId, true, localizer("action.delete")));
 
 		for(ActionType type : ActionType.values())
@@ -105,10 +104,6 @@ public class GoogleDriveItemType extends BaseResourceType
 
 	public ResourceToolAction getAction(String actionId) 
 	{
-		if (actionId.equals(REVISE_METADATA)) {
-			return new BaseServiceLevelAction(REVISE_METADATA, ActionType.REVISE_GOOGLE_DRIVE_ITEM_SETTINGS, typeId, false, localizer("action.props"));
-		}
-
 		return actions.get(actionId);
 	}
 

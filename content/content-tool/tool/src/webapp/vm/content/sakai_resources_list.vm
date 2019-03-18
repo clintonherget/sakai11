@@ -2,6 +2,8 @@
 <!-- sakai_resources_list.vm, use with org.sakaiproject.content.tool.ResourcesAction.java -->
 <!-- this is the new list template, which uses the resources type registry -->
 <script type="text/javascript">includeLatestJQuery('content');</script>
+#javascript("/sakai-content-tool/js/google-drive.js")
+#css("/sakai-content-tool/styles/google-drive.css")
 
 <!-- // -->
 </script>
@@ -1216,4 +1218,4 @@
 	//-->
 </script>
 
-	
+<script>new GoogleDriveListing()</script>
