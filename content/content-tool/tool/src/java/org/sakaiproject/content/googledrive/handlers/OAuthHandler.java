@@ -95,7 +95,7 @@ public class OAuthHandler implements Handler {
                     google.deleteCredential(googleUser);
                 }
 
-                redirectTo = "/";
+                sendToGoogle(request, response, context);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -130,7 +130,9 @@ public class OAuthHandler implements Handler {
 
     private String handleLoginURL(URL baseURL) {
         try {
-            return new URL(baseURL, "/drive-tool/handle-google-login").toString();
+            // FIXME will need to be a Google registered URL for each environment
+//            return new URL(baseURL, "/direct/google-drive/handle-google-auth").toString();
+            return "https://dishevelled.net/nyuclassesoauthdev";
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

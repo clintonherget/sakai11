@@ -23,19 +23,7 @@ function GoogleDrive(rootElt, baseURL, options, onLoading, onLoaded) {
   this.onLoaded = onLoaded || $.noop;
 
   this.getFiles();
-
-  this.setupResetOauthAction();
 };
-
-GoogleDrive.prototype.setupResetOauthAction = function() {
-  var self = this;
-
-  $('#resetOauthCredential').off('click').on('click', function() {
-    $.get(self.baseURL + '/reset-oauth', function() {
-      location.reload();
-    });
-  });
-}
 
 GoogleDrive.prototype.setupList = function() {
   this.listOverlay = $('<div class="list-overlay" />');

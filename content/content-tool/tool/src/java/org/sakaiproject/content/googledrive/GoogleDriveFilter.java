@@ -18,6 +18,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,12 +58,14 @@ public class GoogleDriveFilter implements Filter {
         I18n i18n = new I18n(this.getClass().getClassLoader(), "org.sakaiproject.content.googledrive.i18n.drive");
 
         URL toolBaseURL = determineBaseURL();
-        Handlebars handlebars = loadHandlebars(toolBaseURL, i18n);
+        URL googleDriveURL = determineGoogleDriveURL(toolBaseURL);
+        Handlebars handlebars = loadHandlebars(toolBaseURL, googleDriveURL, i18n);
 
         try {
             Map<String, Object> context = new HashMap<String, Object>();
 
             context.put("baseURL", toolBaseURL);
+            context.put("googleDriveURL", googleDriveURL);
             context.put("layout", true);
             context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
             context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
@@ -79,11 +83,13 @@ public class GoogleDriveFilter implements Filter {
             response.setHeader("Content-Type", handler.getContentType());
 
             if (handler.hasRedirect()) {
-                if (handler.getRedirect().startsWith("http")) {
-                    response.sendRedirect(handler.getRedirect());
-                } else {
-                    response.sendRedirect(toolBaseURL + handler.getRedirect());
+                String redirectURL = handler.getRedirect();
+                if (!redirectURL.startsWith("http")) {
+                    redirectURL = toolBaseURL + redirectURL;
                 }
+                context.put("redirectURL", redirectURL);
+                Template template = handlebars.compile("org/sakaiproject/content/googledrive/views/redirect");
+                response.getWriter().write(template.apply(context));
             } else if (handler.hasTemplate()) {
                 if (Boolean.TRUE.equals(context.get("layout"))) {
                     Template template = handlebars.compile("org/sakaiproject/content/googledrive/views/layout");
@@ -136,6 +142,19 @@ public class GoogleDriveFilter implements Filter {
         }
     }
 
+    private URL determineGoogleDriveURL(URL baseURL) {
+        try {
+            URI uri = baseURL.toURI();
+            String newPath = uri.getPath() + "/google-drive/";
+            URI newUri = uri.resolve(newPath);
+            return newUri.toURL();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Couldn't determine google drive URL", e);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Couldn't determine google drive URL", e);
+        }
+    }
+
     private String getBaseURI() {
         String result = "";
 
@@ -161,7 +180,7 @@ public class GoogleDriveFilter implements Filter {
         return UserDirectoryService.getCurrentUser().getEid() + "@" + GOOGLE_DOMAIN;
     }
 
-    private Handlebars loadHandlebars(final URL baseURL, final I18n i18n) {
+    private Handlebars loadHandlebars(final URL baseURL, final URL googleDriveURL, final I18n i18n) {
         Handlebars handlebars = new Handlebars();
 
         handlebars.setInfiniteLoops(true);
