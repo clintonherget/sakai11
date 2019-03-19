@@ -1,4 +1,4 @@
-<div class="google-drive">
+<div class="google-drive container">
   <div class="row">
     <div class="col-sm-12">
       <div style="text-align: right;">
@@ -11,6 +11,7 @@
 
   <div class="row">
     <div class="col-sm-2 google-drive-menu">
+      <button id="addSelectedGoogleItems" class="btn btn-primary disabled" disabled="disabled">Selected Drive Content</button>
       <div>
         <ul class="nav">
           <li class="active"><a href="#googledriverecent" data-toggle="tab">Most Recent</a></li>
@@ -25,7 +26,8 @@
           <div class="search-bar">
             <input class="file-search" type="text" placeholder="Search Most Recent" value="" />
           </div>
-          <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
+          <form class="google-drive-select-item-form" method="POST" action="{{googleDriveURL}}new-google-item">
+            <input type="hidden" name="collectionId" value="{{collectionId}}"/>
             <div class="scroll-container">
               <ul class="file-list">
               </ul>
@@ -70,8 +72,8 @@
 
 <script id="fileTemplate" type="text/template">
   {if folder}
-    <li><label><input type="radio" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a class="google-drive-folder" href="#" data-id="${id}">${name}</a></label></li>
+    <li><label><input type="radio" name="fileid" value="${id}"> <img src="${iconLink}" /> <a class="google-drive-folder" href="#" data-id="${id}">${name}</a></label></li>
   {else}
-    <li><label><input type="radio" name="fileid[]" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
+    <li><label><input type="radio" name="fileid" value="${id}"> <img src="${iconLink}" /> <a href="${viewLink}">${name}</a></label></li>
   {/if}
 </script>

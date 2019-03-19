@@ -283,14 +283,16 @@ GoogleDriveContainer.prototype.getSelectedFilesIds = function() {
 GoogleDriveContainer.prototype.setupForm = function() {
   var self = this;
 
-  var $form = $('#addGoogleItemsForm');
+  var $form = $('form.google-drive-select-item-form');
 
   var $button = $('#addSelectedGoogleItems');
   $button.on('click', function() {
     $form.submit();
   });
 
-  $form.on('submit', function() {
+  $form.on('submit', function(event) {
+    event.preventDefault();
+
     var files = self.getSelectedFilesIds();
 
     $form.find(':hidden[name="googleitemid[]"]').remove();
@@ -304,7 +306,15 @@ GoogleDriveContainer.prototype.setupForm = function() {
       return false;
     }
 
-    return true;
+    $.ajax({
+      url: $form.attr('action'),
+      data: $form.serialize(),
+      type: 'post',
+      dataType: 'html',
+      success: function(html) {
+        $("#googleDriveModal").html(html);
+      }
+    });
   });
 };
 
@@ -434,6 +444,25 @@ GoogleDriveContainer.prototype.onLoaded = function() {
 }
 
 
+function GoogleDriveForm() {
+  var self = this;
+  self.$form = $('form.create-google-item-form');
+  self.$form.on('submit', function(event) {
+    event.preventDefault();
+
+    $.ajax({
+      url: self.$form.attr('action'),
+      data: self.$form.serialize(),
+      type: 'post',
+      dataType: 'html',
+      success: function(html) {
+        $("#googleDriveModal").html(html);
+      }
+    });
+  });
+}
+
+
 function GoogleDriveListing() {
   var self = this;
 
@@ -455,9 +484,15 @@ function GoogleDriveListing() {
     $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen');
     $(window).trigger('resize');
 
+    var collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
+
     $.ajax({
       url: window.location.pathname + "/google-drive/show-google-drive",
+      type: 'get',
       dataType: 'html',
+      data: {
+        'collectionId': collectionId
+      },
       success: function(html) {
         $("#googleDriveModal").html(html);
         new GoogleDriveContainer($("#googleDriveModal"), window.location.pathname + "/google-drive");

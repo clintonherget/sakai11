@@ -24,50 +24,41 @@
 
 package org.sakaiproject.content.googledrive.handlers;
 
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.model.File;
 import org.sakaiproject.content.googledrive.GoogleClient;
 
-import java.util.ArrayList;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.sakaiproject.component.cover.ServerConfigurationService;
-import org.sakaiproject.tool.cover.SessionManager;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.CredentialRefreshListener;
-import com.google.api.client.auth.oauth2.DataStoreCredentialRefreshListener;
-import com.google.api.client.auth.oauth2.TokenErrorResponse;
-import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.Drive;
-import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-
-import java.util.stream.Collectors;
-import java.util.Collections;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-
-import java.net.URL;
-
-public class ShowGoogleDriveHandler implements Handler {
+public class NewGoogleItemHandler implements Handler {
 
     private String redirectTo = null;
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
+            GoogleClient google = new GoogleClient();
+            Drive drive = google.getDrive((String) context.get("googleUser"));
+
+            String[] fileIds = request.getParameterValues("googleitemid[]");
+
+            if (fileIds == null || fileIds.length == 0) {
+                // FIXME show listing again with message?
+                throw new RuntimeException("fileid required");
+            }
+
+            Drive.Files.Get getRequest = drive.files().get(fileIds[0]); // only handling one at a time?
+            File googleFile = getRequest.setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink").execute();
+
             context.put("collectionId", request.getParameter("collectionId"));
-            context.put("subpage", "show_google_drive");
+            context.put("googleFileId", googleFile.getId());
+            context.put("googleFileName", googleFile.getName());
+            context.put("googleFileIconLink", googleFile.getIconLink());
+            context.put("subpage", "new_google_item");
             context.put("layout", false);
         } catch (Exception e) {
             throw new RuntimeException(e);

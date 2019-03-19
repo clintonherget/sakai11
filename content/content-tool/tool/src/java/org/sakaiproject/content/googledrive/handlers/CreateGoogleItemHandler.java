@@ -24,6 +24,8 @@
 
 package org.sakaiproject.content.googledrive.handlers;
 
+import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.googledrive.GoogleClient;
 
 import java.util.ArrayList;
@@ -76,7 +78,7 @@ import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 /**
  * A handler to access Google Drive file data
  */
-public class AddResourceHandler implements Handler {
+public class CreateGoogleItemHandler implements Handler {
 
     private String redirectTo = null;
 
@@ -86,22 +88,20 @@ public class AddResourceHandler implements Handler {
             GoogleClient google = new GoogleClient();
             Drive drive = google.getDrive((String) context.get("googleUser"));
 
-            String[] fileIds = request.getParameterValues("fileid[]");
+            String fileId = request.getParameter("fileid");
+            String collectionId = request.getParameter("collectionId");
 
-            GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
+            GoogleClient.LimitedBatchRequest batch = google.getBatch(drive); 
 
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
             String siteId = (String) context.get("siteId");
-            String collectionId = "/group/" + siteId + "/";
 
-            for (String id : fileIds) {
-                batch.queue(drive.files().get(id).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
-                        new GoogleFileImporter(google, id, chs, collectionId));
-            }
-
+            batch.queue(drive.files().get(fileId).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
+                        new GoogleFileImporter(google, fileId, chs, collectionId));
+            
             batch.execute();
 
-            redirectTo = "/";
+            redirectTo = "";
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -143,6 +143,7 @@ public class AddResourceHandler implements Handler {
             properties.addProperty("google-id", fileId);
             properties.addProperty("google-view-link", googleFile.getWebViewLink());
             properties.addProperty("google-icon-link", googleFile.getIconLink());
+            properties.addProperty("google-mime-type", googleFile.getMimeType());
 
             try {
                 chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);

@@ -129,6 +129,10 @@ public class GoogleDriveFilter implements Filter {
             return new DriveHandler(DriveHandler.MY_DRIVE);
         } else if (path.startsWith("/starred-drive-data")) {
             return new DriveHandler(DriveHandler.STARRED);
+        } else if (path.startsWith("/new-google-item")) {
+            return new NewGoogleItemHandler();
+        } else if (path.startsWith("/create-google-item")) {
+            return new CreateGoogleItemHandler();
         }
 
         throw new RuntimeException("Path not supported by googledrive handlers: " + path);

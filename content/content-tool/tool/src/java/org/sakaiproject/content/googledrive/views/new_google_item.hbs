@@ -1,0 +1,38 @@
+<div class="new-google-item container">
+  <div class="row">
+    <div class="col-sm-12">
+      <form method="POST" action="{{googleDriveURL}}create-google-item" class="create-google-item-form form-horizontal">
+        <input type="hidden" name="collectionId" value="{{collectionId}}"/>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Google Drive Content</label>
+          <div class="col-sm-10">
+            <img src="{{googleFileIconLink}}"/>
+            {{googleFileName}}
+          </div>
+          <input type="hidden" name="fileid" value="{{googleFileId}}">
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Apply Permission</label>
+          <div class="col-sm-10">
+            TODO
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Select Site Group(s)</label>
+          <div class="col-sm-10">
+            TODO
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Email Notification</label>
+          <div class="col-sm-10">
+            TODO
+          </div>
+        </div>
+
+        <button id="createGoogleDriveItem" class="btn btn-primary">Apply Permissions and Add Google Drive Content</button>
+      </form>
+    </div>
+  </div>
+</div>
+<script>new GoogleDriveForm();</script>
