@@ -26,6 +26,7 @@ package org.sakaiproject.content.googledrive.handlers;
 
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.googledrive.GoogleClient;
 
 import java.util.ArrayList;
@@ -146,7 +147,10 @@ public class CreateGoogleItemHandler implements Handler {
             properties.addProperty("google-mime-type", googleFile.getMimeType());
 
             try {
-                chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
+                ContentResource resource = chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
+                ContentResourceEdit resourceEdit = chs.editResource(resource.getId());
+                resourceEdit.setResourceType(ResourceType.TYPE_GOOGLE_DRIVE_ITEM);
+                chs.commitResource(resourceEdit);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
