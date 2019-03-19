@@ -32,24 +32,25 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Properties;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
-import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
-import com.google.api.client.googleapis.json.GoogleJsonError;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.services.drive.Drive;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
 
 import org.sakaiproject.exception.IdLengthException;
-import org.sakaiproject.util.*;
+import org.sakaiproject.util.FileItem;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.cheftool.JetspeedRunData;
 import org.sakaiproject.cheftool.RunData;
@@ -81,6 +82,10 @@ import org.sakaiproject.tool.api.ToolException;
 import org.sakaiproject.tool.api.ToolSession;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
+import org.sakaiproject.util.FormattedText;
+import org.sakaiproject.util.ParameterParser;
+import org.sakaiproject.util.ResourceLoader;
+import org.sakaiproject.util.Validator;
 import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.event.api.NotificationEdit;
 
@@ -353,10 +358,6 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		case NEW_URLS:
 			template = buildNewUrlsContext(portlet, context, data, state);
 			break;
-		case NEW_GOOGLE_DRIVE_ITEMS:
-			template = buildNewGoogleDriveContext(portlet, context, data, state);
-			break;
-
 		default:
 			template = buildMakeSitePageContext(portlet, context, data, state);
 			break;
@@ -376,29 +377,7 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		
 		return MAKE_SITE_PAGE_TEMPLATE;
 	}
-
-	protected String buildNewGoogleDriveContext(VelocityPortlet portlet, Context context, RunData data, SessionState state) {
-		HttpServletRequest request = data.getRequest();
-		String callbackURL = request.getRequestURL().toString();
-
-		GoogleClient google = new GoogleClient();
-		if (google.getCredential() != null) {
-			return "resources/sakai_google_drive";
-		} else {
-			try {
-				String redirectURL = GoogleClient.getRedirectURL();
-
-				GoogleAuthorizationCodeFlow flow = google.getAuthFlow();
-				context.put("googleRedirect", flow.newAuthorizationUrl()
-												.setRedirectUri(redirectURL)
-												.setState(callbackURL)
-												.build());
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-			return "resources/sakai_google_drive_auth";
-		}
-	}
+	
 
 	protected String buildNewUrlsContext(VelocityPortlet portlet, Context context, RunData data, SessionState state)
 	 {
@@ -914,9 +893,6 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			pipe.setRevisedMimeType(ResourceType.MIME_TYPE_URL);
 			pipe.setNotification(noti);
 		}
-		else if(ResourceType.TYPE_GOOGLE_DRIVE_ITEM.equals(resourceType)) {
-			System.out.println("DO SOMETHING WITH THE GOOGLE ITEM RESOURCE HERE!");
-		}
 		else if(ResourceType.TYPE_FOLDER.equals(resourceType))
 		{
 			MultiFileUploadPipe mfp = (MultiFileUploadPipe) pipe;
@@ -1199,19 +1175,19 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
 		ParameterParser params = data.getParameters ();
 		ToolSession toolSession = SessionManager.getCurrentToolSession();
-
+		
 		int requestStateId = params.getInt("requestStateId", 0);
 		ResourcesAction.restoreRequestState(state, new String[]{ResourcesAction.PREFIX + ResourcesAction.REQUEST}, requestStateId);
-
+		
 		MultiFileUploadPipe mfp = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
 		if(mfp == null)
 		{
 			return;
 		}
-
+		
 		String pipe_init_id = mfp.getInitializationId();
 		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
-
+	
 		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
 		{
 			// in this case, prevent upload to wrong folder
@@ -1221,10 +1197,10 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 			mfp.setActionCompleted(false);
 			return;
 		}
-
+		
 		int count = params.getInt("fileCount");
 		mfp.setFileCount(count);
-
+		
 		int lastIndex = params.getInt("lastIndex");
 		
 		ContentEntity entity = mfp.getContentEntity();
@@ -2374,112 +2350,5 @@ public class ResourcesHelperAction extends VelocityPortletPaneledAction
 		return fileName;
 	}
 */
-
-	public void doAddGoogleItems(RunData data) {
-		log.debug(this + ".doAddGoogleItems()");
-		SessionState state = ((JetspeedRunData)data).getPortletSessionState (((JetspeedRunData)data).getJs_peid ());
-		ParameterParser params = data.getParameters();
-		ToolSession toolSession = SessionManager.getCurrentToolSession();
-
-		int requestStateId = params.getInt("requestStateId", 0);
-		ResourcesAction.restoreRequestState(state, new String[]{ResourcesAction.PREFIX + ResourcesAction.REQUEST}, requestStateId);
-
-		MultiFileUploadPipe mfp = (MultiFileUploadPipe) toolSession.getAttribute(ResourceToolAction.ACTION_PIPE);
-		if(mfp == null)
-		{
-			return;
-		}
-
-		String pipe_init_id = mfp.getInitializationId();
-		String response_init_id = params.getString(ResourcesAction.PIPE_INIT_ID);
-
-		if(pipe_init_id == null || response_init_id == null || ! response_init_id.equalsIgnoreCase(pipe_init_id))
-		{
-			// in this case, prevent upload to wrong folder
-			mfp.setErrorMessage(rb.getString("alert.try-again"));
-			mfp.setActionCanceled(false);
-			mfp.setErrorEncountered(true);
-			mfp.setActionCompleted(false);
-			return;
-		}
-
-		ContentEntity entity = mfp.getContentEntity();
-		ContentCollection containingCollection = null;
-		if(entity != null && entity instanceof ContentCollection) {
-			containingCollection = (ContentCollection) entity;
-		} else {
-			addAlert(state, "Not a valid collection");
-			return;
-		}
-
-		try {
-			GoogleClient google = new GoogleClient();
-			Drive drive = google.getDrive(GoogleClient.getCurrentGoogleUser());
-
-			String[] googleItemIds = params.getStrings("googleitemid[]");
-
-			GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
-
-			org.sakaiproject.content.api.ContentHostingService chs = (org.sakaiproject.content.api.ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
-			String collectionId = containingCollection.getId();
-
-			for (String id : googleItemIds) {
-				batch.queue(drive.files().get(id).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
-					new GoogleFileImporter(google, id, chs, collectionId));
-			}
-
-			batch.execute();
-
-			mfp.setActionCanceled(false);
-			mfp.setErrorEncountered(false);
-			mfp.setActionCompleted(true);
-
-			toolSession.setAttribute(ResourceToolAction.DONE, Boolean.TRUE);
-		} catch (Exception e) {
-			addAlert(state, e.getMessage());
-		}
-	}
-
-	private class GoogleFileImporter extends JsonBatchCallback<com.google.api.services.drive.model.File> {
-		private GoogleClient google;
-		private String fileId;
-		private org.sakaiproject.content.api.ContentHostingService chs;
-		private String collectionId;
-
-		public GoogleFileImporter(GoogleClient google, String fileId, org.sakaiproject.content.api.ContentHostingService chs, String collectionId) {
-			this.google = google;
-			this.fileId = fileId;
-			this.chs = chs;
-			this.collectionId = collectionId;
-		}
-
-		public void onSuccess(com.google.api.services.drive.model.File googleFile, HttpHeaders responseHeaders) {
-			ResourceProperties properties = new BaseResourcePropertiesEdit();
-			properties.addProperty(ResourceProperties.PROP_DISPLAY_NAME, googleFile.getName());
-			properties.addProperty("google-id", fileId);
-			properties.addProperty("google-view-link", googleFile.getWebViewLink());
-			properties.addProperty("google-icon-link", googleFile.getIconLink());
-			properties.addProperty("google-mime-type", googleFile.getMimeType());
-
-			try {
-				ContentResource r = chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
-				ContentResourceEdit redit = chs.editResource(r.getId());
-				redit.setAvailability(true, null, null);
-				redit.setResourceType(ResourceType.TYPE_GOOGLE_DRIVE_ITEM);
-				chs.commitResource(redit);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
-			if (e.getCode() == 403) {
-				google.rateLimitHit();
-			}
-
-			throw new RuntimeException("Failed during Google lookup for file: " + fileId + " " + e);
-		}
-
-	}
 
 }
