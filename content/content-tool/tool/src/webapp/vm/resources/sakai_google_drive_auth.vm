@@ -1,6 +1,0 @@
-<div id="google-drive" class="google-drive">
-  <p>Redirecting to Google...</p>
-  <script>
-    location.href = "$googleRedirect";
-  </script>
-</div>
