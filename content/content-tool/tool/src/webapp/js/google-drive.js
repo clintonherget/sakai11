@@ -237,9 +237,10 @@ GoogleDrive.prototype.refreshListForFolder = function(folderId) {
 
 
 
-function GoogleDriveContainer($container, baseURL) {
+function GoogleDriveContainer($container, baseURL, googleDriveListing) {
   this.$container = $container;
   this.baseURL = baseURL;
+  this.googleDriveListing = googleDriveListing;
 
   this.init();
 };
@@ -265,6 +266,15 @@ GoogleDriveContainer.prototype.init = function() {
       $(this).closest('li').removeClass('active');
     }
     self.handleCheckboxChange();
+  });
+
+  $('#resetGoogleOAuth').on('click', function(event) {
+    $.ajax({
+      url: '/direct/google-drive/reset-oauth',
+      success: function() {
+        self.googleDriveListing.reloadDialog();
+      }
+    });
   });
 };
 
@@ -484,19 +494,25 @@ function GoogleDriveListing() {
     $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen');
     $(window).trigger('resize');
 
-    var collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
+    self.collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
 
-    $.ajax({
-      url: window.location.pathname + "/google-drive/show-google-drive",
-      type: 'get',
-      dataType: 'html',
-      data: {
-        'collectionId': collectionId
-      },
-      success: function(html) {
-        $("#googleDriveModal").html(html);
-        new GoogleDriveContainer($("#googleDriveModal"), window.location.pathname + "/google-drive");
-      }
-    });
+    self.reloadDialog();
   });
 }
+
+GoogleDriveListing.prototype.reloadDialog = function() {
+  var self = this;
+
+  $.ajax({
+    url: window.location.pathname + "/google-drive/show-google-drive",
+    type: 'get',
+    dataType: 'html',
+    data: {
+      'collectionId': self.collectionId
+    },
+    success: function(html) {
+      $("#googleDriveModal").html(html);
+      new GoogleDriveContainer($("#googleDriveModal"), window.location.pathname + "/google-drive", self);
+    }
+  });
+};
