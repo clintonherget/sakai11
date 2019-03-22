@@ -76,9 +76,7 @@ import java.net.URL;
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
 
-/**
- * A handler to access Google Drive file data
- */
+
 public class CreateGoogleItemHandler implements Handler {
 
     private String redirectTo = null;

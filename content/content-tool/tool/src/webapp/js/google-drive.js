@@ -330,10 +330,8 @@ GoogleDriveContainer.prototype.setupForm = function() {
 
 
 GoogleDriveContainer.prototype.resizeGoogleContainer = function() {
-//  if (this.$container.is(':visible')) {
-//    this.$container.find('.tab-content').height($(window).height() - this.$container.find('.tab-content').position().top - 150);
-//    this.$container.find('.scroll-container').height(this.$container.find('.tab-content').height() - (this.$container.find('.tab-pane.active .breadcrumb').height() || 0));
-//  }
+  // FIXME
+  this.$container.find('.scroll-container').height($("#googleDriveModal").closest('.ui-dialog').height() - 100);
 };
 
 GoogleDriveContainer.prototype.setupTabs = function() {
@@ -480,14 +478,29 @@ function GoogleDriveListing() {
     event.preventDefault();
 
     $("<div id='googleDriveModal' class='drive-body'>Loading...</div>").appendTo(document.body)
-    $("#googleDriveModal").dialog();
+    $("#googleDriveModal").dialog({
+      modal: true,
+      resizable: false,
+      open: function() {
+        $(document.body).css({
+          overflow: 'hidden',
+        });
+      },
+      close: function() {
+        $(document.body).css({
+          overflow: '',
+        });
+      }
+    });
 
     $(window).on('resize', function () {
        $('.ui-dialog.ui-dialog-full-screen').css({
-            'width': $(window).width() - 40,
-            'height': $(window).height() - 40,
-            'left': '20px',
-            'top':'20px'
+            'width': $(window).width() - 80,
+            'height': $(window).height() - 80,
+            'left': '40px',
+            'top':'40px',
+            'position': 'fixed',
+            'z-index': 1000,
        });
     });
 
