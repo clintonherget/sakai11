@@ -43,7 +43,7 @@ GoogleDrive.prototype.showOverlay = function () {
   }
   this.listOverlay
       .css('width', this.scrollContainer.width())
-      .css('height', this.scrollContainer.height())
+      .css('height', this.scrollContainer.closest('.tab-pane').height())
       .show();
 };
 
@@ -255,9 +255,7 @@ GoogleDriveContainer.prototype.init = function() {
   self.setupTabs();
   self.setupForm();
 
-  self.$container.on('shown.bs.modal', function () {
-    self.resizeGoogleContainer();
-  });
+  self.resizeGoogleContainer();
 
   self.$container.on('click', '.file-list :radio', function(event) {
     if ($(this).is(':checked')) {
@@ -330,8 +328,9 @@ GoogleDriveContainer.prototype.setupForm = function() {
 
 
 GoogleDriveContainer.prototype.resizeGoogleContainer = function() {
-  // FIXME
-  this.$container.find('.scroll-container').height($("#googleDriveModal").closest('.ui-dialog').height() - 100);
+  var containerHeight = $("#googleDriveModal").closest('.ui-dialog').height() - 100;
+  this.$container.find('.scroll-container').height(containerHeight);
+  this.$container.find('.google-drive-menu').height(containerHeight);
 };
 
 GoogleDriveContainer.prototype.setupTabs = function() {
@@ -494,14 +493,17 @@ function GoogleDriveListing() {
     });
 
     $(window).on('resize', function () {
-       $('.ui-dialog.ui-dialog-full-screen').css({
-            'width': $(window).width() - 80,
-            'height': $(window).height() - 80,
-            'left': '40px',
-            'top':'40px',
-            'position': 'fixed',
-            'z-index': 1000,
-       });
+      var width = Math.min(1200, $(window).width() - 100);
+      var leftOffset = parseInt(($(window).width() - width) / 2);
+
+      $('.ui-dialog.ui-dialog-full-screen').css({
+        'width': width,
+        'height': $(window).height() - 100,
+        'left': leftOffset + 'px',
+        'top':'50px',
+        'position': 'fixed',
+        'z-index': 1000,
+      });
     });
 
     $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen');

@@ -1,5 +1,4 @@
 .drive-body .scroll-container {
-    max-height: 600px;
     overflow-y: auto;
 }
 
@@ -227,6 +226,20 @@ body.sakai-drive-preview-open {
 
 .google-drive-menu .nav .active {
   background-color: #EEE;
+}
+
+.google-drive-menu {
+  position: relative;
+}
+
+.google-drive-menu #resetGoogleOAuth {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.google-drive-select-item-form {
+  clear: both;
 }
 
 .google-drive-panel {
