@@ -257,7 +257,7 @@ GoogleDriveContainer.prototype.init = function() {
 
   self.resizeGoogleContainer();
 
-  self.$container.on('click', '.file-list :radio', function(event) {
+  self.$container.on('click', '.file-list :checkbox', function(event) {
     if ($(this).is(':checked')) {
       $(this).closest('li').addClass('active');
     } else {
@@ -281,7 +281,7 @@ GoogleDriveContainer.prototype.getSelectedFilesIds = function() {
 
   var files = [];
 
-  self.$container.find('.file-list :radio:checked:visible').each(function() {
+  self.$container.find('.file-list :checkbox:checked:visible').each(function() {
     files.push($(this).val());
   });
 
@@ -435,7 +435,7 @@ GoogleDriveContainer.prototype.onLoading = function() {
 }
 
 GoogleDriveContainer.prototype.handleCheckboxChange = function() {
-  if (this.$container.find(':radio:checked').length > 0) {
+  if (this.$container.find(':checkbox:checked').length > 0) {
     $('#addSelectedGoogleItems').prop('disabled', false).removeClass('disabled');
   } else {
     $('#addSelectedGoogleItems').prop('disabled', true).addClass('disabled');

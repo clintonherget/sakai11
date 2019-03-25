@@ -87,16 +87,18 @@ public class CreateGoogleItemHandler implements Handler {
             GoogleClient google = new GoogleClient();
             Drive drive = google.getDrive((String) context.get("googleUser"));
 
-            String fileId = request.getParameter("fileid");
+            String[] fileIds = request.getParameterValues("googleitemid[]");
             String collectionId = request.getParameter("collectionId");
 
-            GoogleClient.LimitedBatchRequest batch = google.getBatch(drive); 
+            GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
 
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
             String siteId = (String) context.get("siteId");
 
-            batch.queue(drive.files().get(fileId).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
-                        new GoogleFileImporter(google, fileId, chs, collectionId));
+            for (String fileId : fileIds) {
+                batch.queue(drive.files().get(fileId).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
+                    new GoogleFileImporter(google, fileId, chs, collectionId));
+            }
             
             batch.execute();
 

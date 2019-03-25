@@ -24,12 +24,18 @@
 
 package org.sakaiproject.content.googledrive.handlers;
 
+import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
+import com.google.api.client.googleapis.json.GoogleJsonError;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.Permission;
 import org.sakaiproject.content.googledrive.GoogleClient;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,14 +58,31 @@ public class NewGoogleItemHandler implements Handler {
                 throw new RuntimeException("fileid required");
             }
 
-            Drive.Files.Get getRequest = drive.files().get(fileIds[0]); // only handling one at a time?
-            File googleFile = getRequest.setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink").execute();
+            GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
+
+            final List<File> googleFiles = new ArrayList<>();
+
+            JsonBatchCallback<File> callback = new JsonBatchCallback<File>() {
+                @Override
+                public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) throws IOException {
+                    System.err.println(e.getMessage());
+                }
+
+                @Override
+                public void onSuccess(File file, HttpHeaders responseHeaders) throws IOException {
+                    googleFiles.add(file);
+                }
+            };
+
+            for (String fileId : fileIds) {
+                batch.queue(drive.files().get(fileId).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"), callback);
+            }
+
+            batch.execute();
 
             context.put("collectionId", request.getParameter("collectionId"));
-            context.put("googleFileId", googleFile.getId());
-            context.put("googleFileName", googleFile.getName());
-            context.put("googleFileIconLink", googleFile.getIconLink());
-            context.put("subpage", "new_google_item");
+            context.put("googleFiles", googleFiles);
+            context.put("subpage", "new_google_items");
             context.put("layout", false);
         } catch (Exception e) {
             throw new RuntimeException(e);
