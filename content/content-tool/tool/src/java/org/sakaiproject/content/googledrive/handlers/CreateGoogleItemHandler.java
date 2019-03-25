@@ -37,6 +37,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.exception.PermissionException;
@@ -89,15 +90,24 @@ public class CreateGoogleItemHandler implements Handler {
 
             String[] fileIds = request.getParameterValues("googleitemid[]");
             String collectionId = request.getParameter("collectionId");
+            String notify = request.getParameter("notify");
 
             GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
 
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
             String siteId = (String) context.get("siteId");
 
+
+            int notificationSetting = NotificationService.NOTI_NONE;
+            if ("r".equals(notify)) {
+                notificationSetting = NotificationService.NOTI_REQUIRED;
+            } else if ("o".equals(notify)) {
+                notificationSetting = NotificationService.NOTI_OPTIONAL;
+            }
+
             for (String fileId : fileIds) {
                 batch.queue(drive.files().get(fileId).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
-                    new GoogleFileImporter(google, fileId, chs, collectionId));
+                    new GoogleFileImporter(google, fileId, chs, collectionId, notificationSetting));
             }
             
             batch.execute();
@@ -130,12 +140,14 @@ public class CreateGoogleItemHandler implements Handler {
         private String fileId;
         private ContentHostingService chs;
         private String collectionId;
+        private int notificationSetting;
 
-        public GoogleFileImporter(GoogleClient google, String fileId, ContentHostingService chs, String collectionId) {
+        public GoogleFileImporter(GoogleClient google, String fileId, ContentHostingService chs, String collectionId, int notificationSetting) {
             this.google = google;
             this.fileId = fileId;
             this.chs = chs;
             this.collectionId = collectionId;
+            this.notificationSetting = notificationSetting;
         }
 
         public void onSuccess(File googleFile, HttpHeaders responseHeaders) {
@@ -147,7 +159,15 @@ public class CreateGoogleItemHandler implements Handler {
             properties.addProperty("google-mime-type", googleFile.getMimeType());
 
             try {
-                ContentResource resource = chs.addResource(UUID.randomUUID().toString(), collectionId, 10, "x-nyu-google/item", googleFile.getWebViewLink().getBytes(), properties, Collections.<String>emptyList(), 1);
+                ContentResource resource = chs.addResource(UUID.randomUUID().toString(),
+                                                           collectionId,
+                                                           10,
+                                                           "x-nyu-google/item",
+                                                           googleFile.getWebViewLink().getBytes(),
+                                                           properties,
+                                                           Collections.<String>emptyList(),
+                                                           notificationSetting);
+
                 ContentResourceEdit resourceEdit = chs.editResource(resource.getId());
                 resourceEdit.setResourceType(ResourceType.TYPE_GOOGLE_DRIVE_ITEM);
                 chs.commitResource(resourceEdit);
