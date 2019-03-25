@@ -321,6 +321,7 @@ GoogleDriveContainer.prototype.setupForm = function() {
       dataType: 'html',
       success: function(html) {
         $("#googleDriveModal").html(html);
+        new GoogleDriveForm(self);
       }
     });
   });
@@ -328,7 +329,7 @@ GoogleDriveContainer.prototype.setupForm = function() {
 
 
 GoogleDriveContainer.prototype.resizeGoogleContainer = function() {
-  var containerHeight = $("#googleDriveModal").closest('.ui-dialog').height() - 100;
+  var containerHeight = $("#googleDriveModal").closest('.ui-dialog').height() - 140;
   this.$container.find('.scroll-container').height(containerHeight);
   this.$container.find('.google-drive-menu').height(containerHeight);
 };
@@ -451,8 +452,9 @@ GoogleDriveContainer.prototype.onLoaded = function() {
 }
 
 
-function GoogleDriveForm() {
+function GoogleDriveForm(container) {
   var self = this;
+  self.container = container;
   self.$form = $('form.create-google-item-form');
   self.$form.on('submit', function(event) {
     event.preventDefault();
@@ -464,8 +466,14 @@ function GoogleDriveForm() {
       dataType: 'html',
       success: function(html) {
         $("#googleDriveModal").html(html);
+        new GoogleDriveForm(self.container);
       }
     });
+  });
+
+  $('#returnToDrive').on('click', function(event) {
+    event.preventDefault();
+    self.container.googleDriveListing.reloadDialog();
   });
 }
 
@@ -489,6 +497,8 @@ function GoogleDriveListing() {
         $(document.body).css({
           overflow: '',
         });
+        $("#googleDriveModal").dialog('destroy');
+        $("#googleDriveModal").remove();
       }
     });
 
@@ -506,8 +516,12 @@ function GoogleDriveListing() {
       });
     });
 
-    $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen');
+    $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen').addClass('google-drive-dialog');
     $(window).trigger('resize');
+
+    $('#googleDriveModal').on('click', '.close-google-dialog', function() {
+      $('#googleDriveModal').dialog('close');
+    });
 
     self.collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
 
