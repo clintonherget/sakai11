@@ -48,13 +48,21 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 
 // FIXME: split this class up.  Maybe want a .google package?
 public class GoogleClient {
     private static final Logger LOG = LoggerFactory.getLogger(GoogleClient.class);
     private static final String APPLICATION = "Sakai Drive";
+
+    private static final String GOOGLE_DOMAIN = "gqa.nyu.edu";
 
     private int requestsPerBatch = 100;
 
@@ -97,6 +105,10 @@ public class GoogleClient {
         rateLimiter.rateLimitHit();
     }
 
+    public Credential getCredential() {
+        return getCredential(GoogleClient.getCurrentGoogleUser());
+    }
+
     public Credential getCredential(String user) {
         try {
             GoogleAuthorizationCodeFlow flow = getAuthFlow();
@@ -136,6 +148,10 @@ public class GoogleClient {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public boolean deleteCredential() throws Exception {
+        return deleteCredential(GoogleClient.getCurrentGoogleUser());
     }
 
     public boolean deleteCredential(String user) throws Exception {
@@ -290,5 +306,14 @@ public class GoogleClient {
         public void rateLimitHit() {
             LOG.warn("Google rate limit hit!");
         }
+    }
+
+    public static String getCurrentGoogleUser() {
+        return org.sakaiproject.user.cover.UserDirectoryService.getCurrentUser().getEid() + "@" + GOOGLE_DOMAIN;
+    }
+
+    public static String getRedirectURL() {
+        // FIXME name? actual URL?
+        return "https://dishevelled.net/nyuclassesoauthdev";
     }
 }

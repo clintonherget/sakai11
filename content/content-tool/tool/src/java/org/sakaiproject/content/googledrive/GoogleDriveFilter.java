@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
 public class GoogleDriveFilter implements Filter {
     protected String GOOGLE_DRIVE_PATH = "/google-drive";
 
-    private static final String GOOGLE_DOMAIN = "gqa.nyu.edu";
-
     private static final Logger LOG = LoggerFactory.getLogger(GoogleDriveFilter.class);
 
 
@@ -53,7 +51,7 @@ public class GoogleDriveFilter implements Filter {
     }
 
     private void handleRequest(HttpServletRequest request, HttpServletResponse response) {
-        String googleUser = getCurrentGoogleUser();
+        String googleUser = GoogleClient.getCurrentGoogleUser();
 
         I18n i18n = new I18n(this.getClass().getClassLoader(), "org.sakaiproject.content.googledrive.i18n.drive");
 
@@ -69,7 +67,7 @@ public class GoogleDriveFilter implements Filter {
             context.put("layout", true);
             context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
             context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
-            context.put("googleUser", getCurrentGoogleUser());
+            context.put("googleUser", googleUser);
 
             // context may be null on handle-google-login callback 
             if (ToolManager.getCurrentPlacement() != null) {
@@ -119,7 +117,7 @@ public class GoogleDriveFilter implements Filter {
             return new OAuthHandler(OAuthHandler.HANDLE_OAUTH);
         } else if (path.startsWith("/reset-oauth")) {
             return new OAuthHandler(OAuthHandler.RESET);
-        } else if (google.getCredential(getCurrentGoogleUser()) == null) {
+        } else if (google.getCredential() == null) {
             return new OAuthHandler(OAuthHandler.SEND_TO_GOOGLE);
         } else if (path.startsWith("/show-google-drive")) {
             return new ShowGoogleDriveHandler();
@@ -178,10 +176,6 @@ public class GoogleDriveFilter implements Filter {
         }
 
         return result;
-    }
-
-    private String getCurrentGoogleUser() {
-        return UserDirectoryService.getCurrentUser().getEid() + "@" + GOOGLE_DOMAIN;
     }
 
     private Handlebars loadHandlebars(final URL baseURL, final URL googleDriveURL, final I18n i18n) {

@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.sakaiproject.authz.api.SecurityService;
-import org.sakaiproject.content.tool.GoogleClient;
+import org.sakaiproject.content.googledrive.GoogleClient;
 import org.sakaiproject.content.tool.RequestParams;
 import org.sakaiproject.entitybroker.EntityView;
 import org.sakaiproject.entitybroker.entityprovider.EntityProvider;
