@@ -190,9 +190,11 @@ public class GrouperSyncServiceImpl implements GrouperSyncService {
                     ps.executeUpdate();
                     ps.close();
 
+                    Telemetry.TelemetryTimer recentTimer = Telemetry.startTimer("recent_commit_time");
                     Telemetry.TelemetryTimer timer = Telemetry.startTimer("commit_time");
                     connection.commit();
                     Telemetry.finishTimer(timer);
+                    Telemetry.finishTimer(recentTimer);
                 }
             });
         } catch (SQLException e) {

@@ -619,69 +619,86 @@ public class Telemetry
         }
     }
 
+    public static Collection<String> listMetricNames() {
+        return metrics.keySet();
+    }
+
     // Fetch all readings since (whenever)
     //
     // For counters and histograms, we'll sum them across hosts and return single (aggregated) readings
-    public static Collection<TelemetryReading> fetchReadings(long since) {
+    public static Collection<TelemetryReading> fetchReadings(String metricName, long since, int maxReadings) {
         Map<String, TelemetryReading> groupedReadings = new HashMap<>();
         Connection connection = null;
+
+        BaseMetric metric = metrics.get(metricName);
+
+        MetricType metricType = null;
+        if (metric instanceof TimerMetric) {
+            metricType = MetricType.TIMER;
+        } else if (metric instanceof HistogramMetric) {
+            metricType = MetricType.HISTOGRAM;
+        } else if (metric instanceof CounterMetric) {
+            metricType = MetricType.COUNTER;
+        } else {
+            throw new RuntimeException("Unrecognized metric type for: " + metricName);
+        }
 
         try {
             connection = SqlService.borrowConnection();
 
-            Set<String> metricNames = metrics.keySet();
+            // Subkey strings tend to be identical across many readings.  Use
+            // the same String instance for each one to avoid having each
+            // reading consume a lot of redundant memory.
+            //
+            // (This is effectively String.intern() but managed ourselves.
+            // Don't want to clog up the shared String pool for this...)
+            //
+            Map<String, String> subKeyPool = new HashMap<>();
 
-            String placeholders = metricNames.stream().map((name) -> { return "?"; }).collect(Collectors.joining(","));
-
-            try (PreparedStatement ps = connection.prepareStatement(String.format("select key, subkey, host, time, value" +
-                                                                                  " from nyu_t_telemetry" +
-                                                                                  " where time >= ? AND key in (%s) order by time",
-                                                                                  placeholders))) {
+            // Ordering by time descending here to return the latest readings in the case where maxReadings is hit.
+            try (PreparedStatement ps = connection.prepareStatement("select subkey, host, time, value" +
+                                                                    " from nyu_t_telemetry" +
+                                                                    " where time >= ? AND key = ? order by time desc, subkey desc")) {
                 ps.setLong(1, since);
-                int pos = 2;
-                for (String name : metricNames) {
-                    ps.setString(pos, name);
-                    pos++;
-                }
+                ps.setString(2, metricName);
 
                 int rowCount = 0;
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        BaseMetric metric = metrics.get(rs.getString("key"));
+                        String subkey = rs.getString("subkey");
 
-                        MetricType metricType = null;
-                        if (metric instanceof TimerMetric) {
-                            metricType = MetricType.TIMER;
-                        } else if (metric instanceof HistogramMetric) {
-                            metricType = MetricType.HISTOGRAM;
-                        } else if (metric instanceof CounterMetric) {
-                            metricType = MetricType.COUNTER;
+                        if (subKeyPool.containsKey(subkey)) {
+                            subkey = subKeyPool.get(subkey);
                         } else {
-                            throw new RuntimeException("Unrecognized metric type for: " + rs.getString("key"));
+                            subKeyPool.put(subkey, subkey);
                         }
 
                         TelemetryReading reading = new TelemetryReading(metricType,
-                                                                        rs.getString("key"),
-                                                                        rs.getString("subkey"),
+                                                                        metricName,
+                                                                        subkey,
                                                                         rs.getLong("time"),
                                                                         rs.getLong("value"));
 
                         if (metric instanceof TimerMetric) {
                             // No merge.  Just take the reading as is.
-                            groupedReadings.put(String.valueOf(rowCount), reading);
+                            if (groupedReadings.size() < maxReadings) {
+                                groupedReadings.put(String.valueOf(rowCount), reading);
+                            }
                         } else {
                             // Merge if we've already got a value for a given key/subkey/time
-                            String key = reading.getKey() + "::" + reading.getSubKey() + "::" + reading.getTime();
+                            String groupKey = reading.getKey() + "::" + reading.getSubKey() + "::" + reading.getTime();
 
-                            if (groupedReadings.containsKey(key)) {
-                                TelemetryReading existingReading = groupedReadings.get(key);
-                                groupedReadings.put(key, new TelemetryReading(existingReading.getMetricType(),
-                                                                              existingReading.getKey(),
-                                                                              existingReading.getSubKey(),
-                                                                              existingReading.getTime(),
-                                                                              reading.getValue() + existingReading.getValue()));
+                            if (groupedReadings.containsKey(groupKey)) {
+                                TelemetryReading existingReading = groupedReadings.get(groupKey);
+                                groupedReadings.put(groupKey, new TelemetryReading(existingReading.getMetricType(),
+                                                                                   existingReading.getKey(),
+                                                                                   existingReading.getSubKey(),
+                                                                                   existingReading.getTime(),
+                                                                                   reading.getValue() + existingReading.getValue()));
                             } else {
-                                groupedReadings.put(key, reading);
+                                if (groupedReadings.size() < maxReadings) {
+                                    groupedReadings.put(groupKey, reading);
+                                }
                             }
                         }
 

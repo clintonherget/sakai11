@@ -37,8 +37,6 @@ public class TelemetryServlet extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        checkAccessControl();
-
         response.setHeader("Content-Type", "text/html");
 
         URL toolBaseURL = determineBaseURL();
@@ -53,23 +51,39 @@ public class TelemetryServlet extends HttpServlet {
             context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
             context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
 
-            Collection<Telemetry.TelemetryReading> allReadings = Telemetry.fetchReadings(System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000));
-
-            Map<String, List<Telemetry.TelemetryReading>> groupedReadings = allReadings.stream().collect(Collectors.groupingBy(Telemetry.TelemetryReading::getKey));
-
             List<LineChart> lineCharts = new ArrayList<>();
             List<HistogramChart> histogramCharts = new ArrayList<>();
 
             List<String> excluded = Arrays.asList(ServerConfigurationService.getString("telemetry.metrics.excluded_from_report", "help_views").split(", *"));
+            int maxDisplayedReadings = Integer.valueOf(ServerConfigurationService.getString("telemetry.metrics.max-displayed-readings", "10000"));
 
-            for (String metricName : groupedReadings.keySet()) {
+            for (String metricName : Telemetry.listMetricNames()) {
                 if (excluded.indexOf(metricName) >= 0) {
                     // Don't show this one.
                     continue;
                 }
 
-                List<Telemetry.TelemetryReading> readings = groupedReadings.get(metricName);
+                List<Telemetry.TelemetryReading> readings = new ArrayList(Telemetry.fetchReadings(metricName,
+                                                                                                  System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000),
+                                                                                                  maxDisplayedReadings));
+
                 Collections.sort(readings, (Telemetry.TelemetryReading a, Telemetry.TelemetryReading b) -> { return Long.compare(a.getTime(), b.getTime()); } );
+
+                // If we're configured to plot the last N minutes of readings,
+                // drop readings until we have the range we want.
+                int graphDurationMinutes = Integer.valueOf(ServerConfigurationService.getString("telemetry." + metricName + ".graph_duration_minutes", "-1"));
+                long graphDurationMs = graphDurationMinutes * 60 * 1000;
+
+                if (graphDurationMinutes >= 0) {
+                    long now = System.currentTimeMillis();
+                    while (readings.size() > 0 && (now - readings.get(0).getTime()) > graphDurationMs) {
+                        readings.remove(0);
+                    }
+                }
+
+                if (readings.isEmpty()) {
+                    continue;
+                }
 
                 if (readings.get(0).getMetricType().equals(Telemetry.MetricType.TIMER) ||
                     readings.get(0).getMetricType().equals(Telemetry.MetricType.COUNTER)) {
@@ -93,13 +107,6 @@ public class TelemetryServlet extends HttpServlet {
         } catch (IOException e) {
             log.warn("Write failed", e);
         }
-    }
-
-    private void checkAccessControl() {
-        // if (!SecurityService.unlock("FIXME", "/site/FIXME")) {
-        //     log.error("Access denied to Telemetry tool for user " + SessionManager.getCurrentSessionUserId());
-        //     throw new RuntimeException("Access denied");
-        // }
     }
 
     private URL determineBaseURL() {
