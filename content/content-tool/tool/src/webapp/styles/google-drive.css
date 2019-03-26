@@ -375,3 +375,33 @@ body.sakai-drive-preview-open {
 .create-google-item-form label {
   font-weight: normal;
 }
+
+.sakai-google-group-category {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.sakai-google-group-category .sakai-google-group-category-title {
+  font-weight: bold;
+  border-bottom: 1px solid #EEE;
+  margin-bottom: 10px;
+}
+
+.sakai-google-group-category ul,
+.sakai-google-group-category li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sakai-google-group-category li > label {
+  margin: 0;
+}
+
+.sakai-google-group-category li > label > input {
+  margin-right: 6px;
+}
+
+.sakai-google-group-category li > div {
+  margin-left: 30px;
+}
