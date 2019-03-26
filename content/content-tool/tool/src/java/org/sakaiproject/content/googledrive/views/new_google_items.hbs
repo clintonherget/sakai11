@@ -35,7 +35,73 @@
         <div class="form-group">
           <label class="col-sm-3 control-label">Select Site Group(s)</label>
           <div class="col-sm-9">
-            TODO
+            <div class="row">
+              <div class="col-sm-12">
+                <strong>Site Group</strong>
+              </div>
+              {{#each wholeSiteGroups}}
+                <div class="col-sm-12">
+                  <label><input type="checkbox" {{#unless this.hasGoogleGroup}}disabled{{/unless}} value="{{this.sakaiGroupId}}"> {{this.title}}</label>
+                  {{#if this.hasGoogleGroup}}
+                    <div class="text-muted">show google group email address</div>
+                  {{/if}}
+                  {{#if this.hasGoogleGroupPending}}
+                    <div class="text-muted">Google group creation is pending. Please try again soon.</div>
+                  {{/if}}
+                  {{#unless this.hasGoogleGroup}}
+                    {{#unless this.hasGoogleGroupPending}}
+                      <div class="text-muted">No google group created.</div>
+                    {{/unless}}
+                  {{/unless}}
+                </div>
+              {{/each}}
+            </div>
+            <div class="row">
+              <div class="col-sm-12">
+                <strong>Sections</strong>
+              </div>
+              {{#each sections}}
+                <div class="col-sm-12">
+                  <label><input type="checkbox" {{#unless this.hasGoogleGroup}}disabled{{/unless}} value="{{this.sakaiGroupId}}"> {{this.title}}</label>
+                  {{#if this.hasGoogleGroup}}
+                    <div class="text-muted">show google group email address</div>
+                  {{/if}}
+                  {{#if this.hasGoogleGroupPending}}
+                    <div class="text-muted">Google group creation is pending. Please try again soon.</div>
+                  {{/if}}
+                  {{#unless this.hasGoogleGroup}}
+                    {{#unless this.hasGoogleGroupPending}}
+                      <div class="text-muted">No google group created.</div>
+                    {{/unless}}
+                  {{/unless}}
+                </div>
+              {{else}}
+                <div class="col-sm-12">No sections.</div>
+              {{/each}}
+            </div>
+            <div class="row">
+              <div class="col-sm-12">
+                <strong>Groups</strong>
+              </div>
+              {{#each adhocGroups}}
+                <div class="col-sm-12">
+                  <label><input type="checkbox" {{#unless this.hasGoogleGroup}}disabled{{/unless}} value="{{this.sakaiGroupId}}"> {{this.title}}</label>
+                  {{#if this.hasGoogleGroup}}
+                    <div class="text-muted">show google group email address</div>
+                  {{/if}}
+                  {{#if this.hasGoogleGroupPending}}
+                    <div class="text-muted">Google group creation is pending. Please try again soon.</div>
+                  {{/if}}
+                  {{#unless this.hasGoogleGroup}}
+                    {{#unless this.hasGoogleGroupPending}}
+                      <div class="text-muted">No google group created.</div>
+                    {{/unless}}
+                  {{/unless}}
+                </div>
+              {{else}}
+                <div class="col-sm-12">No groups.</div>
+              {{/each}}
+            </div>
           </div>
         </div>
         <div class="form-group">

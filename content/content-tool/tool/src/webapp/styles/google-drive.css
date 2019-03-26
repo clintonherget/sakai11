@@ -371,3 +371,7 @@ body.sakai-drive-preview-open {
   top: 4px;
   margin: 0;
 }
+
+.create-google-item-form label {
+  font-weight: normal;
+}

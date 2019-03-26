@@ -117,6 +117,12 @@
       <artifactId>handlebars</artifactId>
       <version>${handlebars4.version}</version>
     </dependency>
+    <dependency>
+      <groupId>edu.nyu.classes.groupersync</groupId>
+      <artifactId>groupersync-api</artifactId>
+      <version>0.1</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <build>
     <resources>
