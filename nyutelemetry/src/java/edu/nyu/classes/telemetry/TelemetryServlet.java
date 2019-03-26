@@ -55,6 +55,7 @@ public class TelemetryServlet extends HttpServlet {
             List<HistogramChart> histogramCharts = new ArrayList<>();
 
             List<String> excluded = Arrays.asList(ServerConfigurationService.getString("telemetry.metrics.excluded_from_report", "help_views").split(", *"));
+            List<String> hideCountsByDay = Arrays.asList(ServerConfigurationService.getString("telemetry.metrics.hide_counts_by_day", "").split(", *"));
             int maxDisplayedReadings = Integer.valueOf(ServerConfigurationService.getString("telemetry.metrics.max-displayed-readings", "10000"));
 
             for (String metricName : Telemetry.listMetricNames()) {
@@ -87,15 +88,27 @@ public class TelemetryServlet extends HttpServlet {
 
                 if (readings.get(0).getMetricType().equals(Telemetry.MetricType.TIMER) ||
                     readings.get(0).getMetricType().equals(Telemetry.MetricType.COUNTER)) {
-                    lineCharts.add(new LineChart(metricName,
-                                                 readings.stream().map(Telemetry.TelemetryReading::getTime).collect(Collectors.toList()),
-                                                 readings.stream().map(Telemetry.TelemetryReading::getValue).collect(Collectors.toList())));
+                    LineChart lineChart = new LineChart(metricName,
+                                                        readings.stream().map(Telemetry.TelemetryReading::getTime).collect(Collectors.toList()),
+                                                        readings.stream().map(Telemetry.TelemetryReading::getValue).collect(Collectors.toList()));
+
+                    if (hideCountsByDay.contains(metricName)) {
+                        lineChart.hideCountsByDay();
+                    }
+
+                    lineCharts.add(lineChart);
                 } else {
                     // Histogram
                     Map<Long, List<Telemetry.TelemetryReading>> histogramsByTime = readings.stream().collect(Collectors.groupingBy(Telemetry.TelemetryReading::getTime));
 
                     if (histogramsByTime.size() > 1) {
-                        histogramCharts.add(new HistogramChart(metricName, histogramsByTime));
+                        HistogramChart histogramChart = new HistogramChart(metricName, histogramsByTime);
+
+                        if (hideCountsByDay.contains(metricName)) {
+                            histogramChart.hideCountsByDay();
+                        }
+
+                        histogramCharts.add(histogramChart);
                     }
                 }
             }
@@ -124,7 +137,7 @@ public class TelemetryServlet extends HttpServlet {
         return new Handlebars();
     }
 
-    private class LineChart {
+    private class LineChart extends BaseChart {
         private String name;
         private List<Reading> readings;
 
@@ -149,7 +162,6 @@ public class TelemetryServlet extends HttpServlet {
 
             return countsByDay;
         }
-
 
 
         private class Reading {
@@ -181,7 +193,19 @@ public class TelemetryServlet extends HttpServlet {
         }
     }
 
-    private class HistogramChart {
+    private abstract class BaseChart {
+        protected boolean showCountsByDay = true;
+
+        public boolean isShowCountsByDay() {
+            return showCountsByDay;
+        }
+
+        public void hideCountsByDay() {
+            showCountsByDay = false;
+        }
+    }
+
+    private class HistogramChart extends BaseChart {
         private String name;
         private long timeStep;
         private TreeMap<String, List<Reading>> bucketsMap = new TreeMap<>();

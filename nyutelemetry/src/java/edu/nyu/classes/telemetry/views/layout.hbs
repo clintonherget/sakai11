@@ -72,52 +72,50 @@
             </script>
 
 
-            <section id="{{this.name}}_counts_by_day_section">
-                <h2>{{this.name}} - counts by day</h2>
+            {{#if this.showCountsByDay}}
+                <section id="{{this.name}}_counts_by_day_section">
+                    <h2>{{this.name}} - counts by day</h2>
 
-                <div id="{{this.name}}_counts_by_day"></div>
-            </section>
+                    <div id="{{this.name}}_counts_by_day"></div>
+                </section>
 
-            <script>
-             var chart = new ApexCharts(
-                 document.querySelector("#{{this.name}}_counts_by_day"),
-                 {
-                     chart: {
-                         width: 1280,
-                         height: 200,
-                         type: 'bar',
-                     },
-                     xaxis: {
-                         labels: {
-                             rotate: -90,
+                <script>
+                 var chart = new ApexCharts(
+                     document.querySelector("#{{this.name}}_counts_by_day"),
+                     {
+                         chart: {
+                             width: 1280,
+                             height: 200,
+                             type: 'bar',
                          },
-                         categories: [
-                             {{#each this.countsByDay}}
-                             '{{@key}}',
-                             {{/each}}
-                         ],
-                     },
-                     yaxis: {
-                         min: 0,
-                     },
-                     series: [
-                         {
-                             name: 'count',
-                             data: [
+                         xaxis: {
+                             labels: {
+                                 rotate: -90,
+                             },
+                             categories: [
                                  {{#each this.countsByDay}}
-                                 {{this}},
+                                 '{{@key}}',
                                  {{/each}}
                              ],
                          },
-                     ],
-                 });
+                         yaxis: {
+                             min: 0,
+                         },
+                         series: [
+                             {
+                                 name: 'count',
+                                 data: [
+                                     {{#each this.countsByDay}}
+                                     {{this}},
+                                     {{/each}}
+                                 ],
+                             },
+                         ],
+                     });
 
-             if ('{{this.name}}'.indexOf('count') < 0) {
                  chart.render();
-             } else {
-                 document.querySelector('#{{this.name}}_counts_by_day_section').style.display = 'none';
-             }
-            </script>
+                </script>
+            {{/if}}
 
         {{/lineCharts}}
 
@@ -204,47 +202,50 @@
 
             </script>
 
-            <h2>{{this.name}} - counts by day</h2>
+            {{#if this.showCountsByDay}}
+                <h2>{{this.name}} - counts by day</h2>
 
-            <div id="{{this.name}}_counts_by_day"></div>
-            <script>
-             var chart = new ApexCharts(
-                 document.querySelector("#{{this.name}}_counts_by_day"),
-                 {
-                     chart: {
-                         width: 1280,
-                         height: 200,
-                         type: 'bar',
-                     },
-                     xaxis: {
-                         labels: {
-                             rotate: -90,
+                <div id="{{this.name}}_counts_by_day"></div>
+                <script>
+                 var chart = new ApexCharts(
+                     document.querySelector("#{{this.name}}_counts_by_day"),
+                     {
+                         chart: {
+                             width: 1280,
+                             height: 200,
+                             type: 'bar',
                          },
-                         categories: [
-                             {{#each this.countsByDay}}
-                             '{{@key}}',
-                             {{/each}}
-                         ],
-                     },
-                     yaxis: {
-                         min: 0,
-                     },
-                     series: [
-                         {
-                             name: 'count',
-                             data: [
+                         xaxis: {
+                             labels: {
+                                 rotate: -90,
+                             },
+                             categories: [
                                  {{#each this.countsByDay}}
-                                 {{this}},
+                                 '{{@key}}',
                                  {{/each}}
                              ],
                          },
-                     ],
-                 });
+                         yaxis: {
+                             min: 0,
+                         },
+                         series: [
+                             {
+                                 name: 'count',
+                                 data: [
+                                     {{#each this.countsByDay}}
+                                     {{this}},
+                                     {{/each}}
+                                 ],
+                             },
+                         ],
+                     });
 
 
-             chart.render();
+                 chart.render();
 
-            </script>
+                </script>
+            {{/if}}
+
 
         {{/histogramCharts}}
 
