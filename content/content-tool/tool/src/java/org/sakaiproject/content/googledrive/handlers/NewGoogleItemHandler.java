@@ -32,6 +32,7 @@ import com.google.api.client.util.Key;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
+import edu.nyu.classes.groupersync.api.AddressFormatter;
 import edu.nyu.classes.groupersync.api.GroupInfo;
 import edu.nyu.classes.groupersync.api.GrouperSyncService;
 import org.sakaiproject.authz.api.AuthzGroup;
@@ -149,18 +150,20 @@ public class NewGoogleItemHandler implements Handler {
         @Key
         String title;
         @Key
-        GroupInfo googleGroupInfo;
-        @Key
         boolean hasGoogleGroup;
         @Key
         boolean hasGoogleGroupPending;
+        @Key
+        String googleGroupId;
 
         public SakaiGoogleGroup(String sakaiGroupId, String title, GroupInfo googleGroupInfo) {
             this.sakaiGroupId = sakaiGroupId;
             this.title = title;
-            this.googleGroupInfo = googleGroupInfo;
             this.hasGoogleGroup = googleGroupInfo != null && googleGroupInfo.isReadyForUse();
             this.hasGoogleGroupPending = googleGroupInfo != null && !googleGroupInfo.isReadyForUse();
+            if (this.hasGoogleGroup) {
+                this.googleGroupId = AddressFormatter.format(googleGroupInfo.getGrouperId());
+            }
         }
     }
 }

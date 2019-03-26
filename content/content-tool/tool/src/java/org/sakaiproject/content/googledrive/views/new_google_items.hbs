@@ -1,4 +1,4 @@
-<div class="new-google-item container">
+<div class="new-google-item">
   <div class="google-dialog-header">
     <div class="text-center">
       <h3>Add Google Drive Content</h3>
@@ -7,121 +7,122 @@
     <button class="close-google-dialog" title="Cancel "><i class="fa fa-times"></i></button>
   </div>
 
-  <div class="row">
-    <div class="col-sm-12">
-      <form method="POST" action="{{googleDriveURL}}create-google-item" class="create-google-item-form form-horizontal">
-        <input type="hidden" name="collectionId" value="{{collectionId}}"/>
-        <div class="form-group">
-          <label class="col-sm-3 control-label">Google Drive Content</label>
-          <div class="col-sm-9">
-            {{#each googleFiles}}
-              <div>
-                <img src="{{this.iconLink}}"/> {{this.name}}
+  <div class="google-dialog-content">
+    <div class="row">
+      <div class="col-sm-12">
+        <form method="POST" action="{{googleDriveURL}}create-google-item" class="create-google-item-form form-horizontal">
+          <input type="hidden" name="collectionId" value="{{collectionId}}"/>
+          <div class="form-group">
+            <label class="col-sm-3 control-label">Google Drive Content</label>
+            <div class="col-sm-9">
+              {{#each googleFiles}}
+                <div>
+                  <img src="{{this.iconLink}}"/> {{this.name}}
+                </div>
+                <input type="hidden" name="googleitemid[]" value="{{this.id}}">
+              {{/each}}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="role">Apply Permission</label>
+            <div class="col-sm-9">
+              <select class="form-control" id="role" name="role">
+                <option value="reader">Can view</option>
+                <option value="commenter">Can comment</option>
+                <option value="writer">Can edit</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label">Select Site Group(s)</label>
+            <div class="col-sm-9">
+              <div class="sakai-google-group-category">
+                <div class="sakai-google-group-category-title">Site Group</div>
+                <ul>
+                  {{#each wholeSiteGroups}}
+                    <li>
+                      <label><input type="checkbox" name="sakaiGroupId[]" {{#unless this.hasGoogleGroup}}disabled{{/unless}} {{#if this.hasGoogleGroup}}value="{{this.sakaiGroupId}}"{{/if}}> {{this.title}}</label>
+                      {{#if this.hasGoogleGroup}}
+                        <div class="text-muted small">{{this.googleGroupId}}</div>
+                      {{/if}}
+                      {{#if this.hasGoogleGroupPending}}
+                        <div class="text-muted small">Google group creation is pending. Please try again soon.</div>
+                      {{/if}}
+                      {{#unless this.hasGoogleGroup}}
+                        {{#unless this.hasGoogleGroupPending}}
+                          <div class="text-muted small">No google group created.</div>
+                        {{/unless}}
+                      {{/unless}}
+                    </li>
+                  {{else}}
+                    <li><span class="text-muted">No site group</span></li>
+                  {{/each}}
+                </ul>
               </div>
-              <input type="hidden" name="googleitemid[]" value="{{this.id}}">
-            {{/each}}
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="col-sm-3 control-label" for="role">Apply Permission</label>
-          <div class="col-sm-9">
-            <select class="form-control" id="role" name="role">
-              <option value="reader">Can view</option>
-              <option value="commenter">Can comment</option>
-              <option value="writer">Can edit</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="col-sm-3 control-label">Select Site Group(s)</label>
-          <div class="col-sm-9">
-            <div class="sakai-google-group-category">
-              <div class="sakai-google-group-category-title">Site Group</div>
-              <ul>
-                {{#each wholeSiteGroups}}
-                  <li>
-                    <label><input type="checkbox" {{#unless this.hasGoogleGroup}}disabled{{/unless}} value="{{this.sakaiGroupId}}"> {{this.title}}</label>
-                    {{#if this.hasGoogleGroup}}
-                      <div class="text-muted small">show google group email address</div>
-                    {{/if}}
-                    {{#if this.hasGoogleGroupPending}}
-                      <div class="text-muted small">Google group creation is pending. Please try again soon.</div>
-                    {{/if}}
-                    {{#unless this.hasGoogleGroup}}
-                      {{#unless this.hasGoogleGroupPending}}
-                        <div class="text-muted small">No google group created.</div>
+              <div class="sakai-google-group-category">
+                <div class="sakai-google-group-category-title">Sections</div>
+                <ul>
+                  {{#each sections}}
+                    <li>
+                      <label><input type="checkbox" name="sakaiGroupId[]" {{#unless this.hasGoogleGroup}}disabled{{/unless}} {{#if this.hasGoogleGroup}}value="{{this.sakaiGroupId}}"{{/if}}> {{this.title}}</label>
+                      {{#if this.hasGoogleGroup}}
+                        <div class="text-muted small">{{this.googleGroupId}}</div>
+                      {{/if}}
+                      {{#if this.hasGoogleGroupPending}}
+                        <div class="text-muted small">Google group creation is pending. Please try again soon.</div>
+                      {{/if}}
+                      {{#unless this.hasGoogleGroup}}
+                        {{#unless this.hasGoogleGroupPending}}
+                          <div class="text-muted small">No google group created.</div>
+                        {{/unless}}
                       {{/unless}}
-                    {{/unless}}
-                  </li>
-                {{else}}
-                  <li><span class="text-muted">No site group</span></li>
-                {{/each}}
-              </ul>
-            </div>
-            <div class="sakai-google-group-category">
-              <div class="sakai-google-group-category-title">Sections</div>
-              <ul>
-                {{#each sections}}
-                  <li>
-                    <label><input type="checkbox" {{#unless this.hasGoogleGroup}}disabled{{/unless}} value="{{this.sakaiGroupId}}"> {{this.title}}</label>
-                    {{#if this.hasGoogleGroup}}
-                      <div class="text-muted small">show google group email address</div>
-                    {{/if}}
-                    {{#if this.hasGoogleGroupPending}}
-                      <div class="text-muted small">Google group creation is pending. Please try again soon.</div>
-                    {{/if}}
-                    {{#unless this.hasGoogleGroup}}
-                      {{#unless this.hasGoogleGroupPending}}
-                        <div class="text-muted small">No google group created.</div>
+                    </li>
+                  {{else}}
+                    <li><span class="text-muted">No sections</span></li>
+                  {{/each}}
+                </ul>
+              </div>
+              <div class="sakai-google-group-category">
+                <div class="sakai-google-group-category-title">Groups</div>
+                <ul>
+                  {{#each adhocGroups}}
+                    <li>
+                      <label><input type="checkbox" name="sakaiGroupId[]" {{#unless this.hasGoogleGroup}}disabled{{/unless}} {{#if this.hasGoogleGroup}}value="{{this.sakaiGroupId}}"{{/if}}> {{this.title}}</label>
+                      {{#if this.hasGoogleGroup}}
+                        <div class="text-muted small">{{this.googleGroupId}}</div>
+                      {{/if}}
+                      {{#if this.hasGoogleGroupPending}}
+                        <div class="text-muted small">Google group creation is pending. Please try again soon.</div>
+                      {{/if}}
+                      {{#unless this.hasGoogleGroup}}
+                        {{#unless this.hasGoogleGroupPending}}
+                          <div class="text-muted small">No google group created.</div>
+                        {{/unless}}
                       {{/unless}}
-                    {{/unless}}
-                  </li>
-                {{else}}
-                  <li><span class="text-muted">No sections</span></li>
-                {{/each}}
-              </ul>
-            </div>
-            <div class="sakai-google-group-category">
-              <div class="sakai-google-group-category-title">Groups</div>
-              <ul>
-                {{#each adhocGroups}}
-                  <li>
-                    <label><input type="checkbox" {{#unless this.hasGoogleGroup}}disabled{{/unless}} value="{{this.sakaiGroupId}}"> {{this.title}}</label>
-                    {{#if this.hasGoogleGroup}}
-                      <div class="text-muted small">show google group email address</div>
-                    {{/if}}
-                    {{#if this.hasGoogleGroupPending}}
-                      <div class="text-muted small">Google group creation is pending. Please try again soon.</div>
-                    {{/if}}
-                    {{#unless this.hasGoogleGroup}}
-                      {{#unless this.hasGoogleGroupPending}}
-                        <div class="text-muted small">No google group created.</div>
-                      {{/unless}}
-                    {{/unless}}
-                  </li>
-                {{else}}
-                  <li><span class="text-muted">No groups</span></li>
-                {{/each}}
-              </ul>
+                    </li>
+                  {{else}}
+                    <li><span class="text-muted">No groups</span></li>
+                  {{/each}}
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="col-sm-3 control-label" for="notify">Email Notification</label>
-          <div class="col-sm-9">
-            <select name="notify" id="notify" class="form-control">
-              <option value="n">None - No notification</option>
-              <option value="o">Low - Not received by those who have opted out</option>
-              <option value="r">High - All participants</option>
-            </select>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="notify">Email Notification</label>
+            <div class="col-sm-9">
+              <select name="notify" id="notify" class="form-control">
+                <option value="n">None - No notification</option>
+                <option value="o">Low - Not received by those who have opted out</option>
+                <option value="r">High - All participants</option>
+              </select>
+            </div>
           </div>
-        </div>
-
-        <div class="text-center">
-          <button id="createGoogleDriveItem" class="button_color">Apply Permissions and Add Google Drive Content</button>
-          <button class="close-google-dialog">Cancel</button>
-        </div>
-      </form>
+          <div class="text-center">
+            <button id="createGoogleDriveItem" class="button_color">Apply Permissions and Add Google Drive Content</button>
+            <button class="close-google-dialog">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>

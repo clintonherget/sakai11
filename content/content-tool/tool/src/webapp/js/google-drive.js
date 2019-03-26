@@ -322,6 +322,7 @@ GoogleDriveContainer.prototype.setupForm = function() {
       success: function(html) {
         $("#googleDriveModal").html(html);
         new GoogleDriveForm(self);
+        $(window).trigger('resize');
       }
     });
   });
@@ -514,6 +515,11 @@ function GoogleDriveListing() {
         'position': 'fixed',
         'z-index': 1000,
       });
+
+      if ($("#googleDriveModal .google-dialog-content").length > 0) {
+        var contentHeight = $("#googleDriveModal").closest('.google-drive-dialog').height() - $("#googleDriveModal .google-dialog-header").height() - 60;
+        $("#googleDriveModal .google-dialog-content").height(contentHeight)
+      }
     });
 
     $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen').addClass('google-drive-dialog');
@@ -542,6 +548,7 @@ GoogleDriveListing.prototype.reloadDialog = function() {
     success: function(html) {
       $("#googleDriveModal").html(html);
       new GoogleDriveContainer($("#googleDriveModal"), window.location.pathname + "/google-drive", self);
+      $(window).trigger('resize');
     }
   });
 };

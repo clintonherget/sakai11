@@ -1,4 +1,4 @@
-<div class="google-drive container">
+<div class="google-drive">
   <div class="google-dialog-header">
     <div class="text-center">
       <h3>Add Google Drive Content</h3>
@@ -6,62 +6,64 @@
     <button class="close-google-dialog" title="Cancel"><i class="fa fa-times"></i></button>
   </div>
 
-  <div class="row">
-    <div class="col-xs-2 google-drive-menu">
-      <button id="addSelectedGoogleItems" class="btn btn-primary disabled" disabled="disabled">Selected Drive Content</button>
-      <button id="resetGoogleOAuth" class="btn btn-danger">Relink Google account</button>
-      <div>
-        <ul class="nav">
-          <li class="active"><a href="#googledriverecent" data-toggle="tab">Most Recent</a></li>
-          <li><a href="#googledrivehome" data-toggle="tab">My Drive</a></li>
-          <li><a href="#googledrivestarred" data-toggle="tab">Starred</a></li>
-        </ul>
+  <div class="google-dialog-content">
+    <div class="row">
+      <div class="col-xs-2 google-drive-menu">
+        <button id="addSelectedGoogleItems" class="btn btn-primary disabled" disabled="disabled">Selected Drive Content</button>
+        <button id="resetGoogleOAuth" class="btn btn-danger">Relink Google account</button>
+        <div>
+          <ul class="nav">
+            <li class="active"><a href="#googledriverecent" data-toggle="tab">Most Recent</a></li>
+            <li><a href="#googledrivehome" data-toggle="tab">My Drive</a></li>
+            <li><a href="#googledrivestarred" data-toggle="tab">Starred</a></li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div class="col-xs-10 google-drive-panel">
-      <div class="tab-content">
-        <div id="googledriverecent" class="tab-pane active">
-          <div class="search-bar">
-            <input class="file-search" type="text" placeholder="Search Most Recent" value="" />
-          </div>
-          <form class="google-drive-select-item-form" method="POST" action="{{googleDriveURL}}new-google-item">
-            <input type="hidden" name="collectionId" value="{{collectionId}}"/>
-            <div class="scroll-container">
-              <ul class="file-list">
-              </ul>
-              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+      <div class="col-xs-10 google-drive-panel">
+        <div class="tab-content">
+          <div id="googledriverecent" class="tab-pane active">
+            <div class="search-bar">
+              <input class="file-search" type="text" placeholder="Search Most Recent" value="" />
             </div>
-          </form>
-        </div>
-        <div id="googledrivehome" class="tab-pane">
-          <div class="search-bar">
-            <input class="file-search" type="text" placeholder="Search My Drive" value="" />
+            <form class="google-drive-select-item-form" method="POST" action="{{googleDriveURL}}new-google-item">
+              <input type="hidden" name="collectionId" value="{{collectionId}}"/>
+              <div class="scroll-container">
+                <ul class="file-list">
+                </ul>
+                <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+              </div>
+            </form>
           </div>
-          <ul class="breadcrumb">
-            <li class="active"><a href="#" data-id="root">My Drive</a></li>
-          </ul>
-          <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
-            <div class="scroll-container">
-              <ul class="file-list">
-              </ul>
-              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+          <div id="googledrivehome" class="tab-pane">
+            <div class="search-bar">
+              <input class="file-search" type="text" placeholder="Search My Drive" value="" />
             </div>
-          </form>
-        </div>
-        <div id="googledrivestarred" class="tab-pane">
-          <div class="search-bar">
-            <input class="file-search" type="text" placeholder="Search Starred" value="" />
+            <ul class="breadcrumb">
+              <li class="active"><a href="#" data-id="root">My Drive</a></li>
+            </ul>
+            <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
+              <div class="scroll-container">
+                <ul class="file-list">
+                </ul>
+                <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+              </div>
+            </form>
           </div>
-          <ul class="breadcrumb">
-            <li class="active"><a href="#" data-id="root">Starred</a></li>
-          </ul>
-          <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
-            <div class="scroll-container">
-              <ul class="file-list">
-              </ul>
-              <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+          <div id="googledrivestarred" class="tab-pane">
+            <div class="search-bar">
+              <input class="file-search" type="text" placeholder="Search Starred" value="" />
             </div>
-          </form>
+            <ul class="breadcrumb">
+              <li class="active"><a href="#" data-id="root">Starred</a></li>
+            </ul>
+            <form class="google-drive-add-selected-form" method="POST" action="{{baseURL}}add-selected">
+              <div class="scroll-container">
+                <ul class="file-list">
+                </ul>
+                <div class="no-matches-msg" style="display: none;">No files matched your query</div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

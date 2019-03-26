@@ -348,8 +348,10 @@ body.sakai-drive-preview-open {
   right: 0;
 }
 
-#googleDriveModal {
-  padding-top: 60px;
+.google-drive-dialog .google-dialog-content {
+  overflow: auto;
+  margin-top: 40px;
+  padding: 20px;
 }
 
 .google-drive-dialog .google-dialog-header h3 {

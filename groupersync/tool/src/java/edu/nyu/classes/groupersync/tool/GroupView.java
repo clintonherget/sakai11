@@ -1,5 +1,6 @@
 package edu.nyu.classes.groupersync.tool;
 
+import edu.nyu.classes.groupersync.api.AddressFormatter;
 import org.sakaiproject.site.api.Group;
 import edu.nyu.classes.groupersync.api.GroupInfo;
 import edu.nyu.classes.groupersync.api.GrouperSyncException;

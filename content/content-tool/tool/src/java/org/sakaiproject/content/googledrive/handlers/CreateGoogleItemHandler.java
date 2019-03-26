@@ -89,6 +89,7 @@ public class CreateGoogleItemHandler implements Handler {
             Drive drive = google.getDrive((String) context.get("googleUser"));
 
             String[] fileIds = request.getParameterValues("googleitemid[]");
+            String[] sakaiGroupIds = request.getParameterValues("sakaiGroupId[]"); // FIXME look up google group ids again
             String collectionId = request.getParameter("collectionId");
             String notify = request.getParameter("notify");
 

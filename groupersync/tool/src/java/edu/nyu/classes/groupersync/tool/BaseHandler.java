@@ -1,15 +1,14 @@
 package edu.nyu.classes.groupersync.tool;
 
-import java.util.Map;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+
+import edu.nyu.classes.groupersync.api.AddressFormatter;
 import org.sakaiproject.component.cover.ComponentManager;
 import edu.nyu.classes.groupersync.api.GrouperSyncService;
 import org.sakaiproject.site.api.Site;
-import java.io.IOException;
+
 import java.net.MalformedURLException;
-import org.sakaiproject.component.cover.ServerConfigurationService;
+
 import org.sakaiproject.tool.cover.ToolManager;
 import java.net.URL;
 
