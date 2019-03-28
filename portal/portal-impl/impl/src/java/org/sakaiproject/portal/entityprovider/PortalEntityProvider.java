@@ -339,6 +339,7 @@ public class PortalEntityProvider extends AbstractEntityProvider implements Auto
 		context.put("you", currentUserId.equals(connectionUserId));
 		BasicPerson person = profileLogic.getBasicPerson(connectionUserId);
 		context.put("pictureUrl", "/direct/profile/" + connectionUserId + "/image/thumb");
+		context.put("displayName", userProfile.getDisplayName());
 		String eid;
 		try {
 			eid = userDirectoryService.getUserEid(connectionUserId);
