@@ -456,7 +456,7 @@ GoogleDriveContainer.prototype.onLoaded = function() {
 function GoogleDriveForm(container) {
   var self = this;
   self.container = container;
-  self.$form = $('form.create-google-item-form');
+  self.$form = $('form.google-item-form');
   self.$form.on('submit', function(event) {
     event.preventDefault();
 
@@ -482,10 +482,49 @@ function GoogleDriveForm(container) {
 function GoogleDriveListing() {
   var self = this;
 
+  // Bootstrap our custom Add Google item workflow onto the Create Google Item menu item
   $("table.resourcesList a[onclick*='org.sakaiproject.content.types.GoogleDriveItemType:create']").removeAttr('onclick').on('click', function(event) {
     event.preventDefault();
 
-    $("<div id='googleDriveModal' class='drive-body'>Loading...</div>").appendTo(document.body)
+    self.prepareDialog();
+
+    self.collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
+
+    self.reloadDialog();
+  });
+
+  // Insert an Edit Details action for google items
+  $("table.resourcesList a[onclick*='org.sakaiproject.content.types.GoogleDriveItemType:delete']").each(function() {
+    var $deleteAction = $(this);
+    var $insertAction = $('<li><a href="javascript:void(0);">Edit Details</a></li>');
+    var resourceId = $deleteAction.closest('tr').find(':checkbox[name=selectedMembers]').val();
+
+    $deleteAction.closest('li').before($insertAction);
+
+    $insertAction.on('click', function() {
+      self.prepareDialog();
+
+      $.ajax({
+          url: window.location.pathname + "/google-drive/edit-google-item",
+          type: 'get',
+          dataType: 'html',
+          data: {
+            'resourceId': resourceId
+          },
+          success: function(html) {
+            $("#googleDriveModal").html(html);
+            new GoogleDriveForm();
+            $(window).trigger('resize');
+          }
+        });
+    });
+  });
+}
+
+GoogleDriveListing.prototype.prepareDialog = function() {
+  var self = this;
+
+  $("<div id='googleDriveModal' class='drive-body'>Loading...</div>").appendTo(document.body)
     $("#googleDriveModal").dialog({
       modal: true,
       resizable: false,
@@ -528,13 +567,7 @@ function GoogleDriveListing() {
     $('#googleDriveModal').on('click', '.close-google-dialog', function() {
       $('#googleDriveModal').dialog('close');
     });
-
-    self.collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
-
-    self.reloadDialog();
-  });
-}
-
+};
 GoogleDriveListing.prototype.reloadDialog = function() {
   var self = this;
 

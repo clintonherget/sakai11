@@ -31,13 +31,14 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Key;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.Permission;
 import edu.nyu.classes.groupersync.api.AddressFormatter;
 import edu.nyu.classes.groupersync.api.GroupInfo;
 import edu.nyu.classes.groupersync.api.GrouperSyncService;
-import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.content.api.ContentHostingService;
+import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.googledrive.GoogleClient;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
@@ -45,19 +46,18 @@ import org.sakaiproject.site.cover.SiteService;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
-public class NewGoogleItemHandler implements Handler {
+public class EditGoogleItemHandler implements Handler {
 
     private String redirectTo = null;
     private GrouperSyncService grouper = null;
+    private ContentHostingService chs = null;
 
-    public NewGoogleItemHandler() {
+    public EditGoogleItemHandler() {
         grouper = (GrouperSyncService) ComponentManager.get("edu.nyu.classes.groupersync.api.GrouperSyncService");
+        chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
     }
 
     @Override
@@ -66,35 +66,15 @@ public class NewGoogleItemHandler implements Handler {
             GoogleClient google = new GoogleClient();
             Drive drive = google.getDrive((String) context.get("googleUser"));
 
-            String[] fileIds = request.getParameterValues("googleitemid[]");
+            String resourceId = request.getParameter("resourceId");
 
-            if (fileIds == null || fileIds.length == 0) {
-                // FIXME show listing again with message?
-                throw new RuntimeException("fileid required");
+            if (resourceId == null) {
+                throw new RuntimeException("resourceId required");
             }
 
-            // Get Google item data
-            GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
-
-            final List<File> googleFiles = new ArrayList<>();
-
-            JsonBatchCallback<File> callback = new JsonBatchCallback<File>() {
-                @Override
-                public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) throws IOException {
-                    System.err.println(e.getMessage());
-                }
-
-                @Override
-                public void onSuccess(File file, HttpHeaders responseHeaders) throws IOException {
-                    googleFiles.add(file);
-                }
-            };
-
-            for (String fileId : fileIds) {
-                batch.queue(drive.files().get(fileId).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"), callback);
-            }
-
-            batch.execute();
+            ContentResource resource = chs.getResource(resourceId);
+            ResourceProperties properties = resource.getProperties();
+            List<Group> accessGroups = new ArrayList<>(resource.getGroups());
 
             // Build group data
             List<SakaiGoogleGroup> wholeSite = new ArrayList<SakaiGoogleGroup>();
@@ -103,15 +83,17 @@ public class NewGoogleItemHandler implements Handler {
 
             Site site = SiteService.getSite((String)context.get("siteId"));
 
-            wholeSite.add(new SakaiGoogleGroup(site.getId(), site.getTitle(), grouper.getGroupInfo(site.getId())));
+            boolean selected = accessGroups.stream().anyMatch(g -> g.getId().equals(site.getId()));
+            wholeSite.add(new SakaiGoogleGroup(site.getId(), site.getTitle(), grouper.getGroupInfo(site.getId()), selected));
 
             for (Group group : site.getGroups()) {
                 GroupInfo groupInfo = grouper.getGroupInfo(group.getId());
+                selected = accessGroups.stream().anyMatch(g -> g.getId().equals(group.getId()));
 
                 if (group.getProviderGroupId() == null) {
-                    adhocGroups.add(new SakaiGoogleGroup(group.getId(), group.getTitle(), groupInfo));
+                    adhocGroups.add(new SakaiGoogleGroup(group.getId(), group.getTitle(), groupInfo, selected));
                 } else {
-                    sections.add(new SakaiGoogleGroup(group.getId(), group.getTitle(), groupInfo));
+                    sections.add(new SakaiGoogleGroup(group.getId(), group.getTitle(), groupInfo, selected));
                 }
             }
 
@@ -119,9 +101,13 @@ public class NewGoogleItemHandler implements Handler {
             context.put("sections", sections);
             context.put("adhocGroups", adhocGroups);
 
-            context.put("collectionId", request.getParameter("collectionId"));
-            context.put("googleFiles", googleFiles);
-            context.put("subpage", "new_google_items");
+            context.put("resourceId", resourceId);
+            context.put("resourceIconLink", properties.get("google-icon-link"));
+            context.put("resourceName", properties.get(ResourceProperties.PROP_DISPLAY_NAME));
+
+            context.put("role", properties.get("google-group-role"));
+
+            context.put("subpage", "edit_google_item");
             context.put("layout", false);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -155,8 +141,10 @@ public class NewGoogleItemHandler implements Handler {
         boolean hasGoogleGroupPending;
         @Key
         String googleGroupId;
+        @Key
+        boolean selected;
 
-        public SakaiGoogleGroup(String sakaiGroupId, String title, GroupInfo googleGroupInfo) {
+        public SakaiGoogleGroup(String sakaiGroupId, String title, GroupInfo googleGroupInfo, boolean selected) {
             this.sakaiGroupId = sakaiGroupId;
             this.title = title;
             this.hasGoogleGroup = googleGroupInfo != null && googleGroupInfo.isReadyForUse();
@@ -164,6 +152,7 @@ public class NewGoogleItemHandler implements Handler {
             if (this.hasGoogleGroup) {
                 this.googleGroupId = AddressFormatter.format(googleGroupInfo.getGrouperId());
             }
+            this.selected = selected;
         }
     }
 }

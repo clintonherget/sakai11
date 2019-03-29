@@ -131,7 +131,12 @@ public class GoogleDriveFilter implements Filter {
             return new NewGoogleItemHandler();
         } else if (path.startsWith("/create-google-item")) {
             return new CreateGoogleItemHandler();
+        } else if (path.startsWith("/edit-google-item")) {
+            return new EditGoogleItemHandler();
         }
+//        } else if (path.startsWith("/update-google-item")) {
+//            return new UpdateGoogleItemHandler();
+//        }
 
         throw new RuntimeException("Path not supported by googledrive handlers: " + path);
     }
