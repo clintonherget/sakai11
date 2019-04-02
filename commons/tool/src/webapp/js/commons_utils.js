@@ -288,25 +288,11 @@ commons.utils = {
         return false;
     },
     attachProfilePopup: function (contentId, userId) {
-
-        $('#commons-author-name-' + contentId).qtip({
-            position: { viewport: $(window), adjust: { method: 'flipinvert none'} },
-            show: { event: 'click', delay: 0 },
-            style: { classes: 'commons-qtip qtip-shadow' },
-            hide: { event: 'click unfocus' },
-            content: {
-                text: function (event, api) {
-
-                    // Need https://jira.sakaiproject.org/browse/SAK-31355 for this to work
-                    return $.ajax( { url: "/direct/portal/" + userId + "/formatted", cache: false })
-                        .then(function (html) {
-                                return html;
-                            }, function (xhr, status, error) {
-                                api.set('content.text', status + ': ' + error);
-                            });
-                }
-            }
-        });
+        // CLASSES-3639 fix profile popup actions
+        var $userLink = $('#commons-author-name-' + contentId);
+        $userLink[0].dataset.userId = userId;
+        $userLink[0].dataset.displayName = $userLink.text().trim();
+        profile.attachPopups($userLink);
     },
     formatDate: function (millis) {
 
