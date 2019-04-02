@@ -24,8 +24,10 @@ package org.sakaiproject.content.types;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentEntity;
+import org.sakaiproject.content.api.ContentHostingService;
+import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.api.ResourceToolAction;
-import org.sakaiproject.content.api.ResourceToolAction.*;
+import org.sakaiproject.content.api.ResourceToolAction.ActionType;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.util.BaseInteractionAction;
 import org.sakaiproject.content.util.BaseResourceAction.Localizer;
@@ -197,15 +199,31 @@ public class GoogleDriveItemType extends BaseResourceType
 	}
 
 	class MoveToTrashAction extends BaseServiceLevelAction {
+		private ContentHostingService chs = null;
+
 		public MoveToTrashAction(String id, ActionType actionType, String typeId, boolean multipleItemAction, Localizer localizer) {
 			super(id, actionType, typeId, multipleItemAction, localizer);
+
+			chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
 		}
 
 		public void finalizeAction(Reference reference)
 		{
 			super.finalizeAction(reference);
 
-			// FIXME Drop all sakai group and google permissions 
+			// FIXME Drop all sakai group and google permissions
+			ContentResourceEdit resourceEdit = null;
+			try {
+				resourceEdit = chs.editResource(reference.getId());
+				resourceEdit.clearRoleAccess();
+				resourceEdit.setHidden();
+				chs.commitResource(resourceEdit);
+			} catch (Exception e) {
+				if (resourceEdit != null) {
+					chs.cancelResource(resourceEdit);
+				}
+				throw new RuntimeException(e);
+			}
 		}
 	}
 }
