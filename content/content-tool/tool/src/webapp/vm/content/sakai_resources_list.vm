@@ -1218,4 +1218,4 @@
 	//-->
 </script>
 
-<script>new GoogleDriveListing();</script>
+<script>sakai.resources = { list: new ResourceListWithGoogleItems() };</script>

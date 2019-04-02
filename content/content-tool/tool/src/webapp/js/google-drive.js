@@ -237,12 +237,14 @@ GoogleDrive.prototype.refreshListForFolder = function(folderId) {
 
 
 
-function GoogleDriveContainer($container, baseURL, googleDriveListing) {
+function GoogleDriveContainer($container, baseURL, dialog) {
   this.$container = $container;
   this.baseURL = baseURL;
-  this.googleDriveListing = googleDriveListing;
+  this.dialog = dialog;
 
-  this.init();
+  if (this.$container.find('.google-drive').length > 0) {
+    this.init();
+  }
 };
 
 GoogleDriveContainer.prototype.init = function() {
@@ -270,7 +272,7 @@ GoogleDriveContainer.prototype.init = function() {
     $.ajax({
       url: '/direct/google-drive/reset-oauth',
       success: function() {
-        self.googleDriveListing.reloadDialog();
+        self.dialog.reload();
       }
     });
   });
@@ -320,9 +322,8 @@ GoogleDriveContainer.prototype.setupForm = function() {
       type: 'post',
       dataType: 'html',
       success: function(html) {
-        $("#googleDriveModal").html(html);
-        new GoogleDriveForm(self);
-        $(window).trigger('resize');
+        self.dialog.setContents(html);
+        new GoogleDriveForm(self.dialog);
       }
     });
   });
@@ -453,9 +454,9 @@ GoogleDriveContainer.prototype.onLoaded = function() {
 }
 
 
-function GoogleDriveForm(container) {
+function GoogleDriveForm(dialog) {
   var self = this;
-  self.container = container;
+  self.dialog = dialog;
   self.$form = $('form.google-item-form');
   self.$form.on('submit', function(event) {
     event.preventDefault();
@@ -466,83 +467,54 @@ function GoogleDriveForm(container) {
       type: 'post',
       dataType: 'html',
       success: function(html) {
-        $("#googleDriveModal").html(html);
-        new GoogleDriveForm(self.container);
+        self.dialog.setContents(html);
+        new GoogleDriveForm(self.dialog);
       }
     });
   });
 
   $('#returnToDrive').on('click', function(event) {
     event.preventDefault();
-    self.container.googleDriveListing.reloadDialog();
+    self.dialog.reload();
   });
 }
 
 
-function GoogleDriveListing() {
+function GoogleDriveItemDialog() {
   var self = this;
 
-  // Bootstrap our custom Add Google item workflow onto the Create Google Item menu item
-  $("table.resourcesList a[onclick*='org.sakaiproject.content.types.GoogleDriveItemType:create']").removeAttr('onclick').on('click', function(event) {
-    event.preventDefault();
+  self.id = "googleDriveModal";
+  self.showDialog();
+  self.bindEvents();
+};
 
-    self.prepareDialog();
-
-    self.collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
-
-    self.reloadDialog();
-  });
-
-  // Insert an Edit Details action for google items
-  $("table.resourcesList a[onclick*='org.sakaiproject.content.types.GoogleDriveItemType:delete']").each(function() {
-    var $deleteAction = $(this);
-    var $insertAction = $('<li><a href="javascript:void(0);">Edit Details</a></li>');
-    var resourceId = $deleteAction.closest('tr').find(':checkbox[name=selectedMembers]').val();
-
-    $deleteAction.closest('li').before($insertAction);
-
-    $insertAction.on('click', function() {
-      self.prepareDialog();
-
-      $.ajax({
-          url: window.location.pathname + "/google-drive/edit-google-item",
-          type: 'get',
-          dataType: 'html',
-          data: {
-            'resourceId': resourceId
-          },
-          success: function(html) {
-            $("#googleDriveModal").html(html);
-            new GoogleDriveForm();
-            $(window).trigger('resize');
-          }
-        });
-    });
-  });
-}
-
-GoogleDriveListing.prototype.prepareDialog = function() {
+GoogleDriveItemDialog.prototype.showDialog = function() {
   var self = this;
 
-  $("<div id='googleDriveModal' class='drive-body'>Loading...</div>").appendTo(document.body)
-    $("#googleDriveModal").dialog({
-      modal: true,
-      resizable: false,
-      open: function() {
-        $(document.body).css({
-          overflow: 'hidden',
-        });
-      },
-      close: function() {
-        $(document.body).css({
-          overflow: '',
-        });
-        $("#googleDriveModal").dialog('destroy');
-        $("#googleDriveModal").remove();
-      }
-    });
+  $("<div id='" + self.id + "' class='drive-body'>Loading...</div>").appendTo(document.body);
+  $("#googleDriveModal").dialog({
+    modal: true,
+    resizable: false,
+    open: function() {
+      $(document.body).css({
+        overflow: 'hidden',
+      });
+    },
+    close: function() {
+      $(document.body).css({
+        overflow: '',
+      });
+      $("#googleDriveModal").dialog('destroy');
+      $("#googleDriveModal").remove();
+    }
+  });
+  $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen').addClass('google-drive-dialog');
+};
 
-    $(window).on('resize', function () {
+GoogleDriveItemDialog.prototype.bindEvents = function() {
+  var self = this;
+
+  $(window).on('resize', function () {
       var width = Math.min(1200, $(window).width() - 100);
       var leftOffset = parseInt(($(window).width() - width) / 2);
 
@@ -561,27 +533,88 @@ GoogleDriveListing.prototype.prepareDialog = function() {
       }
     });
 
-    $("#googleDriveModal").closest('.ui-dialog').addClass('ui-dialog-full-screen').addClass('google-drive-dialog');
     $(window).trigger('resize');
 
     $('#googleDriveModal').on('click', '.close-google-dialog', function() {
       $('#googleDriveModal').dialog('close');
     });
 };
-GoogleDriveListing.prototype.reloadDialog = function() {
+
+GoogleDriveItemDialog.prototype.load = function(url, data, onSuccess) {
   var self = this;
 
+  self._reload_data = {
+    url: url,
+    data: data,
+    onSuccess: onSuccess
+  };
+
   $.ajax({
-    url: window.location.pathname + "/google-drive/show-google-drive",
+    url: url,
     type: 'get',
     dataType: 'html',
-    data: {
-      'collectionId': self.collectionId
-    },
+    data: data,
     success: function(html) {
-      $("#googleDriveModal").html(html);
-      new GoogleDriveContainer($("#googleDriveModal"), window.location.pathname + "/google-drive", self);
-      $(window).trigger('resize');
+      self.setContents(html);
+      onSuccess();
     }
+  });
+};
+
+GoogleDriveItemDialog.prototype.setContents = function(html) {
+  $("#googleDriveModal").html(html);
+  $(window).trigger('resize');
+};
+
+GoogleDriveItemDialog.prototype.reload = function() {
+  var self = this;
+  if (self._reload_data) {
+    self.load(self._reload_data.url, self._reload_data.data, self._reload_data.onSuccess);
+  } else {
+    throw "Nothing to reload";
+  }
+};
+
+var GOOGLE_ITEM_ROUTES = {
+  show: window.location.pathname + "/google-drive/show-google-drive",
+  edit: window.location.pathname + "/google-drive/edit-google-item",
+};
+
+function ResourceListWithGoogleItems() {
+  var self = this;
+
+  // Bootstrap our custom Add Google item workflow onto the Create Google Item menu item
+  $("table.resourcesList a[onclick*='org.sakaiproject.content.types.GoogleDriveItemType:create']").removeAttr('onclick').on('click', function(event) {
+    event.preventDefault();
+
+    self.dialog = new GoogleDriveItemDialog();
+    self.collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
+    self.dialog.load(GOOGLE_ITEM_ROUTES.show,
+                     {
+                       'collectionId': self.collectionId
+                     },
+                     function() {
+                       new GoogleDriveContainer($("#googleDriveModal"), window.location.pathname + "/google-drive", self.dialog);
+                     });
+  });
+
+  // Insert an Edit Details action for google items
+  $("table.resourcesList a[onclick*='org.sakaiproject.content.types.GoogleDriveItemType:delete']").each(function() {
+    var $deleteAction = $(this);
+    var $insertAction = $('<li><a href="javascript:void(0);">Edit Details</a></li>');
+    var resourceId = $deleteAction.closest('tr').find(':checkbox[name=selectedMembers]').val();
+
+    $deleteAction.closest('li').before($insertAction);
+
+    $insertAction.on('click', function() {
+      self.dialog = new GoogleDriveItemDialog();
+      self.dialog.load(GOOGLE_ITEM_ROUTES.edit,
+                       {
+                         'resourceId': resourceId
+                       },
+                       function() {
+                         new GoogleDriveForm(self.dialog);
+                       });
+    });
   });
 };
