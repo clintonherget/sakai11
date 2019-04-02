@@ -74,7 +74,7 @@ public class EditGoogleItemHandler implements Handler {
 
             ContentResource resource = chs.getResource(resourceId);
             ResourceProperties properties = resource.getProperties();
-            List<Group> accessGroups = new ArrayList<>(resource.getGroups());
+            List<String> accessGroups = new ArrayList<>(resource.getGroups());
 
             // Build group data
             List<SakaiGoogleGroup> wholeSite = new ArrayList<SakaiGoogleGroup>();
@@ -83,12 +83,12 @@ public class EditGoogleItemHandler implements Handler {
 
             Site site = SiteService.getSite((String)context.get("siteId"));
 
-            boolean selected = accessGroups.stream().anyMatch(g -> g.getId().equals(site.getId()));
+            boolean selected = accessGroups.stream().anyMatch(g -> site.getReference().equals(g));
             wholeSite.add(new SakaiGoogleGroup(site.getId(), site.getTitle(), grouper.getGroupInfo(site.getId()), selected));
 
             for (Group group : site.getGroups()) {
                 GroupInfo groupInfo = grouper.getGroupInfo(group.getId());
-                selected = accessGroups.stream().anyMatch(g -> g.getId().equals(group.getId()));
+                selected = accessGroups.stream().anyMatch(g -> group.getReference().equals(g));
 
                 if (group.getProviderGroupId() == null) {
                     adhocGroups.add(new SakaiGoogleGroup(group.getId(), group.getTitle(), groupInfo, selected));
