@@ -78,7 +78,7 @@ public class GoogleDriveItemType extends BaseResourceType
 
 	public GoogleDriveItemType() {
 		actions.put(CREATE, new BaseInteractionAction(CREATE, ActionType.NEW_GOOGLE_DRIVE_ITEMS, typeId, helperId, localizer("create.googledriveitems")));
-		actions.put(DELETE, new BaseServiceLevelAction(DELETE, ActionType.DELETE, typeId, true, localizer("action.delete")));
+		actions.put(DELETE, new MoveToTrashAction(DELETE, ActionType.DELETE, typeId, true, localizer("action.delete")));
 
 		for(ActionType type : ActionType.values())
 		{
@@ -196,4 +196,16 @@ public class GoogleDriveItemType extends BaseResourceType
 		return "fa fa-google " + googleMimeTypeCSSClass;
 	}
 
+	class MoveToTrashAction extends BaseServiceLevelAction {
+		public MoveToTrashAction(String id, ActionType actionType, String typeId, boolean multipleItemAction, Localizer localizer) {
+			super(id, actionType, typeId, multipleItemAction, localizer);
+		}
+
+		public void finalizeAction(Reference reference)
+		{
+			super.finalizeAction(reference);
+
+			// FIXME Drop all sakai group and google permissions 
+		}
+	}
 }

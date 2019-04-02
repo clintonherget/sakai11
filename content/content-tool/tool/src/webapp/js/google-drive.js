@@ -589,6 +589,10 @@ function ResourceListWithGoogleItems() {
 
     self.dialog = new GoogleDriveItemDialog();
     self.collectionId = $(this).closest('tr').find(':checkbox[name=selectedMembers]').val();
+    if (self.collectionId == null) {
+      // no checkbox! ok, so get the collectionId from the form
+      self.collectionId = $(this).closest('form').find(':hidden[name=collectionId]').val();
+    }
     self.dialog.load(GOOGLE_ITEM_ROUTES.show,
                      {
                        'collectionId': self.collectionId
