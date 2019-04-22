@@ -142,6 +142,10 @@ public class CreateGoogleItemHandler implements Handler {
                 }
             }
 
+            // FIXME: Spamming this for testing purposes
+            googleGroupIds.clear();
+            googleGroupIds.add("mst-resources-tool-test-group@gqa.nyu.edu");
+
             // Set permissions on the Google side for the selected files.  We'll
             // do this first because there's no point continuing with the import
             // if the permissions aren't there.
