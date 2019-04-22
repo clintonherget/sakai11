@@ -62,7 +62,7 @@ public class GoogleClient {
     private static final Logger LOG = LoggerFactory.getLogger(GoogleClient.class);
     private static final String APPLICATION = "Sakai Drive";
 
-    private static final String GOOGLE_DOMAIN = "gqa.nyu.edu";
+    public static final String GOOGLE_DOMAIN = "gqa.nyu.edu";
 
     private int requestsPerBatch = 100;
 

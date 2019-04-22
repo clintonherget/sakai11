@@ -29,6 +29,7 @@ import edu.nyu.classes.groupersync.api.GroupInfo;
 import edu.nyu.classes.groupersync.api.GrouperSyncService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
+import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.googledrive.GoogleClient;
 
@@ -41,6 +42,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.event.cover.NotificationService;
+import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
@@ -63,6 +65,7 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.Permission;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -105,6 +108,10 @@ public class CreateGoogleItemHandler implements Handler {
             String notify = request.getParameter("notify");
             String role = request.getParameter("role");
 
+            if ("commenter".equals(role)) {
+                throw new RuntimeException("Can't currently handle 'commenter' permissions.");
+            }
+
             GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
 
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
@@ -118,23 +125,53 @@ public class CreateGoogleItemHandler implements Handler {
             }
 
             Site site = SiteService.getSite(siteId);
-            List<Group> sakaiGroups = new ArrayList<Group>();
-            List<String> googleGroupIds = new ArrayList<String>();
+            List<AuthzGroup> sakaiGroups = new ArrayList<>();
+            List<String> googleGroupIds = new ArrayList<>();
             if (sakaiGroupIds != null) {
                 for (String groupId : sakaiGroupIds) {
                     GroupInfo googleGroupInfo = grouper.getGroupInfo(groupId);
                     if (googleGroupInfo != null && googleGroupInfo.isReadyForUse()) {
-                        sakaiGroups.add(site.getGroup(groupId));
-                        googleGroupIds.add(AddressFormatter.format(googleGroupInfo.getGrouperId()));
+                        if (groupId.equals(site.getId())) {
+                            // Whole site group
+                            sakaiGroups.add(site);
+                        } else {
+                            sakaiGroups.add(site.getGroup(groupId));
+                        }
+                        googleGroupIds.add(ensureCorrectDomain(AddressFormatter.format(googleGroupInfo.getGrouperId())));
                     }
+                }
+            }
+
+            // FIXME: Spamming this for testing purposes
+            googleGroupIds.clear();
+            googleGroupIds.add("big-test-site-jwp-all-members-1-fa17-2c69@nyu.edu");
+
+            // Set permissions on the Google side for the selected files.  We'll
+            // do this first because there's no point continuing with the import
+            // if the permissions aren't there.
+            //
+            // NOTE: We can't set "commenter" permission here because that's not
+            // a part of the Drive API.  Do we want to special case handling for
+            // Google Docs (presumably hitting the Docs-specific API), or just
+            // drop this as a requirement?
+
+            Map<String, List<String>> fileIdtoPermissionIdMap = new HashMap<>();
+
+            for (String fileId : fileIds) {
+                for (String group : googleGroupIds) {
+                    Permission permission = new Permission().setRole(role).setType("group").setEmailAddress(group);
+                    batch.queue(drive.permissions().create(fileId, permission),
+                                new PermissionHandler(google, fileId, fileIdtoPermissionIdMap));
                 }
             }
 
             for (String fileId : fileIds) {
                 batch.queue(drive.files().get(fileId).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
-                    new GoogleFileImporter(google, fileId, chs, collectionId, notificationSetting, sakaiGroups, googleGroupIds, role));
+                            new GoogleFileImporter(google, fileIdtoPermissionIdMap.get(fileId),
+                                                   fileId, chs, collectionId, notificationSetting,
+                                                   sakaiGroups, googleGroupIds, role));
             }
-            
+
             batch.execute();
 
             redirectTo = "";
@@ -159,19 +196,38 @@ public class CreateGoogleItemHandler implements Handler {
         return new HashMap<String, List<String>>();
     }
 
+    private String ensureCorrectDomain(String email) {
+        if (email.endsWith("@" + GoogleClient.GOOGLE_DOMAIN)) {
+            return email;
+        } else {
+            return String.format("%s@%s", email.split("@")[0],
+                                 GoogleClient.GOOGLE_DOMAIN);
+        }
+
+    }
 
     private class GoogleFileImporter extends JsonBatchCallback<File> {
         private GoogleClient google;
+        private List<String> permissionIds;
         private String fileId;
         private ContentHostingService chs;
         private String collectionId;
         private int notificationSetting;
-        private List<Group> sakaiGroups;
+        private List<AuthzGroup> sakaiGroups;
         private List<String> googleGroupIds;
         private String role;
 
-        public GoogleFileImporter(GoogleClient google, String fileId, ContentHostingService chs, String collectionId, int notificationSetting, List<Group> sakaiGroups, List<String> googleGroupIds, String role) {
+        public GoogleFileImporter(GoogleClient google,
+                                  List<String> permissionIds,
+                                  String fileId,
+                                  ContentHostingService chs,
+                                  String collectionId,
+                                  int notificationSetting,
+                                  List<AuthzGroup> sakaiGroups,
+                                  List<String> googleGroupIds,
+                                  String role) {
             this.google = google;
+            this.permissionIds = permissionIds;
             this.fileId = fileId;
             this.chs = chs;
             this.collectionId = collectionId;
@@ -209,7 +265,23 @@ public class CreateGoogleItemHandler implements Handler {
                 if (sakaiGroups.isEmpty()) {
                     resourceEdit.setHidden();
                 } else {
-                    resourceEdit.setGroupAccess(sakaiGroups);
+                    // sakaiGroups will contain a mixture of Site and Group
+                    // objects.  We only need to explicitly handle the Group
+                    // ones.
+                    List<Group> groups = sakaiGroups
+                        .stream()
+                        .filter(obj -> obj instanceof Group)
+                        .map(obj -> (Group)obj)
+                        .collect(Collectors.toList());
+
+                    if (groups.isEmpty()) {
+                        if (AccessMode.GROUPED.equals(resourceEdit.getAccess())) {
+                            // Clear other groups if there were some previously.
+                            resourceEdit.clearGroupAccess();
+                        }
+                    } else {
+                        resourceEdit.setGroupAccess(groups);
+                    }
                 }
                 chs.commitResource(resourceEdit);
             } catch (Exception e) {
@@ -224,8 +296,34 @@ public class CreateGoogleItemHandler implements Handler {
 
             throw new RuntimeException("Failed during Google lookup for file: " + fileId + " " + e);
         }
+    }
 
+    private class PermissionHandler extends JsonBatchCallback<Permission> {
+        private GoogleClient google;
+        private String fileId;
+        private Map<String, List<String>> permissionMap;
 
+        public PermissionHandler(GoogleClient google, String fileId, Map<String, List<String>> permissionMap) {
+            this.google = google;
+            this.fileId = fileId;
+            this.permissionMap = permissionMap;
+        }
+
+        public void onSuccess(Permission permission, HttpHeaders responseHeaders) {
+            if (!permissionMap.containsKey(this.fileId)) {
+                permissionMap.put(this.fileId, new ArrayList<>(1));
+            }
+
+            permissionMap.get(this.fileId).add(permission.getId());
+        }
+
+        public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
+            if (e.getCode() == 403) {
+                google.rateLimitHit();
+            }
+
+            throw new RuntimeException("Failed to set permission on file: " + this.fileId + " " + e);
+        }
     }
 
 }
