@@ -25,6 +25,7 @@
 package org.sakaiproject.content.googledrive;
 
 import org.sakaiproject.entity.api.ResourceProperties;
+import java.util.Collections;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,10 @@ public class Utils {
     public static void storeStringArray(ResourceProperties properties,
                                         String key,
                                         Collection<String> values) {
+        if (values == null) {
+            values = Collections.emptyList();
+        }
+
         properties.addProperty(key + "_count", String.valueOf(values.size()));
 
         int count = 0;

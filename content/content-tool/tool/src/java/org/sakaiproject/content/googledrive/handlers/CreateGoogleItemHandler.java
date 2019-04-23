@@ -41,10 +41,7 @@ import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.googledrive.GoogleClient;
 import org.sakaiproject.content.googledrive.google.FileImport;
 import org.sakaiproject.content.googledrive.google.Permissions;
-import org.sakaiproject.event.cover.NotificationService;
-import org.sakaiproject.site.api.Group;
-import org.sakaiproject.site.api.Site;
-import org.sakaiproject.site.cover.SiteService;
+import java.util.Collections;
 
 
 public class CreateGoogleItemHandler implements Handler {
@@ -73,46 +70,28 @@ public class CreateGoogleItemHandler implements Handler {
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
             String siteId = (String) context.get("siteId");
 
-            int notificationSetting = NotificationService.NOTI_NONE;
-            if ("r".equals(notify)) {
-                notificationSetting = NotificationService.NOTI_REQUIRED;
-            } else if ("o".equals(notify)) {
-                notificationSetting = NotificationService.NOTI_OPTIONAL;
-            }
+            FileImport fileImport = new FileImport(google, drive, chs, grouper);
 
-            Site site = SiteService.getSite(siteId);
-            List<AuthzGroup> sakaiGroups = new ArrayList<>();
-            List<String> googleGroupIds = new ArrayList<>();
-            if (sakaiGroupIds != null) {
-                for (String groupId : sakaiGroupIds) {
-                    GroupInfo googleGroupInfo = grouper.getGroupInfo(groupId);
-                    if (googleGroupInfo != null && googleGroupInfo.isReadyForUse()) {
-                        if (groupId.equals(site.getId())) {
-                            // Whole site group
-                            sakaiGroups.add(site);
-                        } else {
-                            sakaiGroups.add(site.getGroup(groupId));
-                        }
-                        googleGroupIds.add(ensureCorrectDomain(AddressFormatter.format(googleGroupInfo.getGrouperId())));
-                    }
-                }
-            }
+            int notificationSetting = fileImport.mapNotificationSetting(notify);
+            FileImport.Groups resolvedGroups = fileImport.resolveSiteGroups(siteId,
+                                                                            (sakaiGroupIds == null) ? Collections.emptyList() :
+                                                                            Arrays.asList(sakaiGroupIds));
+
 
             // FIXME: Spamming this for testing purposes
-            googleGroupIds.clear();
-            googleGroupIds.add("mst-resources-tool-test-group@gqa.nyu.edu");
+            resolvedGroups.googleGroupIds.clear();
+            resolvedGroups.googleGroupIds.add("mst-resources-tool-test-group@gqa.nyu.edu");
 
             // Set permissions on the Google side for the selected files.  We'll
             // do this first because there's no point continuing with the import
             // if the permissions aren't there.
             Map<String, List<String>> fileIdToPermissionIdMap =
-                new Permissions(google, drive).applyPermissions(fileIds, role, googleGroupIds);
+                new Permissions(google, drive).applyPermissions(fileIds, role, resolvedGroups.googleGroupIds);
 
-            new FileImport(google, drive, chs)
-                .importFiles(fileIds, fileIdToPermissionIdMap,
-                             collectionId,
-                             notificationSetting,
-                             sakaiGroups, role);
+            fileImport.importFiles(fileIds, fileIdToPermissionIdMap,
+                                   collectionId,
+                                   notificationSetting,
+                                   resolvedGroups.sakaiGroups, role);
 
             redirectTo = "";
         } catch (Exception e) {
@@ -134,15 +113,5 @@ public class CreateGoogleItemHandler implements Handler {
 
     public Map<String, List<String>> getFlashMessages() {
         return new HashMap<String, List<String>>();
-    }
-
-    private String ensureCorrectDomain(String email) {
-        if (email.endsWith("@" + GoogleClient.GOOGLE_DOMAIN)) {
-            return email;
-        } else {
-            return String.format("%s@%s", email.split("@")[0],
-                                 GoogleClient.GOOGLE_DOMAIN);
-        }
-
     }
 }

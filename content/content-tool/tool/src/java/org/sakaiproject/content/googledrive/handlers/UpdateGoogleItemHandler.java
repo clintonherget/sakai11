@@ -30,14 +30,20 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import edu.nyu.classes.groupersync.api.AddressFormatter;
-import edu.nyu.classes.groupersync.api.GroupInfo;
 import edu.nyu.classes.groupersync.api.GrouperSyncService;
+import edu.nyu.classes.groupersync.api.GroupInfo;
+import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.googledrive.GoogleClient;
+import org.sakaiproject.content.googledrive.google.FileImport;
+import org.sakaiproject.content.googledrive.google.Permissions;
+import org.sakaiproject.content.googledrive.Utils;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.event.cover.NotificationService;
@@ -45,12 +51,6 @@ import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.util.BaseResourcePropertiesEdit;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.*;
-
-import org.sakaiproject.content.googledrive.Utils;
 
 public class UpdateGoogleItemHandler implements Handler {
 
@@ -75,54 +75,47 @@ public class UpdateGoogleItemHandler implements Handler {
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
             String siteId = (String) context.get("siteId");
 
-            int notificationSetting = NotificationService.NOTI_NONE;
-            if ("r".equals(notify)) {
-                notificationSetting = NotificationService.NOTI_REQUIRED;
-            } else if ("o".equals(notify)) {
-                notificationSetting = NotificationService.NOTI_OPTIONAL;
+            FileImport fileImport = new FileImport(google, drive, chs, grouper);
+
+            int notificationSetting = fileImport.mapNotificationSetting(notify);
+            FileImport.Groups resolvedGroups = fileImport.resolveSiteGroups(siteId,
+                                                                            (sakaiGroupIds == null) ? Collections.emptyList() :
+                                                                            Arrays.asList(sakaiGroupIds));
+
+            // FIXME: Spamming this for testing purposes
+            if (resolvedGroups.googleGroupIds.size() > 0) {
+                resolvedGroups.googleGroupIds.clear();
+                resolvedGroups.googleGroupIds.add("mst-resources-tool-test-group@gqa.nyu.edu");
             }
 
-            Site site = SiteService.getSite(siteId);
-            List<Group> sakaiGroups = new ArrayList<Group>();
-            List<String> googleGroupIds = new ArrayList<String>();
-            if (sakaiGroupIds != null) {
-                for (String groupId : sakaiGroupIds) {
-                    GroupInfo googleGroupInfo = grouper.getGroupInfo(groupId);
-                    if (googleGroupInfo != null && googleGroupInfo.isReadyForUse()) {
-                        sakaiGroups.add(site.getGroup(groupId));
-                        googleGroupIds.add(AddressFormatter.format(googleGroupInfo.getGrouperId()));
-                    }
-                }
-            }
 
             ContentResourceEdit resource = null;
             try {
                 resource = chs.editResource(resourceId);
                 ResourcePropertiesEdit properties = resource.getPropertiesEdit();
 
+                // FIXME: constants for this stuff?
+                String fileId = properties.getProperty("google-id");
+
                 // Use these to update permissions on the google side
-                List<String> previousGoogleGroupIds = Utils.loadStringArray(properties, "google-group-id");
                 List<String> previousPermissionIds = Utils.loadStringArray(properties, "google-permission-id");
 
-                // FIXME: make the corresponding changes on the Google side.  Pull Google permissions handling stuff into a shared class?
+                Map<String, List<String>> fileIdToPermissionsMap =
+                    new Permissions(google, drive)
+                    .lazyRemovePermissions(fileId, previousPermissionIds)
+                    .applyPermissions(Arrays.asList(fileId),
+                                      role,
+                                      resolvedGroups.googleGroupIds);
 
                 // replace role
                 properties.removeProperty("google-group-role");
                 properties.addProperty("google-group-role", role);
 
-                // replace google groups
-                properties.removeProperty("google-group-id");
-                for (String googleGroupId : googleGroupIds) {
-                    properties.addPropertyToList("google-group-id", googleGroupId);
-                }
+                List<String> permissionIds = fileIdToPermissionsMap.get(fileId);
 
-                resource.clearRoleAccess();
-                if (sakaiGroups.isEmpty()) {
-                    resource.setHidden();
-                } else {
-                    resource.setAvailability(false, null, null);
-                    resource.setGroupAccess(sakaiGroups);
-                }
+                Utils.storeStringArray(properties, "google-permission-id", permissionIds);
+
+                fileImport.applyGroupAccess(resource, resolvedGroups.sakaiGroups);
 
                 // commit changes
                 chs.commitResource(resource, notificationSetting);

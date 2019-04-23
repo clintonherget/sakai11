@@ -16,10 +16,42 @@ public class Permissions {
 
     private GoogleClient google;
     private Drive drive;
+    private GoogleClient.LimitedBatchRequest batchInProgress;
 
     public Permissions(GoogleClient google, Drive drive) {
         this.google = google;
         this.drive = drive;
+        this.batchInProgress = null;
+    }
+
+    private GoogleClient.LimitedBatchRequest getBatch() throws Exception {
+        if (this.batchInProgress != null) {
+            return this.batchInProgress;
+        } else {
+            return google.getBatch(drive);
+        }
+    }
+
+    private void executeLater(GoogleClient.LimitedBatchRequest batch) {
+        this.batchInProgress = batch;
+    }
+
+    // Remove a list of permissions for a given file.
+    //
+    // Lazy because this doesn't execute until a non-lazy action runs.
+    public Permissions lazyRemovePermissions(String fileId, List<String> permissionIds) throws Exception {
+        GoogleClient.LimitedBatchRequest batch = getBatch();
+
+        // Delete any permission that is about to be replaced
+        for (String permissionId : permissionIds) {
+            batch.queue(drive.permissions().delete(fileId, permissionId),
+                        new DeletePermissionHandler(google, fileId, permissionId));
+        }
+
+
+        executeLater(batch);
+
+        return this;
     }
 
     // Give everyone in `googleGroupIds` `role` permission to every file in `fileIds`.
@@ -31,7 +63,7 @@ public class Permissions {
         throws Exception {
         Map<String, List<String>> fileIdtoPermissionIdMap = new HashMap<>();
 
-        GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
+        GoogleClient.LimitedBatchRequest batch = getBatch();
 
         for (String fileId : fileIds) {
             for (String group : googleGroupIds) {
@@ -44,6 +76,32 @@ public class Permissions {
         batch.execute();
 
         return fileIdtoPermissionIdMap;
+    }
+
+    private class DeletePermissionHandler extends JsonBatchCallback<Void> {
+        private GoogleClient google;
+        private String fileId;
+        private String permissionId;
+
+        public DeletePermissionHandler(GoogleClient google, String fileId, String permissionId) {
+            this.google = google;
+            this.fileId = fileId;
+            this.permissionId = permissionId;
+        }
+
+        public void onSuccess(Void ignored, HttpHeaders responseHeaders)  {
+            // Great!
+        }
+
+        public void onFailure(GoogleJsonError e, HttpHeaders responseHeaders) {
+            if (e.getCode() == 403) {
+                google.rateLimitHit();
+            }
+
+            // FIXME: Logging
+            System.err.println("Failed to remove permission on file: " + this.fileId + " " + e);
+        }
+
     }
 
     private class PermissionHandler extends JsonBatchCallback<Permission> {
