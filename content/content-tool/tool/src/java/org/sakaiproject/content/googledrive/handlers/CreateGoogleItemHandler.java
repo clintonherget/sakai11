@@ -108,10 +108,6 @@ public class CreateGoogleItemHandler implements Handler {
             String notify = request.getParameter("notify");
             String role = request.getParameter("role");
 
-            if ("commenter".equals(role)) {
-                throw new RuntimeException("Can't currently handle 'commenter' permissions.");
-            }
-
             GoogleClient.LimitedBatchRequest batch = google.getBatch(drive);
 
             ContentHostingService chs = (ContentHostingService) ComponentManager.get("org.sakaiproject.content.api.ContentHostingService");
@@ -149,12 +145,6 @@ public class CreateGoogleItemHandler implements Handler {
             // Set permissions on the Google side for the selected files.  We'll
             // do this first because there's no point continuing with the import
             // if the permissions aren't there.
-            //
-            // NOTE: We can't set "commenter" permission here because that's not
-            // a part of the Drive API.  Do we want to special case handling for
-            // Google Docs (presumably hitting the Docs-specific API), or just
-            // drop this as a requirement?
-
             Map<String, List<String>> fileIdtoPermissionIdMap = new HashMap<>();
 
             for (String fileId : fileIds) {
