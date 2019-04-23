@@ -50,6 +50,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
+import org.sakaiproject.content.googledrive.Utils;
 
 public class UpdateGoogleItemHandler implements Handler {
 
@@ -100,7 +101,10 @@ public class UpdateGoogleItemHandler implements Handler {
                 ResourcePropertiesEdit properties = resource.getPropertiesEdit();
 
                 // Use these to update permissions on the google side
-                List<String> previousGoogleGroupIds = properties.getPropertyList("google-group-id");
+                List<String> previousGoogleGroupIds = Utils.loadStringArray(properties, "google-group-id");
+                List<String> previousPermissionIds = Utils.loadStringArray(properties, "google-permission-id");
+
+                // FIXME: make the corresponding changes on the Google side.  Pull Google permissions handling stuff into a shared class?
 
                 // replace role
                 properties.removeProperty("google-group-role");
