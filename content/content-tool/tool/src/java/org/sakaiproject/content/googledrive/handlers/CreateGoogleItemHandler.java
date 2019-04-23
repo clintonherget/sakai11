@@ -155,6 +155,8 @@ public class CreateGoogleItemHandler implements Handler {
                 }
             }
 
+            batch.execute();
+
             for (String fileId : fileIds) {
                 batch.queue(drive.files().get(fileId).setFields("id, name, mimeType, description, webViewLink, iconLink, thumbnailLink"),
                             new GoogleFileImporter(google, fileIdtoPermissionIdMap.get(fileId),
@@ -239,6 +241,11 @@ public class CreateGoogleItemHandler implements Handler {
             for (String googleGroupId : googleGroupIds) {
                 properties.addPropertyToList("google-group-id", googleGroupId);
             }
+
+            for (String permissionId : permissionIds) {
+                properties.addPropertyToList("google-permission-id", permissionId);
+            }
+
 
             try {
                 ContentResource resource = chs.addResource(UUID.randomUUID().toString(),
