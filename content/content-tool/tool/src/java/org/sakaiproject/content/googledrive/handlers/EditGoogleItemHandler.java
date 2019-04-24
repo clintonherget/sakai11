@@ -32,11 +32,12 @@ import com.google.api.client.util.Key;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import edu.nyu.classes.groupersync.api.AddressFormatter;
-import edu.nyu.classes.groupersync.api.GroupInfo;
 import edu.nyu.classes.groupersync.api.GrouperSyncService;
+import edu.nyu.classes.groupersync.api.GroupInfo;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.content.googledrive.GoogleClient;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.site.api.Group;
@@ -83,7 +84,8 @@ public class EditGoogleItemHandler implements Handler {
 
             Site site = SiteService.getSite((String)context.get("siteId"));
 
-            boolean selected = accessGroups.stream().anyMatch(g -> site.getReference().equals(g));
+            // Mode will likely be INHERITED for files available to the whole site, but may also be SITE.
+            boolean selected = !AccessMode.GROUPED.equals(resource.getAccess()) && !resource.isHidden();
             wholeSite.add(new SakaiGoogleGroup(site.getId(), site.getTitle(), grouper.getGroupInfo(site.getId()), selected));
 
             for (Group group : site.getGroups()) {
