@@ -62,7 +62,9 @@ public interface LTIService extends LTISubstitutionsFilter {
             "pagetitle:text:label=bl_pagetitle:required=true:allowed=true:maxlength=1024",
             "fa_icon:text:label=bl_fa_icon:allowed=true:maxlength=1024",
             "frameheight:integer:label=bl_frameheight:allowed=true",
-            "toolorder:integer:label=bl_toolorder:maxlength=2",
+// CLASSES-3643 hide toolorder field
+//            "toolorder:integer:label=bl_toolorder:maxlength=2",
+            "toolorder:integer:hidden=true:label=bl_toolorder:maxlength=2",
             "newpage:checkbox:label=bl_newpage",
             "debug:checkbox:label=bl_debug",
             "custom:textarea:label=bl_custom:rows=5:cols=25:allowed=true:maxlength=16384",

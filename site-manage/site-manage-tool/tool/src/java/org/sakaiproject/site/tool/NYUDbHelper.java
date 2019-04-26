@@ -114,6 +114,15 @@ public class NYUDbHelper {
 	}
 
 	/**
+	 * Get the subject code for the site
+	 * @param sectionEid
+	 * @return
+	 */
+	protected String getSiteSubject(String sectionEid) {
+		return getPropertyFromCourseCatalog(sectionEid, "subject");
+	}
+
+	/**
 	 * Get the instruction mode for the site (e.g. online, in person, hybrid)
 	 * @param sectionEid
 	 * @return
@@ -196,13 +205,25 @@ public class NYUDbHelper {
 			Connection db = sqlService.borrowConnection();
 
 			try {
-				PreparedStatement ps = db.prepareStatement("SELECT template_site_id FROM nyu_t_site_templates WHERE school_code = ?");
+				PreparedStatement ps = db.prepareStatement("SELECT * FROM nyu_t_site_templates WHERE school_code = ?");
 				ps.setString(1, schoolCode);
 
 				ResultSet rs = ps.executeQuery();
 				try {
-					if (rs.next()) {
-						return rs.getString(1);
+					while (rs.next()) {
+						try {
+							if (rs.getString("subject") != null) {
+								// We're not interested in matches on rows that are scoped to a subject.
+								//
+								// In a perfect world we'd add this clause to the above query, but want
+								// to support schemas that haven't had the subject column added yet.
+								continue;
+							}
+						} catch (SQLException e) {
+							// If there is no subject column, this is our match
+						}
+
+						return rs.getString("template_site_id");
 					}
 				} finally {
 					rs.close();
@@ -235,6 +256,38 @@ public class NYUDbHelper {
 		M_log.info("Selected template for school " + schoolCode + " and term " + termCode + ": " + result);
 
 		return result;
+	}
+
+
+	protected String getSiteTemplateForSchoolCodeAndSubject(String schoolCode, String subjectCode, String termCode) {
+		if (StringUtils.isBlank(schoolCode) || StringUtils.isBlank(subjectCode)) {
+			return null;
+		}
+
+		try {
+			Connection db = sqlService.borrowConnection();
+
+			try {
+				PreparedStatement ps = db.prepareStatement("SELECT template_site_id FROM nyu_t_site_templates WHERE school_code = ? AND subject = ?");
+				ps.setString(1, schoolCode);
+				ps.setString(2, subjectCode);
+
+				ResultSet rs = ps.executeQuery();
+				try {
+					if (rs.next()) {
+						return rs.getString(1);
+					}
+				} finally {
+					rs.close();
+				}
+			} finally {
+				sqlService.returnConnection(db);
+			}
+		} catch (SQLException e) {
+			M_log.warn(this + ".getSiteTemplateForSchoolCodeAndSubject: " + e);
+		}
+
+		return null;
 	}
 
 

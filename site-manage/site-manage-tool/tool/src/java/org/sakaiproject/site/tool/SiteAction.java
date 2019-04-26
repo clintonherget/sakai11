@@ -16076,6 +16076,20 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			templateSiteId = nyuDbHelper.getSiteTemplateForSchoolCode(epolyCode, term.getEid());
 		}
 
+		// CLASSES-3649 Try a match on school code and subject
+		if (templateSiteId == null) {
+			String subject = nyuDbHelper.getSiteSubject(sectionEid);
+			templateSiteId = nyuDbHelper.getSiteTemplateForSchoolCodeAndSubject(prop_school,
+											    subject,
+											    term.getEid());
+
+			if (templateSiteId != null) {
+				log.info(String.format("Selected site template based on school code %s and subject %s",
+						       prop_school,
+						       subject));
+			}
+		}
+
 		if (templateSiteId == null) {
 			//CLASSES-494, get template site if it exists
 			templateSiteId = nyuDbHelper.getSiteTemplateForSchoolCode(prop_school, term.getEid());
