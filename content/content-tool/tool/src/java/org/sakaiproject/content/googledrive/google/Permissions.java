@@ -98,8 +98,8 @@ public class Permissions {
                 google.rateLimitHit();
             }
 
-            // FIXME: Logging
-            System.err.println("Failed to remove permission on file: " + this.fileId + " " + e);
+            throw new GoogleUpdateFailureException("Failed to remove permission on file: " + this.fileId + " " + e,
+                                                   e);
         }
 
     }
@@ -128,7 +128,8 @@ public class Permissions {
                 google.rateLimitHit();
             }
 
-            throw new RuntimeException("Failed to set permission on file: " + this.fileId + " " + e);
+            throw new GoogleUpdateFailureException("Failed to set permission on file: " + this.fileId + " " + e,
+                                                   e);
         }
     }
 

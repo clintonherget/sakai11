@@ -196,7 +196,8 @@ public class FileImport {
                 google.rateLimitHit();
             }
 
-            throw new RuntimeException("Failed during Google lookup for file: " + fileId + " " + e);
+            throw new GoogleUpdateFailureException("Failed during Google lookup for file: " + this.fileId + " " + e,
+                                                   e);
         }
     }
 }
