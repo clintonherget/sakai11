@@ -83,13 +83,6 @@ public class UpdateGoogleItemHandler implements Handler {
                                                                             (sakaiGroupIds == null) ? Collections.emptyList() :
                                                                             Arrays.asList(sakaiGroupIds));
 
-            // FIXME: Spamming this for testing purposes
-            if (resolvedGroups.googleGroupIds.size() > 0) {
-                resolvedGroups.googleGroupIds.clear();
-                resolvedGroups.googleGroupIds.add("mst-resources-tool-test-group@gqa.nyu.edu");
-            }
-
-
             ContentResourceEdit resource = null;
             try {
                 resource = chs.editResource(resourceId);

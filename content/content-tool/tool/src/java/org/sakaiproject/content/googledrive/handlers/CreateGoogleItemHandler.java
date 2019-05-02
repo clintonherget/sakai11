@@ -79,10 +79,6 @@ public class CreateGoogleItemHandler implements Handler {
                                                                             Arrays.asList(sakaiGroupIds));
 
 
-            // FIXME: Spamming this for testing purposes
-            resolvedGroups.googleGroupIds.clear();
-            resolvedGroups.googleGroupIds.add("mst-resources-tool-test-group@gqa.nyu.edu");
-
             // Set permissions on the Google side for the selected files.  We'll
             // do this first because there's no point continuing with the import
             // if the permissions aren't there.
