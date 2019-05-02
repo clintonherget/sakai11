@@ -68,7 +68,7 @@ public class Permissions {
         for (String fileId : fileIds) {
             for (String group : googleGroupIds) {
                 Permission permission = new Permission().setRole(role).setType("group").setEmailAddress(group);
-                batch.queue(drive.permissions().create(fileId, permission),
+                batch.queue(drive.permissions().create(fileId, permission).setSendNotificationEmail(false),
                             new PermissionHandler(google, fileId, fileIdtoPermissionIdMap));
             }
         }
