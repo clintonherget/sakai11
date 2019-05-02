@@ -30,8 +30,9 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import edu.nyu.classes.groupersync.api.AddressFormatter;
-import edu.nyu.classes.groupersync.api.GrouperSyncService;
 import edu.nyu.classes.groupersync.api.GroupInfo;
+import edu.nyu.classes.groupersync.api.GrouperSyncService;
+import java.io.IOException;
 import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,9 +42,9 @@ import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.content.api.ResourceType;
 import org.sakaiproject.content.googledrive.GoogleClient;
+import org.sakaiproject.content.googledrive.Utils;
 import org.sakaiproject.content.googledrive.google.FileImport;
 import org.sakaiproject.content.googledrive.google.Permissions;
-import org.sakaiproject.content.googledrive.Utils;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.event.cover.NotificationService;
@@ -120,19 +121,31 @@ public class UpdateGoogleItemHandler implements Handler {
                 // commit changes
                 chs.commitResource(resource, notificationSetting);
 
+                redirectTo = "";
+
             } catch (Exception e) {
                 // force rollback and removal of lock
                 if (resource != null) {
                     chs.cancelResource(resource);
                 }
 
-                throw new RuntimeException(e);
+                throw e;
             }
-
-            redirectTo = "";
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            context.put("layout", false);
+
+            try {
+                response.setStatus(500);
+                response.setHeader("Content-Type", "text/plain");
+                response.getWriter().write(e.getMessage());
+            } catch (IOException ioe) {}
+
+            return;
         }
+    }
+
+    public boolean hasTemplate() {
+        return false;
     }
 
     public boolean hasRedirect() {

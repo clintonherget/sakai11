@@ -26,10 +26,12 @@ package org.sakaiproject.content.googledrive.handlers;
 
 import com.google.api.services.drive.Drive;
 import edu.nyu.classes.groupersync.api.AddressFormatter;
-import edu.nyu.classes.groupersync.api.GrouperSyncService;
 import edu.nyu.classes.groupersync.api.GroupInfo;
+import edu.nyu.classes.groupersync.api.GrouperSyncService;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +43,6 @@ import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.googledrive.GoogleClient;
 import org.sakaiproject.content.googledrive.google.FileImport;
 import org.sakaiproject.content.googledrive.google.Permissions;
-import java.util.Collections;
 
 
 public class CreateGoogleItemHandler implements Handler {
@@ -95,8 +96,19 @@ public class CreateGoogleItemHandler implements Handler {
 
             redirectTo = "";
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            context.put("layout", false);
+            try {
+                response.setStatus(500);
+                response.setHeader("Content-Type", "text/plain");
+                response.getWriter().write(e.getMessage());
+            } catch (IOException ioe) {}
+
+            return;
         }
+    }
+
+    public boolean hasTemplate() {
+        return false;
     }
 
     public boolean hasRedirect() {

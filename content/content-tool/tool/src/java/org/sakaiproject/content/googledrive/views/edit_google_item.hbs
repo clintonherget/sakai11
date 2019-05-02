@@ -10,6 +10,8 @@
     <div class="row">
       <div class="col-sm-12">
         <form method="POST" action="{{googleDriveURL}}update-google-item" class="google-item-form edit-google-item-form form-horizontal">
+          <div class="error-messages alertMessage" style="display: none">
+          </div>
           <input type="hidden" name="resourceId" value="{{resourceId}}"/>
           <div class="form-group">
             <label class="col-sm-3 control-label">Google Drive Content</label>

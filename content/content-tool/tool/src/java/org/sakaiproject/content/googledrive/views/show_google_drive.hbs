@@ -26,6 +26,8 @@
               <input class="file-search" type="text" placeholder="Search Most Recent" value="" />
             </div>
             <form class="google-drive-select-item-form" method="POST" action="{{googleDriveURL}}new-google-item">
+              <div class="error-messages alertMessage" style="display: none">
+              </div>
               <input type="hidden" name="collectionId" value="{{collectionId}}"/>
               <div class="scroll-container">
                 <ul class="file-list">

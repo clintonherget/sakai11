@@ -78,7 +78,9 @@ public class GoogleDriveFilter implements Filter {
 
             handler.handle(request, response, context);
 
-            response.setHeader("Content-Type", handler.getContentType());
+            if (!response.containsHeader("Content-Type")) {
+                response.setHeader("Content-Type", handler.getContentType());
+            }
 
             if (handler.hasRedirect()) {
                 String redirectURL = handler.getRedirect();

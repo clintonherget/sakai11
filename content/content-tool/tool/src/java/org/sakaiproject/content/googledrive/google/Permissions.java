@@ -98,7 +98,7 @@ public class Permissions {
                 google.rateLimitHit();
             }
 
-            throw new GoogleUpdateFailureException("Failed to remove permission on file: " + this.fileId + " " + e,
+            throw new GoogleUpdateFailureException("Failed to remove permission on file: " + this.fileId,
                                                    e);
         }
 
@@ -128,7 +128,7 @@ public class Permissions {
                 google.rateLimitHit();
             }
 
-            throw new GoogleUpdateFailureException("Failed to set permission on file: " + this.fileId + " " + e,
+            throw new GoogleUpdateFailureException("Failed to set permission on file: " + this.fileId,
                                                    e);
         }
     }

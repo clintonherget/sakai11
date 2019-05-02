@@ -64,11 +64,11 @@ GoogleDrive.prototype.showAuthError = function () {
 };
 
 GoogleDrive.prototype.showError = function (errorText) {
-  this.root.find('.unknown-error').html(errorText).show();
+  this.root.find('.error-messages').text(errorText).show();
 };
 
 GoogleDrive.prototype.hideErrors = function () {
-  this.root.find('.auth-error, .unknown-error').hide();
+  this.root.find('.auth-error, .error-messages').hide();
 };
 
 // FIXME now that scrollbar is on the window, we need to rework this one :(
@@ -216,7 +216,7 @@ GoogleDrive.prototype.getFiles = function(pageToken, options) {
                 if (jqxhr.status >= 400 && jqxhr.status < 500) {
                   self.showAuthError();
                 } else {
-                  self.showError(textStatus + ", " + error);
+                  self.showError(jqxhr.responseText);
                 }
             });
 };
@@ -324,6 +324,10 @@ GoogleDriveContainer.prototype.setupForm = function() {
       success: function(html) {
         self.dialog.setContents(html);
         new GoogleDriveForm(self.dialog);
+      },
+      error: function(message) {
+        self.$form.find('.error-messages').show();
+        self.$form.find('.error-messages').text(message.responseText);
       }
     });
   });
@@ -467,8 +471,13 @@ function GoogleDriveForm(dialog) {
       type: 'post',
       dataType: 'html',
       success: function(html) {
+        self.$form.find('.error-messages').hide();
         self.dialog.setContents(html);
         new GoogleDriveForm(self.dialog);
+      },
+      error: function(message) {
+        self.$form.find('.error-messages').show();
+        self.$form.find('.error-messages').text(message.responseText);
       }
     });
   });
@@ -557,7 +566,7 @@ GoogleDriveItemDialog.prototype.load = function(url, data, onSuccess) {
     success: function(html) {
       self.setContents(html);
       onSuccess();
-    }
+    },
   });
 };
 

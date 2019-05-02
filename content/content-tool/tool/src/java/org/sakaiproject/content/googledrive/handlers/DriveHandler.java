@@ -57,7 +57,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.stream.Collectors;
 import java.util.Collections;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+
 
 import java.net.URL;
 
@@ -113,7 +115,15 @@ public class DriveHandler implements Handler {
             ObjectMapper mapper = new ObjectMapper();
             mapper.writeValue(response.getOutputStream(), new GoogleItemPage(items, fileList.getNextPageToken()));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            context.put("layout", false);
+
+            try {
+                response.setStatus(500);
+                response.setHeader("Content-Type", "text/plain");
+                response.getWriter().write(e.getMessage());
+            } catch (IOException ioe) {}
+
+            return;
         }
     }
 
