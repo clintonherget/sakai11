@@ -62,7 +62,7 @@ public class GoogleClient {
     private static final Logger LOG = LoggerFactory.getLogger(GoogleClient.class);
     private static final String APPLICATION = "Sakai Drive";
 
-    public static final String GOOGLE_DOMAIN = "gqa.nyu.edu";
+    public static final String GOOGLE_DOMAIN = "nyu.edu";
 
     private int requestsPerBatch = 100;
 
@@ -85,7 +85,7 @@ public class GoogleClient {
     }
 
     public GoogleAuthorizationCodeFlow getAuthFlow() throws Exception {
-        File dataStoreLocation = new File(ServerConfigurationService.getSakaiHomePath() + "/googly-data-store");
+        File dataStoreLocation = new File(ServerConfigurationService.getSakaiHomePath() + "/google-data-store");
         FileDataStoreFactory store = new FileDataStoreFactory(dataStoreLocation);
 
         // set up authorization code flow
@@ -313,7 +313,6 @@ public class GoogleClient {
     }
 
     public static String getRedirectURL() {
-        // FIXME name? actual URL?
-        return "https://dishevelled.net/nyuclassesoauthdev";
+        return ServerConfigurationService.getServerUrl() + "/direct/google-drive/handle-google-auth";
     }
 }

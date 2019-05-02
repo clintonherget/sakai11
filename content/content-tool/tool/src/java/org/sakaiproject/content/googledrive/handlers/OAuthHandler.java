@@ -129,13 +129,7 @@ public class OAuthHandler implements Handler {
 
 
     private String handleLoginURL(URL baseURL) {
-        try {
-            // FIXME will need to be a Google registered URL for each environment
-//            return new URL(baseURL, "/direct/google-drive/handle-google-auth").toString();
-            return "https://dishevelled.net/nyuclassesoauthdev";
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return GoogleClient.getRedirectURL();
     }
 
     public boolean hasRedirect() {
