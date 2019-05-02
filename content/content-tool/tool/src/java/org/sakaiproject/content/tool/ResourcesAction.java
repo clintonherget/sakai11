@@ -4657,6 +4657,8 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			// TODO: why 'site' here?
 			Site site = siteService.getSite(toolManager.getCurrentPlacement().getContext());
 			context.put("siteTitle", site.getTitle());
+
+                        context.put("googleDriveEnabled", "true".equals(site.getProperties().get("google-drive-enabled")));
 		}
 		catch (IdUnusedException e)
 		{

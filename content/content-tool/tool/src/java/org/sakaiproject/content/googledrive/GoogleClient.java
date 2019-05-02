@@ -313,6 +313,12 @@ public class GoogleClient {
     }
 
     public static String getRedirectURL() {
-        return ServerConfigurationService.getServerUrl() + "/direct/google-drive/handle-google-auth";
+        String redirectUrl = ServerConfigurationService.getString("resources-google-redirect-url", "");
+
+        if (redirectUrl.isEmpty()) {
+            return ServerConfigurationService.getServerUrl() + "/direct/google-drive/handle-google-auth";
+        } else {
+            return redirectUrl;
+        }
     }
 }

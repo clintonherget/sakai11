@@ -49,6 +49,11 @@ import java.util.Set;
 
 import static org.sakaiproject.content.api.ResourceToolAction.*;
 
+import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.tool.cover.ToolManager;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.exception.IdUnusedException;
+
 public class GoogleDriveItemType extends BaseResourceType 
 {
 	protected String typeId = ResourceType.TYPE_GOOGLE_DRIVE_ITEM;
@@ -157,6 +162,19 @@ public class GoogleDriveItemType extends BaseResourceType
 
 	public List<ResourceToolAction> getActions(ActionType type)
 	{
+		if (ActionType.NEW_GOOGLE_DRIVE_ITEMS.equals(type)) {
+			boolean showGoogleDrive = false;
+
+			try {
+				Site site = SiteService.getSite(ToolManager.getCurrentPlacement().getContext());
+				showGoogleDrive = (site != null && "true".equals(site.getProperties().get("google-drive-enabled")));
+			} catch (org.sakaiproject.exception.IdUnusedException missing) {}
+
+			if (!showGoogleDrive) {
+				return new ArrayList<>();
+			}
+		}
+
 		List<ResourceToolAction> list = actionMap.get(type);
 		if(list == null)
 		{
