@@ -7,14 +7,14 @@
   <name>conversations-tool</name>
   <groupId>org.sakaiproject.conversations</groupId>
   <artifactId>conversations-tool</artifactId>
-  <version>12.4</version>
+  <version>12.5</version>
 
   <packaging>war</packaging>
 
   <parent>
-    <artifactId>conversations-base</artifactId>
     <groupId>org.sakaiproject.conversations</groupId>
-    <version>12.4</version>
+    <artifactId>conversations-base</artifactId>
+    <version>12.5</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -40,6 +40,12 @@
     <dependency>
       <groupId>org.sakaiproject.kernel</groupId>
       <artifactId>sakai-component-manager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.conversations</groupId>
+      <artifactId>conversations-api</artifactId>
+      <version>12.5</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>

@@ -1,0 +1,79 @@
+/**********************************************************************************
+ *
+ * Copyright (c) 2019 The Sakai Foundation
+ *
+ * Original developers:
+ *
+ *   New York University
+ *   Payten Giles
+ *   Mark Triggs
+ *
+ * Licensed under the Educational Community License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.osedu.org/licenses/ECL-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ **********************************************************************************/
+
+package org.sakaiproject.conversations.api;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
+import lombok.Getter;
+
+public class Conversation implements Comparable<Conversation> {
+    private final String uuid;
+    @Getter
+    private final String type;
+    @Getter
+    private final String title;
+
+    public Conversation(String uuid, String type, String title) {
+        this.uuid = uuid;
+        this.type = type;
+        this.title = title;
+    }
+
+    @Override
+    public int compareTo(Conversation other) {
+        return getTitle().compareTo(other.getTitle());
+    }
+
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Conversation)) {
+            return false;
+        }
+
+        try {
+            return uuid.equals(((Conversation)obj).getUuid());
+        } catch (MissingUuidException e) {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        return uuid.hashCode();
+    }
+
+    public String getUuid() throws MissingUuidException {
+        if (this.uuid == null) {
+            throw new MissingUuidException("No UUID has been set for this conversation");
+        }
+
+        return this.uuid;
+    }
+
+    public Errors validate() {
+        Errors errors = new Errors();
+
+        return errors;
+    }
+}
