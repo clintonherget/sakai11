@@ -29,37 +29,37 @@ import java.util.Date;
 import java.util.Locale;
 import lombok.Getter;
 
-public class Conversation implements Comparable<Conversation> {
+public class Topic implements Comparable<Topic> {
     private final String uuid;
     @Getter
     private final String type;
     @Getter
     private final String title;
 
-    public Conversation(String uuid, String title, String type) {
+    public Topic(String uuid, String title, String type) {
         this.uuid = uuid;
         this.title = title;
         this.type = type;
     }
 
-    public Conversation(String title, String type) {
+    public Topic(String title, String type) {
         this.uuid = null;
         this.title = title;
         this.type = type;
     }
 
     @Override
-    public int compareTo(Conversation other) {
+    public int compareTo(Topic other) {
         return getTitle().compareTo(other.getTitle());
     }
 
     public boolean equals(Object obj) {
-        if (!(obj instanceof Conversation)) {
+        if (!(obj instanceof Topic)) {
             return false;
         }
 
         try {
-            return uuid.equals(((Conversation)obj).getUuid());
+            return uuid.equals(((Topic)obj).getUuid());
         } catch (MissingUuidException e) {
             return false;
         }
@@ -71,7 +71,7 @@ public class Conversation implements Comparable<Conversation> {
 
     public String getUuid() throws MissingUuidException {
         if (this.uuid == null) {
-            throw new MissingUuidException("No UUID has been set for this conversation");
+            throw new MissingUuidException("No UUID has been set for this topic");
         }
 
         return this.uuid;

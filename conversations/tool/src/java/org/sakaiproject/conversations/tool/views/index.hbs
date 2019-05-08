@@ -1,23 +1,23 @@
 <span class="blink">New Conversation Tool!!</span>
 
 <p>
-  <a href="{{baseURL}}add-conversation" class="button">Add Conversation</a>
+  <a href="{{baseURL}}new-topic" class="button">Create Topic</a>
 </p>
 
 <table class="table table-bordered table-hover table-condensed">
     <thead>
         <tr>
-            <th class="col-sm-3">Title</th>
-            <th class="col-sm-6">Type</th>
+            <th class="col-sm-3">Topic Title</th>
+            <th class="col-sm-6">Topic Type</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        {{#each conversations}}
+        {{#each topics}}
             <tr>
               <td>{{title}}</td>
               <td>{{type}}</td>
-              <td></td>
+              <td><a href="{{baseURL}}topic?uuid={{uuid}}">View</a></td>
             </tr>
         {{/each}}
     </tbody>

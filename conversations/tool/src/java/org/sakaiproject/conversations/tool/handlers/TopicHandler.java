@@ -27,19 +27,16 @@ package org.sakaiproject.conversations.tool.handlers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sakaiproject.conversations.tool.models.Conversation;
+import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 
-
-public class CreateConversationHandler implements Handler {
+public class TopicHandler implements Handler {
 
     private String redirectTo = null;
-
-    public CreateConversationHandler() {
-    }
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
@@ -47,12 +44,23 @@ public class CreateConversationHandler implements Handler {
             RequestParams p = new RequestParams(request);
 
             String siteId = (String)context.get("siteId");
+            String topicUuid = p.getString("uuid", null);
 
-            Conversation conversation = new Conversation(p.getString("title", null), p.getString("type", null));
+            if (topicUuid == null) {
+                // FIXME
+                throw new RuntimeException("uuid required");
+            }
 
-            new ConversationsStorage().createConversation(conversation, siteId);
+            Optional<Topic> topic = new ConversationsStorage().getTopic(topicUuid, siteId);
 
-            redirectTo = "/";
+            if (!topic.isPresent()) {
+                // FIXME
+                throw new RuntimeException("Topic not found for uuid");
+            }
+
+            context.put("topic", topic.get());
+            context.put("subpage", topic.get().getType().toLowerCase());
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

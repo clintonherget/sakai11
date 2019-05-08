@@ -122,11 +122,12 @@ public class ConversationsServlet extends HttpServlet {
             path = "";
         }
 
-        if (path.equals("/add-conversation")) {
-            return new NewConversationHandler();
-        }
-        if (path.equals("/create-conversation")) {
-            return new CreateConversationHandler();
+        if (path.equals("/new-topic")) {
+            return new NewTopicHandler();
+        } else if (path.equals("/create-topic")) {
+            return new CreateTopicHandler();
+        } else if (path.equals("/topic")) {
+            return new TopicHandler();
         }
 
         return new IndexHandler();

@@ -30,13 +30,15 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sakaiproject.conversations.tool.models.Conversation;
+import org.sakaiproject.conversations.tool.models.Topic;
+import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 
-public class NewConversationHandler implements Handler {
+
+public class CreateTopicHandler implements Handler {
 
     private String redirectTo = null;
 
-    public NewConversationHandler() {
+    public CreateTopicHandler() {
     }
 
     @Override
@@ -46,9 +48,11 @@ public class NewConversationHandler implements Handler {
 
             String siteId = (String)context.get("siteId");
 
-            context.put("conversation", new Conversation("", "", ""));
-            context.put("subpage", "conversation_form");
+            Topic topic = new Topic(p.getString("title", null), p.getString("type", null));
 
+            new ConversationsStorage().createTopic(topic, siteId);
+
+            redirectTo = "/";
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
