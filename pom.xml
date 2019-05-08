@@ -60,6 +60,7 @@
                 <module>common/import-parsers/blackboard_6</module>
                 <module>common/import-parsers/blackboard_9_nyu</module>
                 <module>config</module>
+                <module>conversations</module>
                 <module>cloud-content</module>
                 <module>content</module>
                 <module>content-review</module>
