@@ -7,7 +7,6 @@
   <name>conversations-tool</name>
   <groupId>org.sakaiproject.conversations</groupId>
   <artifactId>conversations-tool</artifactId>
-  <version>12.5</version>
 
   <packaging>war</packaging>
 

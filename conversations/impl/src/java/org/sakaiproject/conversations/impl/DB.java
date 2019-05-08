@@ -22,7 +22,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.conversations.tool.storage;
+package org.sakaiproject.conversations.impl;
 
 import java.sql.Connection;
 import java.sql.SQLException;

@@ -29,6 +29,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.conversations.api.ConversationsService;
+
 /**
  * The interface implemented by all handlers.
  */
@@ -67,5 +70,15 @@ public interface Handler {
 
     public default boolean hasTemplate() {
         return true;
+    }
+
+    public default ConversationsService getConversationsService() {
+        ConversationsService result = (ConversationsService) ComponentManager.get("edu.nyu.classes.conversations.api.ConversationsService");
+
+        if (result == null) {
+            throw new RuntimeException("Couldn't get the ConversationsService");
+        }
+
+        return result;
     }
 }

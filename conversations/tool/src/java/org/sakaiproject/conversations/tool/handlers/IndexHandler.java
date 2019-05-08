@@ -30,8 +30,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
-
 public class IndexHandler implements Handler {
 
     private String redirectTo = null;
@@ -46,7 +44,7 @@ public class IndexHandler implements Handler {
 
             String siteId = (String)context.get("siteId");
 
-//            context.put("conversations", new ConversationsStorage().getAll(siteId));
+            context.put("conversations", getConversationsService().getConversations().getAll(siteId));
             context.put("subpage", "index");
 
         } catch (Exception e) {

@@ -11,8 +11,8 @@
   <packaging>jar</packaging>
 
   <parent>
-    <artifactId>conversations-base</artifactId>
     <groupId>org.sakaiproject.conversations</groupId>
+    <artifactId>conversations-base</artifactId>
     <version>12.5</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
