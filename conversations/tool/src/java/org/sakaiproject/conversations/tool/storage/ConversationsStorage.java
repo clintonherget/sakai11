@@ -51,8 +51,8 @@ public class ConversationsStorage {
                                 conversations.add(
                                     new Conversation(
                                         result.getString("uuid"),
-                                        result.getString("type"),
-                                        result.getString("title")));
+                                        result.getString("title"),
+                                        result.getString("type")));
                             }
 
                             return conversations;

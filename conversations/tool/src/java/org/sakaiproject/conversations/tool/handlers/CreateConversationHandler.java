@@ -48,7 +48,7 @@ public class CreateConversationHandler implements Handler {
 
             String siteId = (String)context.get("siteId");
 
-            Conversation conversation = new Conversation(null, p.getString("title", null), p.getString("type", null));
+            Conversation conversation = new Conversation(p.getString("title", null), p.getString("type", null));
 
             new ConversationsStorage().createConversation(conversation, siteId);
 

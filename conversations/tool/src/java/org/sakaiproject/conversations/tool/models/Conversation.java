@@ -36,10 +36,16 @@ public class Conversation implements Comparable<Conversation> {
     @Getter
     private final String title;
 
-    public Conversation(String uuid, String type, String title) {
+    public Conversation(String uuid, String title, String type) {
         this.uuid = uuid;
-        this.type = type;
         this.title = title;
+        this.type = type;
+    }
+
+    public Conversation(String title, String type) {
+        this.uuid = null;
+        this.title = title;
+        this.type = type;
     }
 
     @Override
