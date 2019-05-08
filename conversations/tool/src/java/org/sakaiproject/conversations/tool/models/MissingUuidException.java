@@ -22,13 +22,10 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.conversations.api;
+package org.sakaiproject.conversations.tool.models;
 
-import java.util.List;
-import java.util.Optional;
-
-public interface Conversations {
-
-    public List<Conversation> getAll(String siteId);
-
+public class MissingUuidException extends Exception {
+    public MissingUuidException(String msg) {
+        super(msg);
+    }
 }

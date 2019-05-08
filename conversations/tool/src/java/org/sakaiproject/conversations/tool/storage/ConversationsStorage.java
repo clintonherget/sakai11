@@ -22,7 +22,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.conversations.impl;
+package org.sakaiproject.conversations.tool.storage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,13 +34,11 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.sakaiproject.conversations.api.Conversations;
-import org.sakaiproject.conversations.api.Conversation;
+import org.sakaiproject.conversations.tool.models.Conversation;
 
 @Slf4j
-public class ConversationsStorage implements Conversations {
+public class ConversationsStorage {
 
-    @Override
     public List<Conversation> getAll(String siteId) {
         return DB.transaction
             ("Find all conversations",
@@ -64,4 +62,25 @@ public class ConversationsStorage implements Conversations {
             );
     }
 
+    public String createConversation(Conversation conversation, String siteId) {
+        return DB.transaction("Create a conversation",
+            new DBAction<String>() {
+                @Override
+                public String call(DBConnection db) throws SQLException {
+                    String id = UUID.randomUUID().toString();
+
+                    db.run("INSERT INTO conversations (uuid, title, type, site_id) VALUES (?, ?, ?, ?)")
+                        .param(id)
+                        .param(conversation.getTitle())
+                        .param(conversation.getType())
+                        .param(siteId)
+                        .executeUpdate();
+
+                    db.commit();
+
+                    return id;
+                }
+            }
+        );
+    }
 }

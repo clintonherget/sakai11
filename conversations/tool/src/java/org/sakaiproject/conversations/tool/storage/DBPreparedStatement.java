@@ -22,7 +22,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.conversations.impl;
+package org.sakaiproject.conversations.tool.storage;
 
 import java.io.Reader;
 import java.sql.PreparedStatement;

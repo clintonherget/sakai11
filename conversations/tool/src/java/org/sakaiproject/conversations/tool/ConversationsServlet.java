@@ -122,6 +122,13 @@ public class ConversationsServlet extends HttpServlet {
             path = "";
         }
 
+        if (path.equals("/add-conversation")) {
+            return new NewConversationHandler();
+        }
+        if (path.equals("/create-conversation")) {
+            return new CreateConversationHandler();
+        }
+
         return new IndexHandler();
     }
 

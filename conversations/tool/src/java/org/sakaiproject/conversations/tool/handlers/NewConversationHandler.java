@@ -30,13 +30,13 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
+import org.sakaiproject.conversations.tool.models.Conversation;
 
-public class IndexHandler implements Handler {
+public class NewConversationHandler implements Handler {
 
     private String redirectTo = null;
 
-    public IndexHandler() {
+    public NewConversationHandler() {
     }
 
     @Override
@@ -46,8 +46,8 @@ public class IndexHandler implements Handler {
 
             String siteId = (String)context.get("siteId");
 
-            context.put("conversations", new ConversationsStorage().getAll(siteId));
-            context.put("subpage", "index");
+            context.put("conversation", new Conversation("", "", ""));
+            context.put("subpage", "conversation_form");
 
         } catch (Exception e) {
             throw new RuntimeException(e);

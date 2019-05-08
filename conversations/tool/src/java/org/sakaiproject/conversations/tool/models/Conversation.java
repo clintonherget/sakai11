@@ -22,7 +22,7 @@
  *
  **********************************************************************************/
 
-package org.sakaiproject.conversations.api;
+package org.sakaiproject.conversations.tool.models;
 
 import java.util.Arrays;
 import java.util.Date;

@@ -71,14 +71,4 @@ public interface Handler {
     public default boolean hasTemplate() {
         return true;
     }
-
-    public default ConversationsService getConversationsService() {
-        ConversationsService result = (ConversationsService) ComponentManager.get("edu.nyu.classes.conversations.api.ConversationsService");
-
-        if (result == null) {
-            throw new RuntimeException("Couldn't get the ConversationsService");
-        }
-
-        return result;
-    }
 }
