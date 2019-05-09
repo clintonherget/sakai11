@@ -130,6 +130,7 @@ public class ConversationsStorage {
                                         result.getString("content"),
                                         result.getString("posted_by"),
                                         result.getLong("posted_at"),
+                                        result.getString("parent_post_uuid"),
                                         result.getString("eid")));
                             }
 
@@ -140,7 +141,11 @@ public class ConversationsStorage {
             );
     }
 
-    public String createPost(Post post, final String topicUuid) {
+    public String createPost(Post post, String topicUuid) {
+        return createPost(post, topicUuid, null);
+    }
+
+    public String createPost(Post post, String topicUuid, String parentPostUuid) {
         return DB.transaction("Create a post for a topic",
             new DBAction<String>() {
                 @Override
@@ -148,9 +153,10 @@ public class ConversationsStorage {
                     String id = UUID.randomUUID().toString();
                     Long postedAt = Calendar.getInstance().getTime().getTime();
 
-                    db.run("INSERT INTO conversations_post (uuid, topic_uuid, content, posted_by, posted_at) VALUES (?, ?, ?, ?, ?)")
+                    db.run("INSERT INTO conversations_post (uuid, topic_uuid, parent_post_uuid, content, posted_by, posted_at) VALUES (?, ?, ?, ?, ?, ?)")
                         .param(id)
                         .param(topicUuid)
+                        .param(parentPostUuid)
                         .param(post.getContent())
                         .param(post.getPostedBy())
                         .param(postedAt)

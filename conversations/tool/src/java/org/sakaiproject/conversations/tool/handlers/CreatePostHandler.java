@@ -51,6 +51,7 @@ public class CreatePostHandler implements Handler {
 
             String topicUuid = p.getString("topicUuid", null);
             String content = p.getString("content", null);
+            String parentPostUuid = p.getString("post_uuid", null);
 
             if (topicUuid == null || content == null) {
                 // FIXME
@@ -60,7 +61,7 @@ public class CreatePostHandler implements Handler {
             User currentUser = UserDirectoryService.getCurrentUser();
             Post post = new Post(content, currentUser.getId());
 
-            String postUuid = new ConversationsStorage().createPost(post, topicUuid);
+            String postUuid = new ConversationsStorage().createPost(post, topicUuid, parentPostUuid);
 
             JSONObject result = new JSONObject();
             result.put("status", "success");

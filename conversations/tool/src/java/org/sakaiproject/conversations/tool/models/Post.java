@@ -24,9 +24,8 @@
 
 package org.sakaiproject.conversations.tool.models;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 
 public class Post implements Comparable<Post> {
@@ -39,13 +38,19 @@ public class Post implements Comparable<Post> {
     private final String postedByEid;
     @Getter
     private final Long postedAt;
+    @Getter
+    private final String parentPostUuid;
+    @Getter
+    private final List<Post> comments;
 
-    public Post(String uuid, String content, String postedBy, Long postedAt, String postedByEid) {
+    public Post(String uuid, String content, String postedBy, Long postedAt, String parentPostUuid, String postedByEid) {
         this.uuid = uuid;
         this.content = content;
         this.postedBy = postedBy;
         this.postedAt = postedAt;
         this.postedByEid = postedByEid;
+        this.parentPostUuid = parentPostUuid;
+        this.comments = new ArrayList<Post>();
     }
 
     public Post(String content, String postedBy) {
@@ -54,12 +59,18 @@ public class Post implements Comparable<Post> {
         this.postedBy = postedBy;
         this.postedByEid = null;
         this.postedAt = null;
+        this.parentPostUuid = null;
+        this.comments = new ArrayList<Post>();
+    }
+
+    public void addComment(Post comment) {
+        comments.add(comment);
     }
 
     @Override
     public int compareTo(Post other) {
-        // Sort newest first!
-        return other.getPostedAt().compareTo(getPostedAt());
+        // React: sort oldest first
+        return getPostedAt().compareTo(other.getPostedAt());
     }
 
     public boolean equals(Object obj) {

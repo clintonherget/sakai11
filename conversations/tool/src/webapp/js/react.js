@@ -1,3 +1,65 @@
+Vue.component('react-post', {
+  template: `
+<div class="conversations-react-post well">
+  <small class="text-muted">{{post.postedByEid}} - {{formatEpochTime(post.postedAt)}}</small>
+  <br>
+  <br>
+  {{post.content}}
+  <br>
+  <br>
+  <template v-if="post.comments.length > 0">
+    <div v-for="comment in post.comments">
+      <small class="text-muted">{{comment.postedByEid}} - {{formatEpochTime(comment.postedAt)}}</small>
+      <br>
+      {{comment.content}}
+    </div>
+  </template>
+  <template v-if="showCommentForm">
+    <div class="conversations-react-comment-form">
+      <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
+      <button class="button" v-on:click="addComment()">Post Comment</button>
+    </div>
+  </template>
+  <template v-else>
+      <button class="button" v-on:click="showCommentForm = true">Comment</button>
+  </template>
+</div>
+`,
+  data: function () {
+    return {
+      showCommentForm: false,
+      commentContent: '',
+    }
+  },
+  props: ['post', 'baseurl', 'topic_uuid'],
+  methods: {
+    addComment: function() {
+      if (this.commentContent.trim() == "") {
+          this.commentContent = "";
+        return;
+      }
+
+      $.ajax({
+        url: this.baseurl+"create-post",
+        type: 'post',
+        data: { topicUuid: this.topic_uuid, content: this.commentContent, post_uuid: this.post.uuid },
+        dataType: 'json',
+        success: (json) => {
+          this.commentContent = "";
+          this.showCommentForm = false;
+          this.$parent.refreshPosts();
+        }
+      });
+    },
+    formatEpochTime: function(epoch) {
+      return new Date(epoch).toLocaleString();
+    }
+  },
+  mounted: function() {
+  }
+});
+
+
 Vue.component('react-topic', {
   template: `
   <div class="conversations-topic react">
@@ -15,14 +77,7 @@ Vue.component('react-topic', {
     </div>
     <div class="conversations-posts">
       <div v-for="(post, index) in posts" class="conversations-post">
-        <template v-if="post.uuid != initialPost.uuid">
-          <div class="well">
-            {{post.content}}
-            <br>
-            <br>
-            <small class="text-muted">{{post.postedByEid}} - {{formatEpochTime(post.postedAt)}}</small>
-          </div>
-        </template>
+        <react-post :topic_uuid="topic_uuid" :post="post" :baseurl="baseurl"></react-post>
       </div>
     </div>
   </div>
@@ -61,7 +116,7 @@ Vue.component('react-topic', {
         dataType: 'json',
         success: (json) => {
           if (json.length > 0) {
-            this.initialPost = json.pop();
+            this.initialPost = json.shift();
             this.posts = json;
           } else {
             this.initialPost = null;
@@ -77,4 +132,4 @@ Vue.component('react-topic', {
   mounted: function() {
     this.refreshPosts();
   }
-})
+});

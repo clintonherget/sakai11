@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
+import org.sakaiproject.conversations.tool.models.MissingUuidException;
 import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
@@ -59,23 +60,47 @@ public class PostsHandler implements Handler {
 
             Collections.sort(posts);
 
+            Map<String, Post> topLevelPosts = new HashMap<String, Post>();
+
+            for (Post post : posts) {
+                if (post.getParentPostUuid() == null) {
+                    topLevelPosts.put(post.getUuid(), post);
+                } else {
+                    topLevelPosts.get(post.getParentPostUuid()).addComment(post);
+                }
+            }
+
             JSONArray result = new JSONArray();
 
 
             for (Post post : posts) {
-                JSONObject obj = new JSONObject();
-                obj.put("uuid", post.getUuid());
-                obj.put("content", post.getContent());
-                obj.put("postedBy", post.getPostedBy());
-                obj.put("postedByEid", post.getPostedByEid());
-                obj.put("postedAt", post.getPostedAt());
-                result.add(obj);
+                if (topLevelPosts.containsKey(post.getUuid())) {
+                    result.add(postAsJSON(post));
+                }
             }
 
             response.getWriter().write(result.toString());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private JSONObject postAsJSON(Post post) throws MissingUuidException {
+        JSONObject obj = new JSONObject();
+
+        obj.put("uuid", post.getUuid());
+        obj.put("content", post.getContent());
+        obj.put("postedBy", post.getPostedBy());
+        obj.put("postedByEid", post.getPostedByEid());
+        obj.put("postedAt", post.getPostedAt());
+
+        JSONArray comments = new JSONArray();
+        for (Post comment : post.getComments()) {
+            comments.add(postAsJSON(comment));
+        }
+        obj.put("comments", comments);
+
+        return obj;
     }
 
     public boolean hasRedirect() {

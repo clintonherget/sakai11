@@ -8,6 +8,7 @@ CREATE TABLE conversations_topic (
 CREATE TABLE conversations_post (
     uuid varchar2(255) PRIMARY KEY,
     topic_uuid varchar2(255) NOT NULL,
+    parent_post_uuid varchar2(255),
     content CLOB NOT NULL,
     posted_by varchar2(255) NOT NULL,
     posted_at LONG NOT NULL
