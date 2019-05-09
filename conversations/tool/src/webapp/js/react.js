@@ -1,18 +1,28 @@
 Vue.component('react-topic', {
   template: `
   <div class="conversations-topic react">
+    <template v-if="intialPost">
+      <div class="well">
+        {{intialPost.content}}
+        <br>
+        <br>
+        <small class="text-muted">{{intialPost.postedByEid}} - {{formatEpochTime(intialPost.postedAt)}}</small>
+      </div>
+    </template>
     <div class="conversations-post-form">
       <textarea class="form-control" placeholder="Post to topic..." v-model="newPostContent"></textarea>
       <button class="button" v-on:click="post()">Post</button>
     </div>
     <div class="conversations-posts">
-      <div v-for="post in posts" class="conversations-post">
-        <div class="well">
-          {{post.content}}
-          <br>
-          <br>
-          <small class="text-muted">{{post.postedByEid}} - {{formatEpochTime(post.postedAt)}}</small>
-        </div>
+      <div v-for="(post, index) in posts" class="conversations-post">
+        <template v-if="post.uuid != intialPost.uuid">
+          <div class="well">
+            {{post.content}}
+            <br>
+            <br>
+            <small class="text-muted">{{post.postedByEid}} - {{formatEpochTime(post.postedAt)}}</small>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -21,6 +31,7 @@ Vue.component('react-topic', {
     return {
       posts: [],
       newPostContent: '',
+      intialPost: null,
     }
   },
   props: ['baseurl', 'topic_uuid'],
@@ -49,7 +60,13 @@ Vue.component('react-topic', {
         data: { topicUuid: this.topic_uuid },
         dataType: 'json',
         success: (json) => {
-          this.posts = json;
+          if (json.length > 0) {
+            this.intialPost = json.pop();
+            this.posts = json;
+          } else {
+            this.intialPost = null;
+            this.posts = [];
+          }
         }
       });
     },
