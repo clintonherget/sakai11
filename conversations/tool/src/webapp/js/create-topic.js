@@ -25,12 +25,14 @@ Vue.component('create-topic-workflow', {
       </div>
     </template> 
     <template v-else-if="step == 'SET_TITLE'">
-      <input class="form-control" ref="topicTitleInput" placeholder="Topic title">
+      <input class="form-control" placeholder="Topic title" v-model="topicTitle">
       <button class="button" v-on:click="selectTopicTitle()">Next</button>
+      <a href="#" v-on:click="step = 'SELECT_TYPE'">Back to select type</a>
     </template>
     <template v-else-if="step == 'CREATE_FIRST_POST'">
-      <textarea class="form-control" ref="topicFirstPostElement" placeholder="Type the initial post..."></textarea>
+      <textarea class="form-control" placeholder="Type the initial post..." v-model="topicFirstPost"></textarea>
       <button class="button" v-on:click="createTopic()">Create Post</button>
+      <a href="#" v-on:click="step = 'SET_TITLE'">Back to set title</a>
     </template>
   </div>
 `,
@@ -38,8 +40,8 @@ Vue.component('create-topic-workflow', {
     return {
       step: 'SELECT_TYPE',
       topicType: null,
-      topicTitle: null,
-      topicFirstPost: null,
+      topicTitle: "",
+      topicFirstPost: "",
     };
   },
   props: ['baseurl'],
@@ -49,13 +51,11 @@ Vue.component('create-topic-workflow', {
       this.step = 'SET_TITLE';
     },
     selectTopicTitle: function() {
-      this.topicTitle = this.$refs.topicTitleInput.value;
       if (this.topicTitle != "") {
         this.step = 'CREATE_FIRST_POST';
       }
     },
     createTopic: function() {
-      this.topicFirstPost = this.$refs.topicFirstPostElement.value;
       if (this.topicFirstPost != "") {
         $.ajax({
           url: this.baseurl + 'create-topic',
