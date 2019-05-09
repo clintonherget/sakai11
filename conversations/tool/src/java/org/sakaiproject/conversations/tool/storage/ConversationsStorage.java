@@ -27,6 +27,7 @@ package org.sakaiproject.conversations.tool.storage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -34,19 +35,22 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Topic;
 
 @Slf4j
 public class ConversationsStorage {
 
-    public List<Topic> getAllTopics(String siteId) {
+    public List<Topic> getAllTopics(final String siteId) {
         return DB.transaction
             ("Find all topics for site",
                 new DBAction<List<Topic>>() {
                     @Override
                     public List<Topic> call(DBConnection db) throws SQLException {
                         List<Topic> topics = new ArrayList<>();
-                        try (DBResults results = db.run("SELECT * FROM conversations_topic").executeQuery()) {
+                        try (DBResults results = db.run("SELECT * FROM conversations_topic WHERE site_id = ?")
+                            .param(siteId)
+                            .executeQuery()) {
                             for (ResultSet result : results) {
                                 topics.add(
                                     new Topic(
@@ -105,5 +109,58 @@ public class ConversationsStorage {
                     }
                 }
             );
+    }
+
+    public List<Post> getPosts(final String topicUuid) {
+        return DB.transaction
+            ("Find all posts for topic",
+                new DBAction<List<Post>>() {
+                    @Override
+                    public List<Post> call(DBConnection db) throws SQLException {
+                        List<Post> posts = new ArrayList<>();
+                        try (DBResults results = db.run("SELECT conversations_post.*, sakai_user_id_map.eid FROM conversations_post" +
+                                                        " INNER JOIN sakai_user_id_map ON sakai_user_id_map.user_id = conversations_post.posted_by" +
+                                                        " WHERE conversations_post.topic_uuid = ?")
+                            .param(topicUuid)
+                            .executeQuery()) {
+                            for (ResultSet result : results) {
+                                posts.add(
+                                    new Post(
+                                        result.getString("uuid"),
+                                        result.getString("content"),
+                                        result.getString("posted_by"),
+                                        result.getLong("posted_at"),
+                                        result.getString("eid")));
+                            }
+
+                            return posts;
+                        }
+                    }
+                }
+            );
+    }
+
+    public String createPost(Post post, final String topicUuid) {
+        return DB.transaction("Create a post for a topic",
+            new DBAction<String>() {
+                @Override
+                public String call(DBConnection db) throws SQLException {
+                    String id = UUID.randomUUID().toString();
+                    Long postedAt = Calendar.getInstance().getTime().getTime();
+
+                    db.run("INSERT INTO conversations_post (uuid, topic_uuid, content, posted_by, posted_at) VALUES (?, ?, ?, ?, ?)")
+                        .param(id)
+                        .param(topicUuid)
+                        .param(post.getContent())
+                        .param(post.getPostedBy())
+                        .param(postedAt)
+                        .executeUpdate();
+
+                    db.commit();
+
+                    return id;
+                }
+            }
+        );
     }
 }
