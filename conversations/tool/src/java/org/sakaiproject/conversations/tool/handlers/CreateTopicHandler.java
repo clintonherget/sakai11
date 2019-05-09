@@ -30,9 +30,13 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.simple.JSONObject;
+
+import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
-
+import org.sakaiproject.user.api.User;
+import org.sakaiproject.user.cover.UserDirectoryService;
 
 public class CreateTopicHandler implements Handler {
 
@@ -48,11 +52,30 @@ public class CreateTopicHandler implements Handler {
 
             String siteId = (String)context.get("siteId");
 
-            Topic topic = new Topic(p.getString("title", null), p.getString("type", null));
+            String title = p.getString("title", null);
+            String type = p.getString("type", null);
+            String initialPost = p.getString("post", null);
 
-            new ConversationsStorage().createTopic(topic, siteId);
+            if (title == null || type == null) {
+                // FIXME
+                throw new RuntimeException("tile and type required");
+            }
 
-            redirectTo = "/";
+            Topic topic = new Topic(title, type);
+
+            String topicUuid = new ConversationsStorage().createTopic(topic, siteId);
+
+            if (initialPost != null) {
+                User currentUser = UserDirectoryService.getCurrentUser();
+                Post post = new Post(initialPost, currentUser.getId());
+
+                String postUuid = new ConversationsStorage().createPost(post, topicUuid);
+            }
+
+            JSONObject result = new JSONObject();
+            result.put("status", "success");
+            result.put("topicUuid", topicUuid);
+            response.getWriter().write(result.toString());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -72,5 +95,15 @@ public class CreateTopicHandler implements Handler {
 
     public Map<String, List<String>> getFlashMessages() {
         return new HashMap<String, List<String>>();
+    }
+
+    @Override
+    public String getContentType() {
+        return "text/json";
+    }
+
+    @Override
+    public boolean hasTemplate() {
+        return false;
     }
 }
