@@ -1,12 +1,12 @@
 Vue.component('react-topic', {
   template: `
   <div class="conversations-topic react">
-    <template v-if="intialPost">
+    <template v-if="initialPost">
       <div class="well">
-        {{intialPost.content}}
+        {{initialPost.content}}
         <br>
         <br>
-        <small class="text-muted">{{intialPost.postedByEid}} - {{formatEpochTime(intialPost.postedAt)}}</small>
+        <small class="text-muted">{{initialPost.postedByEid}} - {{formatEpochTime(initialPost.postedAt)}}</small>
       </div>
     </template>
     <div class="conversations-post-form">
@@ -15,7 +15,7 @@ Vue.component('react-topic', {
     </div>
     <div class="conversations-posts">
       <div v-for="(post, index) in posts" class="conversations-post">
-        <template v-if="post.uuid != intialPost.uuid">
+        <template v-if="post.uuid != initialPost.uuid">
           <div class="well">
             {{post.content}}
             <br>
@@ -31,7 +31,7 @@ Vue.component('react-topic', {
     return {
       posts: [],
       newPostContent: '',
-      intialPost: null,
+      initialPost: null,
     }
   },
   props: ['baseurl', 'topic_uuid'],
@@ -61,10 +61,10 @@ Vue.component('react-topic', {
         dataType: 'json',
         success: (json) => {
           if (json.length > 0) {
-            this.intialPost = json.pop();
+            this.initialPost = json.pop();
             this.posts = json;
           } else {
-            this.intialPost = null;
+            this.initialPost = null;
             this.posts = [];
           }
         }
