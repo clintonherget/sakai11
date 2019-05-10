@@ -39,6 +39,8 @@ import org.sakaiproject.conversations.tool.models.MissingUuidException;
 import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
+import org.sakaiproject.user.api.User;
+import org.sakaiproject.user.cover.UserDirectoryService;
 
 public class PostsHandler implements Handler {
 
@@ -56,13 +58,22 @@ public class PostsHandler implements Handler {
                 throw new RuntimeException("topicUuid required");
             }
 
-            List<Post> posts = new ConversationsStorage().getPosts(topicUuid);
+            User currentUser = UserDirectoryService.getCurrentUser();
+
+            ConversationsStorage storage = new ConversationsStorage();
+
+            List<Post> posts = storage.getPosts(topicUuid);
+            Long timeLastVisited = storage.getLastVisitedTopic(topicUuid, currentUser.getId());
 
             Collections.sort(posts);
 
             Map<String, Post> topLevelPosts = new HashMap<String, Post>();
 
             for (Post post : posts) {
+                if (!post.getPostedBy().equals(currentUser.getId())) {
+                    post.setUnread(post.getPostedAt() > timeLastVisited);
+                }
+
                 if (post.getParentPostUuid() == null) {
                     topLevelPosts.put(post.getUuid(), post);
                 } else {
@@ -80,6 +91,9 @@ public class PostsHandler implements Handler {
             }
 
             response.getWriter().write(result.toString());
+
+            // FIXME move to ajax so unread is smrtr
+            storage.setLastVisitedEvent(topicUuid, currentUser.getId());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -93,6 +107,7 @@ public class PostsHandler implements Handler {
         obj.put("postedBy", post.getPostedBy());
         obj.put("postedByEid", post.getPostedByEid());
         obj.put("postedAt", post.getPostedAt());
+        obj.put("unread", post.isUnread());
 
         JSONArray comments = new JSONArray();
         for (Post comment : post.getComments()) {

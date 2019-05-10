@@ -1,6 +1,7 @@
 Vue.component('react-post', {
   template: `
 <div class="conversations-react-post well">
+  <span v-if="post.unread" class="badge badge-primary">NEW</span>
   <small class="text-muted">{{post.postedByEid}} - {{formatEpochTime(post.postedAt)}}</small>
   <br>
   <br>
@@ -9,6 +10,7 @@ Vue.component('react-post', {
   <br>
   <template v-if="post.comments.length > 0">
     <div v-for="comment in post.comments">
+      <span v-if="comment.unread" class="badge badge-primary">NEW</span>
       <small class="text-muted">{{comment.postedByEid}} - {{formatEpochTime(comment.postedAt)}}</small>
       <br>
       {{comment.content}}
@@ -65,6 +67,7 @@ Vue.component('react-topic', {
   <div class="conversations-topic react">
     <template v-if="initialPost">
       <div class="well">
+        <span v-if="initialPost.unread" class="badge badge-primary">NEW</span>
         {{initialPost.content}}
         <br>
         <br>

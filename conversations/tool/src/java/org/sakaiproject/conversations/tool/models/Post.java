@@ -26,7 +26,9 @@ package org.sakaiproject.conversations.tool.models;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.Getter;
+import lombok.Setter;
 
 public class Post implements Comparable<Post> {
     private final String uuid;
@@ -42,6 +44,9 @@ public class Post implements Comparable<Post> {
     private final String parentPostUuid;
     @Getter
     private final List<Post> comments;
+    @Setter
+    @Getter
+    private boolean unread = false;
 
     public Post(String uuid, String content, String postedBy, Long postedAt, String parentPostUuid, String postedByEid) {
         this.uuid = uuid;

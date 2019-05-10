@@ -169,4 +169,55 @@ public class ConversationsStorage {
             }
         );
     }
+
+    public String setLastVisitedEvent(final String topicUuid, final String userId) {
+        return DB.transaction("Create or update an event for visiting a topic",
+                new DBAction<String>() {
+                    @Override
+                    public String call(DBConnection db) throws SQLException {
+                        String id = UUID.randomUUID().toString();
+                        Long timestamp = Calendar.getInstance().getTime().getTime();
+
+                        db.run("DELETE FROM conversations_topic_event WHERE topic_uuid = ? AND user_id = ? AND event_name = ?")
+                            .param(topicUuid)
+                            .param(userId)
+                            .param("TOPIC_LAST_VISITED")
+                            .executeUpdate();
+
+                        db.run("INSERT INTO conversations_topic_event (uuid, topic_uuid, user_id, event_name, event_time) VALUES (?, ?, ?, ?, ?)")
+                            .param(id)
+                            .param(topicUuid)
+                            .param(userId)
+                            .param("TOPIC_LAST_VISITED")
+                            .param(timestamp)
+                            .executeUpdate();
+
+                        db.commit();
+
+                        return id;
+                    }
+                }
+        );
+    }
+
+    public Long getLastVisitedTopic(String topicUuid, String userId) {
+        return DB.transaction
+                ("Get time user last visited a topic",
+                        new DBAction<Long>() {
+                            @Override
+                            public Long call(DBConnection db) throws SQLException {
+                                try (DBResults results = db.run("SELECT * from conversations_topic_event WHERE topic_uuid = ? AND user_id = ? ORDER BY event_time DESC")
+                                        .param(topicUuid)
+                                        .param(userId)
+                                        .executeQuery()) {
+                                    for (ResultSet result : results) {
+                                        return result.getLong("event_time");
+                                    }
+
+                                    return 0L;
+                                }
+                            }
+                        }
+                );
+    }
 }
