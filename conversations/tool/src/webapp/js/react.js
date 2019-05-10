@@ -148,7 +148,6 @@ Vue.component('react-topic', {
     resetMarkTopicReadEvents: function() {
       // FIXME do something smRTr to determine when a topic has been read
       $( window ).off('unload').on('unload', () => {
-        console.log('TESTING');
         this.markTopicRead(false);
       });
     },
