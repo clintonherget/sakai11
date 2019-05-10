@@ -7,3 +7,24 @@
     opacity: 0;
   }
 }
+
+
+.conversations-posts-unread-line:before {
+    content: ' ';
+    height: 2px;
+    background-color: #555;
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    margin-top: -1px;
+    left: 0;
+    z-index: 0;
+}
+.conversations-posts-unread-line {
+    position: relative;
+    text-align: center;
+    margin: 0 0 20px;
+}
+.conversations-posts-unread-line .badge {
+    position: relative;
+}

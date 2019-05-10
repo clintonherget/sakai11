@@ -80,9 +80,16 @@ Vue.component('react-topic', {
       <button class="button" v-on:click="markTopicRead(true)">Mark all read</button>
     </div>
     <div class="conversations-posts">
-      <div v-for="(post, index) in posts" class="conversations-post">
-        <react-post :topic_uuid="topic_uuid" :post="post" :baseurl="baseurl"></react-post>
-      </div>
+      <template v-for="post in posts">
+        <template v-if="isFirstUnreadPost(post)">
+          <div class="conversations-posts-unread-line">
+            <span class="badge badge-primary">NEW</span>
+          </div>
+        </template>
+        <div  :class="postCssClasses(post)">
+          <react-post :topic_uuid="topic_uuid" :post="post" :baseurl="baseurl"></react-post>
+        </div>
+      </template>
     </div>
   </div>
 `,
@@ -91,6 +98,7 @@ Vue.component('react-topic', {
       posts: [],
       newPostContent: '',
       initialPost: null,
+      firstUnreadPost: null,
     }
   },
   props: ['baseurl', 'topic_uuid'],
@@ -113,6 +121,8 @@ Vue.component('react-topic', {
       });
     },
     refreshPosts: function() {
+      this.firstUnreadPost = null;
+
       $.ajax({
         url: this.baseurl+"posts",
         type: 'get',
@@ -122,6 +132,12 @@ Vue.component('react-topic', {
           if (json.length > 0) {
             this.initialPost = json.shift();
             this.posts = json;
+
+            // FIXME IE support?
+            this.firstUnreadPost = this.posts.find(function(post) {
+              return post.unread;
+            });
+
           } else {
             this.initialPost = null;
             this.posts = [];
@@ -145,9 +161,24 @@ Vue.component('react-topic', {
         }
       });
     },
+    isFirstUnreadPost: function(post) {
+      if (post == this.firstUnreadPost) {
+        return true;
+      }
+
+      return false;
+    },
+    postCssClasses: function(post) {
+        var classes = ['conversations-post'];
+        if (post.unread) {
+            classes.push('unread');
+        }
+        return classes.join(' ');
+    },
     resetMarkTopicReadEvents: function() {
       // FIXME do something smRTr to determine when a topic has been read
       $( window ).off('unload').on('unload', () => {
+        console.log('TESTING');
         this.markTopicRead(false);
       });
     },
