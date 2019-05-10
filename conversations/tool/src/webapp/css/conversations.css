@@ -8,6 +8,15 @@
   }
 }
 
+.conversations-post {
+    margin: 10px 0;
+}
+.conversations-post-content {
+    border: 1px solid #CCC;
+    border-radius: 5px;
+    padding: 20px;
+    background-color: #FAFAFA;
+}
 
 .conversations-posts-unread-line:before {
     content: ' ';
@@ -27,4 +36,16 @@
 }
 .conversations-posts-unread-line .badge {
     position: relative;
+}
+
+.conversations-post-comments {
+    border-top: 1px solid #DDD;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.conversations-post-comment {
+    border-top: 1px solid #DDD;
+    margin: 10px 0 10px 40px;
+    padding-top: 10px;
 }

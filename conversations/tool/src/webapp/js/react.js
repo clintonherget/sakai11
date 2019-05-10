@@ -1,30 +1,30 @@
 Vue.component('react-post', {
   template: `
-<div class="conversations-react-post well">
+<div class="conversations-post">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
   <small class="text-muted">{{post.postedByEid}} - {{formatEpochTime(post.postedAt)}}</small>
-  <br>
-  <br>
-  {{post.content}}
-  <br>
-  <br>
-  <template v-if="post.comments.length > 0">
-    <div v-for="comment in post.comments">
-      <span v-if="comment.unread" class="badge badge-primary">NEW</span>
-      <small class="text-muted">{{comment.postedByEid}} - {{formatEpochTime(comment.postedAt)}}</small>
-      <br>
-      {{comment.content}}
+  <div class="conversations-post-content">
+    {{post.content}}
+    <div class="conversations-post-comments">
+      <template v-if="showCommentForm">
+        <div class="conversations-react-comment-form">
+          <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
+          <button class="button" v-on:click="addComment()">Post Comment</button>
+        </div>
+      </template>
+      <template v-else>
+          <button class="button" v-on:click="showCommentForm = true">Comment</button>
+      </template>
+      <template v-if="post.comments.length > 0">
+        <div v-for="comment in post.comments" class="conversations-post-comment">
+          <span v-if="comment.unread" class="badge badge-primary">NEW</span>
+          <small class="text-muted">{{comment.postedByEid}} - {{formatEpochTime(comment.postedAt)}}</small>
+          <br>
+          {{comment.content}}
+        </div>
+      </template>
     </div>
-  </template>
-  <template v-if="showCommentForm">
-    <div class="conversations-react-comment-form">
-      <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
-      <button class="button" v-on:click="addComment()">Post Comment</button>
-    </div>
-  </template>
-  <template v-else>
-      <button class="button" v-on:click="showCommentForm = true">Comment</button>
-  </template>
+  </div>
 </div>
 `,
   data: function () {
@@ -66,12 +66,12 @@ Vue.component('react-topic', {
   template: `
   <div class="conversations-topic react">
     <template v-if="initialPost">
-      <div class="well">
+      <div class="conversations-post conversations-initial-post">
         <span v-if="initialPost.unread" class="badge badge-primary">NEW</span>
-        {{initialPost.content}}
-        <br>
-        <br>
         <small class="text-muted">{{initialPost.postedByEid}} - {{formatEpochTime(initialPost.postedAt)}}</small>
+        <div class="conversations-post-content">
+          {{initialPost.content}}
+        </div>
       </div>
     </template>
     <div class="conversations-post-form">
