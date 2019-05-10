@@ -77,6 +77,7 @@ Vue.component('react-topic', {
     <div class="conversations-post-form">
       <textarea class="form-control" placeholder="Post to topic..." v-model="newPostContent"></textarea>
       <button class="button" v-on:click="post()">Post</button>
+      <button class="button" v-on:click="markTopicRead(true)">Mark all read</button>
     </div>
     <div class="conversations-posts">
       <div v-for="(post, index) in posts" class="conversations-post">
@@ -131,27 +132,25 @@ Vue.component('react-topic', {
     formatEpochTime: function(epoch) {
       return new Date(epoch).toLocaleString();
     },
-    markTopicRead: function() {
+    markTopicRead: function(reloadPosts) {
       $.ajax({
         url: this.baseurl+"mark-topic-read",
         type: 'post',
         data: { topicUuid: this.topic_uuid },
         dataType: 'json',
         success: (json) => {
-          // YASSSSS.
+          if (reloadPosts) {
+            this.refreshPosts();
+          }
         }
       });
     },
     resetMarkTopicReadEvents: function() {
-      if (this.markTopicReadTimeout) {
-        clearTimeout(this.markTopicReadTimeout);
-      }
-
       // FIXME do something smRTr to determine when a topic has been read
-      this.markTopicReadTimeout = setTimeout(() => {
-        this.markTopicRead();
-        this.resetMarkTopicReadEvents();
-      }, 20 * 1000);
+      $( window ).off('unload').on('unload', () => {
+        console.log('TESTING');
+        this.markTopicRead(false);
+      });
     },
   },
   mounted: function() {
