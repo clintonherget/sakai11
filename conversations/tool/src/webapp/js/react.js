@@ -77,7 +77,7 @@ Vue.component('react-topic', {
     <div class="conversations-post-form">
       <textarea class="form-control" placeholder="Post to topic..." v-model="newPostContent"></textarea>
       <button class="button" v-on:click="post()">Post</button>
-      <button class="button" v-on:click="markTopicRead(true)">Mark all read</button>
+      <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
     </div>
     <div class="conversations-posts">
       <template v-for="post in posts">
