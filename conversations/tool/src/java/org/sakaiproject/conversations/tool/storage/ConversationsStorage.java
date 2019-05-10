@@ -170,8 +170,8 @@ public class ConversationsStorage {
         );
     }
 
-    public String setLastVisitedEvent(final String topicUuid, final String userId) {
-        return DB.transaction("Create or update an event for visiting a topic",
+    public String setLastReadTopicEvent(final String topicUuid, final String userId) {
+        return DB.transaction("Create or update an event for reading a topic",
                 new DBAction<String>() {
                     @Override
                     public String call(DBConnection db) throws SQLException {
@@ -181,14 +181,14 @@ public class ConversationsStorage {
                         db.run("DELETE FROM conversations_topic_event WHERE topic_uuid = ? AND user_id = ? AND event_name = ?")
                             .param(topicUuid)
                             .param(userId)
-                            .param("TOPIC_LAST_VISITED")
+                            .param("TOPIC_LAST_READ")
                             .executeUpdate();
 
                         db.run("INSERT INTO conversations_topic_event (uuid, topic_uuid, user_id, event_name, event_time) VALUES (?, ?, ?, ?, ?)")
                             .param(id)
                             .param(topicUuid)
                             .param(userId)
-                            .param("TOPIC_LAST_VISITED")
+                            .param("TOPIC_LAST_READ")
                             .param(timestamp)
                             .executeUpdate();
 
@@ -200,15 +200,16 @@ public class ConversationsStorage {
         );
     }
 
-    public Long getLastVisitedTopic(String topicUuid, String userId) {
+    public Long getLastReadTopic(String topicUuid, String userId) {
         return DB.transaction
-                ("Get time user last visited a topic",
+                ("Get time user last read a topic",
                         new DBAction<Long>() {
                             @Override
                             public Long call(DBConnection db) throws SQLException {
-                                try (DBResults results = db.run("SELECT * from conversations_topic_event WHERE topic_uuid = ? AND user_id = ? ORDER BY event_time DESC")
+                                try (DBResults results = db.run("SELECT * from conversations_topic_event WHERE topic_uuid = ? AND user_id = ? AND event_name = ? ORDER BY event_time DESC")
                                         .param(topicUuid)
                                         .param(userId)
+                                        .param("TOPIC_LAST_READ")
                                         .executeQuery()) {
                                     for (ResultSet result : results) {
                                         return result.getLong("event_time");

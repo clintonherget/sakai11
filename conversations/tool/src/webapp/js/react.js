@@ -130,9 +130,32 @@ Vue.component('react-topic', {
     },
     formatEpochTime: function(epoch) {
       return new Date(epoch).toLocaleString();
-    }
+    },
+    markTopicRead: function() {
+      $.ajax({
+        url: this.baseurl+"mark-topic-read",
+        type: 'post',
+        data: { topicUuid: this.topic_uuid },
+        dataType: 'json',
+        success: (json) => {
+          // YASSSSS.
+        }
+      });
+    },
+    resetMarkTopicReadEvents: function() {
+      if (this.markTopicReadTimeout) {
+        clearTimeout(this.markTopicReadTimeout);
+      }
+
+      // FIXME do something smRTr to determine when a topic has been read
+      this.markTopicReadTimeout = setTimeout(() => {
+        this.markTopicRead();
+        this.resetMarkTopicReadEvents();
+      }, 20 * 1000);
+    },
   },
   mounted: function() {
     this.refreshPosts();
+    this.resetMarkTopicReadEvents();
   }
 });

@@ -63,7 +63,7 @@ public class PostsHandler implements Handler {
             ConversationsStorage storage = new ConversationsStorage();
 
             List<Post> posts = storage.getPosts(topicUuid);
-            Long timeLastVisited = storage.getLastVisitedTopic(topicUuid, currentUser.getId());
+            Long timeLastVisited = storage.getLastReadTopic(topicUuid, currentUser.getId());
 
             Collections.sort(posts);
 
@@ -91,9 +91,6 @@ public class PostsHandler implements Handler {
             }
 
             response.getWriter().write(result.toString());
-
-            // FIXME move to ajax so unread is smrtr
-            storage.setLastVisitedEvent(topicUuid, currentUser.getId());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

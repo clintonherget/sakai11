@@ -132,6 +132,8 @@ public class ConversationsServlet extends HttpServlet {
             return new PostsHandler();
         } else if (path.equals("/create-post")) {
             return new CreatePostHandler();
+        } else if (path.equals("/mark-topic-read")) {
+            return new TopicReadEventHandler();
         }
 
         return new IndexHandler();
