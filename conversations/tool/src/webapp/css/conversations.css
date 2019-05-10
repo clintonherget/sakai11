@@ -11,6 +11,11 @@
 .conversations-post {
     margin: 10px 0;
 }
+
+.conversations-initial-post h2 {
+  margin: 0;
+}
+
 .conversations-post-content {
     border: 1px solid #CCC;
     border-radius: 5px;
@@ -21,7 +26,7 @@
 .conversations-posts-unread-line:before {
     content: ' ';
     height: 2px;
-    background-color: #555;
+    background-color: #265AA2;
     width: 100%;
     position: absolute;
     top: 50%;
@@ -48,4 +53,28 @@
     border-top: 1px solid #DDD;
     margin: 10px 0 10px 40px;
     padding-top: 10px;
+}
+
+.conversations-post-form textarea,
+.conversations-comment-form textarea {
+  border-color: #336DBE;
+}
+
+.conversations-body .badge {
+  background-color: #265AA2;
+}
+
+
+body.dark-mode .Mrphs-pagebody,
+body.dark-mode .Mrphs-siteHierarchy,
+body.dark-mode .Mrphs-mainContent,
+body.dark-mode .portletBody,
+body.dark-mode #toolMenu ul li.is-current .Mrphs-toolsNav__menuitem--link,
+body.dark-mode #subSites ul li.is-current .Mrphs-toolsNav__menuitem--link,
+body.dark-mode .floatingToolMenu ul li.is-current .Mrphs-toolsNav__menuitem--link {
+ background: #F6F6F6
+}
+
+body.dark-mode .conversations-post-content {
+  background: #FFFFFF;
 }

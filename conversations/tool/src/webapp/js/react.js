@@ -2,12 +2,12 @@ Vue.component('react-post', {
   template: `
 <div class="conversations-post">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
-  <small class="text-muted">{{post.postedByEid}} - {{formatEpochTime(post.postedAt)}}</small>
+  <small class="text-muted"><strong>{{post.postedByEid}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}</small>
   <div class="conversations-post-content">
     {{post.content}}
     <div class="conversations-post-comments">
       <template v-if="showCommentForm">
-        <div class="conversations-react-comment-form">
+        <div class="conversations-comment-form">
           <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
           <button class="button" v-on:click="addComment()">Post Comment</button>
         </div>
@@ -17,9 +17,10 @@ Vue.component('react-post', {
       </template>
       <template v-if="post.comments.length > 0">
         <div v-for="comment in post.comments" class="conversations-post-comment">
-          <span v-if="comment.unread" class="badge badge-primary">NEW</span>
-          <small class="text-muted">{{comment.postedByEid}} - {{formatEpochTime(comment.postedAt)}}</small>
-          <br>
+          <div>
+            <span v-if="comment.unread" class="badge badge-primary">NEW</span>
+            <small class="text-muted"><strong>{{comment.postedByEid}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(comment.postedAt)}}</small>
+          </div>
           {{comment.content}}
         </div>
       </template>
@@ -68,8 +69,11 @@ Vue.component('react-topic', {
     <template v-if="initialPost">
       <div class="conversations-post conversations-initial-post">
         <span v-if="initialPost.unread" class="badge badge-primary">NEW</span>
-        <small class="text-muted">{{initialPost.postedByEid}} - {{formatEpochTime(initialPost.postedAt)}}</small>
         <div class="conversations-post-content">
+          <h2>{{topic_title}}</h2>
+          <p>
+            <small class="text-muted">Created by {{initialPost.postedByEid}} on {{formatEpochTime(initialPost.postedAt)}}</small>
+          </p>
           {{initialPost.content}}
         </div>
       </div>
@@ -101,7 +105,7 @@ Vue.component('react-topic', {
       firstUnreadPost: null,
     }
   },
-  props: ['baseurl', 'topic_uuid'],
+  props: ['baseurl', 'topic_uuid', 'topic_title'],
   methods: {
     post: function() {
       if (this.newPostContent.trim() == "") {
