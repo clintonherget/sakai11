@@ -4,7 +4,7 @@ Vue.component('react-post', {
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
   <small class="text-muted"><strong>{{post.postedByEid}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}</small>
   <div class="conversations-post-content">
-    {{post.content}}
+    <span v-html="post.content"></span>
     <div class="conversations-post-comments">
       <template v-if="showCommentForm">
         <div class="conversations-comment-form">
@@ -79,7 +79,7 @@ Vue.component('react-topic', {
       </div>
     </template>
     <div class="conversations-post-form">
-      <textarea class="form-control" placeholder="Post to topic..." v-model="newPostContent"></textarea>
+      <div class="post-to-topic-textarea form-control" placeholder="Post to topic..."></div>
       <button class="button" v-on:click="post()">Post</button>
       <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
     </div>
@@ -100,29 +100,40 @@ Vue.component('react-topic', {
   data: function () {
     return {
       posts: [],
-      newPostContent: '',
       initialPost: null,
       firstUnreadPost: null,
+      editor: null,
     }
   },
   props: ['baseurl', 'topic_uuid', 'topic_title'],
   methods: {
     post: function() {
-      if (this.newPostContent.trim() == "") {
-          this.newPostContent = "";
+      if (this.newPostContent().trim() == "") {
         return;
       }
 
       $.ajax({
         url: this.baseurl+"create-post",
         type: 'post',
-        data: { topicUuid: this.topic_uuid, content: this.newPostContent },
+        data: { topicUuid: this.topic_uuid, content: this.newPostContent() },
         dataType: 'json',
         success: (json) => {
-          this.newPostContent = "";
+          this.clearEditor();
           this.refreshPosts();
         }
       });
+    },
+    clearEditor: function () {
+      if (this.editor) {
+        this.editor.setData('');
+      }
+    },
+    newPostContent: function () {
+      if (this.editor) {
+        return this.editor.getData();
+      } else {
+        return "";
+      }
     },
     refreshPosts: function() {
       this.firstUnreadPost = null;
@@ -186,9 +197,31 @@ Vue.component('react-topic', {
         this.markTopicRead(false);
       });
     },
+    initRichTextareas: function() {
+      var self = this;
+
+      $(this.$el).find('.post-to-topic-textarea').not('.rich-text-initialized').each(function () {
+        InlineEditor
+          .create(this)
+          .then(newEditor => {
+            self.editor = newEditor;
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+
+        $(this).addClass('rich-text-initialized');
+      });
+    },
   },
   mounted: function() {
     this.refreshPosts();
     this.resetMarkTopicReadEvents();
+  },
+  updated: function() {
+    // If we added a new rich text area, enrich it!
+    this.$nextTick(function () {
+      this.initRichTextareas();
+    });
   }
 });
