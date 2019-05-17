@@ -81,7 +81,6 @@
 .post-to-topic-textarea {
     border: 1px solid #336DBE !important;
     border-radius: 5px !important;
-    min-height: 50px;
 }
 
 .conversations-body .badge {
@@ -131,4 +130,17 @@ body.dark-mode .floatingToolMenu ul li.is-current .Mrphs-toolsNav__menuitem--lin
 
 body.dark-mode .conversations-post-content {
   background: #FFFFFF;
+}
+
+.ck-editor__editable {
+  height: 100% !important;
+}
+
+.full-editor-height {
+  height: 15em !important;
+}
+
+.post-to-topic-textarea {
+  min-height: 5em;
+  transition: height 0.2s ease-in !important;
 }

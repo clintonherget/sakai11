@@ -95,7 +95,7 @@ Vue.component('react-topic', {
           <p>
             <small class="text-muted">Created by {{initialPost.postedByDisplayName}} on {{formatEpochTime(initialPost.postedAt)}}</small>
           </p>
-          {{initialPost.content}}
+          <span v-html="initialPost.content"></span>
         </div>
       </div>
     </template>
@@ -103,7 +103,9 @@ Vue.component('react-topic', {
       <div class="conversations-postedby-photo">
         <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
       </div>
-      <div class="post-to-topic-textarea form-control"></div>
+      <div class="post-to-topic-textarea form-control" v-bind:class='{ "full-editor-height": editorFocused }'>
+        <div class="topic-ckeditor"></div>
+      </div>
       <button class="button" v-on:click="post()">Post</button>
       <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
     </div>
@@ -126,12 +128,14 @@ Vue.component('react-topic', {
       firstUnreadPost: null,
       editor: null,
       postToFocusAndHighlight: null,
+      editorFocused: false,
     }
   },
   props: ['baseurl', 'topic_uuid', 'topic_title', 'current_user_id'],
   methods: {
     post: function() {
       if (this.newPostContent().trim() == "") {
+        this.clearEditor();
         return;
       }
 
@@ -149,7 +153,8 @@ Vue.component('react-topic', {
     },
     clearEditor: function () {
       if (this.editor) {
-        this.editor.setData('');
+        this.editor.setData("");
+        this.editorFocused = false;
       }
     },
     newPostContent: function () {
@@ -221,21 +226,25 @@ Vue.component('react-topic', {
       });
     },
     initRichTextareas: function() {
-      var self = this;
-
-      $(this.$el).find('.post-to-topic-textarea').not('.rich-text-initialized').each(function () {
+      $(this.$el).find('.topic-ckeditor').not('.topic-ckeditor-initialized').each((idx, elt) => {
         InlineEditor
-          .create(this, {
+          .create(elt, {
             placeholder: 'Post to topic...'
           })
           .then(newEditor => {
-            self.editor = newEditor;
+            this.editor = newEditor;
+            this.editor.ui.focusTracker.on('change:isFocused', (event, name, isFocused) => {
+              if (isFocused) {
+                this.editorFocused = isFocused;
+              }
+            });
+
           })
           .catch(function (error) {
             console.error(error);
           });
 
-        $(this).addClass('rich-text-initialized');
+        $(this).addClass('topic-ckeditor-initialized');
       });
     },
     focusAndHighlightPost: function(postUuid) {
@@ -255,11 +264,11 @@ Vue.component('react-topic', {
   mounted: function() {
     this.refreshPosts();
     this.resetMarkTopicReadEvents();
+    this.initRichTextareas();
   },
   updated: function() {
     // If we added a new rich text area, enrich it!
     this.$nextTick(function () {
-      this.initRichTextareas();
       this.focusAndHighlightPost();
     });
   }
