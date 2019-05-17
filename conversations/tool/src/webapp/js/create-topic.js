@@ -117,25 +117,17 @@ Vue.component('create-topic-workflow', {
       }
     },
     initRichTextareas: function() {
-      $(this.$el).find('.topic-ckeditor').not('.topic-ckeditor-initialized').each((idx, elt) => {
-        InlineEditor
-          .create(elt, {
-            placeholder: 'Add initial topic post content...'
-          })
-          .then(newEditor => {
-            this.editor = newEditor;
-            this.editor.ui.focusTracker.on('change:isFocused', (event, name, isFocused) => {
-              if (isFocused) {
-                this.editorFocused = isFocused;
-              }
-            });
-
-          })
-          .catch(function (error) {
-            console.error(error);
-          });
-
-        $(elt).addClass('topic-ckeditor-initialized');
+      $(this.$el).find('.topic-ckeditor').each((idx, elt) => {
+        RichText.initialize({
+          elt: elt,
+          placeholder: 'Add initial topic post content...',
+          onCreate: (newEditor) => { this.editor = newEditor; },
+          onFocus: (event, name, isFocused) => {
+            if (isFocused) {
+              this.editorFocused = isFocused;
+            }
+          }
+        });
       });
     },
   },

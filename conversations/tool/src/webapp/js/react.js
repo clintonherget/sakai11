@@ -226,25 +226,17 @@ Vue.component('react-topic', {
       });
     },
     initRichTextareas: function() {
-      $(this.$el).find('.topic-ckeditor').not('.topic-ckeditor-initialized').each((idx, elt) => {
-        InlineEditor
-          .create(elt, {
-            placeholder: 'Post to topic...'
-          })
-          .then(newEditor => {
-            this.editor = newEditor;
-            this.editor.ui.focusTracker.on('change:isFocused', (event, name, isFocused) => {
-              if (isFocused) {
-                this.editorFocused = isFocused;
-              }
-            });
-
-          })
-          .catch(function (error) {
-            console.error(error);
-          });
-
-        $(this).addClass('topic-ckeditor-initialized');
+      $(this.$el).find('.topic-ckeditor').each((idx, elt) => {
+        RichText.initialize({
+          elt: elt,
+          placeholder: 'Post to topic...',
+          onCreate: (newEditor) => { this.editor = newEditor; },
+          onFocus: (event, name, isFocused) => {
+            if (isFocused) {
+              this.editorFocused = isFocused;
+            }
+          }
+        });
       });
     },
     focusAndHighlightPost: function(postUuid) {
