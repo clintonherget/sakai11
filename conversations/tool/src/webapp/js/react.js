@@ -228,6 +228,7 @@ Vue.component('react-topic', {
     initRichTextareas: function() {
       $(this.$el).find('.topic-ckeditor').each((idx, elt) => {
         RichText.initialize({
+          baseurl: this.baseurl,
           elt: elt,
           placeholder: 'Post to topic...',
           onCreate: (newEditor) => { this.editor = newEditor; },

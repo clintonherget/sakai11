@@ -55,7 +55,9 @@ public class CreatePostHandler implements Handler {
             String parentPostUuid = p.getString("post_uuid", null);
 
             if (content != null) {
+                System.err.println("BEFORE SANITIZE: " + content);
                 content = HTMLSanitizer.sanitize(content);
+                System.err.println("AFTER SANITIZE: " + content);
 
                 if ("".equals(content)) {
                     // Null out and throw an exception in a mo

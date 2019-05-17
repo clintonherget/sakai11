@@ -7,6 +7,7 @@ import org.owasp.html.PolicyFactory;
 public class HTMLSanitizer {
     public static String sanitize(String html) {
         PolicyFactory customFactory = new HtmlPolicyBuilder()
+            .allowElements("figcaption")
             .allowElements("figure")
             .allowAttributes("class").onElements("figure")
             .toFactory();
@@ -14,6 +15,7 @@ public class HTMLSanitizer {
         PolicyFactory policy = Sanitizers.FORMATTING
             .and(Sanitizers.LINKS)
             .and(Sanitizers.TABLES)
+            .and(Sanitizers.IMAGES)
             .and(Sanitizers.BLOCKS)
             .and(customFactory);
 

@@ -93,7 +93,9 @@ public class ConversationsServlet extends HttpServlet {
 
             handler.handle(request, response, context);
 
-            response.setHeader("Content-Type", handler.getContentType());
+            if (!response.containsHeader("Content-Type")) {
+                response.setHeader("Content-Type", handler.getContentType());
+            }
 
             if (handler.hasRedirect()) {
                 if (handler.getRedirect().startsWith("http")) {
@@ -134,6 +136,10 @@ public class ConversationsServlet extends HttpServlet {
             return new CreatePostHandler();
         } else if (path.equals("/mark-topic-read")) {
             return new TopicReadEventHandler();
+        } else if (path.equals("/file-upload")) {
+            return new FileHandler();
+        } else if (path.equals("/file-view")) {
+            return new FileHandler();
         }
 
         return new IndexHandler();

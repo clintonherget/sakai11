@@ -119,6 +119,7 @@ Vue.component('create-topic-workflow', {
     initRichTextareas: function() {
       $(this.$el).find('.topic-ckeditor').each((idx, elt) => {
         RichText.initialize({
+          baseurl: this.baseurl,
           elt: elt,
           placeholder: 'Add initial topic post content...',
           onCreate: (newEditor) => { this.editor = newEditor; },

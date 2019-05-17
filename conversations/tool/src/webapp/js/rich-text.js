@@ -1,5 +1,51 @@
 (function() {
 
+    class UploadAdapter {
+        constructor(loader, baseurl) {
+            this.loader = loader;
+            this.baseurl = baseurl;
+        }
+
+        upload() {
+            console.log("BOOM UPLOAD");
+
+            return this.loader.file.then(file =>
+                new Promise((resolve, reject) => {
+                    this.handleUpload(file, resolve, reject);
+                }));
+        }
+
+        abort() {
+            console.log("BAILING OUT");
+        }
+
+        handleUpload(file, resolve, reject) {
+            var self = this;
+            var formData = new FormData();
+            formData.append("file", file);
+            formData.append("mode", "inline-upload");
+
+            $.ajax({
+                url: self.baseurl + "file-upload",
+                type: "POST",
+                contentType: false,
+                cache: false,
+                processData: false,
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    resolve({
+                        default: self.baseurl + "file-view?mode=view&key=" + response.key
+                    });
+                },
+                error: function (xhr, statusText) {
+                    reject(statusText);
+                }
+            });
+        }
+    }
+
+
     var initialize = function (opts) {
         if ($(opts.elt).hasClass('rich-text-initialized')) {
             return;
@@ -10,11 +56,15 @@
                 placeholder: (opts.placeholder || "Type something")
             })
             .then(newEditor => {
-                opts.onCreate(newEditor);
-                this.editor.ui.focusTracker.on('change:isFocused', (event, name, isFocused) => {
+                newEditor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                    return new UploadAdapter(loader, opts.baseurl);
+                };
+
+                newEditor.ui.focusTracker.on('change:isFocused', (event, name, isFocused) => {
                     opts.onFocus(event, name, isFocused);
                 });
 
+                opts.onCreate(newEditor);
             })
             .catch(function (error) {
                 console.error(error);
