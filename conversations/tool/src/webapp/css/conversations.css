@@ -155,3 +155,9 @@ body.dark-mode .conversations-post-content {
   min-height: 5em;
   transition: height 0.2s ease-in !important;
 }
+
+/* CKEditor */
+/* Fix for bootstrap modals covering CKEditor balloon toolbar */
+.ck.ck-balloon-panel {
+    z-index: 2000 !important;
+}
