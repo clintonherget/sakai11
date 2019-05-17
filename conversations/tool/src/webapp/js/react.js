@@ -103,7 +103,7 @@ Vue.component('react-topic', {
       <div class="conversations-postedby-photo">
         <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
       </div>
-      <div ref="commentInput" class="post-to-topic-textarea form-control" placeholder="Post to topic..."></div>
+      <div class="post-to-topic-textarea form-control"></div>
       <button class="button" v-on:click="post()">Post</button>
       <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
     </div>
@@ -225,7 +225,9 @@ Vue.component('react-topic', {
 
       $(this.$el).find('.post-to-topic-textarea').not('.rich-text-initialized').each(function () {
         InlineEditor
-          .create(this)
+          .create(this, {
+            placeholder: 'Post to topic...'
+          })
           .then(newEditor => {
             self.editor = newEditor;
           })
