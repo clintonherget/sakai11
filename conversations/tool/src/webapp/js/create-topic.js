@@ -135,7 +135,7 @@ Vue.component('create-topic-workflow', {
             console.error(error);
           });
 
-        $(this).addClass('topic-ckeditor-initialized');
+        $(elt).addClass('topic-ckeditor-initialized');
       });
     },
   },
