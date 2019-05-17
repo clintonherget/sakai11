@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
+import org.sakaiproject.conversations.tool.lib.HTMLSanitizer;
 import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
@@ -52,6 +53,15 @@ public class CreatePostHandler implements Handler {
             String topicUuid = p.getString("topicUuid", null);
             String content = p.getString("content", null);
             String parentPostUuid = p.getString("post_uuid", null);
+
+            if (content != null) {
+                content = HTMLSanitizer.sanitize(content);
+
+                if ("".equals(content)) {
+                    // Null out and throw an exception in a mo
+                    content = null;
+                }
+            }
 
             if (topicUuid == null || content == null) {
                 // FIXME
