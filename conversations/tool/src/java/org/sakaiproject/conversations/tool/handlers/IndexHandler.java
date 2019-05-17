@@ -60,6 +60,7 @@ public class IndexHandler implements Handler {
 
             Map<String, List<String>> topicPosters = storage.getPostersForTopics(topicUuids);
             Map<String, Long> postCounts = storage.getPostCountsForTopics(topicUuids);
+            Map<String, Long> lastActivityTimes = storage.getLastActivityTimeForTopics(topicUuids);
 
             for (Topic topic : topics) {
                 if (topicPosters.containsKey(topic.getUuid())) {
@@ -69,6 +70,9 @@ public class IndexHandler implements Handler {
                     if (postCounts.get(topic.getUuid()) > 1) {
                         topic.setPostCount(postCounts.get(topic.getUuid()));
                     }
+                }
+                if (lastActivityTimes.containsKey(topic.getUuid())) {
+                    topic.setLastActivityTime(lastActivityTimes.get(topic.getUuid()));
                 }
             }
 

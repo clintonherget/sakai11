@@ -105,7 +105,7 @@ public class ConversationsStorage {
                         new DBAction<Map<String, Long>>() {
                             @Override
                             public Map<String, Long> call(DBConnection db) throws SQLException {
-                                Map<String, Long> postersByTopic = new HashMap();
+                                Map<String, Long> postCountsByTopic = new HashMap();
 
                                 String placeholders = topicUuids.stream().map(_p -> "?").collect(Collectors.joining(","));
 
@@ -119,12 +119,43 @@ public class ConversationsStorage {
                                         while (rs.next()) {
                                             String topicUuid = rs.getString("topic_uuid");
                                             Long count = rs.getLong("count");
-                                            postersByTopic.put(topicUuid, count);
+                                            postCountsByTopic.put(topicUuid, count);
                                         }
                                     }
                                 }
 
-                                return postersByTopic;
+                                return postCountsByTopic;
+                            }
+                        }
+                );
+    }
+
+    public Map<String, Long> getLastActivityTimeForTopics(final List<String> topicUuids) {
+        return DB.transaction
+                ("Find last activity times for topics",
+                        new DBAction<Map<String, Long>>() {
+                            @Override
+                            public Map<String, Long> call(DBConnection db) throws SQLException {
+                                Map<String, Long> lastActivityByTopic = new HashMap();
+
+                                String placeholders = topicUuids.stream().map(_p -> "?").collect(Collectors.joining(","));
+
+                                try (PreparedStatement ps = db.prepareStatement("SELECT max(posted_at) as last_activity, topic_uuid FROM conversations_post WHERE topic_uuid in (" + placeholders + ") GROUP BY topic_uuid")) {
+                                    Iterator<String> it = topicUuids.iterator();
+                                    for (int i = 0; it.hasNext(); i++) {
+                                        ps.setString(i + 1, it.next());
+                                    }
+
+                                    try (ResultSet rs = ps.executeQuery()) {
+                                        while (rs.next()) {
+                                            String topicUuid = rs.getString("topic_uuid");
+                                            Long count = rs.getLong("last_activity");
+                                            lastActivityByTopic.put(topicUuid, count);
+                                        }
+                                    }
+                                }
+
+                                return lastActivityByTopic;
                             }
                         }
                 );

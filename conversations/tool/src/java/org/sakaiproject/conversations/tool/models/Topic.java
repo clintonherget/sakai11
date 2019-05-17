@@ -43,6 +43,9 @@ public class Topic implements Comparable<Topic> {
     @Getter
     @Setter
     private Long postCount;
+    @Getter
+    @Setter
+    private Long lastActivityTime;
 
     public Topic(String uuid, String title, String type) {
         this.uuid = uuid;
