@@ -1,8 +1,11 @@
 Vue.component('react-post', {
   template: `
 <div :class="postCssClasses(post)" :data-post-uuid="post.uuid">
+  <div class="conversations-postedby-photo">
+    <img :src="'/direct/profile/'+post.postedBy + '/image'"/>
+  </div>
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
-  <small class="text-muted"><strong>{{post.postedByEid}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}</small>
+  <small class="text-muted"><strong>{{post.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}</small>
   <div class="conversations-post-content">
     <span v-html="post.content"></span>
     <div class="conversations-post-comments">
@@ -18,9 +21,12 @@ Vue.component('react-post', {
       </template>
       <template v-if="post.comments.length > 0">
         <div v-for="comment in post.comments" class="conversations-post-comment" :data-post-uuid="comment.uuid">
+          <div class="conversations-postedby-photo">
+            <img :src="'/direct/profile/'+comment.postedBy + '/image'"/>
+          </div>
           <div>
             <span v-if="comment.unread" class="badge badge-primary">NEW</span>
-            <small class="text-muted"><strong>{{comment.postedByEid}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(comment.postedAt)}}</small>
+            <small class="text-muted"><strong>{{comment.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(comment.postedAt)}}</small>
           </div>
           <div class="conversations-comment-content">
             {{comment.content}}
@@ -87,13 +93,16 @@ Vue.component('react-topic', {
         <div class="conversations-post-content">
           <h2>{{topic_title}}</h2>
           <p>
-            <small class="text-muted">Created by {{initialPost.postedByEid}} on {{formatEpochTime(initialPost.postedAt)}}</small>
+            <small class="text-muted">Created by {{initialPost.postedByDisplayName}} on {{formatEpochTime(initialPost.postedAt)}}</small>
           </p>
           {{initialPost.content}}
         </div>
       </div>
     </template>
     <div class="conversations-post-form">
+      <div class="conversations-postedby-photo">
+        <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
+      </div>
       <div ref="commentInput" class="post-to-topic-textarea form-control" placeholder="Post to topic..."></div>
       <button class="button" v-on:click="post()">Post</button>
       <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
@@ -119,7 +128,7 @@ Vue.component('react-topic', {
       postToFocusAndHighlight: null,
     }
   },
-  props: ['baseurl', 'topic_uuid', 'topic_title'],
+  props: ['baseurl', 'topic_uuid', 'topic_title', 'current_user_id'],
   methods: {
     post: function() {
       if (this.newPostContent().trim() == "") {

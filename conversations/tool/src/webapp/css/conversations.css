@@ -10,6 +10,7 @@
 
 .conversations-post {
     margin: 10px 0;
+    position: relative;
 }
 
 .conversations-initial-post h2 {
@@ -66,8 +67,10 @@
     transition-duration: 2s;
 
     border-top: 1px solid #DDD;
-    margin: 10px 0 10px 40px;
+    margin: 10px 0;
     padding-top: 10px;
+    position: relative;
+    padding-left: 60px;
 }
 
 .conversations-comment-content {
@@ -75,15 +78,43 @@
     transition-duration: 2s;
 }
 
-.conversations-post-form textarea,
-.conversations-comment-form textarea {
-  border-color: #336DBE;
+.post-to-topic-textarea {
+    border: 1px solid #336DBE !important;
+    border-radius: 5px !important;
+    margin-left: 60px;
+    min-height: 50px;
 }
 
 .conversations-body .badge {
   background-color: #265AA2;
 }
 
+.conversations-postedby-photo {
+    position: absolute;
+    width: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid #336DBE;
+    left: 0;
+    top: 0;
+    height: 50px;
+}
+
+.conversations-posts >  .conversations-post {
+    padding-left: 60px;
+}
+
+.conversations-posts >  .conversations-post > .conversations-postedby-photo {
+    top: 20px;
+}
+
+.conversations-post-comment .conversations-postedby-photo {
+    top: 5px;
+}
+
+.conversations-post-form {
+    position: relative;
+}
 
 body.dark-mode .Mrphs-pagebody,
 body.dark-mode .Mrphs-siteHierarchy,

@@ -102,7 +102,7 @@ public class PostsHandler implements Handler {
         obj.put("uuid", post.getUuid());
         obj.put("content", post.getContent());
         obj.put("postedBy", post.getPostedBy());
-        obj.put("postedByEid", post.getPostedByEid());
+        obj.put("postedByDisplayName", post.getPostedByDisplayName());
         obj.put("postedAt", post.getPostedAt());
         obj.put("unread", post.isUnread());
 

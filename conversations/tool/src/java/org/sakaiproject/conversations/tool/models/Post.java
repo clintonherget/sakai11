@@ -43,12 +43,14 @@ public class Post implements Comparable<Post> {
     @Getter
     private final String parentPostUuid;
     @Getter
+    private final String postedByDisplayName;
+    @Getter
     private final List<Post> comments;
     @Setter
     @Getter
     private boolean unread = false;
 
-    public Post(String uuid, String content, String postedBy, Long postedAt, String parentPostUuid, String postedByEid) {
+    public Post(String uuid, String content, String postedBy, Long postedAt, String parentPostUuid, String postedByEid, String postedByFirstName, String postedByLastName) {
         this.uuid = uuid;
         this.content = content;
         this.postedBy = postedBy;
@@ -56,6 +58,11 @@ public class Post implements Comparable<Post> {
         this.postedByEid = postedByEid;
         this.parentPostUuid = parentPostUuid;
         this.comments = new ArrayList<Post>();
+        if (postedByFirstName != null && postedByLastName != null) {
+            this.postedByDisplayName = postedByFirstName + " " + postedByLastName;
+        } else {
+            this.postedByDisplayName = postedByEid;
+        }
     }
 
     public Post(String content, String postedBy) {
@@ -66,6 +73,7 @@ public class Post implements Comparable<Post> {
         this.postedAt = null;
         this.parentPostUuid = null;
         this.comments = new ArrayList<Post>();
+        this.postedByDisplayName = null;
     }
 
     public void addComment(Post comment) {

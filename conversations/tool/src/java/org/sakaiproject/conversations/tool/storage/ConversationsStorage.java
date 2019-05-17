@@ -118,8 +118,9 @@ public class ConversationsStorage {
                     @Override
                     public List<Post> call(DBConnection db) throws SQLException {
                         List<Post> posts = new ArrayList<>();
-                        try (DBResults results = db.run("SELECT conversations_post.*, sakai_user_id_map.eid FROM conversations_post" +
+                        try (DBResults results = db.run("SELECT conversations_post.*, sakai_user_id_map.eid, nyu_t_users.fname, nyu_t_users.lname FROM conversations_post" +
                                                         " INNER JOIN sakai_user_id_map ON sakai_user_id_map.user_id = conversations_post.posted_by" +
+                                                        " LEFT JOIN nyu_t_users ON nyu_t_users.netid = sakai_user_id_map.eid" +
                                                         " WHERE conversations_post.topic_uuid = ?")
                             .param(topicUuid)
                             .executeQuery()) {
@@ -131,7 +132,9 @@ public class ConversationsStorage {
                                         result.getString("posted_by"),
                                         result.getLong("posted_at"),
                                         result.getString("parent_post_uuid"),
-                                        result.getString("eid")));
+                                        result.getString("eid"),
+                                        result.getString("fname"),
+                                        result.getString("lname")));
                             }
 
                             return posts;
