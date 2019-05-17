@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sakaiproject.component.cover.ComponentManager;
-import org.sakaiproject.conversations.api.ConversationsService;
 
 /**
  * The interface implemented by all handlers.
