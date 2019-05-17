@@ -81,7 +81,6 @@
 .post-to-topic-textarea {
     border: 1px solid #336DBE !important;
     border-radius: 5px !important;
-    margin-left: 60px;
     min-height: 50px;
 }
 
@@ -114,6 +113,10 @@
 
 .conversations-post-form {
     position: relative;
+}
+
+.conversations-topic > .conversations-post-form {
+    padding-left: 60px;
 }
 
 body.dark-mode .Mrphs-pagebody,
