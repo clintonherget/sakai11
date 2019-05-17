@@ -120,7 +120,7 @@ Vue.component('create-topic-workflow', {
       $(this.$el).find('.topic-ckeditor').not('.topic-ckeditor-initialized').each((idx, elt) => {
         InlineEditor
           .create(elt, {
-            placeholder: 'Post to topic...'
+            placeholder: 'Add initial topic post content...'
           })
           .then(newEditor => {
             this.editor = newEditor;
