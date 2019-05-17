@@ -7,8 +7,12 @@
 <table class="table table-hover table-condensed">
     <thead>
         <tr>
-            <th class="col-sm-3">Topic Title</th>
-            <th class="col-sm-6">Topic Type</th>
+            <th class="col-sm-4">Topic Title</th>
+            <th class="col-sm-1">Topic Type</th>
+            <th class="col-sm-2">Posters</th>
+            <th class="col-sm-1">Available To</th>
+            <th class="col-sm-1">Posts</th>
+            <!-- FIXME th class="col-sm-1">Last Activity</th -->
             <th></th>
         </tr>
     </thead>
@@ -17,6 +21,20 @@
             <tr>
               <td>{{title}}</td>
               <td>{{type}}</td>
+              <td>
+                <!-- FIXME limit to first 6 and add plus number of others -->
+                {{#each posters}}
+                  <div class="topic-poster-photo"><img src="/direct/profile/{{this}}/image" alt="User with netid {{this}}" /></div>
+                {{/each}}
+              </td>
+              <td>
+                <!-- FIXME do permissions -->
+                Entire Site
+              </td>
+              <td>
+                {{postCount}}
+              </td>
+              <!-- td></td -->
               <td><a href="{{baseURL}}topic?uuid={{uuid}}">View</a></td>
             </tr>
         {{/each}}

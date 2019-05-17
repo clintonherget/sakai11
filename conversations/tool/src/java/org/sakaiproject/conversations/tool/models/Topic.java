@@ -26,8 +26,10 @@ package org.sakaiproject.conversations.tool.models;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import lombok.Getter;
+import lombok.Setter;
 
 public class Topic implements Comparable<Topic> {
     private final String uuid;
@@ -35,17 +37,25 @@ public class Topic implements Comparable<Topic> {
     private final String type;
     @Getter
     private final String title;
+    @Getter
+    @Setter
+    private List<String> posters;
+    @Getter
+    @Setter
+    private Long postCount;
 
     public Topic(String uuid, String title, String type) {
         this.uuid = uuid;
         this.title = title;
         this.type = type;
+        this.postCount = 0L;
     }
 
     public Topic(String title, String type) {
         this.uuid = null;
         this.title = title;
         this.type = type;
+        this.postCount = 0L;
     }
 
     @Override

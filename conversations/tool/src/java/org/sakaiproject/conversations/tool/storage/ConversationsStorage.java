@@ -24,14 +24,11 @@
 
 package org.sakaiproject.conversations.tool.storage;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,6 +61,73 @@ public class ConversationsStorage {
                     }
                 }
             );
+    }
+
+    public Map<String, List<String>> getPostersForTopics(final List<String> topicUuids) {
+        // FIXME ORDER BY MOST RECENT CHANGES
+        return DB.transaction
+                ("Find all posters for topics",
+                        new DBAction<Map<String, List<String>>>() {
+                            @Override
+                            public Map<String, List<String>> call(DBConnection db) throws SQLException {
+                                Map<String, List<String>> postersByTopic = new HashMap();
+
+                                String placeholders = topicUuids.stream().map(_p -> "?").collect(Collectors.joining(","));
+
+                                try (PreparedStatement ps = db.prepareStatement("SELECT distinct posted_by, topic_uuid FROM conversations_post WHERE topic_uuid in (" + placeholders + ")")) {
+                                    Iterator<String> it = topicUuids.iterator();
+                                    for (int i = 0; it.hasNext(); i++) {
+                                        ps.setString(i + 1, it.next());
+                                    }
+
+                                    try (ResultSet rs = ps.executeQuery()) {
+                                        while (rs.next()) {
+                                            String topicUuid = rs.getString("topic_uuid");
+                                            String postedBy = rs.getString("posted_by");
+                                            if (!postersByTopic.containsKey(topicUuid)) {
+                                                postersByTopic.put(topicUuid, new ArrayList<String>());
+                                            }
+                                            postersByTopic.get(topicUuid).add(postedBy);
+                                        }
+                                    }
+                                }
+
+                                return postersByTopic;
+                            }
+                        }
+                );
+    }
+
+    public Map<String, Long> getPostCountsForTopics(final List<String> topicUuids) {
+        // FIXME ORDER BY MOST RECENT CHANGES
+        return DB.transaction
+                ("Find post counts for topics",
+                        new DBAction<Map<String, Long>>() {
+                            @Override
+                            public Map<String, Long> call(DBConnection db) throws SQLException {
+                                Map<String, Long> postersByTopic = new HashMap();
+
+                                String placeholders = topicUuids.stream().map(_p -> "?").collect(Collectors.joining(","));
+
+                                try (PreparedStatement ps = db.prepareStatement("SELECT count(*) as count, topic_uuid FROM conversations_post WHERE topic_uuid in (" + placeholders + ") GROUP BY topic_uuid")) {
+                                    Iterator<String> it = topicUuids.iterator();
+                                    for (int i = 0; it.hasNext(); i++) {
+                                        ps.setString(i + 1, it.next());
+                                    }
+
+                                    try (ResultSet rs = ps.executeQuery()) {
+                                        while (rs.next()) {
+                                            String topicUuid = rs.getString("topic_uuid");
+                                            Long count = rs.getLong("count");
+                                            postersByTopic.put(topicUuid, count);
+                                        }
+                                    }
+                                }
+
+                                return postersByTopic;
+                            }
+                        }
+                );
     }
 
     public String createTopic(Topic topic, String siteId) {

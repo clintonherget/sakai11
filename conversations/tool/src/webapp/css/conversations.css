@@ -1,3 +1,18 @@
+/* Topic Listing */
+.topic-poster-photo {
+    height: 30px;
+    width: 30px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid #336DBE;
+    display: inline-block;
+    margin-left: -20px;
+}
+
+.topic-poster-photo:first-child {
+    margin-left: 0;
+}
+
 /* Create workflow */
 .conversations-create-topic-modal .modal-content {
     background-color: #FAFAFA;

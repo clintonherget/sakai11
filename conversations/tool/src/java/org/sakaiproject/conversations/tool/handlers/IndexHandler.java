@@ -24,12 +24,15 @@
 
 package org.sakaiproject.conversations.tool.handlers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 
 public class IndexHandler implements Handler {
@@ -46,7 +49,30 @@ public class IndexHandler implements Handler {
 
             String siteId = (String)context.get("siteId");
 
-            context.put("topics", new ConversationsStorage().getAllTopics(siteId));
+            ConversationsStorage storage = new ConversationsStorage();
+
+            List<Topic> topics = storage.getAllTopics(siteId);
+            List<String> topicUuids = new ArrayList<String>();
+
+            for (Topic topic : topics) {
+                topicUuids.add(topic.getUuid());
+            }
+
+            Map<String, List<String>> topicPosters = storage.getPostersForTopics(topicUuids);
+            Map<String, Long> postCounts = storage.getPostCountsForTopics(topicUuids);
+
+            for (Topic topic : topics) {
+                if (topicPosters.containsKey(topic.getUuid())) {
+                    topic.setPosters(topicPosters.get(topic.getUuid()));
+                }
+                if (postCounts.containsKey(topic.getUuid())) {
+                    if (postCounts.get(topic.getUuid()) > 1) {
+                        topic.setPostCount(postCounts.get(topic.getUuid()));
+                    }
+                }
+            }
+
+            context.put("topics", topics);
             context.put("subpage", "index");
 
         } catch (Exception e) {
