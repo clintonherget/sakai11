@@ -3,36 +3,74 @@ Vue.component('create-topic-workflow', {
   <div class="conversations-create-topic-workflow">
     <template v-if="step == 'SELECT_TYPE'">
       <div class="row">
-        <div class="col-sm-4">
-          <div class="well">
-            <strong>React</strong>
-            <p>Stuff goes here.</p>
-            <button class="button" v-on:click="selectTopicType('react')">Select Topic Type</button>
+        <div class="col-sm-12">
+          <p class="text-center">Choose your topic type:</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3">
+          <div class="conversations-topic">
+            <p><strong>React</strong></p>
+            <p><button class="button" v-on:click="selectTopicType('react')">Select Topic Type</button></p>
           </div>
         </div>
-        <div class="col-sm-4">
-          <div class="well">
-            <strong>Brainstorm</strong>
-            <p>Stuff goes here.</p>
+        <div class="col-sm-3">
+          <div class="conversations-topic">
+            <p><strong>Brainstorm</strong></p>
+            <p>Coming soon.</p>
           </div>
         </div>
-        <div class="col-sm-4">
-          <div class="well">
-            <strong>Discuss</strong>
-            <p>Stuff goes here.</p>
+        <div class="col-sm-3">
+          <div class="conversations-topic">
+            <p><strong>Discuss</strong></p>
+            <p>Coming soon.</p>
           </div>
         </div>
       </div>
     </template> 
     <template v-else-if="step == 'SET_TITLE'">
-      <input class="form-control" placeholder="Topic title" v-model="topicTitle">
-      <button class="button" v-on:click="selectTopicTitle()">Next</button>
-      <a href="#" v-on:click="step = 'SELECT_TYPE'">Back to select type</a>
+      <div class="row">
+        <div class="col-sm-12">
+          <i class="fa fa-arrow-left" aria-hidden="true"></i> <a href="#" v-on:click="step = 'SELECT_TYPE'">Back to select type</a>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-3">
+          <p class="text-center">
+            <input class="form-control" placeholder="Topic title" v-model="topicTitle">
+          </p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <p class="text-center">
+            <button class="button" v-on:click="selectTopicTitle()">Next <i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+          </p>
+        </div>
+      </div>
     </template>
     <template v-else-if="step == 'CREATE_FIRST_POST'">
-      <textarea class="form-control" placeholder="Type the initial post..." v-model="topicFirstPost"></textarea>
-      <button class="button" v-on:click="createTopic()">Create Post</button>
-      <a href="#" v-on:click="step = 'SET_TITLE'">Back to set title</a>
+      <div class="row">
+        <div class="col-sm-12">
+          <i class="fa fa-arrow-left" aria-hidden="true"></i> <a href="#" v-on:click="step = 'SET_TITLE'">Back to set title</a>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-3">
+          <p class="text-center">
+            <div class="post-to-topic-textarea form-control" v-bind:class='{ "full-editor-height": editorFocused }'>
+              <div class="topic-ckeditor"></div>
+            </div>
+          </p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <p class="text-center">
+            <button class="button_color" v-on:click="createTopic()"><i class="fa fa-plus" aria-hidden="true"></i> Create Post</button>
+          </p>
+        </div>
+      </div>
     </template>
   </div>
 `,
@@ -41,11 +79,18 @@ Vue.component('create-topic-workflow', {
       step: 'SELECT_TYPE',
       topicType: null,
       topicTitle: "",
-      topicFirstPost: "",
+      editorFocused: false,
     };
   },
   props: ['baseurl'],
   methods: {
+    firstPostContent: function () {
+      if (this.editor) {
+        return this.editor.getData();
+      } else {
+        return "";
+      }
+    },
     selectTopicType: function(type) {
       this.topicType = type;
       this.step = 'SET_TITLE';
@@ -56,23 +101,46 @@ Vue.component('create-topic-workflow', {
       }
     },
     createTopic: function() {
-      if (this.topicFirstPost != "") {
+      if (this.firstPostContent() != "") {
         $.ajax({
           url: this.baseurl + 'create-topic',
           method: 'post',
           data: {
             title: this.topicTitle,
             type: this.topicType,
-            post: this.topicFirstPost,
+            post: this.firstPostContent(),
           },
           success: function() {
             location.reload();
           }
         });
       }
-    }
+    },
+    initRichTextareas: function() {
+      $(this.$el).find('.topic-ckeditor').not('.topic-ckeditor-initialized').each((idx, elt) => {
+        InlineEditor
+          .create(elt, {
+            placeholder: 'Post to topic...'
+          })
+          .then(newEditor => {
+            this.editor = newEditor;
+            this.editor.ui.focusTracker.on('change:isFocused', (event, name, isFocused) => {
+              if (isFocused) {
+                this.editorFocused = isFocused;
+              }
+            });
+
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+
+        $(this).addClass('topic-ckeditor-initialized');
+      });
+    },
   },
-  mounted: function() {
+  updated: function() {
+    this.initRichTextareas();
   }
 });
 
@@ -83,10 +151,12 @@ Vue.component('create-topic-modal', {
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <span class="modal-title">Create Topic</span>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
+            <div class="text-center">
+              <span class="modal-title text-center">Add New Topic</span>
+            </div>
           </div>
           <div class="modal-body">
             <create-topic-workflow :baseurl="baseurl"></create-topic-workflow>
@@ -131,7 +201,7 @@ Vue.component('create-topic-modal', {
 Vue.component('create-topic-wrapper', {
   template: `
   <div class="conversations-create-topic-wrapper">
-    <button class="button" v-on:click="showModal()">Create Topic</button>
+    <button class="button" v-on:click="showModal()"><i class="fa fa-plus" aria-hidden="true"></i> New Topic</button>
     <create-topic-modal ref="createTopicModal" :baseurl="baseurl"></create-topic-modal>
   </div>
 `,

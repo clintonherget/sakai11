@@ -1,13 +1,24 @@
-.blink {
-  animation: blinker 1s step-start infinite;
+/* Create workflow */
+.conversations-create-topic-modal .modal-content {
+    background-color: #FAFAFA;
+}
+.conversations-create-topic-modal .modal-content .modal-header {
+    background-color: #FFFFFF;
 }
 
-@keyframes blinker {
-  50% {
-    opacity: 0;
-  }
+.conversations-create-topic-modal .modal-content .modal-body {
+    background-color: transparent;
 }
 
+.conversations-create-topic-modal .conversations-topic {
+    background-color: #FFFFFF;
+/*    border: 1px solid #CCCCCC;*/
+    box-shadow: 1px 1px 5px #999;
+    padding: 30px;
+    border-radius: 5px;
+}
+
+/* React Topic Type */
 .conversations-post {
     margin: 10px 0;
     position: relative;
