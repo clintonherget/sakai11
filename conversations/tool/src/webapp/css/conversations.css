@@ -17,10 +17,22 @@
 }
 
 .conversations-post-content {
+    transition-property: background-color;
+    transition-duration: 2s;
+
     border: 1px solid #CCC;
     border-radius: 5px;
     padding: 20px;
     background-color: #FAFAFA;
+}
+
+.conversations-post-highlight .conversations-post-content,
+.conversations-post-comment.conversations-post-highlight,
+.conversations-post-highlight .conversations-comment-content {
+    transition-property: background-color;
+    transition-duration: 2s;
+
+    background-color: #FFFACC !important;
 }
 
 .conversations-posts-unread-line:before {
@@ -50,9 +62,17 @@
 }
 
 .conversations-post-comment {
+    transition-property: background-color;
+    transition-duration: 2s;
+
     border-top: 1px solid #DDD;
     margin: 10px 0 10px 40px;
     padding-top: 10px;
+}
+
+.conversations-comment-content {
+    transition-property: background-color;
+    transition-duration: 2s;
 }
 
 .conversations-post-form textarea,

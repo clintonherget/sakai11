@@ -1,6 +1,6 @@
 Vue.component('react-post', {
   template: `
-<div class="conversations-post">
+<div :class="postCssClasses(post)" :data-post-uuid="post.uuid">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
   <small class="text-muted"><strong>{{post.postedByEid}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}</small>
   <div class="conversations-post-content">
@@ -10,18 +10,21 @@ Vue.component('react-post', {
         <div class="conversations-comment-form">
           <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
           <button class="button" v-on:click="addComment()">Post Comment</button>
+          <button class="button" v-on:click="toggleCommentForm()">Cancel</button>
         </div>
       </template>
       <template v-else>
-          <button class="button" v-on:click="showCommentForm = true">Comment</button>
+          <button class="button" v-on:click="toggleCommentForm()">Comment</button>
       </template>
       <template v-if="post.comments.length > 0">
-        <div v-for="comment in post.comments" class="conversations-post-comment">
+        <div v-for="comment in post.comments" class="conversations-post-comment" :data-post-uuid="comment.uuid">
           <div>
             <span v-if="comment.unread" class="badge badge-primary">NEW</span>
             <small class="text-muted"><strong>{{comment.postedByEid}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(comment.postedAt)}}</small>
           </div>
-          {{comment.content}}
+          <div class="conversations-comment-content">
+            {{comment.content}}
+          </div>
         </div>
       </template>
     </div>
@@ -50,13 +53,25 @@ Vue.component('react-post', {
         success: (json) => {
           this.commentContent = "";
           this.showCommentForm = false;
+          this.$parent.postToFocusAndHighlight = json.uuid;
           this.$parent.refreshPosts();
         }
       });
     },
     formatEpochTime: function(epoch) {
       return new Date(epoch).toLocaleString();
-    }
+    },
+    postCssClasses: function(post) {
+      return this.$parent.postCssClasses(post);
+    },
+    toggleCommentForm: function() {
+        if (this.showCommentForm) {
+            this.showCommentForm = false;
+            this.commentContent = "";
+        } else {
+            this.showCommentForm = true;
+        }
+    },
   },
   mounted: function() {
   }
@@ -79,7 +94,7 @@ Vue.component('react-topic', {
       </div>
     </template>
     <div class="conversations-post-form">
-      <div class="post-to-topic-textarea form-control" placeholder="Post to topic..."></div>
+      <div ref="commentInput" class="post-to-topic-textarea form-control" placeholder="Post to topic..."></div>
       <button class="button" v-on:click="post()">Post</button>
       <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
     </div>
@@ -90,9 +105,7 @@ Vue.component('react-topic', {
             <span class="badge badge-primary">NEW</span>
           </div>
         </template>
-        <div  :class="postCssClasses(post)">
-          <react-post :topic_uuid="topic_uuid" :post="post" :baseurl="baseurl"></react-post>
-        </div>
+        <react-post :topic_uuid="topic_uuid" :post="post" :baseurl="baseurl"></react-post>
       </template>
     </div>
   </div>
@@ -103,6 +116,7 @@ Vue.component('react-topic', {
       initialPost: null,
       firstUnreadPost: null,
       editor: null,
+      postToFocusAndHighlight: null,
     }
   },
   props: ['baseurl', 'topic_uuid', 'topic_title'],
@@ -119,6 +133,7 @@ Vue.component('react-topic', {
         dataType: 'json',
         success: (json) => {
           this.clearEditor();
+          this.postToFocusAndHighlight = json.uuid;
           this.refreshPosts();
         }
       });
@@ -193,7 +208,6 @@ Vue.component('react-topic', {
     resetMarkTopicReadEvents: function() {
       // FIXME do something smRTr to determine when a topic has been read
       $( window ).off('unload').on('unload', () => {
-        console.log('TESTING');
         this.markTopicRead(false);
       });
     },
@@ -213,6 +227,19 @@ Vue.component('react-topic', {
         $(this).addClass('rich-text-initialized');
       });
     },
+    focusAndHighlightPost: function(postUuid) {
+      if (this.postToFocusAndHighlight) {
+        var $post = $(this.$el).find('[data-post-uuid='+this.postToFocusAndHighlight+']');
+        if ($post.length > 0) {
+          this.postToFocusAndHighlight = null;
+          $post[0].scrollIntoView();
+          $post.addClass('conversations-post-highlight');
+          setTimeout(() => {
+              $post.removeClass('conversations-post-highlight');
+          }, 1000);
+        }
+      }
+    },
   },
   mounted: function() {
     this.refreshPosts();
@@ -222,6 +249,7 @@ Vue.component('react-topic', {
     // If we added a new rich text area, enrich it!
     this.$nextTick(function () {
       this.initRichTextareas();
+      this.focusAndHighlightPost();
     });
   }
 });
