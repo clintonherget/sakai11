@@ -1,15 +1,15 @@
 Vue.component('topic-listing', {
   template: `
-<div>
+<div class="conversations-topics-listing">
   <table class="table table-hover table-condensed">
       <thead>
           <tr>
-              <th class="col-sm-4">Topic Title</th>
-              <th class="col-sm-1">Topic Type</th>
+              <th :class="'col-sm-4' + sortClassesForColumn('title')" v-on:click="toggleSort('title')">Topic Title</th>
+              <th :class="'col-sm-1' + sortClassesForColumn('type')" v-on:click="toggleSort('type')">Topic Type</th>
               <th class="col-sm-2">Posters</th>
               <th class="col-sm-1">Available To</th>
               <th class="col-sm-1">Posts</th>
-              <th class="col-sm-2">Last Activity</th>
+              <th :class="'col-sm-2' + sortClassesForColumn('last_activity_at')" v-on:click="toggleSort('last_activity_at')">Last Activity</th>
               <th></th>
           </tr>
       </thead>
@@ -75,6 +75,28 @@ Vue.component('topic-listing', {
     },
     buildPosterProfilePicSrc(poster) {
         return "/direct/profile/" + poster.userId + "/image";
+    },
+    toggleSort: function(column) {
+      if (this.order_by == column) {
+        if (this.order_direction === 'asc') {
+          this.order_direction = 'desc';
+        } else {
+          this.order_direction = 'asc';
+        }
+      } else {
+        this.order_by = column;
+        this.order_direction = 'asc';
+      }
+      this.loadTopics();
+    },
+    sortClassesForColumn: function(column) {
+      var classes = ['conversations-sortable'];
+      if (column === this.order_by) {
+        var sort_direction = this.order_direction.toLowerCase();
+        classes.push('conversations-sortable-active');
+        classes.push('conversations-sortable-active-'+sort_direction);
+      }
+      return ' ' + classes.join(' ');
     }
   },
   mounted: function() {

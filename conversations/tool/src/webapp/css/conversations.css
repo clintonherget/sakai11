@@ -13,6 +13,28 @@
     margin-left: 0;
 }
 
+.conversations-topics-listing .conversations-sortable {
+    cursor: pointer;
+    position: relative;
+}
+.conversations-topics-listing .conversations-sortable:hover {
+    background: #EEE;
+}
+
+.conversations-topics-listing .conversations-sortable:after {
+    content: '\f0dc';
+    font: normal normal normal 14px/1 FontAwesome;
+    float: right;
+}
+
+.conversations-topics-listing .conversations-sortable.conversations-sortable-active-desc:after {
+    content: '\f0dd';
+}
+
+.conversations-topics-listing .conversations-sortable.conversations-sortable-active-asc:after {
+    content: '\f0de';
+}
+
 /* Create workflow */
 .conversations-create-topic-modal .modal-content {
     background-color: #FAFAFA;
