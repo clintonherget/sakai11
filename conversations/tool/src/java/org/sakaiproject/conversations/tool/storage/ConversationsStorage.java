@@ -39,14 +39,44 @@ import org.sakaiproject.conversations.tool.models.Topic;
 @Slf4j
 public class ConversationsStorage {
 
-    public List<Topic> getAllTopics(final String siteId) {
+//    public List<Topic> getAllTopics(final String siteId) {
+//        return DB.transaction
+//            ("Find all topics for site",
+//                new DBAction<List<Topic>>() {
+//                    @Override
+//                    public List<Topic> call(DBConnection db) throws SQLException {
+//                        List<Topic> topics = new ArrayList<>();
+//                        try (DBResults results = db.run("SELECT * FROM conversations_topic WHERE site_id = ?")
+//                            .param(siteId)
+//                            .executeQuery()) {
+//                            for (ResultSet result : results) {
+//                                topics.add(
+//                                    new Topic(
+//                                        result.getString("uuid"),
+//                                        result.getString("title"),
+//                                        result.getString("type")));
+//                            }
+//
+//                            return topics;
+//                        }
+//                    }
+//                }
+//            );
+//    }
+
+    public List<Topic> getTopics(final String siteId, final Integer page, final Integer pageSize, final String orderBy, final String orderDirection) {
+        // FIXME pagination
         return DB.transaction
-            ("Find all topics for site",
+            ("Get topics on page for site",
                 new DBAction<List<Topic>>() {
                     @Override
                     public List<Topic> call(DBConnection db) throws SQLException {
                         List<Topic> topics = new ArrayList<>();
-                        try (DBResults results = db.run("SELECT * FROM conversations_topic WHERE site_id = ?")
+                        try (DBResults results = db.run(
+                                "SELECT *" +
+                                " FROM conversations_topic" +
+                                " WHERE site_id = ?" +
+                                " ORDER BY " + orderBy + " " + orderDirection.toUpperCase())
                             .param(siteId)
                             .executeQuery()) {
                             for (ResultSet result : results) {
@@ -54,7 +84,10 @@ public class ConversationsStorage {
                                     new Topic(
                                         result.getString("uuid"),
                                         result.getString("title"),
-                                        result.getString("type")));
+                                        result.getString("type"),
+                                        result.getString("created_by"),
+                                        result.getLong("created_at"),
+                                        result.getLong("last_activity_at")));
                             }
 
                             return topics;
@@ -62,6 +95,26 @@ public class ConversationsStorage {
                     }
                 }
             );
+    }
+
+    public Integer getTopicsCount(final String siteId) {
+        return DB.transaction
+                ("Count topics for site",
+                        new DBAction<Integer>() {
+                            @Override
+                            public Integer call(DBConnection db) throws SQLException {
+                                Integer count = 0;
+                                try (DBResults results = db.run("SELECT count(*) as count FROM conversations_topic WHERE site_id = ?")
+                                        .param(siteId)
+                                        .executeQuery()) {
+                                    for (ResultSet result : results) {
+                                        count = result.getInt("count");
+                                    }
+                                }
+                                return count;
+                            }
+                        }
+                );
     }
 
     public Map<String, List<Poster>> getPostersForTopics(final List<String> topicUuids) {
@@ -172,18 +225,25 @@ public class ConversationsStorage {
                 );
     }
 
-    public String createTopic(Topic topic, String siteId) {
+    public String createTopic(Topic topic, String siteId, String userId) {
         return DB.transaction("Create a topic for a site",
             new DBAction<String>() {
                 @Override
                 public String call(DBConnection db) throws SQLException {
                     String id = UUID.randomUUID().toString();
 
-                    db.run("INSERT INTO conversations_topic (uuid, title, type, site_id) VALUES (?, ?, ?, ?)")
+                    Long createdAt = Calendar.getInstance().getTime().getTime();
+
+                    db.run(
+                        "INSERT INTO conversations_topic (uuid, title, type, site_id, created_by, created_at, last_activity_at)" +
+                        " VALUES (?, ?, ?, ?, ?, ?, ?)")
                         .param(id)
                         .param(topic.getTitle())
                         .param(topic.getType())
                         .param(siteId)
+                        .param(userId)
+                        .param(createdAt)
+                        .param(createdAt)
                         .executeUpdate();
 
                     db.commit();
@@ -207,7 +267,10 @@ public class ConversationsStorage {
                             for (ResultSet result : results) {
                                 return Optional.of(new Topic(result.getString("uuid"),
                                                              result.getString("title"),
-                                                             result.getString("type")));
+                                                             result.getString("type"),
+                                                             result.getString("created_by"),
+                                                             result.getLong("created_at"),
+                                                             result.getLong("last_activity_at")));
                             }
 
                             return Optional.empty();

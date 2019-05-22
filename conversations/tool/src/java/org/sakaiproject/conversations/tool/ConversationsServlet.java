@@ -33,8 +33,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.servlet.ServletConfig;
@@ -42,16 +40,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.sakaiproject.authz.cover.SecurityService;
-import org.sakaiproject.component.cover.ComponentManager;
+
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
-import org.sakaiproject.tool.api.Session;
-import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
-import org.sakaiproject.user.cover.PreferencesService;
-import org.sakaiproject.user.cover.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,8 +123,10 @@ public class ConversationsServlet extends HttpServlet {
             return new CreateTopicHandler();
         } else if (path.equals("/topic")) {
             return new TopicHandler();
-        } else if (path.equals("/posts")) {
-            return new PostsHandler();
+        } else if (path.equals("/feed/posts")) {
+            return new PostsFeedHandler();
+        } else if (path.equals("/feed/topics")) {
+            return new TopicsFeedHandler();
         } else if (path.equals("/create-post")) {
             return new CreatePostHandler();
         } else if (path.equals("/mark-topic-read")) {

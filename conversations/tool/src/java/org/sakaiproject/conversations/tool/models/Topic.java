@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Locale;
 import lombok.Getter;
 import lombok.Setter;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 public class Topic implements Comparable<Topic> {
     private final String uuid;
@@ -44,13 +46,19 @@ public class Topic implements Comparable<Topic> {
     @Setter
     private Long postCount;
     @Getter
-    @Setter
-    private Long lastActivityTime;
+    private String createdBy;
+    @Getter
+    private Long createdAt;
+    @Getter
+    private Long lastActivityAt;
 
-    public Topic(String uuid, String title, String type) {
+    public Topic(String uuid, String title, String type, String createdBy, Long createdAt, Long lastActivityAt) {
         this.uuid = uuid;
         this.title = title;
         this.type = type;
+        this.createdBy = createdBy;
+        this.createdAt = createdAt;
+        this.lastActivityAt = lastActivityAt;
         this.postCount = 0L;
     }
 
@@ -94,5 +102,25 @@ public class Topic implements Comparable<Topic> {
         Errors errors = new Errors();
 
         return errors;
+    }
+
+    public JSONObject asJSONObject() {
+        JSONObject obj = new JSONObject();
+
+        obj.put("uuid", this.uuid);
+        obj.put("title", this.title);
+        obj.put("type", this.type);
+        obj.put("postCount", this.postCount);
+        obj.put("createdBy", this.createdBy);
+        obj.put("createdAt", this.createdAt);
+        obj.put("lastActivityAt", this.lastActivityAt);
+
+        JSONArray postersJSON = new JSONArray();
+        for (Poster poster : this.posters) {
+            postersJSON.add(poster.asJSONObject());
+        }
+        obj.put("posters", postersJSON);
+
+        return obj;
     }
 }

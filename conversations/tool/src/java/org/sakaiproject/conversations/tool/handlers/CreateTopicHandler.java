@@ -63,10 +63,11 @@ public class CreateTopicHandler implements Handler {
 
             Topic topic = new Topic(title, type);
 
-            String topicUuid = new ConversationsStorage().createTopic(topic, siteId);
+            User currentUser = UserDirectoryService.getCurrentUser();
+
+            String topicUuid = new ConversationsStorage().createTopic(topic, siteId, currentUser.getId());
 
             if (initialPost != null) {
-                User currentUser = UserDirectoryService.getCurrentUser();
                 Post post = new Post(initialPost, currentUser.getId());
 
                 String postUuid = new ConversationsStorage().createPost(post, topicUuid);

@@ -46,7 +46,7 @@ public class NewTopicHandler implements Handler {
 
             String siteId = (String)context.get("siteId");
 
-            context.put("topic", new Topic("", "", ""));
+            context.put("topic", new Topic("", ""));
             context.put("subpage", "topic_form");
 
         } catch (Exception e) {

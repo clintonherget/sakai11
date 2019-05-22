@@ -1,44 +1,7 @@
 <script src="/conversations-tool/js/create-topic.js"></script>
+<script src="/conversations-tool/js/topic-listing.js"></script>
 
 <div class="vue-enabled">
   <create-topic-wrapper baseurl="{{baseURL}}"></create-topic-wrapper>
-
-  <table class="table table-hover table-condensed">
-      <thead>
-          <tr>
-              <th class="col-sm-4">Topic Title</th>
-              <th class="col-sm-1">Topic Type</th>
-              <th class="col-sm-2">Posters</th>
-              <th class="col-sm-1">Available To</th>
-              <th class="col-sm-1">Posts</th>
-              <th class="col-sm-2">Last Activity</th>
-              <th></th>
-          </tr>
-      </thead>
-      <tbody>
-          {{#each topics}}
-              <tr>
-                <td>{{title}}</td>
-                <td>{{type}}</td>
-                <td>
-                  <!-- FIXME limit to first 6 and add plus number of others -->
-                  {{#each posters}}
-                    <div class="topic-poster-photo" title="{{firstName}} {{lastName}} last posted at {{latestPostAt}}"><img src="/direct/profile/{{userId}}/image" alt="Profile picture for {{netId}}" /></div>
-                  {{/each}}
-                </td>
-                <td>
-                  <!-- FIXME do permissions -->
-                  Entire Site
-                </td>
-                <td>
-                  {{postCount}}
-                </td>
-                <td><epoch-display-converter epoch="{{lastActivityTime}}"></epoch-display-converter></td>
-                <td>
-                  <a href="{{baseURL}}topic?uuid={{uuid}}">View</a>
-                </td>
-              </tr>
-          {{/each}}
-      </tbody>
-  </table>
+  <topic-listing baseurl="{{baseURL}}"></topic-listing>
 </div>

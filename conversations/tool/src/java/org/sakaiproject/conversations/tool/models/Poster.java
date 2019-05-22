@@ -25,6 +25,8 @@
 package org.sakaiproject.conversations.tool.models;
 
 import lombok.Getter;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 public class Poster {
     @Getter
@@ -44,5 +46,17 @@ public class Poster {
         this.firstName = firstName;
         this.lastName = lastName;
         this.latestPostAt = latestPostAt;
+    }
+
+    public JSONObject asJSONObject() {
+        JSONObject obj = new JSONObject();
+
+        obj.put("userId", this.userId);
+        obj.put("netId", this.netId);
+        obj.put("firstName", this.firstName);
+        obj.put("lastName", this.lastName);
+        obj.put("latestPostAt", this.latestPostAt);
+
+        return obj;
     }
 }

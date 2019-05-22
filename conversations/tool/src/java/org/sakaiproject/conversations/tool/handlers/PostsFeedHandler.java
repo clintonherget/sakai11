@@ -42,7 +42,7 @@ import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
 
-public class PostsHandler implements Handler {
+public class PostsFeedHandler implements Handler {
 
     private String redirectTo = null;
 

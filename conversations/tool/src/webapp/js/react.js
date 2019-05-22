@@ -168,7 +168,7 @@ Vue.component('react-topic', {
       this.firstUnreadPost = null;
 
       $.ajax({
-        url: this.baseurl+"posts",
+        url: this.baseurl+"feed/posts",
         type: 'get',
         data: { topicUuid: this.topic_uuid },
         dataType: 'json',

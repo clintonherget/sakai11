@@ -52,32 +52,36 @@ public class IndexHandler implements Handler {
 
             ConversationsStorage storage = new ConversationsStorage();
 
-            List<Topic> topics = storage.getAllTopics(siteId);
-            List<String> topicUuids = new ArrayList<String>();
-
-            for (Topic topic : topics) {
-                topicUuids.add(topic.getUuid());
-            }
-
-            Map<String, List<Poster>> topicPosters = storage.getPostersForTopics(topicUuids);
-            Map<String, Long> postCounts = storage.getPostCountsForTopics(topicUuids);
-            Map<String, Long> lastActivityTimes = storage.getLastActivityTimeForTopics(topicUuids);
-
-            for (Topic topic : topics) {
-                if (topicPosters.containsKey(topic.getUuid())) {
-                    topic.setPosters(topicPosters.get(topic.getUuid()));
-                }
-                if (postCounts.containsKey(topic.getUuid())) {
-                    if (postCounts.get(topic.getUuid()) > 1) {
-                        topic.setPostCount(postCounts.get(topic.getUuid()));
-                    }
-                }
-                if (lastActivityTimes.containsKey(topic.getUuid())) {
-                    topic.setLastActivityTime(lastActivityTimes.get(topic.getUuid()));
-                }
-            }
-
-            context.put("topics", topics);
+//            List<Topic> topics = storage.getAllTopics(siteId);
+//            List<String> topicUuids = new ArrayList<String>();
+//
+//            for (Topic topic : topics) {
+//                topicUuids.add(topic.getUuid());
+//            }
+//
+//            Map<String, List<Poster>> topicPosters = storage.getPostersForTopics(topicUuids);
+//            Map<String, Long> postCounts = storage.getPostCountsForTopics(topicUuids);
+//            Map<String, Long> lastActivityTimes = storage.getLastActivityTimeForTopics(topicUuids);
+//
+//            for (Topic topic : topics) {
+//                if (topicPosters.containsKey(topic.getUuid())) {
+//                    topic.setPosters(topicPosters.get(topic.getUuid()));
+//                }
+//                if (postCounts.containsKey(topic.getUuid())) {
+//                    if (postCounts.get(topic.getUuid()) > 1) {
+//                        topic.setPostCount(postCounts.get(topic.getUuid()));
+//                    }
+//                }
+//                if (lastActivityTimes.containsKey(topic.getUuid())) {
+//                    topic.setLastActivityTime(lastActivityTimes.get(topic.getUuid()));
+//                }
+//            }
+//
+//            context.put("topics", topics);
+            
+            context.put("page", 0);
+            context.put("order_by", "last_activity_at");
+            context.put("order_direction", "desc");
             context.put("subpage", "index");
 
         } catch (Exception e) {
