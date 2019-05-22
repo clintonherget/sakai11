@@ -39,7 +39,7 @@ public class Topic implements Comparable<Topic> {
     private final String title;
     @Getter
     @Setter
-    private List<String> posters;
+    private List<Poster> posters;
     @Getter
     @Setter
     private Long postCount;

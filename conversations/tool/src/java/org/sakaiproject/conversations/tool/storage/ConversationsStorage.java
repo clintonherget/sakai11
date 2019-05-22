@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import org.sakaiproject.conversations.tool.models.Post;
+import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
 
 @Slf4j
@@ -63,18 +64,25 @@ public class ConversationsStorage {
             );
     }
 
-    public Map<String, List<String>> getPostersForTopics(final List<String> topicUuids) {
-        // FIXME ORDER BY MOST RECENT CHANGES
+    public Map<String, List<Poster>> getPostersForTopics(final List<String> topicUuids) {
         return DB.transaction
                 ("Find all posters for topics",
-                        new DBAction<Map<String, List<String>>>() {
+                        new DBAction<Map<String, List<Poster>>>() {
                             @Override
-                            public Map<String, List<String>> call(DBConnection db) throws SQLException {
-                                Map<String, List<String>> postersByTopic = new HashMap();
+                            public Map<String, List<Poster>> call(DBConnection db) throws SQLException {
+                                Map<String, List<Poster>> postersByTopic = new HashMap();
 
                                 String placeholders = topicUuids.stream().map(_p -> "?").collect(Collectors.joining(","));
 
-                                try (PreparedStatement ps = db.prepareStatement("SELECT distinct posted_by, topic_uuid FROM conversations_post WHERE topic_uuid in (" + placeholders + ")")) {
+                                try (PreparedStatement ps = db.prepareStatement(
+                                     "SELECT poster.*, sakai_user_id_map.eid, nyu_t_users.fname, nyu_t_users.lname" +
+                                     " FROM (SELECT posted_by, topic_uuid, MAX(posted_at) AS latest_posted_at" +
+                                     "       FROM conversations_post" + 
+                                     "       WHERE topic_uuid in (" + placeholders + ")" +
+                                     "       GROUP BY posted_by, topic_uuid) poster" +
+                                     " INNER JOIN sakai_user_id_map ON sakai_user_id_map.user_id = poster.posted_by" + 
+                                     " LEFT JOIN nyu_t_users ON nyu_t_users.netid = sakai_user_id_map.eid" +
+                                     " ORDER BY poster.latest_posted_at DESC")) {
                                     Iterator<String> it = topicUuids.iterator();
                                     for (int i = 0; it.hasNext(); i++) {
                                         ps.setString(i + 1, it.next());
@@ -83,11 +91,14 @@ public class ConversationsStorage {
                                     try (ResultSet rs = ps.executeQuery()) {
                                         while (rs.next()) {
                                             String topicUuid = rs.getString("topic_uuid");
-                                            String postedBy = rs.getString("posted_by");
                                             if (!postersByTopic.containsKey(topicUuid)) {
-                                                postersByTopic.put(topicUuid, new ArrayList<String>());
+                                                postersByTopic.put(topicUuid, new ArrayList<Poster>());
                                             }
-                                            postersByTopic.get(topicUuid).add(postedBy);
+                                            postersByTopic.get(topicUuid).add(new Poster(rs.getString("posted_by"),
+                                                                                         rs.getString("eid"),
+                                                                                         rs.getString("fname"),
+                                                                                         rs.getString("lname"),
+                                                                                         rs.getLong("latest_posted_at")));
                                         }
                                     }
                                 }

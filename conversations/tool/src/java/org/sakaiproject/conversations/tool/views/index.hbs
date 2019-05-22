@@ -23,7 +23,7 @@
                 <td>
                   <!-- FIXME limit to first 6 and add plus number of others -->
                   {{#each posters}}
-                    <div class="topic-poster-photo"><img src="/direct/profile/{{this}}/image" alt="User with netid {{this}}" /></div>
+                    <div class="topic-poster-photo" title="{{firstName}} {{lastName}} last posted at {{latestPostAt}}"><img src="/direct/profile/{{userId}}/image" alt="Profile picture for {{netId}}" /></div>
                   {{/each}}
                 </td>
                 <td>

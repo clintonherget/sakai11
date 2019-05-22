@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 
@@ -58,7 +59,7 @@ public class IndexHandler implements Handler {
                 topicUuids.add(topic.getUuid());
             }
 
-            Map<String, List<String>> topicPosters = storage.getPostersForTopics(topicUuids);
+            Map<String, List<Poster>> topicPosters = storage.getPostersForTopics(topicUuids);
             Map<String, Long> postCounts = storage.getPostCountsForTopics(topicUuids);
             Map<String, Long> lastActivityTimes = storage.getLastActivityTimeForTopics(topicUuids);
 
