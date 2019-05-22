@@ -117,6 +117,29 @@ public class ConversationsStorage {
                 );
     }
 
+    public void touchTopicLastActivityAt(final String topicUuid) {
+        touchTopicLastActivityAt(topicUuid, Calendar.getInstance().getTime().getTime());
+    }
+
+    public void touchTopicLastActivityAt(final String topicUuid, final Long lastActivityAt) {
+        DB.transaction("Create a post for a topic",
+                new DBAction<Void>() {
+                    @Override
+                    public Void call(DBConnection db) throws SQLException {
+                        db.run("UPDATE conversations_topic SET last_activity_at = ?" +
+                               " WHERE uuid = ?")
+                                .param(lastActivityAt)
+                                .param(topicUuid)
+                                .executeUpdate();
+
+                        db.commit();
+
+                        return null;
+                    }
+                }
+        );
+    }
+
     public Map<String, List<Poster>> getPostersForTopics(final List<String> topicUuids) {
         return DB.transaction
                 ("Find all posters for topics",
@@ -317,7 +340,7 @@ public class ConversationsStorage {
         return createPost(post, topicUuid, null);
     }
 
-    public String createPost(Post post, String topicUuid, String parentPostUuid) {
+    public String createPost(final Post post, final String topicUuid, final String parentPostUuid) {
         return DB.transaction("Create a post for a topic",
             new DBAction<String>() {
                 @Override
@@ -333,6 +356,8 @@ public class ConversationsStorage {
                         .param(post.getPostedBy())
                         .param(postedAt)
                         .executeUpdate();
+
+                    touchTopicLastActivityAt(topicUuid, postedAt);
 
                     db.commit();
 
