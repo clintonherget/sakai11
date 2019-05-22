@@ -19,9 +19,14 @@ Vue.component('topic-listing', {
             <td>{{capitalize(topic.type)}}</td>
             <td>
               <!-- FIXME limit to first 6 and add plus number of others -->
-              <div v-for="poster in topic.posters" class="topic-poster-photo" :title="buildPosterTooltip(poster)">
+              <div v-for="poster in postersToDisplay(topic.posters)" class="topic-poster-photo" :title="buildPosterTooltip(poster)">
                 <img :src="buildPosterProfilePicSrc(poster)" :alt="buildPosterProfilePicAlt(poster)" />
               </div>
+              <template v-if="topic.posters.length > maxPostersToDisplay">
+                <div class="topic-poster-photo topic-poster-others" :title="'Plus ' + (topic.posters.length - maxPostersToDisplay) + ' other posters'">
+                  +{{topic.posters.length - maxPostersToDisplay}}
+                </div>
+              </template>
             </td>
             <td>
               <!-- FIXME do permissions -->
@@ -39,12 +44,13 @@ Vue.component('topic-listing', {
   </table>
 </div>
 `,
-  data: function () {
+  data: function() {
     return {
       topics: [],
       page: this.initial_page,
       order_by: this.initial_order_by,
       order_direction: this.initial_order_direction,
+      maxPostersToDisplay: 5,
     }
   },
   props: ['baseurl', 'initial_order_by', 'initial_order_direction', 'initial_page'],
@@ -97,6 +103,13 @@ Vue.component('topic-listing', {
         classes.push('conversations-sortable-active-'+sort_direction);
       }
       return ' ' + classes.join(' ');
+    },
+    postersToDisplay: function(posters) {
+      if (posters.length < this.maxPostersToDisplay) {
+        return posters;
+      } else {
+        return posters.slice(0, this.maxPostersToDisplay);
+      }
     }
   },
   mounted: function() {

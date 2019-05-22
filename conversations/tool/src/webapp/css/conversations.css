@@ -6,11 +6,19 @@
     overflow: hidden;
     border: 1px solid #336DBE;
     display: inline-block;
-    margin-left: -20px;
+    margin-left: -10px;
+    background: #FFF;
+    box-shadow: 0 0 0 2px #FFF;
 }
 
 .topic-poster-photo:first-child {
     margin-left: 0;
+}
+
+.topic-poster-photo.topic-poster-others {
+    line-height: 28px;
+    text-align: center;
+    background: #EEE;
 }
 
 .conversations-topics-listing .conversations-sortable {
