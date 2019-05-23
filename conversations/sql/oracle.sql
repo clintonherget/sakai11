@@ -3,13 +3,13 @@ DROP TABLE conversations_post;
 DROP TABLE conversations_topic_event;
 
 CREATE TABLE conversations_topic (
-    uuid varchar2(255) PRIMARY KEY, 
-    site_id varchar2(255) NOT NULL, 
+    uuid varchar2(255) PRIMARY KEY,
+    site_id varchar2(255) NOT NULL,
     title varchar2(255) NOT NULL,
     type varchar2(255) NOT NULL,
     created_by varchar2(255) NOT NULL,
     created_at NUMBER NOT NULL,
-    last_activity_at NUMBER NOT NULL,
+    last_activity_at NUMBER NOT NULL
 );
 
 CREATE TABLE conversations_post (
