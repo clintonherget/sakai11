@@ -111,7 +111,7 @@ Vue.component('react-topic', {
     </div>
     <div class="conversations-posts">
       <template v-for="post in posts">
-        <template v-if="isFirstUnreadPost(post)">
+        <template v-if="post.isFirstUnreadPost">
           <div class="conversations-posts-unread-line">
             <span class="badge badge-primary">NEW</span>
           </div>
@@ -178,9 +178,12 @@ Vue.component('react-topic', {
             this.posts = json;
 
             // FIXME IE support?
-            this.firstUnreadPost = this.posts.find(function(post) {
+            var firstUnreadPost = this.posts.find(function(post) {
               return post.unread;
             });
+            if (firstUnreadPost) {
+                firstUnreadPost.isFirstUnreadPost = true;
+            }
 
           } else {
             this.initialPost = null;
@@ -204,13 +207,6 @@ Vue.component('react-topic', {
           }
         }
       });
-    },
-    isFirstUnreadPost: function(post) {
-      if (post == this.firstUnreadPost) {
-        return true;
-      }
-
-      return false;
     },
     postCssClasses: function(post) {
         var classes = ['conversations-post'];
@@ -245,7 +241,10 @@ Vue.component('react-topic', {
         var $post = $(this.$el).find('[data-post-uuid='+this.postToFocusAndHighlight+']');
         if ($post.length > 0) {
           this.postToFocusAndHighlight = null;
-          $post[0].scrollIntoView();
+          $post[0].scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
           $post.addClass('conversations-post-highlight');
           setTimeout(() => {
               $post.removeClass('conversations-post-highlight');
@@ -256,6 +255,9 @@ Vue.component('react-topic', {
   },
   mounted: function() {
     this.refreshPosts();
+    setInterval(() => {
+      this.refreshPosts();
+    }, 5*1000);
     this.resetMarkTopicReadEvents();
     this.initRichTextareas();
   },

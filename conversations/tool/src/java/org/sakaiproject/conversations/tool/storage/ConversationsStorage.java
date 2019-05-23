@@ -72,12 +72,27 @@ public class ConversationsStorage {
                     @Override
                     public List<Topic> call(DBConnection db) throws SQLException {
                         List<Topic> topics = new ArrayList<>();
+
+                        final int minRowNum = pageSize * page + 1;
+                        final int maxRowNum = pageSize * page + pageSize;
+
+                        // SELECT uuid from (SELECT uuid, rownum rnk FROM (SELECT uuid FROM conversations_topic WHERE site_id = 'ded0dc82-d306-43ce-bff2-d21aefba9fec' ORDER BY last_activity_at desc)) WHERE rnk between 1 and 5)
                         try (DBResults results = db.run(
                                 "SELECT *" +
                                 " FROM conversations_topic" +
-                                " WHERE site_id = ?" +
+                                " WHERE uuid in (" +
+                                "   SELECT uuid FROM (" +
+                                "     SELECT uuid, rownum rnk FROM (" +
+                                "       SELECT uuid FROM conversations_topic" +
+                                "       WHERE site_id = ?" +
+                                "       ORDER BY " + orderBy + " " + orderDirection.toUpperCase() +
+                                "     )" + 
+                                "   ) WHERE rnk BETWEEN ? AND ?" +
+                                " )" +
                                 " ORDER BY " + orderBy + " " + orderDirection.toUpperCase())
                             .param(siteId)
+                            .param(String.valueOf(minRowNum))
+                            .param(String.valueOf(maxRowNum))
                             .executeQuery()) {
                             for (ResultSet result : results) {
                                 topics.add(

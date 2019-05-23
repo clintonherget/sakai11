@@ -80,6 +80,7 @@ public class IndexHandler implements Handler {
 //            context.put("topics", topics);
             
             context.put("page", 0);
+            context.put("pageSize", TopicsFeedHandler.PAGE_SIZE);
             context.put("order_by", "last_activity_at");
             context.put("order_direction", "desc");
             context.put("subpage", "index");

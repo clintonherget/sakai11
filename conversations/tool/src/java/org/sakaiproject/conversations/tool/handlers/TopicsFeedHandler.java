@@ -40,7 +40,7 @@ import java.util.*;
 
 public class TopicsFeedHandler implements Handler {
 
-    private static Integer PAGE_SIZE = 5;
+    public static Integer PAGE_SIZE = 20;
 
     private String redirectTo = null;
 
@@ -50,6 +50,8 @@ public class TopicsFeedHandler implements Handler {
             RequestParams p = new RequestParams(request);
 
             Integer page = Integer.valueOf(p.getString("page", "0"));
+
+            // FIXME WHITELIST ORDER_BY/DIRECTION
             String orderBy = p.getString("order_by", "last_activity_at");
             String orderDirection = p.getString("order_direction", "desc");
 

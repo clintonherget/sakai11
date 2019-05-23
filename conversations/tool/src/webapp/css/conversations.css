@@ -64,6 +64,10 @@
 }
 
 /* React Topic Type */
+.conversations-topic.react {
+    max-width: 900px;
+}
+
 .conversations-post {
     margin: 10px 0;
     position: relative;

@@ -42,18 +42,22 @@ Vue.component('topic-listing', {
           </tr>
       </tbody>
   </table>
+  <template v-if="topics.length > 0">
+      <listing-pagination :baseurl="baseurl"></listing-pagination>
+  </template>
 </div>
 `,
   data: function() {
     return {
       topics: [],
-      page: this.initial_page,
+        page: parseInt(this.initial_page),
       order_by: this.initial_order_by,
       order_direction: this.initial_order_direction,
       maxPostersToDisplay: 5,
+      count: 0,
     }
   },
-  props: ['baseurl', 'initial_order_by', 'initial_order_direction', 'initial_page'],
+  props: ['baseurl', 'initial_order_by', 'initial_order_direction', 'initial_page', "page_size"],
   methods: {
     loadTopics: function() {
       $.ajax({
@@ -83,6 +87,7 @@ Vue.component('topic-listing', {
         return "/direct/profile/" + poster.userId + "/image";
     },
     toggleSort: function(column) {
+      this.page = 0;
       if (this.order_by == column) {
         if (this.order_direction === 'asc') {
           this.order_direction = 'desc';
@@ -115,4 +120,79 @@ Vue.component('topic-listing', {
   mounted: function() {
     this.loadTopics();
   }
+});
+
+
+Vue.component('listing-pagination', {
+  template: `
+<div class="conversations-topics-listing-pagination">
+    <template v-if="maxPage() > 0">
+      <nav aria-label="Page navigation" class="text-center">
+        <ul class="pagination">
+          <li v-bind:class="{ disabled: currentPage() == 0 }">
+            <a @click="currentPage() > 0 ? showPage(currentPage() - 1) : null" aria-label="Previous" :href="currentPage() > 0 ? 'javascript:void(0);' : null">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <li v-for="pageIndex in pagesToDisplay()" v-bind:class="{ active: currentPage() == pageIndex }">
+            <a v-on:click="showPage(pageIndex)" href="javascript:void(0);">{{pageIndex + 1}}</a>
+          </li>
+          <li v-bind:class="{ disabled: currentPage() == maxPage() }">
+            <a @click="currentPage() < maxPage() ? showPage(currentPage() + 1) : null" aria-label="Next" :href="currentPage() < maxPage() ? 'javascript:void(0);' : null">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </template>
+</div>
+`,
+  data: function() {
+    return {
+      number_of_pages: 10,
+    }
+  },
+  props: [],
+  methods: {
+      currentPage: function() {
+          return this.$parent.page;
+      },
+      firstPage: function() {
+          return Math.max(this.$parent.page - this.number_of_pages / 2, 0);
+      },
+      lastPage: function() {
+          return Math.min(this.firstPage() + this.number_of_pages, this.maxPage());
+      },
+      maxPage: function() {
+          return parseInt(this.$parent.count / this.$parent.page_size);
+      },
+      pagesToDisplay: function() {
+        var result = [];
+        for (var i = this.firstPage(); i <= this.lastPage(); i++) {
+          result.push(i);
+        }
+        return result;
+      },
+      showPage: function(pageToShow) {
+          this.$parent.page = pageToShow;
+          this.$parent.loadTopics();
+      },
+      debug: function() {
+          console.log("--- pagination");
+          console.log("initial_page:" + this.$parent.initial_page);
+          console.log("page:" + this.$parent.page);
+          console.log("page_size:" + this.$parent.page_size);
+          console.log("number_of_results:" + this.$parent.count);
+          console.log("firstPage:" + this.firstPage());
+          console.log("lastPage:" + this.lastPage());
+          console.log("maxPage:" + this.maxPage());
+          console.log("pagesToDisplay:" + this.pagesToDisplay());
+      },
+  },
+    updated: function() {
+        this.debug();
+    },
+    mounted: function() {
+        this.debug();
+    }
 });
