@@ -164,7 +164,8 @@ Vue.component('react-topic', {
         return "";
       }
     },
-    refreshPosts: function() {
+    refreshPosts: function(opts) {
+      if (!opts) { opts = {}; }
       this.firstUnreadPost = null;
 
       $.ajax({
@@ -175,7 +176,7 @@ Vue.component('react-topic', {
         success: (json) => {
           if (json.length > 0) {
             this.initialPost = json.shift();
-            this.posts = json;
+            this.posts = opts.fullRefresh ? json : this.mergePosts(json, this.posts);
 
             // FIXME IE support?
             var firstUnreadPost = this.posts.find(function(post) {
@@ -192,6 +193,21 @@ Vue.component('react-topic', {
         }
       });
     },
+    mergePosts: function(newPosts, origPosts) {
+      // We want to preserve the unread statuses that were displayed at the point the page loaded.
+      var unreadStatuses = {};
+      for (const post of origPosts) {
+        unreadStatuses[post.uuid] = post.unread
+      }
+
+      for (var post of newPosts) {
+        if (unreadStatuses[post.uuid]) {
+          post.unread = true;
+        }
+      }
+
+      return newPosts;
+    },
     formatEpochTime: function(epoch) {
       return new Date(epoch).toLocaleString();
     },
@@ -203,7 +219,7 @@ Vue.component('react-topic', {
         dataType: 'json',
         success: (json) => {
           if (reloadPosts) {
-            this.refreshPosts();
+            this.refreshPosts({fullRefresh: true});
           }
         }
       });
@@ -216,9 +232,25 @@ Vue.component('react-topic', {
         return classes.join(' ');
     },
     resetMarkTopicReadEvents: function() {
-      // FIXME do something smRTr to determine when a topic has been read
-      $( window ).off('unload').on('unload', () => {
+      var autoMarkedAsRead = false;
+      var markAsRead = () => {
+        autoMarkedAsRead = true;
         this.markTopicRead(false);
+      };
+
+      // If we're visible right now, mark as read immediately
+      if (!document.hidden) {
+        setTimeout(markAsRead, 0);
+      }
+
+      // Mark as read when the page unloads
+      $(window).off('unload').on('unload', markAsRead);
+
+      // Or when the tab becomes visible
+      $(document).on('visibilitychange', () => {
+        if (!document.hidden) {
+          markAsRead();
+        }
       });
     },
     initRichTextareas: function() {
