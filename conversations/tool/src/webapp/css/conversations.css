@@ -223,6 +223,51 @@ body.dark-mode .conversations-post-content {
   height: 30em !important;
 }
 
+/* Timeline */
+.conversations-timeline ul:before {
+    content: ' ';
+    width: 1px;
+    height: 100%;
+    position: absolute;
+    left: 20px;
+    background-color: #AAA;
+}
+.conversations-timeline ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    position: relative;
+}
+.conversations-timeline li {
+    height: 50px;
+    line-height: 50px;
+    padding-left: 40px;
+    cursor: pointer;
+}
+.conversations-timeline .tick-line:before {
+    height: 1px;
+    content: ' ';
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    background-color: #AAA;
+}
+.conversations-timeline .tick-line {
+    float: left;
+    height: 100%;
+    position: relative;
+}
+.conversations-timeline .tick-label {
+    display: none;
+    padding-left: 10px;
+    color: #999;
+}
+
+.conversations-timeline li:hover .tick-label {
+    display: inline-block;
+}
+
 /* CKEditor */
 /* Fix for bootstrap modals covering CKEditor balloon toolbar */
 .ck.ck-balloon-panel {

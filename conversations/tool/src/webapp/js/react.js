@@ -89,7 +89,7 @@ Vue.component('react-topic', {
   <div class="conversations-topic react">
     <div class="conversations-topic-main">
         <template v-if="initialPost">
-          <div class="conversations-post conversations-initial-post">
+          <div class="conversations-post conversations-initial-post" :data-post-uuid="initialPost.uuid">
             <span v-if="initialPost.unread" class="badge badge-primary">NEW</span>
             <div class="conversations-post-content">
               <h2>{{topic_title}}</h2>
@@ -128,7 +128,7 @@ Vue.component('react-topic', {
         </div>
     </div>
     <div class="conversations-topic-sidebar">
-        Hello, I'm your friendly sidebar.
+        <timeline :initialPost="initialPost" :posts="posts"></timeline>
     </div>
   </div>
 `,
@@ -280,19 +280,16 @@ Vue.component('react-topic', {
       });
     },
     focusAndHighlightPost: function(postUuid) {
-      if (this.postToFocusAndHighlight) {
-        var $post = $(this.$el).find('[data-post-uuid='+this.postToFocusAndHighlight+']');
-        if ($post.length > 0) {
-          this.postToFocusAndHighlight = null;
-          $post[0].scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-          $post.addClass('conversations-post-highlight');
-          setTimeout(() => {
-              $post.removeClass('conversations-post-highlight');
-          }, 1000);
-        }
+      var $post = $(this.$el).find('[data-post-uuid='+postUuid+']');
+      if ($post.length > 0) {
+        $post[0].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        $post.addClass('conversations-post-highlight');
+        setTimeout(() => {
+            $post.removeClass('conversations-post-highlight');
+        }, 1000);
       }
     },
   },
@@ -307,7 +304,10 @@ Vue.component('react-topic', {
   updated: function() {
     // If we added a new rich text area, enrich it!
     this.$nextTick(function () {
-      this.focusAndHighlightPost();
+      if (this.postToFocusAndHighlight) {
+        this.focusAndHighlightPost(this.postToFocusAndHighlight);
+        this.postToFocusAndHighlight = null;
+      }
     });
   }
 });
