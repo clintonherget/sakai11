@@ -24,6 +24,8 @@
 
 package org.sakaiproject.conversations.tool.handlers;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +72,15 @@ public class CreatePostHandler implements Handler {
                 throw new RuntimeException("topicUuid and content required");
             }
 
+            List<String> attachmentKeys = Collections.emptyList();
+            if (request.getParameterValues("attachmentKeys[]") != null) {
+                attachmentKeys = Arrays.asList(request.getParameterValues("attachmentKeys[]"));
+            }
+
             User currentUser = UserDirectoryService.getCurrentUser();
             Post post = new Post(content, currentUser.getId());
 
-            String postUuid = new ConversationsStorage().createPost(post, topicUuid, parentPostUuid);
+            String postUuid = new ConversationsStorage().createPost(post, topicUuid, parentPostUuid, attachmentKeys);
 
             JSONObject result = new JSONObject();
             result.put("status", "success");

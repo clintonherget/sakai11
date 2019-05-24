@@ -26,6 +26,7 @@ package org.sakaiproject.conversations.tool.storage;
 
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import java.nio.file.Paths;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 
@@ -34,8 +35,11 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+
+import org.sakaiproject.conversations.tool.models.Attachment;
 
 @Slf4j
 public class FileStore {
@@ -43,50 +47,66 @@ public class FileStore {
     public class Handle {
         public InputStream inputStream;
         public String mimeType;
+        public String fileName;
+        public boolean attachment;
     }
 
     public String storeInline(byte[] content, String filename, String mimeType) throws Exception {
+        return store(new ByteArrayInputStream(content), filename, mimeType, "inline");
+    }
+
+    public String storeAttachment(InputStream content, String filename, String mimeType) throws Exception {
+        return store(content, filename, mimeType, "attachment");
+    }
+
+    private String store(InputStream content, String filename, String mimeType, String role) throws Exception {
         String basedir = ServerConfigurationService.getString("conversation-tool.storage", "/tmp/conversation");
 
         String key = UUID.randomUUID().toString();
 
-        // FIXME: Need to think more about this.  Should store metadata in the
-        // DB for starters.
         String subdir = key.split("-")[0];
 
         Paths.get(basedir, subdir).toFile().mkdirs();
 
         File output = Paths.get(basedir, subdir, key).toFile();
 
+        byte[] buf = new byte[4096];
+        int len;
+
         try (FileOutputStream out = new FileOutputStream(output)) {
-            out.write(content);
+            while ((len = content.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
         }
 
-        File metadata = Paths.get(basedir, subdir, key + ".metadata").toFile();
-
-        try (FileOutputStream out = new FileOutputStream(metadata)) {
-            out.write((mimeType + "\n").getBytes("UTF-8"));
-            out.write((filename + "\n").getBytes("UTF-8"));
-        }
+        storeMetadata(key, mimeType, filename, role);
 
         return key;
     }
 
-    public Handle read(String key) throws Exception {
+    private void storeMetadata(String key, String mimeType, String fileName, String role) {
+        new ConversationsStorage().storeFileMetadata(key, mimeType, fileName, role);
+    }
+
+    public Optional<Handle> read(String key) throws Exception {
         String basedir = ServerConfigurationService.getString("conversation-tool.storage", "/tmp/conversation");
         String subdir = key.split("-")[0];
 
         File dataFile = Paths.get(basedir, subdir, key).toFile();
-        File metadataFile = Paths.get(basedir, subdir, key + ".metadata").toFile();
 
         Handle result = new Handle();
 
-        try (BufferedReader metadata = new BufferedReader(new FileReader(metadataFile))) {
-            result.mimeType = metadata.readLine().trim();
+        Optional<Attachment> attachment = new ConversationsStorage().readFileMetadata(key);
+
+        if (attachment.isPresent()) {
+            result.mimeType = attachment.get().mimeType;
+            result.fileName = attachment.get().fileName;
+            result.attachment = "attachment".equals(attachment.get().role);
+            result.inputStream = new FileInputStream(dataFile);
+
+            return Optional.of(result);
+        } else {
+            return Optional.empty();
         }
-
-        result.inputStream = new FileInputStream(dataFile);
-
-        return result;
     }
 }

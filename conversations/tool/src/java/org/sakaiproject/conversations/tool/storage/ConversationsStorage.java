@@ -30,11 +30,10 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 import lombok.extern.slf4j.Slf4j;
 
-import org.sakaiproject.conversations.tool.models.Post;
-import org.sakaiproject.conversations.tool.models.Poster;
-import org.sakaiproject.conversations.tool.models.Topic;
+import org.sakaiproject.conversations.tool.models.*;
 
 @Slf4j
 public class ConversationsStorage {
@@ -63,6 +62,54 @@ public class ConversationsStorage {
 //                }
 //            );
 //    }
+
+    public void storeFileMetadata(final String key, final String mimeType, final String fileName, final String role) {
+        DB.transaction("Store file metadata",
+                       new DBAction<Void>() {
+                           @Override
+                           public Void call(DBConnection db) throws SQLException {
+                               String id = UUID.randomUUID().toString();
+
+                               Long createdAt = Calendar.getInstance().getTime().getTime();
+
+                               db.run(
+                                      "INSERT INTO conversations_files (uuid, mime_type, filename, role)" +
+                                      " VALUES (?, ?, ?, ?)")
+                                   .param(key)
+                                   .param(mimeType)
+                                   .param(fileName)
+                                   .param(role)
+                                   .executeUpdate();
+
+                               db.commit();
+
+                               return null;
+                           }
+                       });
+
+    }
+
+    public Optional<Attachment> readFileMetadata(final String key) {
+        return
+            DB.transaction("Retrieve file metadata",
+                           new DBAction<Optional<Attachment>>() {
+                               @Override
+                               public Optional<Attachment> call(DBConnection db) throws SQLException {
+                                   try (DBResults results = db.run("select * from conversations_files where uuid = ?")
+                                        .param(key)
+                                        .executeQuery()) {
+                                       for (ResultSet result : results) {
+                                           return Optional.of(new Attachment(key,
+                                                                             result.getString("mime_type"),
+                                                                             result.getString("filename"),
+                                                                             result.getString("role")));
+                                       }
+                                   }
+
+                                   return Optional.empty();
+                               }
+                           });
+    }
 
     public List<Topic> getTopics(final String siteId, final Integer page, final Integer pageSize, final String orderBy, final String orderDirection) {
         // FIXME pagination
@@ -318,6 +365,66 @@ public class ConversationsStorage {
             );
     }
 
+    private void loadAttachments(List<Post> posts) {
+        if (posts.isEmpty()) {
+            return;
+        }
+
+        DB.transaction
+            ("Fetch attachments for posts",
+                new DBAction<Void>() {
+                    @Override
+                    public Void call(DBConnection db) throws SQLException {
+                        Map<String, Post> postMap = new HashMap<>();
+                        for (Post p : posts) {
+                            try {
+                                postMap.put(p.getUuid(), p);
+                            } catch (MissingUuidException e) {}
+                        }
+
+                        int pageSize = 200;
+                        List<String> workSet = new ArrayList<>(pageSize);
+                        for (int start = 0; start < posts.size();) {
+                            int end = Math.min(start + pageSize, posts.size());
+                            workSet.clear();
+
+                            for (int i = start; i < end; i++) {
+                                try {
+                                    workSet.add(posts.get(i).getUuid());
+                                } catch (MissingUuidException e) {}
+                            }
+
+                            String placeholders = workSet.stream().map(_p -> "?").collect(Collectors.joining(","));
+
+                            DBPreparedStatement ps = db.run("SELECT a.post_uuid, f.*" +
+                                                            " FROM conversations_attachments a " +
+                                                            " INNER JOIN conversations_files f on f.uuid = a.attachment_key" +
+                                                            " WHERE a.post_uuid in (" + placeholders + ")");
+
+                            for (String postUuid : workSet) {
+                                ps.param(postUuid);
+                            }
+
+                            try (DBResults results = ps.executeQuery()) {
+                                for (ResultSet result : results) {
+                                    Post p = postMap.get(result.getString("post_uuid"));
+
+                                    p.addAttachment(new Attachment(result.getString("uuid"),
+                                                                   result.getString("mime_type"),
+                                                                   result.getString("filename"),
+                                                                   result.getString("role")));
+                                }
+                            }
+
+                            start = end;
+                        }
+
+                        return null;
+                    }
+                }
+             );
+    }
+
     public List<Post> getPosts(final String topicUuid) {
         return DB.transaction
             ("Find all posts for topic",
@@ -344,6 +451,8 @@ public class ConversationsStorage {
                                         result.getString("lname")));
                             }
 
+                            loadAttachments(posts);
+
                             return posts;
                         }
                     }
@@ -352,10 +461,10 @@ public class ConversationsStorage {
     }
 
     public String createPost(Post post, String topicUuid) {
-        return createPost(post, topicUuid, null);
+        return createPost(post, topicUuid, null, Collections.emptyList());
     }
 
-    public String createPost(final Post post, final String topicUuid, final String parentPostUuid) {
+    public String createPost(final Post post, final String topicUuid, final String parentPostUuid, final List<String> attachmentKeys) {
         return DB.transaction("Create a post for a topic",
             new DBAction<String>() {
                 @Override
@@ -373,6 +482,14 @@ public class ConversationsStorage {
                         .executeUpdate();
 
                     touchTopicLastActivityAt(topicUuid, postedAt);
+
+                    for (String attachmentKey : attachmentKeys) {
+                        db.run("INSERT INTO conversations_attachments (uuid, post_uuid, attachment_key) VALUES (?, ?, ?)")
+                            .param(UUID.randomUUID().toString())
+                            .param(id)
+                            .param(attachmentKey)
+                            .executeUpdate();
+                    }
 
                     db.commit();
 

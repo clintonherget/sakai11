@@ -7,8 +7,6 @@
         }
 
         upload() {
-            console.log("BOOM UPLOAD");
-
             return this.loader.file.then(file =>
                 new Promise((resolve, reject) => {
                     this.handleUpload(file, resolve, reject);
@@ -16,7 +14,6 @@
         }
 
         abort() {
-            console.log("BAILING OUT");
         }
 
         handleUpload(file, resolve, reject) {

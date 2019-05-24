@@ -35,9 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
-import org.sakaiproject.conversations.tool.models.MissingUuidException;
-import org.sakaiproject.conversations.tool.models.Post;
-import org.sakaiproject.conversations.tool.models.Topic;
+import org.sakaiproject.conversations.tool.models.*;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
@@ -111,6 +109,12 @@ public class PostsFeedHandler implements Handler {
             comments.add(postAsJSON(comment));
         }
         obj.put("comments", comments);
+
+        JSONArray attachments = new JSONArray();
+        for (Attachment attachment : post.getAttachments()) {
+            attachments.add(attachment.asJSONObject());
+        }
+        obj.put("attachments", attachments);
 
         return obj;
     }

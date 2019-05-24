@@ -28,3 +28,17 @@ CREATE TABLE conversations_topic_event (
     event_name varchar2(255) NOT NULL,
     event_time NUMBER NOT NULL
 );
+
+CREATE TABLE conversations_files (
+    uuid varchar2(255) PRIMARY KEY,
+    mime_type varchar2(255) NOT NULL,
+    filename varchar2(255) NOT NULL,
+    role varchar2(32) NOT NULL
+);
+
+CREATE TABLE conversations_attachments (
+    uuid varchar2(255) PRIMARY KEY,
+    post_uuid varchar2(255),
+    topic_uuid varchar2(255),
+    attachment_key varchar2(255) NOT NULL
+);

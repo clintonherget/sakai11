@@ -268,8 +268,19 @@ body.dark-mode .conversations-post-content {
     display: inline-block;
 }
 
+.conversations-attachment-list, .conversations-attachment-list a {
+    list-style: none;
+    margin-left: 0;
+    padding-left: 0;
+}
+
 /* CKEditor */
 /* Fix for bootstrap modals covering CKEditor balloon toolbar */
 .ck.ck-balloon-panel {
     z-index: 2000 !important;
+}
+
+.conversations-minimal-btn {
+    border: none !important;
+    background-color: inherit !important;
 }

@@ -9,6 +9,11 @@ Vue.component('react-post', {
   <div class="conversations-post-content">
     <span v-html="post.content"></span>
     <div class="conversations-post-comments">
+      <ul class="conversations-attachment-list">
+        <li v-for="a in post.attachments">
+          <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'></i>&nbsp;<a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
+        </li>
+      </ul>
       <template v-if="showCommentForm">
         <div class="conversations-comment-form">
           <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
@@ -110,10 +115,23 @@ Vue.component('react-topic', {
             </div>
             <div>
               <hr>
-              <button><i class="fa fa-paperclip"></i>&nbsp;Attach files</button>
+              <button v-on:click="newAttachment()"
+                      class="conversations-minimal-btn">
+                <i class="fa fa-paperclip"></i>&nbsp;Add attachment
+              </button>
+              <ul class="conversations-attachment-list">
+                <li v-for="a in attachments">
+                  <i class="fa" v-bind:class='a.icon'></i>&nbsp;<a :href='a.url'>{{a.name}}</a>
+                </li>
+              </ul>
             </div>
           </div>
-          <button class="button" v-on:click="post()">Post</button>
+          <template v-if="postAllowed">
+            <button class="button" v-on:click="post()">Post</button>
+          </template>
+          <template v-else>
+            <button class="button" disabled>Uploading...</button>
+          </template>
           <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
         </div>
         <div class="conversations-posts">
@@ -135,25 +153,78 @@ Vue.component('react-topic', {
   data: function () {
     return {
       posts: [],
+      postAllowed: true,
       initialPost: null,
       firstUnreadPost: null,
       editor: null,
       postToFocusAndHighlight: null,
       editorFocused: false,
+      attachments: [],
+      mimeToIcon: {
+        'application/pdf': 'fa-file-pdf-o',
+        'text/pdf': 'fa-file-pdf-o',
+
+        'application/msword': 'fa-file-word-o',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'fa-file-word-o',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.template': 'fa-file-word-o',
+
+        'application/vnd.ms-powerpoint': 'fa-file-powerpoint-o',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'fa-file-powerpoint-o',
+        'application/vnd.openxmlformats-officedocument.presentationml.template': 'fa-file-powerpoint-o',
+        'application/vnd.openxmlformats-officedocument.presentationml.slideshow': 'fa-file-powerpoint-o',
+
+        'application/vnd.ms-excel': 'fa-file-excel-o',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'fa-file-excel-o',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.template': 'fa-file-excel-o',
+
+        'image/jpeg': 'fa-file-image-o',
+        'image/png': 'fa-file-image-o',
+        'image/gif': 'fa-file-image-o',
+        'image/tiff': 'fa-file-image-o',
+        'image/bmp': 'fa-file-image-o',
+
+        'application/zip': 'fa-file-archive-o',
+        'application/x-rar-compressed': 'fa-file-archive-o',
+
+        'text/plain': 'fa-file-text-o',
+
+        'video/mp4': 'fa-file-video-o',
+        'video/x-flv': 'fa-file-video-o',
+        'video/quicktime': 'fa-file-video-o',
+        'video/mpeg': 'fa-file-video-o',
+        'video/ogg': 'fa-file-video-o',
+
+        'audio/mpeg': 'fa-file-audio-o',
+        'audio/ogg': 'fa-file-audio-o',
+        'audio/midi': 'fa-file-audio-o',
+        'audio/flac': 'fa-file-audio-o',
+        'audio/aac': 'fa-file-audio-o',
+      },
     }
   },
   props: ['baseurl', 'topic_uuid', 'topic_title', 'current_user_id'],
   methods: {
     post: function() {
-      if (this.newPostContent().trim() == "") {
-        this.clearEditor();
-        return;
+      var content = this.newPostContent().trim();
+
+      if (content === "") {
+        if (this.attachments.length === 0) {
+          this.clearEditor();
+          return;
+        } else {
+          // Blank content is OK if we have attachments.  Store a placeholder.
+          content = "&nbsp;";
+        }
       }
 
       $.ajax({
         url: this.baseurl+"create-post",
         type: 'post',
-        data: { topicUuid: this.topic_uuid, content: this.newPostContent() },
+        data: {
+          topicUuid: this.topic_uuid,
+          content: content,
+          attachmentKeys: this.attachments.map((attachment) => { return attachment.key }),
+        },
         dataType: 'json',
         success: (json) => {
           this.clearEditor();
@@ -162,8 +233,56 @@ Vue.component('react-topic', {
         }
       });
     },
+    iconForMimeType: function (mimeType) {
+      return this.mimeToIcon[mimeType] || 'fa-file';
+    },
+    urlForAttachmentKey: function (key) {
+      return this.baseurl + "file-view?mode=view&key=" + key;
+    },
+    newAttachment: function () {
+      var self = this;
+      var fileInput = $('<input type="file" style="display: none;"></input>');
+
+      $(this.$el).append(fileInput);
+
+      fileInput.click();
+
+      fileInput.on('change', function () {
+        var file = fileInput[0].files[0];
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('mode', 'attachment');
+
+        // Disable the post button while we upload.
+        self.postAllowed = false;
+
+        $.ajax({
+          url: self.baseurl + "file-upload",
+          type: "POST",
+          contentType: false,
+          cache: false,
+          processData: false,
+          data: formData,
+          dataType: 'json',
+          success: function (response) {
+            self.attachments.push({
+              name: file.name,
+              icon: self.iconForMimeType(file.type),
+              key: response.key,
+              url: self.urlForAttachmentKey(response.key),
+            });
+          },
+          error: function (xhr, statusText) {},
+          complete: function () {
+            self.postAllowed = true;
+          }
+        });
+
+      });
+    },
     clearEditor: function () {
       if (this.editor) {
+        this.attachments = []
         this.editor.setData("");
         this.editorFocused = false;
       }

@@ -45,6 +45,8 @@ public class Post implements Comparable<Post> {
     @Getter
     private final String postedByDisplayName;
     @Getter
+    private final List<Attachment> attachments;
+    @Getter
     private final List<Post> comments;
     @Setter
     @Getter
@@ -57,6 +59,7 @@ public class Post implements Comparable<Post> {
         this.postedAt = postedAt;
         this.postedByEid = postedByEid;
         this.parentPostUuid = parentPostUuid;
+        this.attachments = new ArrayList<Attachment>();
         this.comments = new ArrayList<Post>();
         if (postedByFirstName != null && postedByLastName != null) {
             this.postedByDisplayName = postedByFirstName + " " + postedByLastName;
@@ -72,12 +75,17 @@ public class Post implements Comparable<Post> {
         this.postedByEid = null;
         this.postedAt = null;
         this.parentPostUuid = null;
+        this.attachments = new ArrayList<Attachment>();
         this.comments = new ArrayList<Post>();
         this.postedByDisplayName = null;
     }
 
     public void addComment(Post comment) {
         comments.add(comment);
+    }
+
+    public void addAttachment(Attachment attachment) {
+        attachments.add(attachment);
     }
 
     @Override

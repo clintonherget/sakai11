@@ -49,6 +49,7 @@ import java.io.OutputStream;
 
 public class FileHandler implements Handler {
 
+    static long SENSIBLE_ATTACHMENT_SIZE_BYTES = 100 * 1024 * 1024;
     static long SENSIBLE_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
     private String redirectTo = null;
@@ -60,6 +61,8 @@ public class FileHandler implements Handler {
 
             if ("inline-upload".equals(mode)) {
                 handleUpload(request, response, context);
+            } else if ("attachment".equals(mode)) {
+                handleAttachmentUpload(request, response, context);
             } else if ("view".equals(mode)) {
                 handleView(request, response, context);
             } else {
@@ -112,25 +115,51 @@ public class FileHandler implements Handler {
         response.getWriter().write(String.format("{\"key\": \"%s\"}", key));
     }
 
+    public void handleAttachmentUpload(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        FileItem uploadedFile = (FileItem)request.getAttribute("file");
+
+        if (uploadedFile.getSize() > SENSIBLE_ATTACHMENT_SIZE_BYTES) {
+            throw new RuntimeException("Attachment too large");
+        }
+
+        String key = new FileStore().storeAttachment(uploadedFile.getInputStream(),
+                                                     uploadedFile.getName(),
+                                                     uploadedFile.getContentType());
+
+        response.setHeader("Content-type", "text/json");
+        response.getWriter().write(String.format("{\"key\": \"%s\"}", key));
+    }
+
     public void handleView(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
         String key = request.getParameter("key");
 
         // sanity check.  FIXME: Better handling here.
         UUID.fromString(key);
 
-        FileStore.Handle f = new FileStore().read(key);
+        Optional<FileStore.Handle> maybeHandle = new FileStore().read(key);
 
-        response.setHeader("Content-type", f.mimeType);
-        OutputStream out = response.getOutputStream();
-        byte[] buf = new byte[4096];
-        int len;
+        if (maybeHandle.isPresent()) {
+            FileStore.Handle f = maybeHandle.get();
 
-        try {
-            while ((len = f.inputStream.read(buf)) > 0) {
-                out.write(buf, 0, len);
+            response.setHeader("Content-type", f.mimeType);
+
+            if (f.attachment)  {
+                response.setHeader("Content-disposition", "attachment; filename=" + f.fileName);
             }
-        } finally {
-            f.inputStream.close();
+
+            OutputStream out = response.getOutputStream();
+            byte[] buf = new byte[4096];
+            int len;
+
+            try {
+                while ((len = f.inputStream.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } finally {
+                f.inputStream.close();
+            }
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
