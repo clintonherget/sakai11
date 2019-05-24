@@ -64,8 +64,22 @@
 }
 
 /* React Topic Type */
-.conversations-topic.react {
+.conversations-topic {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: stretch;
+}
+.conversations-topic-main {
     max-width: 900px;
+    flex-grow: 1;
+}
+.conversations-topic-sidebar {
+    min-width: 300px;
+    background: #FFF;
+    padding: 20px;
+    border: 1px solid #DDD;
+    margin-left: 20px;
 }
 
 .conversations-post {
@@ -174,7 +188,7 @@
     position: relative;
 }
 
-.conversations-topic > .conversations-post-form {
+.conversations-topic-main > .conversations-post-form {
     padding-left: 60px;
 }
 

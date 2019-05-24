@@ -87,37 +87,42 @@ Vue.component('react-post', {
 Vue.component('react-topic', {
   template: `
   <div class="conversations-topic react">
-    <template v-if="initialPost">
-      <div class="conversations-post conversations-initial-post">
-        <span v-if="initialPost.unread" class="badge badge-primary">NEW</span>
-        <div class="conversations-post-content">
-          <h2>{{topic_title}}</h2>
-          <p>
-            <small class="text-muted">Created by {{initialPost.postedByDisplayName}} on {{formatEpochTime(initialPost.postedAt)}}</small>
-          </p>
-          <span v-html="initialPost.content"></span>
-        </div>
-      </div>
-    </template>
-    <div class="conversations-post-form">
-      <div class="conversations-postedby-photo">
-        <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
-      </div>
-      <div class="post-to-topic-textarea form-control" v-bind:class='{ "full-editor-height": editorFocused }'>
-        <div class="topic-ckeditor"></div>
-      </div>
-      <button class="button" v-on:click="post()">Post</button>
-      <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
-    </div>
-    <div class="conversations-posts">
-      <template v-for="post in posts">
-        <template v-if="post.isFirstUnreadPost">
-          <div class="conversations-posts-unread-line">
-            <span class="badge badge-primary">NEW</span>
+    <div class="conversations-topic-main">
+        <template v-if="initialPost">
+          <div class="conversations-post conversations-initial-post">
+            <span v-if="initialPost.unread" class="badge badge-primary">NEW</span>
+            <div class="conversations-post-content">
+              <h2>{{topic_title}}</h2>
+              <p>
+                <small class="text-muted">Created by {{initialPost.postedByDisplayName}} on {{formatEpochTime(initialPost.postedAt)}}</small>
+              </p>
+              <span v-html="initialPost.content"></span>
+            </div>
           </div>
         </template>
-        <react-post :topic_uuid="topic_uuid" :post="post" :baseurl="baseurl"></react-post>
-      </template>
+        <div class="conversations-post-form">
+          <div class="conversations-postedby-photo">
+            <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
+          </div>
+          <div class="post-to-topic-textarea form-control" v-bind:class='{ "full-editor-height": editorFocused }'>
+            <div class="topic-ckeditor"></div>
+          </div>
+          <button class="button" v-on:click="post()">Post</button>
+          <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
+        </div>
+        <div class="conversations-posts">
+          <template v-for="post in posts">
+            <template v-if="post.isFirstUnreadPost">
+              <div class="conversations-posts-unread-line">
+                <span class="badge badge-primary">NEW</span>
+              </div>
+            </template>
+            <react-post :topic_uuid="topic_uuid" :post="post" :baseurl="baseurl"></react-post>
+          </template>
+        </div>
+    </div>
+    <div class="conversations-topic-sidebar">
+        Hello, I'm your friendly sidebar.
     </div>
   </div>
 `,
