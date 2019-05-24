@@ -104,8 +104,14 @@ Vue.component('react-topic', {
           <div class="conversations-postedby-photo">
             <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
           </div>
-          <div class="post-to-topic-textarea form-control" v-bind:class='{ "full-editor-height": editorFocused }'>
-            <div class="topic-ckeditor"></div>
+          <div class="post-to-topic-textarea form-control">
+            <div class="stretchy-editor" v-bind:class='{ "full-editor-height": editorFocused }'>
+              <div class="topic-ckeditor"></div>
+            </div>
+            <div>
+              <hr>
+              <button><i class="fa fa-paperclip"></i>&nbsp;Attach files</button>
+            </div>
           </div>
           <button class="button" v-on:click="post()">Post</button>
           <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>

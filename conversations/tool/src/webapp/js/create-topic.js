@@ -58,8 +58,10 @@ Vue.component('create-topic-workflow', {
       <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
           <p class="text-center">
-            <div class="post-to-topic-textarea form-control" v-bind:class='{ "full-editor-height": editorFocused }'>
-              <div class="topic-ckeditor"></div>
+            <div class="post-to-topic-textarea form-control">
+              <div class="stretchy-editor" v-bind:class='{ "full-editor-height": editorFocused }'>
+                <div class="topic-ckeditor"></div>
+              </div>
             </div>
           </p>
         </div>

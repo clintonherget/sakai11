@@ -210,13 +210,17 @@ body.dark-mode .conversations-post-content {
   height: 100% !important;
 }
 
-.full-editor-height {
-  height: 30em !important;
+.post-to-topic-textarea.form-control {
+    height: auto;
 }
 
-.post-to-topic-textarea {
-  min-height: 5em;
-  transition: height 0.2s ease-in !important;
+.stretchy-editor {
+    height: 5em; /* Needed for the transition to work */
+    transition: height 0.2s ease-in !important;
+}
+
+.stretchy-editor.full-editor-height {
+  height: 30em !important;
 }
 
 /* CKEditor */
