@@ -274,6 +274,11 @@ Vue.component('react-topic', {
           onFocus: (event, name, isFocused) => {
             if (isFocused) {
               this.editorFocused = isFocused;
+            } else {
+              if (this.editor.getData() === '') {
+                console.log(this.editor.getData());
+                this.editorFocused = false;
+              }
             }
           }
         });
