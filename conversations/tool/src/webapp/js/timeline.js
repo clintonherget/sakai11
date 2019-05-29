@@ -45,30 +45,38 @@ Vue.component('timeline', {
                   }
               ];
           }
-          var range = this.maxDate - this.minDate;
-          var tickLength = Math.max(range / this.maxTicks, this.minTickLength);
 
+          var range = this.maxDate - this.minDate;
+          var tickLength = Math.max(Math.ceil(range / this.maxTicks), this.minTickLength);
           var allPosts = [this.initialPost].concat(this.posts);
 
-          var result = [];
-          for (var i=this.minDate; i<this.maxDate;) {
-              var tickEnd = i + tickLength;
-              if (this.maxDate - tickEnd < tickLength) {
-                  tickEnd = this.maxDate + 1;
-              }
-              var postsInTick = allPosts.filter((post) => {
-                  return post.postedAt >= i && post.postedAt < tickEnd;
-              });
-              var tickEpoch = Math.min(tickEnd, this.maxDate);
-              result.push({
-                  size: Math.max(parseInt((postsInTick.length / allPosts.length) * 100), 5),
-                  firstPostInTick: postsInTick[0],
-                  label: this.formatEpochDate(tickEpoch),
-                  count: postsInTick.length,
-              });
+          var bucketedPosts = {};
+          var lastBucket = 0;
 
-              i = tickEnd;
+          for (var post of allPosts) {
+              var bucket = Math.floor((post.postedAt - this.minDate) / tickLength);
+
+              bucketedPosts[bucket] = bucketedPosts[bucket] || [];
+              bucketedPosts[bucket].push(post);
+
+              if (bucket > lastBucket) {
+                  lastBucket = bucket;
+              }
           }
+
+          var result = [];
+          for (var i = 0; i <= lastBucket; i++) {
+              var bucketPosts = bucketedPosts[i] || [];
+              var bucketEnd = this.minDate + ((i + 1) * tickLength);
+
+              result.push({
+                  size: Math.max(Math.floor((bucketPosts.length / allPosts.length) * 100), 5),
+                  firstPostInTick: bucketPosts[0],
+                  label: this.formatEpochDate(bucketEnd),
+                  count: bucketPosts.length,
+              });
+          }
+
           return result;
       },
   },
