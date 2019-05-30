@@ -37,6 +37,11 @@ import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.ArrayList;
 
 public class CreateTopicHandler implements Handler {
 
@@ -68,9 +73,13 @@ public class CreateTopicHandler implements Handler {
             String topicUuid = new ConversationsStorage().createTopic(topic, siteId, currentUser.getId());
 
             if (initialPost != null) {
-                Post post = new Post(initialPost, currentUser.getId());
+                if (initialPost.startsWith("<p>#IMPORTDEMO")) {
+                    demoImport(initialPost, topicUuid);
+                } else {
+                    Post post = new Post(initialPost, currentUser.getId());
 
-                String postUuid = new ConversationsStorage().createPost(post, topicUuid);
+                    String postUuid = new ConversationsStorage().createPost(post, topicUuid);
+                }
             }
 
             JSONObject result = new JSONObject();
@@ -79,6 +88,65 @@ public class CreateTopicHandler implements Handler {
             response.getWriter().write(result.toString());
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void demoImport(String text, String topicUuid) throws Exception {
+        String[] messages = text.split("</p>");
+
+        String importSpec = messages[0];
+
+        int days = 12;
+
+
+        Pattern daysPattern = Pattern.compile(".*days=([0-9]+).*");
+        Matcher m = daysPattern.matcher(importSpec);
+
+        if (m.matches()) {
+            days = Integer.valueOf(m.group(1));
+        }
+
+        List<Long> times = new ArrayList<>();
+        for (String line : messages) {
+            if (line.indexOf(":") < 0) {
+                continue;
+            }
+
+            times.add((long)Math.floor(Math.random() * (days * 86400000)) + System.currentTimeMillis());
+        }
+
+        Collections.sort(times);
+
+        Map<String, String> characters = new HashMap<>();
+        for (String line : messages) {
+            if (line.indexOf(":") < 0) {
+                continue;
+            }
+
+            String[] bits = line.replace("<p>", "").split(":", 2);
+
+            if (!characters.containsKey(bits[0])) {
+                // Create the user
+                String userUuid = UUID.randomUUID().toString();
+                UserDirectoryService.addUser(userUuid,
+                                             bits[0].replaceAll("[^a-zA-Z0-9_]", "").toLowerCase(java.util.Locale.ROOT) + "_" + UUID.randomUUID().toString(),
+                                             "",
+                                             bits[0],
+                                             "example@dishevelled.net",
+                                             "testuser",
+                                             "registered",
+                                             null);
+
+                characters.put(bits[0], userUuid);
+            }
+
+            long postTime = times.remove(0);
+
+            String postUuid = new ConversationsStorage().createPost(new Post(bits[1].trim(), characters.get(bits[0])),
+                                                                    topicUuid,
+                                                                    null,
+                                                                    Collections.emptyList(),
+                                                                    postTime);
         }
     }
 

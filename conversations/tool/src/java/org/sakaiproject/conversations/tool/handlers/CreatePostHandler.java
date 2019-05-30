@@ -80,7 +80,7 @@ public class CreatePostHandler implements Handler {
             User currentUser = UserDirectoryService.getCurrentUser();
             Post post = new Post(content, currentUser.getId());
 
-            String postUuid = new ConversationsStorage().createPost(post, topicUuid, parentPostUuid, attachmentKeys);
+            String postUuid = new ConversationsStorage().createPost(post, topicUuid, parentPostUuid, attachmentKeys, System.currentTimeMillis());
 
             JSONObject result = new JSONObject();
             result.put("status", "success");

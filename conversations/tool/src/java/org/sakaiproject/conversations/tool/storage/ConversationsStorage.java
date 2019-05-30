@@ -70,7 +70,7 @@ public class ConversationsStorage {
                            public Void call(DBConnection db) throws SQLException {
                                String id = UUID.randomUUID().toString();
 
-                               Long createdAt = Calendar.getInstance().getTime().getTime();
+                               Long createdAt = System.currentTimeMillis();
 
                                db.run(
                                       "INSERT INTO conversations_files (uuid, mime_type, filename, role)" +
@@ -180,7 +180,7 @@ public class ConversationsStorage {
     }
 
     public void touchTopicLastActivityAt(final String topicUuid) {
-        touchTopicLastActivityAt(topicUuid, Calendar.getInstance().getTime().getTime());
+        touchTopicLastActivityAt(topicUuid, System.currentTimeMillis());
     }
 
     public void touchTopicLastActivityAt(final String topicUuid, final Long lastActivityAt) {
@@ -317,7 +317,7 @@ public class ConversationsStorage {
                 public String call(DBConnection db) throws SQLException {
                     String id = UUID.randomUUID().toString();
 
-                    Long createdAt = Calendar.getInstance().getTime().getTime();
+                    Long createdAt = System.currentTimeMillis();
 
                     db.run(
                         "INSERT INTO conversations_topic (uuid, title, type, site_id, created_by, created_at, last_activity_at)" +
@@ -461,16 +461,15 @@ public class ConversationsStorage {
     }
 
     public String createPost(Post post, String topicUuid) {
-        return createPost(post, topicUuid, null, Collections.emptyList());
+        return createPost(post, topicUuid, null, Collections.emptyList(), System.currentTimeMillis());
     }
 
-    public String createPost(final Post post, final String topicUuid, final String parentPostUuid, final List<String> attachmentKeys) {
+    public String createPost(final Post post, final String topicUuid, final String parentPostUuid, final List<String> attachmentKeys, long postedAt) {
         return DB.transaction("Create a post for a topic",
             new DBAction<String>() {
                 @Override
                 public String call(DBConnection db) throws SQLException {
                     String id = UUID.randomUUID().toString();
-                    Long postedAt = Calendar.getInstance().getTime().getTime();
 
                     db.run("INSERT INTO conversations_post (uuid, topic_uuid, parent_post_uuid, content, posted_by, posted_at) VALUES (?, ?, ?, ?, ?, ?)")
                         .param(id)
@@ -505,7 +504,7 @@ public class ConversationsStorage {
                     @Override
                     public String call(DBConnection db) throws SQLException {
                         String id = UUID.randomUUID().toString();
-                        Long timestamp = Calendar.getInstance().getTime().getTime();
+                        Long timestamp = System.currentTimeMillis();
 
                         db.run("DELETE FROM conversations_topic_event WHERE topic_uuid = ? AND user_id = ? AND event_name = ?")
                             .param(topicUuid)
