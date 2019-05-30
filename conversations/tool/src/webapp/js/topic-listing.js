@@ -33,7 +33,7 @@ Vue.component('topic-listing', {
               Entire Site
             </td>
             <td>
-              {{count}}
+              {{topic.postCount}}
             </td>
             <td>{{formatEpochTime(topic.lastActivityAt)}}</td>
             <td>
