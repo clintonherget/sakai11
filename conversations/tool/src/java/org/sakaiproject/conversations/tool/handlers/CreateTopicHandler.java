@@ -42,6 +42,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
+import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.site.api.Site;
 
 public class CreateTopicHandler implements Handler {
 
@@ -74,7 +76,7 @@ public class CreateTopicHandler implements Handler {
 
             if (initialPost != null) {
                 if (initialPost.startsWith("<p>#IMPORTDEMO")) {
-                    demoImport(initialPost, topicUuid);
+                    demoImport(initialPost, topicUuid, siteId);
                 } else {
                     Post post = new Post(initialPost, currentUser.getId());
 
@@ -91,7 +93,7 @@ public class CreateTopicHandler implements Handler {
         }
     }
 
-    private void demoImport(String text, String topicUuid) throws Exception {
+    private void demoImport(String text, String topicUuid, String siteId) throws Exception {
         String[] messages = text.split("</p>");
 
         String importSpec = messages[0];
@@ -112,7 +114,7 @@ public class CreateTopicHandler implements Handler {
                 continue;
             }
 
-            times.add((long)Math.floor(Math.random() * (days * 86400000)) + System.currentTimeMillis());
+            times.add(System.currentTimeMillis() - ((long)Math.floor(Math.random() * (days * 86400000))));
         }
 
         Collections.sort(times);
@@ -148,6 +150,17 @@ public class CreateTopicHandler implements Handler {
                                                                     Collections.emptyList(),
                                                                     postTime);
         }
+
+        Site site = SiteService.getSite(siteId);
+        for (String userId : characters.values()) {
+            if ("course".equals(site.getType())) {
+                site.addMember(userId, "Student", true, false);
+            } else {
+                site.addMember(userId, "access", true, false);
+            }
+        }
+
+        SiteService.save(site);
     }
 
     public boolean hasRedirect() {
