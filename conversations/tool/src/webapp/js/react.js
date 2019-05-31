@@ -420,6 +420,9 @@ Vue.component('react-topic', {
         setTimeout(() => {
             $post.removeClass('conversations-post-highlight');
         }, 1000);
+        return true;
+      } else {
+        return false;
       }
     },
   },
@@ -435,8 +438,9 @@ Vue.component('react-topic', {
     // If we added a new rich text area, enrich it!
     this.$nextTick(function () {
       if (this.postToFocusAndHighlight) {
-        this.focusAndHighlightPost(this.postToFocusAndHighlight);
-        this.postToFocusAndHighlight = null;
+        if (this.focusAndHighlightPost(this.postToFocusAndHighlight)) {
+          this.postToFocusAndHighlight = null;
+        }
       }
     });
   }
