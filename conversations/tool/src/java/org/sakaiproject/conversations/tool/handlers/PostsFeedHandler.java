@@ -68,7 +68,9 @@ public class PostsFeedHandler implements Handler {
             Map<String, Post> topLevelPosts = new HashMap<String, Post>();
 
             for (Post post : posts) {
-                if (!post.getPostedBy().equals(currentUser.getId())) {
+                if (post.getPostedBy().equals(currentUser.getId())) {
+                    post.setEditable(true);
+                } else {
                     post.setUnread(post.getPostedAt() > timeLastVisited);
                 }
 
@@ -103,6 +105,7 @@ public class PostsFeedHandler implements Handler {
         obj.put("postedByDisplayName", post.getPostedByDisplayName());
         obj.put("postedAt", post.getPostedAt());
         obj.put("unread", post.isUnread());
+        obj.put("editable", post.isEditable());
 
         JSONArray comments = new JSONArray();
         for (Post comment : post.getComments()) {

@@ -33,13 +33,23 @@ import lombok.Setter;
 public class Post implements Comparable<Post> {
     private final String uuid;
     @Getter
-    private final String content;
+    @Setter
+    private String content;
     @Getter
     private final String postedBy;
     @Getter
     private final String postedByEid;
     @Getter
     private final Long postedAt;
+    @Setter
+    @Getter
+    private String updatedBy;
+    @Setter
+    @Getter
+    private Long updatedAt;
+    @Getter
+    @Setter
+    private Long version;
     @Getter
     private final String parentPostUuid;
     @Getter
@@ -51,8 +61,11 @@ public class Post implements Comparable<Post> {
     @Setter
     @Getter
     private boolean unread = false;
+    @Setter
+    @Getter
+    private boolean editable = false;
 
-    public Post(String uuid, String content, String postedBy, Long postedAt, String parentPostUuid, String postedByEid, String postedByFirstName, String postedByLastName) {
+    public Post(String uuid, String content, String postedBy, Long postedAt, String parentPostUuid, String postedByEid, String postedByFirstName, String postedByLastName, Long version) {
         this.uuid = uuid;
         this.content = content;
         this.postedBy = postedBy;

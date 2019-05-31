@@ -27,13 +27,25 @@ package org.sakaiproject.conversations.tool.storage;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.sakaiproject.conversations.tool.models.*;
+import org.sakaiproject.conversations.tool.models.Attachment;
+import org.sakaiproject.conversations.tool.models.MissingUuidException;
+import org.sakaiproject.conversations.tool.models.Post;
+import org.sakaiproject.conversations.tool.models.Poster;
+import org.sakaiproject.conversations.tool.models.Topic;
 
 @Slf4j
 public class ConversationsStorage {
@@ -448,7 +460,8 @@ public class ConversationsStorage {
                                         result.getString("parent_post_uuid"),
                                         result.getString("eid"),
                                         result.getString("fname"),
-                                        result.getString("lname")));
+                                        result.getString("lname"),
+                                        result.getLong("version")));
                             }
 
                             loadAttachments(posts);
@@ -458,6 +471,40 @@ public class ConversationsStorage {
                     }
                 }
             );
+    }
+
+    public Post getPost(final String postUuid) {
+        return DB.transaction
+                ("Find all posts for topic",
+                        new DBAction<Post>() {
+                            @Override
+                            public Post call(DBConnection db) throws SQLException {
+                                Post post = null;
+                                try (DBResults results = db.run("SELECT conversations_post.*, sakai_user_id_map.eid, nyu_t_users.fname, nyu_t_users.lname FROM conversations_post" +
+                                        " INNER JOIN sakai_user_id_map ON sakai_user_id_map.user_id = conversations_post.posted_by" +
+                                        " LEFT JOIN nyu_t_users ON nyu_t_users.netid = sakai_user_id_map.eid" +
+                                        " WHERE conversations_post.uuid = ?")
+                                        .param(postUuid)
+                                        .executeQuery()) {
+                                    for (ResultSet result : results) {
+                                        post = new Post(result.getString("uuid"),
+                                                        result.getString("content"),
+                                                        result.getString("posted_by"),
+                                                        result.getLong("posted_at"),
+                                                        result.getString("parent_post_uuid"),
+                                                        result.getString("eid"),
+                                                        result.getString("fname"),
+                                                        result.getString("lname"),
+                                                        result.getLong("version"));
+                                    }
+
+                                    loadAttachments(Arrays.asList(post));
+
+                                    return post;
+                                }
+                            }
+                        }
+                );
     }
 
     public String createPost(Post post, String topicUuid) {
@@ -471,13 +518,17 @@ public class ConversationsStorage {
                 public String call(DBConnection db) throws SQLException {
                     String id = UUID.randomUUID().toString();
 
-                    db.run("INSERT INTO conversations_post (uuid, topic_uuid, parent_post_uuid, content, posted_by, posted_at) VALUES (?, ?, ?, ?, ?, ?)")
+                    db.run("INSERT INTO conversations_post (uuid, topic_uuid, parent_post_uuid, content, posted_by, posted_at, updated_by, updated_at, version)" +
+                            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
                         .param(id)
                         .param(topicUuid)
                         .param(parentPostUuid)
                         .param(post.getContent())
                         .param(post.getPostedBy())
                         .param(postedAt)
+                        .param(post.getPostedBy())
+                        .param(postedAt)
+                        .param(1)
                         .executeUpdate();
 
                     touchTopicLastActivityAt(topicUuid, postedAt);
@@ -495,6 +546,47 @@ public class ConversationsStorage {
                     return id;
                 }
             }
+        );
+    }
+
+    public String updatePost(final Post post, final String topicUuid, final List<String> attachmentKeys, long postedAt) {
+        return DB.transaction("Create a post for a topic",
+                new DBAction<String>() {
+                    @Override
+                    public String call(DBConnection db) throws SQLException {
+                        try {
+                            db.run("UPDATE conversations_post (content, updated_by, updated_at, version) VALUES (?, ?, ?, ?) WHERE uuid = ? && topic_uuid = ?")
+                                    .param(post.getContent())
+                                    .param(post.getUpdatedBy())
+                                    .param(postedAt)
+                                    .param(post.getVersion())
+                                    .param(post.getUuid())
+                                    .param(topicUuid)
+                                    .executeUpdate();
+
+                            touchTopicLastActivityAt(topicUuid, postedAt);
+
+                            for (String attachmentKey : attachmentKeys) {
+                                db.run("DELETE FROM conversations_attachments WHERE post_uuid = ?")
+                                        .param(post.getUuid())
+                                        .executeUpdate();
+
+                                db.run("INSERT INTO conversations_attachments (uuid, post_uuid, attachment_key) VALUES (?, ?, ?)")
+                                        .param(UUID.randomUUID().toString())
+                                        .param(post.getUuid())
+                                        .param(attachmentKey)
+                                        .executeUpdate();
+                            }
+
+                            db.commit();
+
+                            return post.getUuid();
+                        } catch(MissingUuidException e) {
+                            // FIXME
+                            throw new RuntimeException("Unable to update post due to missing uuid");
+                        }
+                    }
+                }
         );
     }
 

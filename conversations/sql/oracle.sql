@@ -1,6 +1,8 @@
 DROP TABLE conversations_topic;
 DROP TABLE conversations_post;
 DROP TABLE conversations_topic_event;
+DROP TABLE conversations_files;
+DROP TABLE conversations_attachments;
 
 CREATE TABLE conversations_topic (
     uuid varchar2(255) PRIMARY KEY,
@@ -18,7 +20,10 @@ CREATE TABLE conversations_post (
     parent_post_uuid varchar2(255),
     content CLOB NOT NULL,
     posted_by varchar2(255) NOT NULL,
-    posted_at NUMBER NOT NULL
+    posted_at NUMBER NOT NULL,
+    updated_by varchar2(255) NOT NULL,
+    updated_at NUMBER NOT NULL,
+    version NUMBER NOT NULL
 );
 
 CREATE TABLE conversations_topic_event (

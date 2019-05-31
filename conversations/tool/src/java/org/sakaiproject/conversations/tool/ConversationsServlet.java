@@ -41,10 +41,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
 import org.sakaiproject.tool.cover.ToolManager;
+import org.sakaiproject.user.api.User;
+import org.sakaiproject.user.cover.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +85,14 @@ public class ConversationsServlet extends HttpServlet {
             context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
             context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
             context.put("siteId", ToolManager.getCurrentPlacement().getContext());
+
+            User currentUser = UserDirectoryService.getCurrentUser();
+            context.put("currentUserId", currentUser.getId());
+            String role = "student";
+            if (SecurityService.unlock("site.upd", SiteService.siteReference(ToolManager.getCurrentPlacement().getContext()))) {
+                role = "instructor";
+            }
+            context.put("currentUserRole", role);
 
             Handler handler = handlerForRequest(request);
 
@@ -129,6 +141,8 @@ public class ConversationsServlet extends HttpServlet {
             return new TopicsFeedHandler();
         } else if (path.equals("/create-post")) {
             return new CreatePostHandler();
+        } else if (path.equals("/update-post")) {
+            return new UpdatePostHandler();
         } else if (path.equals("/mark-topic-read")) {
             return new TopicReadEventHandler();
         } else if (path.equals("/file-upload")) {

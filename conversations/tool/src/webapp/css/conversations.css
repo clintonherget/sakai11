@@ -90,6 +90,9 @@
 .conversations-initial-post h2 {
   margin: 0;
 }
+.conversations-initial-post .edit {
+    margin: 10px;
+}
 
 .conversations-post-content {
     transition-property: background-color;

@@ -63,9 +63,6 @@ public class TopicHandler implements Handler {
             context.put("topic", topic.get());
             context.put("subpage", topic.get().getType().toLowerCase());
 
-            User currentUser = UserDirectoryService.getCurrentUser();
-            context.put("currentUserId", currentUser.getId());
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

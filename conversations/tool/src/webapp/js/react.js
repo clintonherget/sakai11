@@ -1,54 +1,96 @@
 Vue.component('react-post', {
   template: `
-<div :class="postCssClasses(post)" :data-post-uuid="post.uuid">
-  <div class="conversations-postedby-photo">
-    <img :src="'/direct/profile/'+post.postedBy + '/image'"/>
-  </div>
+<div :class="css_classes" :data-post-uuid="post.uuid">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
-  <small class="text-muted"><strong>{{post.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}</small>
-  <div class="conversations-post-content">
-    <span v-html="post.content"></span>
-    <div class="conversations-post-comments">
-      <ul class="conversations-attachment-list">
-        <li v-for="a in post.attachments">
-          <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'></i>&nbsp;<a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
-        </li>
-      </ul>
-      <template v-if="showCommentForm">
-        <div class="conversations-comment-form">
-          <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
-          <button class="button" v-on:click="addComment()">Post Comment</button>
-          <button class="button" v-on:click="toggleCommentForm()">Cancel</button>
-        </div>
-      </template>
-      <template v-else>
-          <button class="button" v-on:click="toggleCommentForm()">Comment</button>
-      </template>
-      <template v-if="post.comments.length > 0">
-        <div v-for="comment in post.comments" class="conversations-post-comment" :data-post-uuid="comment.uuid">
-          <div class="conversations-postedby-photo">
-            <img :src="'/direct/profile/'+comment.postedBy + '/image'"/>
-          </div>
-          <div>
-            <span v-if="comment.unread" class="badge badge-primary">NEW</span>
-            <small class="text-muted"><strong>{{comment.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(comment.postedAt)}}</small>
-          </div>
-          <div class="conversations-comment-content">
-            {{comment.content}}
-          </div>
-        </div>
-      </template>
+  <template v-if="post.editable">
+    <a href="javascript:void(0)" class="edit pull-right" title="Edit Post" @click="edit()">
+      <i class="fa fa-pencil" aria-hidden="true"></i>
+    </a>
+  </template>
+  <template v-if="editing">
+    <div class="conversations-post-content">
+      <p>Gimme an editor!</p>
+      <a class="button" @click="update()">Update Post</a>
+      <a class="button" @click="cancelEdit()">Cancel</a>
     </div>
-  </div>
+  </template>
+  <template v-else>
+    <template v-if="initialPost">
+        <div class="conversations-post-content">
+          <h2>{{topic_title}}</h2>
+          <p>
+            <small class="text-muted">Created by {{post.postedByDisplayName}} on {{formatEpochTime(post.postedAt)}}</small>
+          </p>
+          <span v-html="post.content"></span>
+        </div>
+    </template>
+    <template v-else>
+      <small class="text-muted"><strong>{{post.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}</small>
+      <div class="conversations-postedby-photo">
+        <img :src="'/direct/profile/'+post.postedBy + '/image'"/>
+      </div>
+      <div class="conversations-post-content">
+        <span v-html="post.content"></span>
+        <div class="conversations-post-comments">
+          <ul class="conversations-attachment-list">
+            <li v-for="a in post.attachments">
+              <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'></i>&nbsp;<a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
+            </li>
+          </ul>
+          <template v-if="showCommentForm">
+            <div class="conversations-comment-form">
+              <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
+              <button class="button" v-on:click="addComment()">Post Comment</button>
+              <button class="button" v-on:click="toggleCommentForm()">Cancel</button>
+            </div>
+          </template>
+          <template v-else>
+              <button class="button" v-on:click="toggleCommentForm()">Comment</button>
+          </template>
+          <template v-if="post.comments.length > 0">
+            <div v-for="comment in post.comments" class="conversations-post-comment" :data-post-uuid="comment.uuid">
+              <div class="conversations-postedby-photo">
+                <img :src="'/direct/profile/'+comment.postedBy + '/image'"/>
+              </div>
+              <div>
+                <span v-if="comment.unread" class="badge badge-primary">NEW</span>
+                <small class="text-muted"><strong>{{comment.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(comment.postedAt)}}</small>
+              </div>
+              <div class="conversations-comment-content">
+                {{comment.content}}
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </template>
 </div>
 `,
   data: function () {
     return {
       showCommentForm: false,
       commentContent: '',
+      initialPost: this.initial_post == 'true',
+      editing: false,
     }
   },
-  props: ['post', 'baseurl', 'topic_uuid'],
+  props: ['post', 'baseurl', 'topic_uuid', 'initial_post'],
+  computed: {
+    topic_title: function() {
+      return this.$parent.topic_title;
+    },
+    css_classes: function() {
+      var classes = ['conversations-post'];
+      if (this.initialPost) {
+        classes.push('conversations-initial-post');
+      }
+      if (this.post.unread) {
+          classes.push('unread');
+      }
+      return classes.join(' ');
+    },
+  },
   methods: {
     addComment: function() {
       if (this.commentContent.trim() == "") {
@@ -72,9 +114,6 @@ Vue.component('react-post', {
     formatEpochTime: function(epoch) {
       return new Date(epoch).toLocaleString();
     },
-    postCssClasses: function(post) {
-      return this.$parent.postCssClasses(post);
-    },
     toggleCommentForm: function() {
         if (this.showCommentForm) {
             this.showCommentForm = false;
@@ -83,6 +122,16 @@ Vue.component('react-post', {
             this.showCommentForm = true;
         }
     },
+    edit: function() {
+      this.editing = true;
+    },
+    update: function() {
+      alert("TODO");
+      this.cancelEdit();
+    },
+    cancelEdit: function() {
+      this.editing = false;
+    }
   },
   mounted: function() {
   }
@@ -94,16 +143,7 @@ Vue.component('react-topic', {
   <div class="conversations-topic react">
     <div class="conversations-topic-main">
         <template v-if="initialPost">
-          <div class="conversations-post conversations-initial-post" :data-post-uuid="initialPost.uuid">
-            <span v-if="initialPost.unread" class="badge badge-primary">NEW</span>
-            <div class="conversations-post-content">
-              <h2>{{topic_title}}</h2>
-              <p>
-                <small class="text-muted">Created by {{initialPost.postedByDisplayName}} on {{formatEpochTime(initialPost.postedAt)}}</small>
-              </p>
-              <span v-html="initialPost.content"></span>
-            </div>
-          </div>
+          <react-post :topic_uuid="topic_uuid" :post="initialPost" initial_post="true" :baseurl="baseurl"></react-post>
         </template>
         <div class="conversations-post-form">
           <div class="conversations-postedby-photo">
@@ -202,7 +242,11 @@ Vue.component('react-topic', {
       },
     }
   },
-  props: ['baseurl', 'topic_uuid', 'topic_title', 'current_user_id'],
+  props: ['baseurl',
+          'topic_uuid',
+          'topic_title',
+          'current_user_id',
+          'current_user_role'],
   methods: {
     post: function() {
       var content = this.newPostContent().trim();
@@ -353,13 +397,6 @@ Vue.component('react-topic', {
         }
       });
     },
-    postCssClasses: function(post) {
-        var classes = ['conversations-post'];
-        if (post.unread) {
-            classes.push('unread');
-        }
-        return classes.join(' ');
-    },
     resetMarkTopicReadEvents: function() {
       var autoMarkedAsRead = false;
       var markAsRead = () => {
@@ -387,7 +424,7 @@ Vue.component('react-topic', {
         RichText.initialize({
           baseurl: this.baseurl,
           elt: elt,
-          placeholder: 'Post to topic...',
+          placeholder: 'React to the post...',
           onCreate: (newEditor) => { this.editor = newEditor; },
           onUploadEvent: (status) => {
             if (status === 'started') {
@@ -444,4 +481,20 @@ Vue.component('react-topic', {
       }
     });
   }
+});
+
+
+Vue.component('post-editor', {
+  template: `
+<div></div>
+`,
+  data: function () {
+    return {
+    }
+  },
+  computed: {},
+  props: [],
+  methods: {},
+  mounted: function() {},
+  updated: function() {}
 });
