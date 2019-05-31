@@ -145,35 +145,16 @@ Vue.component('react-topic', {
         <template v-if="initialPost">
           <react-post :topic_uuid="topic_uuid" :post="initialPost" initial_post="true" :baseurl="baseurl"></react-post>
         </template>
-        <div class="conversations-post-form">
-          <div class="conversations-postedby-photo">
-            <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
-          </div>
-          <div class="post-to-topic-textarea form-control">
-            <div class="stretchy-editor" v-bind:class='{ "full-editor-height": editorFocused }'>
-              <div class="topic-ckeditor"></div>
+        <post-editor ref="postEditor">
+          <template v-slot:author>
+            <div class="conversations-postedby-photo">
+              <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
             </div>
-            <div>
-              <hr>
-              <button v-on:click="newAttachment()"
-                      class="conversations-minimal-btn">
-                <i class="fa fa-paperclip"></i>&nbsp;Add attachment
-              </button>
-              <ul class="conversations-attachment-list">
-                <li v-for="a in attachments">
-                  <i class="fa" v-bind:class='a.icon'></i>&nbsp;<a :href='a.url'>{{a.name}}</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <template v-if="activeUploads === 0">
-            <button class="button" v-on:click="post()">Post</button>
           </template>
-          <template v-else>
-            <button class="button" disabled>Uploading...</button>
+          <template v-slot:actions>
+            <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
           </template>
-          <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
-        </div>
+        </post-editor>
         <div class="conversations-posts">
           <template v-for="post in posts">
             <template v-if="post.isFirstUnreadPost">
@@ -196,50 +177,7 @@ Vue.component('react-topic', {
       activeUploads: 0,
       initialPost: null,
       firstUnreadPost: null,
-      editor: null,
       postToFocusAndHighlight: null,
-      editorFocused: false,
-      attachments: [],
-      mimeToIcon: {
-        'application/pdf': 'fa-file-pdf-o',
-        'text/pdf': 'fa-file-pdf-o',
-
-        'application/msword': 'fa-file-word-o',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'fa-file-word-o',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.template': 'fa-file-word-o',
-
-        'application/vnd.ms-powerpoint': 'fa-file-powerpoint-o',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'fa-file-powerpoint-o',
-        'application/vnd.openxmlformats-officedocument.presentationml.template': 'fa-file-powerpoint-o',
-        'application/vnd.openxmlformats-officedocument.presentationml.slideshow': 'fa-file-powerpoint-o',
-
-        'application/vnd.ms-excel': 'fa-file-excel-o',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'fa-file-excel-o',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.template': 'fa-file-excel-o',
-
-        'image/jpeg': 'fa-file-image-o',
-        'image/png': 'fa-file-image-o',
-        'image/gif': 'fa-file-image-o',
-        'image/tiff': 'fa-file-image-o',
-        'image/bmp': 'fa-file-image-o',
-
-        'application/zip': 'fa-file-archive-o',
-        'application/x-rar-compressed': 'fa-file-archive-o',
-
-        'text/plain': 'fa-file-text-o',
-
-        'video/mp4': 'fa-file-video-o',
-        'video/x-flv': 'fa-file-video-o',
-        'video/quicktime': 'fa-file-video-o',
-        'video/mpeg': 'fa-file-video-o',
-        'video/ogg': 'fa-file-video-o',
-
-        'audio/mpeg': 'fa-file-audio-o',
-        'audio/ogg': 'fa-file-audio-o',
-        'audio/midi': 'fa-file-audio-o',
-        'audio/flac': 'fa-file-audio-o',
-        'audio/aac': 'fa-file-audio-o',
-      },
     }
   },
   props: ['baseurl',
@@ -248,95 +186,6 @@ Vue.component('react-topic', {
           'current_user_id',
           'current_user_role'],
   methods: {
-    post: function() {
-      var content = this.newPostContent().trim();
-
-      if (content === "") {
-        if (this.attachments.length === 0) {
-          this.clearEditor();
-          return;
-        } else {
-          // Blank content is OK if we have attachments.  Store a placeholder.
-          content = "&nbsp;";
-        }
-      }
-
-      $.ajax({
-        url: this.baseurl+"create-post",
-        type: 'post',
-        data: {
-          topicUuid: this.topic_uuid,
-          content: content,
-          attachmentKeys: this.attachments.map((attachment) => { return attachment.key }),
-        },
-        dataType: 'json',
-        success: (json) => {
-          this.clearEditor();
-          this.postToFocusAndHighlight = json.uuid;
-          this.refreshPosts();
-        }
-      });
-    },
-    iconForMimeType: function (mimeType) {
-      return this.mimeToIcon[mimeType] || 'fa-file';
-    },
-    urlForAttachmentKey: function (key) {
-      return this.baseurl + "file-view?mode=view&key=" + key;
-    },
-    newAttachment: function () {
-      var self = this;
-      var fileInput = $('<input type="file" style="display: none;"></input>');
-
-      $(this.$el).append(fileInput);
-
-      fileInput.click();
-
-      fileInput.on('change', function () {
-        var file = fileInput[0].files[0];
-        var formData = new FormData();
-        formData.append('file', file);
-        formData.append('mode', 'attachment');
-
-        self.activeUploads += 1;
-
-        $.ajax({
-          url: self.baseurl + "file-upload",
-          type: "POST",
-          contentType: false,
-          cache: false,
-          processData: false,
-          data: formData,
-          dataType: 'json',
-          success: function (response) {
-            self.attachments.push({
-              name: file.name,
-              icon: self.iconForMimeType(file.type),
-              key: response.key,
-              url: self.urlForAttachmentKey(response.key),
-            });
-          },
-          error: function (xhr, statusText) {},
-          complete: function () {
-            self.activeUploads -= 1;
-          }
-        });
-
-      });
-    },
-    clearEditor: function () {
-      if (this.editor) {
-        this.attachments = []
-        this.editor.setData("");
-        this.editorFocused = false;
-      }
-    },
-    newPostContent: function () {
-      if (this.editor) {
-        return this.editor.getData();
-      } else {
-        return "";
-      }
-    },
     refreshPosts: function(opts) {
       if (!opts) { opts = {}; }
       this.firstUnreadPost = null;
@@ -419,6 +268,139 @@ Vue.component('react-topic', {
         }
       });
     },
+    focusAndHighlightPost: function(postUuid) {
+      var $post = $(this.$el).find('[data-post-uuid='+postUuid+']');
+      if ($post.length > 0) {
+        $post[0].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        $post.addClass('conversations-post-highlight');
+        setTimeout(() => {
+            $post.removeClass('conversations-post-highlight');
+        }, 1000);
+        return true;
+      } else {
+        return false;
+      }
+    },
+    iconForMimeType: function (mimeType) {
+      return this.$refs.postEditor.iconForMimeType(mimeType);
+    },
+    urlForAttachmentKey: function (key) {
+      return this.$refs.postEditor.urlForAttachmentKey(key);
+    },
+
+  },
+  mounted: function() {
+    this.refreshPosts();
+    setInterval(() => {
+      this.refreshPosts();
+    }, 5*1000);
+    this.resetMarkTopicReadEvents();
+  },
+  updated: function() {
+    // If we added a new rich text area, enrich it!
+    this.$nextTick(function () {
+      if (this.postToFocusAndHighlight) {
+        if (this.focusAndHighlightPost(this.postToFocusAndHighlight)) {
+          this.postToFocusAndHighlight = null;
+        }
+      }
+    });
+  }
+});
+
+
+Vue.component('post-editor', {
+  template: `
+<div class="conversations-post-form">
+  <slot name="author"></slot>
+  <div class="post-to-topic-textarea form-control">
+    <div class="stretchy-editor" v-bind:class='{ "full-editor-height": editorFocused }'>
+      <div class="topic-ckeditor"></div>
+    </div>
+    <div>
+      <hr>
+      <button v-on:click="newAttachment()" class="conversations-minimal-btn">
+        <i class="fa fa-paperclip"></i>&nbsp;Add attachment
+      </button>
+      <ul class="conversations-attachment-list">
+        <li v-for="a in attachments">
+          <i class="fa" v-bind:class='a.icon'></i>&nbsp;<a :href='a.url'>{{a.name}}</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <template v-if="activeUploads === 0">
+    <button class="button" v-on:click="post()">Post</button>
+  </template>
+  <template v-else>
+    <button class="button" disabled>Uploading...</button>
+  </template>
+  <slot name="actions"></slot>
+</div>
+`,
+  data: function () {
+    return {
+      editorFocused: false,
+      attachments: [],
+      activeUploads: 0,
+      editor: null,
+      attachments: [],
+      mimeToIcon: {
+        'application/pdf': 'fa-file-pdf-o',
+        'text/pdf': 'fa-file-pdf-o',
+
+        'application/msword': 'fa-file-word-o',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'fa-file-word-o',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.template': 'fa-file-word-o',
+
+        'application/vnd.ms-powerpoint': 'fa-file-powerpoint-o',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'fa-file-powerpoint-o',
+        'application/vnd.openxmlformats-officedocument.presentationml.template': 'fa-file-powerpoint-o',
+        'application/vnd.openxmlformats-officedocument.presentationml.slideshow': 'fa-file-powerpoint-o',
+
+        'application/vnd.ms-excel': 'fa-file-excel-o',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'fa-file-excel-o',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.template': 'fa-file-excel-o',
+
+        'image/jpeg': 'fa-file-image-o',
+        'image/png': 'fa-file-image-o',
+        'image/gif': 'fa-file-image-o',
+        'image/tiff': 'fa-file-image-o',
+        'image/bmp': 'fa-file-image-o',
+
+        'application/zip': 'fa-file-archive-o',
+        'application/x-rar-compressed': 'fa-file-archive-o',
+
+        'text/plain': 'fa-file-text-o',
+
+        'video/mp4': 'fa-file-video-o',
+        'video/x-flv': 'fa-file-video-o',
+        'video/quicktime': 'fa-file-video-o',
+        'video/mpeg': 'fa-file-video-o',
+        'video/ogg': 'fa-file-video-o',
+
+        'audio/mpeg': 'fa-file-audio-o',
+        'audio/ogg': 'fa-file-audio-o',
+        'audio/midi': 'fa-file-audio-o',
+        'audio/flac': 'fa-file-audio-o',
+        'audio/aac': 'fa-file-audio-o',
+      },
+    }
+  },
+  computed: {
+    baseurl: function() {
+      return this.$parent.baseurl;
+    },
+    topic_uuid: function() {
+      return this.$parent.topic_uuid;
+    }
+  },
+  props: [],
+  methods: {
+    newAttachment: function() {},
     initRichTextareas: function() {
       $(this.$el).find('.topic-ckeditor').each((idx, elt) => {
         RichText.initialize({
@@ -446,55 +428,98 @@ Vue.component('react-topic', {
         });
       });
     },
-    focusAndHighlightPost: function(postUuid) {
-      var $post = $(this.$el).find('[data-post-uuid='+postUuid+']');
-      if ($post.length > 0) {
-        $post[0].scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
+    iconForMimeType: function (mimeType) {
+      return this.mimeToIcon[mimeType] || 'fa-file';
+    },
+    urlForAttachmentKey: function (key) {
+      return this.baseurl + "file-view?mode=view&key=" + key;
+    },
+    newAttachment: function () {
+      var self = this;
+      var fileInput = $('<input type="file" style="display: none;"></input>');
+
+      $(this.$el).append(fileInput);
+
+      fileInput.click();
+
+      fileInput.on('change', function () {
+        var file = fileInput[0].files[0];
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('mode', 'attachment');
+
+        self.activeUploads += 1;
+
+        $.ajax({
+          url: self.baseurl + "file-upload",
+          type: "POST",
+          contentType: false,
+          cache: false,
+          processData: false,
+          data: formData,
+          dataType: 'json',
+          success: function (response) {
+            self.attachments.push({
+              name: file.name,
+              icon: self.iconForMimeType(file.type),
+              key: response.key,
+              url: self.urlForAttachmentKey(response.key),
+            });
+          },
+          error: function (xhr, statusText) {},
+          complete: function () {
+            self.activeUploads -= 1;
+          }
         });
-        $post.addClass('conversations-post-highlight');
-        setTimeout(() => {
-            $post.removeClass('conversations-post-highlight');
-        }, 1000);
-        return true;
-      } else {
-        return false;
+
+      });
+    },
+    clearEditor: function () {
+      if (this.editor) {
+        this.attachments = []
+        this.editor.setData("");
+        this.editorFocused = false;
       }
+    },
+    newPostContent: function () {
+      if (this.editor) {
+        return this.editor.getData();
+      } else {
+        return "";
+      }
+    },
+    post: function() {
+      var content = this.newPostContent().trim();
+
+      if (content === "") {
+        if (this.attachments.length === 0) {
+          this.clearEditor();
+          return;
+        } else {
+          // Blank content is OK if we have attachments.  Store a placeholder.
+          content = "&nbsp;";
+        }
+      }
+
+      $.ajax({
+        url: this.baseurl+"create-post",
+        type: 'post',
+        data: {
+          topicUuid: this.topic_uuid,
+          content: content,
+          attachmentKeys: this.attachments.map((attachment) => { return attachment.key }),
+        },
+        dataType: 'json',
+        success: (json) => {
+          this.clearEditor();
+          this.$parent.postToFocusAndHighlight = json.uuid;
+          this.$parent.refreshPosts();
+        }
+      });
     },
   },
   mounted: function() {
-    this.refreshPosts();
-    setInterval(() => {
-      this.refreshPosts();
-    }, 5*1000);
-    this.resetMarkTopicReadEvents();
     this.initRichTextareas();
   },
-  updated: function() {
-    // If we added a new rich text area, enrich it!
-    this.$nextTick(function () {
-      if (this.postToFocusAndHighlight) {
-        if (this.focusAndHighlightPost(this.postToFocusAndHighlight)) {
-          this.postToFocusAndHighlight = null;
-        }
-      }
-    });
-  }
-});
-
-
-Vue.component('post-editor', {
-  template: `
-<div></div>
-`,
-  data: function () {
-    return {
-    }
-  },
-  computed: {},
-  props: [],
-  methods: {},
-  mounted: function() {},
   updated: function() {}
 });
