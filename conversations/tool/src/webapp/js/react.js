@@ -126,7 +126,7 @@ Vue.component('react-topic', {
               </ul>
             </div>
           </div>
-          <template v-if="postAllowed">
+          <template v-if="activeUploads === 0">
             <button class="button" v-on:click="post()">Post</button>
           </template>
           <template v-else>
@@ -153,7 +153,7 @@ Vue.component('react-topic', {
   data: function () {
     return {
       posts: [],
-      postAllowed: true,
+      activeUploads: 0,
       initialPost: null,
       firstUnreadPost: null,
       editor: null,
@@ -253,8 +253,7 @@ Vue.component('react-topic', {
         formData.append('file', file);
         formData.append('mode', 'attachment');
 
-        // Disable the post button while we upload.
-        self.postAllowed = false;
+        self.activeUploads += 1;
 
         $.ajax({
           url: self.baseurl + "file-upload",
@@ -274,7 +273,7 @@ Vue.component('react-topic', {
           },
           error: function (xhr, statusText) {},
           complete: function () {
-            self.postAllowed = true;
+            self.activeUploads -= 1;
           }
         });
 
@@ -390,6 +389,13 @@ Vue.component('react-topic', {
           elt: elt,
           placeholder: 'Post to topic...',
           onCreate: (newEditor) => { this.editor = newEditor; },
+          onUploadEvent: (status) => {
+            if (status === 'started') {
+              this.activeUploads += 1;
+            } else {
+              this.activeUploads -= 1;
+            }
+          },
           onFocus: (event, name, isFocused) => {
             if (isFocused) {
               this.editorFocused = isFocused;

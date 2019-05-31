@@ -1,9 +1,10 @@
 (function() {
 
     class UploadAdapter {
-        constructor(loader, baseurl) {
+        constructor(loader, baseurl, callbacks) {
             this.loader = loader;
             this.baseurl = baseurl;
+            this.callbacks = callbacks;
         }
 
         upload() {
@@ -18,6 +19,11 @@
 
         handleUpload(file, resolve, reject) {
             var self = this;
+
+            if (self.callbacks.uploadStarted) {
+                self.callbacks.uploadStarted();
+            }
+
             var formData = new FormData();
             formData.append("file", file);
             formData.append("mode", "inline-upload");
@@ -37,7 +43,14 @@
                 },
                 error: function (xhr, statusText) {
                     reject(statusText);
-                }
+                },
+                complete: function () {
+                    setTimeout(function () {
+                        if (self.callbacks.uploadFinished) {
+                            self.callbacks.uploadFinished();
+                        }
+                    }, 0);
+                },
             });
         }
     }
@@ -53,8 +66,13 @@
                 placeholder: (opts.placeholder || "Type something")
             })
             .then(newEditor => {
+                newEditor.activeUploads = 0;
                 newEditor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-                    return new UploadAdapter(loader, opts.baseurl);
+                    return new UploadAdapter(loader, opts.baseurl,
+                                             {
+                                                 uploadStarted: () => { opts.onUploadEvent && opts.onUploadEvent('started'); },
+                                                 uploadFinished: () => { opts.onUploadEvent && opts.onUploadEvent('finished'); },
+                                             });
                 };
 
                 newEditor.ui.focusTracker.on('change:isFocused', (event, name, isFocused) => {
