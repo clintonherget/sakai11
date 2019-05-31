@@ -22,7 +22,10 @@ Vue.component('react-post', {
         <div class="conversations-post-content">
           <h2>{{topic_title}}</h2>
           <p>
-            <small class="text-muted">Created by {{post.postedByDisplayName}} on {{formatEpochTime(post.postedAt)}}</small>
+            <small class="text-muted">
+              Created by {{post.postedByDisplayName}} on {{formatEpochTime(post.postedAt)}}
+              <template v-if="post.version > 1"> <em>Edited</em></template>
+            </small>
           </p>
           <span v-html="post.content"></span>
           <ul class="conversations-attachment-list">
@@ -33,7 +36,10 @@ Vue.component('react-post', {
         </div>
     </template>
     <template v-else>
-      <small class="text-muted"><strong>{{post.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}</small>
+      <small class="text-muted">
+        <strong>{{post.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}
+        <template v-if="post.version > 1"> <em>Edited</em></template>
+      </small>
       <div class="conversations-postedby-photo">
         <img :src="'/direct/profile/'+post.postedBy + '/image'"/>
       </div>
@@ -441,7 +447,7 @@ Vue.component('post-editor', {
         });
       });
     }
-    console.log(existingAttachments);
+
     return {
       editorFocused: false,
       attachments: existingAttachments,
@@ -477,7 +483,6 @@ Vue.component('post-editor', {
               this.editorFocused = isFocused;
             } else {
               if (this.editor.getData() === '') {
-                console.log(this.editor.getData());
                 this.editorFocused = false;
               }
             }
