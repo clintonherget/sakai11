@@ -2,16 +2,19 @@ Vue.component('react-post', {
   template: `
 <div :class="css_classes" :data-post-uuid="post.uuid">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
-  <template v-if="post.editable">
+  <template v-if="post.editable && !editing">
     <a href="javascript:void(0)" class="edit pull-right" title="Edit Post" @click="edit()">
       <i class="fa fa-pencil" aria-hidden="true"></i>
     </a>
   </template>
   <template v-if="editing">
     <div class="conversations-post-content">
-      <p>Gimme an editor!</p>
-      <a class="button" @click="update()">Update Post</a>
-      <a class="button" @click="cancelEdit()">Cancel</a>
+      <post-editor ref="postEditor" :existing_attachments="post.attachments" :baseurl="baseurl">
+        <template v-slot:content><div v-html="post.content"></div></template>
+        <template v-slot:actions>
+          <a class="button" @click="cancelEdit()">Cancel</a>
+        </template>
+      </post-editor>
     </div>
   </template>
   <template v-else>
@@ -22,6 +25,11 @@ Vue.component('react-post', {
             <small class="text-muted">Created by {{post.postedByDisplayName}} on {{formatEpochTime(post.postedAt)}}</small>
           </p>
           <span v-html="post.content"></span>
+          <ul class="conversations-attachment-list">
+            <li v-for="a in post.attachments">
+              <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'></i>&nbsp;<a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
+            </li>
+          </ul>
         </div>
     </template>
     <template v-else>
@@ -47,7 +55,7 @@ Vue.component('react-post', {
           <template v-else>
               <button class="button" v-on:click="toggleCommentForm()">Comment</button>
           </template>
-          <template v-if="post.comments.length > 0">
+          <template v-if="post.comments && post.comments.length > 0">
             <div v-for="comment in post.comments" class="conversations-post-comment" :data-post-uuid="comment.uuid">
               <div class="conversations-postedby-photo">
                 <img :src="'/direct/profile/'+comment.postedBy + '/image'"/>
@@ -75,8 +83,14 @@ Vue.component('react-post', {
       editing: false,
     }
   },
-  props: ['post', 'baseurl', 'topic_uuid', 'initial_post'],
+  props: ['post', 'initial_post'],
   computed: {
+    baseurl: function() {
+      return this.$parent.baseurl;
+    },
+    topic_uuid: function() {
+      return this.$parent.topic_uuid;
+    },
     topic_title: function() {
       return this.$parent.topic_title;
     },
@@ -122,12 +136,28 @@ Vue.component('react-post', {
             this.showCommentForm = true;
         }
     },
+    savePost: function(content, attachments) {
+      $.ajax({
+        url: this.baseurl+"update-post",
+        type: 'post',
+        data: {
+          topic_uuid: this.topic_uuid,
+          post_uuid: this.post.uuid,
+          content: content,
+          attachmentKeys: attachments.map((attachment) => { return attachment.key }),
+          version: this.post.version,
+        },
+        dataType: 'json',
+        success: (json) => {
+          this.$refs.postEditor.clearEditor();
+          this.$parent.postToFocusAndHighlight = json.uuid;
+          this.$parent.refreshPosts();
+          this.cancelEdit();
+        }
+      });
+    },
     edit: function() {
       this.editing = true;
-    },
-    update: function() {
-      alert("TODO");
-      this.cancelEdit();
     },
     cancelEdit: function() {
       this.editing = false;
@@ -143,9 +173,9 @@ Vue.component('react-topic', {
   <div class="conversations-topic react">
     <div class="conversations-topic-main">
         <template v-if="initialPost">
-          <react-post :topic_uuid="topic_uuid" :post="initialPost" initial_post="true" :baseurl="baseurl"></react-post>
+          <react-post :post="initialPost" initial_post="true"></react-post>
         </template>
-        <post-editor ref="postEditor">
+        <post-editor ref="postEditor" :baseurl="baseurl">
           <template v-slot:author>
             <div class="conversations-postedby-photo">
               <img :src="'/direct/profile/'+ current_user_id + '/image'"/>
@@ -290,7 +320,23 @@ Vue.component('react-topic', {
     urlForAttachmentKey: function (key) {
       return this.$refs.postEditor.urlForAttachmentKey(key);
     },
-
+    savePost: function(content, attachments) {
+      $.ajax({
+        url: this.baseurl+"create-post",
+        type: 'post',
+        data: {
+          topicUuid: this.topic_uuid,
+          content: content,
+          attachmentKeys: attachments.map((attachment) => { return attachment.key }),
+        },
+        dataType: 'json',
+        success: (json) => {
+          this.$refs.postEditor.clearEditor();
+          this.postToFocusAndHighlight = json.uuid;
+          this.refreshPosts();
+        }
+      });
+    }
   },
   mounted: function() {
     this.refreshPosts();
@@ -318,7 +364,7 @@ Vue.component('post-editor', {
   <slot name="author"></slot>
   <div class="post-to-topic-textarea form-control">
     <div class="stretchy-editor" v-bind:class='{ "full-editor-height": editorFocused }'>
-      <div class="topic-ckeditor"></div>
+      <div class="topic-ckeditor"><slot name="content"></slot></div>
     </div>
     <div>
       <hr>
@@ -333,7 +379,7 @@ Vue.component('post-editor', {
     </div>
   </div>
   <template v-if="activeUploads === 0">
-    <button class="button" v-on:click="post()">Post</button>
+    <button class="button" v-on:click="savePost()">Post</button>
   </template>
   <template v-else>
     <button class="button" disabled>Uploading...</button>
@@ -342,63 +388,74 @@ Vue.component('post-editor', {
 </div>
 `,
   data: function () {
+    var mimeToIconMap = {
+      'application/pdf': 'fa-file-pdf-o',
+      'text/pdf': 'fa-file-pdf-o',
+
+      'application/msword': 'fa-file-word-o',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'fa-file-word-o',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.template': 'fa-file-word-o',
+
+      'application/vnd.ms-powerpoint': 'fa-file-powerpoint-o',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'fa-file-powerpoint-o',
+      'application/vnd.openxmlformats-officedocument.presentationml.template': 'fa-file-powerpoint-o',
+      'application/vnd.openxmlformats-officedocument.presentationml.slideshow': 'fa-file-powerpoint-o',
+
+      'application/vnd.ms-excel': 'fa-file-excel-o',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'fa-file-excel-o',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.template': 'fa-file-excel-o',
+
+      'image/jpeg': 'fa-file-image-o',
+      'image/png': 'fa-file-image-o',
+      'image/gif': 'fa-file-image-o',
+      'image/tiff': 'fa-file-image-o',
+      'image/bmp': 'fa-file-image-o',
+
+      'application/zip': 'fa-file-archive-o',
+      'application/x-rar-compressed': 'fa-file-archive-o',
+
+      'text/plain': 'fa-file-text-o',
+
+      'video/mp4': 'fa-file-video-o',
+      'video/x-flv': 'fa-file-video-o',
+      'video/quicktime': 'fa-file-video-o',
+      'video/mpeg': 'fa-file-video-o',
+      'video/ogg': 'fa-file-video-o',
+
+      'audio/mpeg': 'fa-file-audio-o',
+      'audio/ogg': 'fa-file-audio-o',
+      'audio/midi': 'fa-file-audio-o',
+      'audio/flac': 'fa-file-audio-o',
+      'audio/aac': 'fa-file-audio-o',
+    };
+
+    var existingAttachments = [];
+
+    if (this.existing_attachments) {
+      this.existing_attachments.forEach((attachment) => {
+        existingAttachments.push({
+          name: attachment.fileName,
+          icon: mimeToIconMap[attachment.mimeType] || 'fa-file',
+          key: attachment.key,
+          url: this.urlForAttachmentKey(attachment.key),
+        });
+      });
+    }
+    console.log(existingAttachments);
     return {
       editorFocused: false,
-      attachments: [],
+      attachments: existingAttachments,
       activeUploads: 0,
       editor: null,
-      attachments: [],
-      mimeToIcon: {
-        'application/pdf': 'fa-file-pdf-o',
-        'text/pdf': 'fa-file-pdf-o',
-
-        'application/msword': 'fa-file-word-o',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'fa-file-word-o',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.template': 'fa-file-word-o',
-
-        'application/vnd.ms-powerpoint': 'fa-file-powerpoint-o',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'fa-file-powerpoint-o',
-        'application/vnd.openxmlformats-officedocument.presentationml.template': 'fa-file-powerpoint-o',
-        'application/vnd.openxmlformats-officedocument.presentationml.slideshow': 'fa-file-powerpoint-o',
-
-        'application/vnd.ms-excel': 'fa-file-excel-o',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'fa-file-excel-o',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.template': 'fa-file-excel-o',
-
-        'image/jpeg': 'fa-file-image-o',
-        'image/png': 'fa-file-image-o',
-        'image/gif': 'fa-file-image-o',
-        'image/tiff': 'fa-file-image-o',
-        'image/bmp': 'fa-file-image-o',
-
-        'application/zip': 'fa-file-archive-o',
-        'application/x-rar-compressed': 'fa-file-archive-o',
-
-        'text/plain': 'fa-file-text-o',
-
-        'video/mp4': 'fa-file-video-o',
-        'video/x-flv': 'fa-file-video-o',
-        'video/quicktime': 'fa-file-video-o',
-        'video/mpeg': 'fa-file-video-o',
-        'video/ogg': 'fa-file-video-o',
-
-        'audio/mpeg': 'fa-file-audio-o',
-        'audio/ogg': 'fa-file-audio-o',
-        'audio/midi': 'fa-file-audio-o',
-        'audio/flac': 'fa-file-audio-o',
-        'audio/aac': 'fa-file-audio-o',
-      },
+      mimeToIcon: mimeToIconMap,
     }
   },
   computed: {
-    baseurl: function() {
-      return this.$parent.baseurl;
-    },
     topic_uuid: function() {
       return this.$parent.topic_uuid;
     }
   },
-  props: [],
+  props: ['existing_attachments', 'baseurl'],
   methods: {
     newAttachment: function() {},
     initRichTextareas: function() {
@@ -488,7 +545,7 @@ Vue.component('post-editor', {
         return "";
       }
     },
-    post: function() {
+    savePost: function() {
       var content = this.newPostContent().trim();
 
       if (content === "") {
@@ -501,21 +558,7 @@ Vue.component('post-editor', {
         }
       }
 
-      $.ajax({
-        url: this.baseurl+"create-post",
-        type: 'post',
-        data: {
-          topicUuid: this.topic_uuid,
-          content: content,
-          attachmentKeys: this.attachments.map((attachment) => { return attachment.key }),
-        },
-        dataType: 'json',
-        success: (json) => {
-          this.clearEditor();
-          this.$parent.postToFocusAndHighlight = json.uuid;
-          this.$parent.refreshPosts();
-        }
-      });
+      this.$parent.savePost(content, this.attachments);
     },
   },
   mounted: function() {

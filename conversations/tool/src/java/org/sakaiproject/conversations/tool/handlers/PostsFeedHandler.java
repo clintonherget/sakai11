@@ -106,6 +106,7 @@ public class PostsFeedHandler implements Handler {
         obj.put("postedAt", post.getPostedAt());
         obj.put("unread", post.isUnread());
         obj.put("editable", post.isEditable());
+        obj.put("version", post.getVersion());
 
         JSONArray comments = new JSONArray();
         for (Post comment : post.getComments()) {

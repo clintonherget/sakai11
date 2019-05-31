@@ -79,6 +79,7 @@ public class Post implements Comparable<Post> {
         } else {
             this.postedByDisplayName = postedByEid;
         }
+        this.version = version;
     }
 
     public Post(String content, String postedBy) {

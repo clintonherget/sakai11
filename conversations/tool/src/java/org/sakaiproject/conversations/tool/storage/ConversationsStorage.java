@@ -555,7 +555,7 @@ public class ConversationsStorage {
                     @Override
                     public String call(DBConnection db) throws SQLException {
                         try {
-                            db.run("UPDATE conversations_post (content, updated_by, updated_at, version) VALUES (?, ?, ?, ?) WHERE uuid = ? && topic_uuid = ?")
+                            db.run("UPDATE conversations_post SET content = ?, updated_by = ?, updated_at = ?, version = ? WHERE uuid = ? AND topic_uuid = ?")
                                     .param(post.getContent())
                                     .param(post.getUpdatedBy())
                                     .param(postedAt)

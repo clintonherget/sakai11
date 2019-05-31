@@ -78,7 +78,7 @@ public class UpdatePostHandler implements Handler {
                 throw new RuntimeException("Unable to edit post");
             }
 
-            if (!post.getVersion().equals(version)) {
+            if (!post.getVersion().equals(Long.valueOf(version))) {
                 // FIXME
                 throw new RuntimeException("Unable to edit as post is stale");
             }
