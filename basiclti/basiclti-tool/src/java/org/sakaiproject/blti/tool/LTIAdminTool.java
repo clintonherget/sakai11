@@ -21,11 +21,13 @@
 package org.sakaiproject.blti.tool;
 
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -36,6 +38,7 @@ import java.net.HttpURLConnection;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.tsugi.basiclti.BasicLTIUtil;
 import org.tsugi.lti2.LTI2Config;
 import org.tsugi.lti2.LTI2Constants;
@@ -1767,7 +1770,15 @@ public class LTIAdminTool extends VelocityPortletPaneledAction
 					}
 				}
 			}
-			state.setAttribute(STATE_REDIRECT_URL,returnUrl);
+
+			//Append the LTI item description to the URL so Lessons can use it.
+			String ltiToolDescription = reqProps.getProperty(LTIService.LTI_DESCRIPTION);
+			if(StringUtils.isNotEmpty(ltiToolDescription)){
+				returnUrl += "&ltiItemDescription=" + StringEscapeUtils.escapeHtml4​(ltiToolDescription);
+			}
+
+			state.setAttribute(STATE_REDIRECT_URL, returnUrl);
+
 			return;
 		}
 
@@ -2276,11 +2287,17 @@ public class LTIAdminTool extends VelocityPortletPaneledAction
 		if ( allowLinkSelection > 0 ) context.put("contentLaunch", contentLaunch);
 		// If this tool only allows configuration, go straight to Content Item
 		if ( allowLinkSelection > 0 && allowLaunch < 1 ) context.put("autoLaunch", contentLaunch);
-		context.put(LTIService.LTI_TOOL_ID,toolKey);
-		context.put("tool_description", tool.get(LTIService.LTI_DESCRIPTION));
+		context.put(LTIService.LTI_TOOL_ID, toolKey);
 		context.put("tool_title", tool.get(LTIService.LTI_TITLE));
 		context.put("tool_launch", tool.get(LTIService.LTI_LAUNCH));
 
+		String toolDescription = StringEscapeUtils.escapeHtml4​((String) tool.get(LTIService.LTI_DESCRIPTION));
+		Optional<String> descriptionField = Arrays.stream(LTIService.TOOL_MODEL).filter(e -> e.startsWith("description")).findFirst();
+		if(descriptionField.isPresent()){
+			String descriptionFormInput = foorm.formInput(null, descriptionField.get(), rb);
+			toolDescription = StringUtils.isNotEmpty(toolDescription) ? StringUtils.replace(descriptionFormInput, "</textarea>", toolDescription + "</textarea>") : descriptionFormInput;
+		}
+		context.put("tool_description", toolDescription);
 
 		String key = (String) tool.get(LTIService.LTI_CONSUMERKEY);
 		String secret = (String) tool.get(LTIService.LTI_SECRET);

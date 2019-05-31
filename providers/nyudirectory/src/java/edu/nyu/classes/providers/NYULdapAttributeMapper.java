@@ -28,6 +28,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import java.util.stream.Collectors;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -38,6 +40,8 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
 
 import org.sakaiproject.unboundid.SimpleLdapAttributeMapper;
 import org.sakaiproject.unboundid.LdapUserData;
+
+import org.sakaiproject.unboundid.AttributeMappingConstants;
 
 public class NYULdapAttributeMapper extends SimpleLdapAttributeMapper
 {
@@ -122,6 +126,74 @@ public class NYULdapAttributeMapper extends SimpleLdapAttributeMapper
 
     public static boolean isOverrideActive() {
         return ServerConfigurationService.getBoolean("edu.nyu.classes.ldap.emailsFromDB", false);
+    }
+
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public String getFindUserByCrossAttributeSearchFilter(String criteria) {
+        String eidAttr = getAttributeMapping(AttributeMappingConstants.LOGIN_ATTR_MAPPING_KEY);
+        String emailAttr = getAttributeMapping(AttributeMappingConstants.EMAIL_ATTR_MAPPING_KEY);
+        String givenNameAttr = getAttributeMapping(AttributeMappingConstants.FIRST_NAME_ATTR_MAPPING_KEY);
+        String lastNameAttr = getAttributeMapping(AttributeMappingConstants.LAST_NAME_ATTR_MAPPING_KEY);
+
+        // Prefix searches just add noise to these.
+        List<String> noPrefixFields = Arrays.asList(eidAttr, emailAttr);
+
+        List<String> fields = Arrays.asList(eidAttr, emailAttr, givenNameAttr, lastNameAttr);
+        List<String> tokens = Arrays.asList(criteria.split("[\" ,]+")).stream()
+            .filter(s -> !s.isEmpty()).distinct()
+            .map(s -> escapeSearchFilterTerm(s))
+            .collect(Collectors.toList());
+
+        // If any of our tokens looks like an email address, look it up and
+        // include the netid on our search.
+        List<String> removeEmails = new ArrayList<>();
+        List<String> additionalNetIds = new ArrayList<>();
+        for (String token : tokens) {
+            if (token.indexOf("@") > 0) {
+                String netid = getNetIdForEmail(token);
+
+                if (netid != null) {
+                    additionalNetIds.add(netid);
+                    removeEmails.add(token);
+                }
+            }
+        }
+
+        tokens.addAll(additionalNetIds);
+        tokens.removeAll(removeEmails);
+
+
+        // We want to end up with:
+        //
+        // (field1=term1 OR field2=term1 OR field3=term1) AND
+        // (field1=term2 OR field2=term2 OR field3=term2) AND
+        // (field1=term3 OR field2=term3 OR field3=term3)
+
+        List<String> subqueries = new ArrayList<>();
+        for (String token : tokens) {
+            // A search for `token` against all fields in our list.
+            String allFieldsSubquery =
+                String.format("(|%s)",
+                              fields
+                              .stream()
+                              .map(field -> {
+                                      if (noPrefixFields.contains(field)) {
+                                          return String.format("(%s=%s)", field, token);
+                                      } else {
+                                          return String.format("(%s=%s*)", field, token);
+                                      }
+                                  })
+                              .collect(Collectors.joining("")));
+
+            subqueries.add(allFieldsSubquery);
+        }
+
+        // Our final search requires that every token appear *somewhere*
+        return String.format("(&%s)", subqueries.stream().collect(Collectors.joining("")));
     }
 
 

@@ -39,8 +39,8 @@ public class GrouperSyncJob implements StatefulJob {
                 Collection<UserWithRole> formerMembers = grouper.getMembers(grouperGroupId);
                 Collection<UserWithRole> currentMembers = syncableGroup.getMembers();
 
-                log.info("Former members: " + formerMembers);
-                log.info("Current members: " + currentMembers);
+                log.debug("Former members: " + formerMembers);
+                log.debug("Current members: " + currentMembers);
 
                 Sets.KeyFn byUsername = new Sets.KeyFn<UserWithRole>() {
                     public Object key(UserWithRole user) {
@@ -53,9 +53,9 @@ public class GrouperSyncJob implements StatefulJob {
                 Set<UserWithRole> changedRoles = Sets.subtract(Sets.subtract(currentMembers, formerMembers),
                         addedUsers);
 
-                log.info("Added users: " + addedUsers);
-                log.info("Dropped users: " + droppedUsers);
-                log.info("Changed roles: " + changedRoles);
+                log.debug("Added users: " + addedUsers);
+                log.debug("Dropped users: " + droppedUsers);
+                log.debug("Changed roles: " + changedRoles);
 
                 grouper.recordChanges(grouperGroupId, addedUsers, droppedUsers, changedRoles);
             } catch (GrouperSyncException e) {

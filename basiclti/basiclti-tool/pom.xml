@@ -59,6 +59,15 @@
             <groupId>org.sakaiproject.portal</groupId>
             <artifactId>sakai-portal-util</artifactId>
         </dependency>
+        <dependency>
+          <groupId>commons-lang</groupId>
+          <artifactId>commons-lang</artifactId>
+         </dependency>
+        <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-text</artifactId>
+          <version>1.6</version>
+         </dependency>
     </dependencies>
     
     <build>

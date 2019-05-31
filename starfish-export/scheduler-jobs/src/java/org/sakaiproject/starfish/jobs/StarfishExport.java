@@ -386,7 +386,38 @@ public class StarfishExport implements InterruptableJob {
 	}
 
 
-	private void writeOutputsToSite(Path assessmentFile, Path scoreFile) {
+	private void makeFolder(String folderName, String path) throws Exception {
+		// Ensure the folder exists in resources
+		try {
+			org.sakaiproject.content.api.ContentCollectionEdit edit =
+				org.sakaiproject.content.cover.ContentHostingService.addCollection(path);
+			edit.getPropertiesEdit().addProperty(org.sakaiproject.entity.api.ResourceProperties.PROP_DISPLAY_NAME, folderName);
+			org.sakaiproject.content.cover.ContentHostingService.commitCollection(edit);
+		} catch (org.sakaiproject.exception.IdUsedException e) {}
+
+	}
+
+	public static java.io.InputStream gzipInputStream(java.io.InputStream input) throws Exception {
+		byte[] buf = new byte[4096];
+
+		java.io.File tempPath = java.io.File.createTempFile("patrick", "starfish");
+		java.util.zip.GZIPOutputStream tempfile = new java.util.zip.GZIPOutputStream(new java.io.FileOutputStream(tempPath));
+
+		int len;
+		while ((len = input.read(buf)) >= 0) {
+			tempfile.write(buf, 0, len);
+		}
+
+		tempfile.close();
+
+		java.io.InputStream result = new java.io.FileInputStream(tempPath);
+
+		tempPath.delete();
+
+		return result;
+	}
+
+	private void writeOutputsToSite(java.nio.file.Path assessmentFile, java.nio.file.Path scoreFile) {
 		try {
 			String exportSiteId = org.sakaiproject.component.cover.HotReloadConfigurationService.getString("nyu.starfish-export-site", "");
 
@@ -398,21 +429,88 @@ public class StarfishExport implements InterruptableJob {
 			String folderName = "starfish_exports";
 			String exportDir = org.sakaiproject.content.cover.ContentHostingService.getSiteCollection(exportSiteId) + folderName + "/";
 
-			// Ensure the folder exists in resources
-			try {
-				org.sakaiproject.content.api.ContentCollectionEdit edit =
-					org.sakaiproject.content.cover.ContentHostingService.addCollection(exportDir);
-				edit.getPropertiesEdit().addProperty(org.sakaiproject.entity.api.ResourceProperties.PROP_DISPLAY_NAME, folderName);
-				org.sakaiproject.content.cover.ContentHostingService.commitCollection(edit);
-			} catch (org.sakaiproject.exception.IdUsedException e) {}
+			makeFolder(folderName, exportDir);
+
+			String archiveDir = exportDir + "archives" + "/";
+			makeFolder("archives", archiveDir);
+
+			// Expire old archives
+			for (Object obj : org.sakaiproject.content.cover.ContentHostingService.getAllEntities(exportDir + "archives/")) {
+				if (obj instanceof org.sakaiproject.content.api.ContentCollection) {
+					org.sakaiproject.content.api.ContentCollection collection = (org.sakaiproject.content.api.ContentCollection) obj;
+
+					if (collection.getId().matches("^.*/archives/2[0-9]{3}-[0-9][0-9]/$")) {
+						String dateString = collection.getId().replaceAll("^.*/archives/(.*?)/", "$1");
+
+						Date archiveDate = new java.text.SimpleDateFormat("yyyy-MM").parse(dateString);
+
+						if ((new Date().getTime() - archiveDate.getTime()) > (365L * 24 * 60 * 60 * 1000)) {
+							// Expire this archive folder
+							org.sakaiproject.content.cover.ContentHostingService.removeCollection(collection.getId());
+						}
+					}
+				}
+			}
+
 
 			String now = new java.text.SimpleDateFormat("YYYY-MM-dd").format(new Date());
+
+			String thisMonth = new java.text.SimpleDateFormat("YYYY-MM").format(new Date());
+			String currentArchiveDir = archiveDir + thisMonth + "/";
+			makeFolder(thisMonth, currentArchiveDir);
+
+
+			// Remove existing files
+			List<String> deleteMe = new ArrayList<>();
+			for (Object resourceObject : org.sakaiproject.content.cover.ContentHostingService.getAllResources(exportDir)) {
+				org.sakaiproject.content.api.ContentResource resource = (org.sakaiproject.content.api.ContentResource) resourceObject;
+
+				if (resource.getId().endsWith(".csv")) {
+					deleteMe.add(resource.getId());
+				}
+			}
+
+			for (String resourceId : deleteMe) {
+				org.sakaiproject.content.cover.ContentHostingService.removeResource(resourceId);
+				org.sakaiproject.content.cover.ContentHostingService.removeDeletedResource(resourceId);
+			};
+
+			// Write assessments (archive copy)
+			try (java.io.InputStream assessmentsInputStream = gzipInputStream(new java.io.FileInputStream(assessmentFile.toFile()))) {
+				org.sakaiproject.content.api.ContentResourceEdit assessmentsResource =
+					org.sakaiproject.content.cover.ContentHostingService.addResource(currentArchiveDir,
+													 String.format("%s_assessments", now),
+													 "csv.gz",
+													 10);
+
+				assessmentsResource.setContentType("application/gzip");
+				assessmentsResource.setContent(assessmentsInputStream);
+
+				org.sakaiproject.content.cover.ContentHostingService.commitResource(assessmentsResource,
+												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
+			}
+
+			// Write scores (archive copy)
+			try (java.io.InputStream scoresInputStream = gzipInputStream(new java.io.FileInputStream(scoreFile.toFile()))) {
+				org.sakaiproject.content.api.ContentResourceEdit scoresResource =
+					org.sakaiproject.content.cover.ContentHostingService.addResource(currentArchiveDir,
+													 String.format("%s_scores", now),
+													 "csv.gz",
+													 10);
+
+				scoresResource.setContentType("application/gzip");
+				scoresResource.setContent(scoresInputStream);
+
+				org.sakaiproject.content.cover.ContentHostingService.commitResource(scoresResource,
+												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
+			}
+
 
 			// Write assessments
 			try (java.io.InputStream assessmentsInputStream = new java.io.FileInputStream(assessmentFile.toFile())) {
 				org.sakaiproject.content.api.ContentResourceEdit assessmentsResource =
 					org.sakaiproject.content.cover.ContentHostingService.addResource(exportDir,
-													 String.format("%s_assessments", now),
+													 "assessments",
 													 "csv",
 													 10);
 
@@ -427,7 +525,7 @@ public class StarfishExport implements InterruptableJob {
 			try (java.io.InputStream scoresInputStream = new java.io.FileInputStream(scoreFile.toFile())) {
 				org.sakaiproject.content.api.ContentResourceEdit scoresResource =
 					org.sakaiproject.content.cover.ContentHostingService.addResource(exportDir,
-													 String.format("%s_scores", now),
+													 "scores",
 													 "csv",
 													 10);
 
@@ -442,6 +540,7 @@ public class StarfishExport implements InterruptableJob {
 			throw new RuntimeException(e);
 		}
 	}
+
 
 	/**
 	 * Start a session for the admin user and the given jobName
