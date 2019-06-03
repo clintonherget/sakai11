@@ -82,14 +82,15 @@ public class ConversationsStorage {
                      .param(key)
                      .executeQuery()) {
                     for (ResultSet result : results) {
-                        return Optional.of(new Attachment(key,
+                        return (Optional<Attachment>)Optional.of(new Attachment(key,
                                                           result.getString("mime_type"),
                                                           result.getString("filename"),
                                                           result.getString("role")));
                     }
                 }
 
-                return Optional.empty();
+                Optional<Attachment> result = Optional.empty();
+                return result;
             });
     }
 
@@ -312,7 +313,8 @@ public class ConversationsStorage {
                                                      result.getLong("last_activity_at")));
                     }
 
-                    return Optional.empty();
+                    Optional<Topic> result = Optional.empty();
+                    return result;
                 }
             });
     }
