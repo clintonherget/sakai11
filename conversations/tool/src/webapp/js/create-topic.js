@@ -169,7 +169,6 @@ Vue.component('create-topic-modal', {
   props: ['baseurl'],
   methods: {
     show: function() {
-      const $dialog = $(this.$refs.dialog);
       $(this.$refs.dialog).modal();
       this.resize();
     },

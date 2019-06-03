@@ -103,9 +103,9 @@ Vue.component('topic-listing', {
     sortClassesForColumn: function(column) {
       const classes = ['conversations-sortable'];
       if (column === this.order_by) {
-        const sort_direction = this.order_direction.toLowerCase();
+        const sortDirection = this.order_direction.toLowerCase();
         classes.push('conversations-sortable-active');
-        classes.push('conversations-sortable-active-'+sort_direction);
+        classes.push('conversations-sortable-active-'+sortDirection);
       }
       return ' ' + classes.join(' ');
     },

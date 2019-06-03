@@ -19,6 +19,7 @@
         "vue"
     ],
     "rules": {
-        "max-len": "off"
+        "max-len": "off",
+        "require-jsdoc": "off"
     }
 }
