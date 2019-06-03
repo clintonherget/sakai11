@@ -1,15 +1,19 @@
+import Vue from 'vue';
+
 Vue.component('react-post', {
   template: `
 <div :class="css_classes" :data-post-uuid="post.uuid">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
   <template v-if="post.editable && !editing">
-    <a href="javascript:void(0)" class="edit pull-right" title="Edit Post" @click="edit()">
+    <a href="javascript:void(0)" class="edit pull-right" title="Edit Post"
+        @click="edit()">
       <i class="fa fa-pencil" aria-hidden="true"></i>
     </a>
   </template>
   <template v-if="editing">
     <div class="conversations-post-content">
-      <post-editor ref="postEditor" :existing_attachments="post.attachments" :baseurl="baseurl">
+      <post-editor ref="postEditor" :existing_attachments="post.attachments"
+            :baseurl="baseurl">
         <template v-slot:content><div v-html="post.content"></div></template>
         <template v-slot:actions>
           <a class="button" @click="cancelEdit()">Cancel</a>
@@ -19,25 +23,33 @@ Vue.component('react-post', {
   </template>
   <template v-else>
     <template v-if="initialPost">
-        <div class="conversations-post-content">
-          <h2>{{topic_title}}</h2>
-          <p>
-            <small class="text-muted">
-              Created by {{post.postedByDisplayName}} on {{formatEpochTime(post.postedAt)}}
-              <template v-if="post.version > 1"> <em>Edited</em></template>
-            </small>
-          </p>
-          <span v-html="post.content"></span>
-          <ul class="conversations-attachment-list">
-            <li v-for="a in post.attachments">
-              <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'></i>&nbsp;<a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
-            </li>
-          </ul>
-        </div>
+      <div class="conversations-post-content">
+        <h2>{{topic_title}}</h2>
+        <p>
+          <small class="text-muted">
+            Created by {{post.postedByDisplayName}}
+            on {{formatEpochTime(post.postedAt)}}
+            <template v-if="post.version > 1"> <em>Edited</em></template>
+          </small>
+        </p>
+        <span v-html="post.content"></span>
+        <ul class="conversations-attachment-list">
+          <li v-for="a in post.attachments">
+            <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'>
+            </i>
+            &nbsp;
+            <a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
+          </li>
+        </ul>
+      </div>
     </template>
     <template v-else>
       <small class="text-muted">
-        <strong>{{post.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(post.postedAt)}}
+        <strong>
+          {{post.postedByDisplayName}}
+        </strong>
+        &nbsp;&nbsp;&nbsp;
+        {{formatEpochTime(post.postedAt)}}
         <template v-if="post.version > 1"> <em>Edited</em></template>
       </small>
       <div class="conversations-postedby-photo">
@@ -48,27 +60,46 @@ Vue.component('react-post', {
         <div class="conversations-post-comments">
           <ul class="conversations-attachment-list">
             <li v-for="a in post.attachments">
-              <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'></i>&nbsp;<a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
+              <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'>
+              </i>
+              &nbsp;
+              <a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
             </li>
           </ul>
           <template v-if="showCommentForm">
             <div class="conversations-comment-form">
-              <textarea class="form-control" placeholder="Comment on post..." v-model="commentContent"></textarea>
-              <button class="button" v-on:click="addComment()">Post Comment</button>
-              <button class="button" v-on:click="toggleCommentForm()">Cancel</button>
+              <textarea class="form-control" placeholder="Comment on post..."
+                  v-model="commentContent"></textarea>
+              <button class="button" v-on:click="addComment()">
+                Post Comment
+              </button>
+              <button class="button" v-on:click="toggleCommentForm()">
+                Cancel
+              </button>
             </div>
           </template>
           <template v-else>
-              <button class="button" v-on:click="toggleCommentForm()">Comment</button>
+            <button class="button" v-on:click="toggleCommentForm()">
+              Comment
+            </button>
           </template>
           <template v-if="post.comments && post.comments.length > 0">
-            <div v-for="comment in post.comments" class="conversations-post-comment" :data-post-uuid="comment.uuid">
+            <div v-for="comment in post.comments"
+                  class="conversations-post-comment"
+                  :data-post-uuid="comment.uuid">
               <div class="conversations-postedby-photo">
                 <img :src="'/direct/profile/'+comment.postedBy + '/image'"/>
               </div>
               <div>
-                <span v-if="comment.unread" class="badge badge-primary">NEW</span>
-                <small class="text-muted"><strong>{{comment.postedByDisplayName}}</strong>&nbsp;&nbsp;&nbsp;{{formatEpochTime(comment.postedAt)}}</small>
+                <span v-if="comment.unread"
+                      class="badge badge-primary">NEW</span>
+                <small class="text-muted">
+                  <strong>
+                    {{comment.postedByDisplayName}}
+                  </strong>
+                  &nbsp;&nbsp;&nbsp;
+                  {{formatEpochTime(comment.postedAt)}}
+                </small>
               </div>
               <div class="conversations-comment-content">
                 {{comment.content}}
@@ -81,13 +112,13 @@ Vue.component('react-post', {
   </template>
 </div>
 `,
-  data: function () {
+  data: function() {
     return {
       showCommentForm: false,
       commentContent: '',
       initialPost: this.initial_post == 'true',
       editing: false,
-    }
+    };
   },
   props: ['post', 'initial_post'],
   computed: {
@@ -101,56 +132,62 @@ Vue.component('react-post', {
       return this.$parent.topic_title;
     },
     css_classes: function() {
-      var classes = ['conversations-post'];
+      const classes = ['conversations-post'];
       if (this.initialPost) {
         classes.push('conversations-initial-post');
       }
       if (this.post.unread) {
-          classes.push('unread');
+        classes.push('unread');
       }
       return classes.join(' ');
     },
   },
   methods: {
     addComment: function() {
-      if (this.commentContent.trim() == "") {
-          this.commentContent = "";
+      if (this.commentContent.trim() == '') {
+        this.commentContent = '';
         return;
       }
 
       $.ajax({
-        url: this.baseurl+"create-post",
+        url: this.baseurl+'create-post',
         type: 'post',
-        data: { topicUuid: this.topic_uuid, content: this.commentContent, post_uuid: this.post.uuid },
+        data: {
+          topicUuid: this.topic_uuid,
+          content: this.commentContent,
+          post_uuid: this.post.uuid,
+        },
         dataType: 'json',
         success: (json) => {
-          this.commentContent = "";
+          this.commentContent = '';
           this.showCommentForm = false;
           this.$parent.postToFocusAndHighlight = json.uuid;
           this.$parent.refreshPosts();
-        }
+        },
       });
     },
     formatEpochTime: function(epoch) {
       return new Date(epoch).toLocaleString();
     },
     toggleCommentForm: function() {
-        if (this.showCommentForm) {
-            this.showCommentForm = false;
-            this.commentContent = "";
-        } else {
-            this.showCommentForm = true;
-        }
+      if (this.showCommentForm) {
+        this.showCommentForm = false;
+        this.commentContent = '';
+      } else {
+        this.showCommentForm = true;
+      }
     },
     savePost: function(content, attachments) {
       $.ajax({
-        url: this.baseurl+"update-post",
+        url: this.baseurl+'update-post',
         type: 'post',
         data: {
           topic_uuid: this.topic_uuid,
           post_uuid: this.post.uuid,
           content: content,
-          attachmentKeys: attachments.map((attachment) => { return attachment.key }),
+          attachmentKeys: attachments.map((attachment) => {
+            return attachment.key;
+          }),
           version: this.post.version,
         },
         dataType: 'json',
@@ -159,7 +196,7 @@ Vue.component('react-post', {
           this.$parent.postToFocusAndHighlight = json.uuid;
           this.$parent.refreshPosts();
           this.cancelEdit();
-        }
+        },
       });
     },
     edit: function() {
@@ -167,10 +204,10 @@ Vue.component('react-post', {
     },
     cancelEdit: function() {
       this.editing = false;
-    }
+    },
   },
   mounted: function() {
-  }
+  },
 });
 
 
@@ -188,7 +225,9 @@ Vue.component('react-topic', {
             </div>
           </template>
           <template v-slot:actions>
-            <button class="button" v-on:click="markTopicRead(true)">Mark all as read</button>
+            <button class="button" v-on:click="markTopicRead(true)">
+              Mark all as read
+            </button>
           </template>
         </post-editor>
         <div class="conversations-posts">
@@ -198,7 +237,9 @@ Vue.component('react-topic', {
                 <span class="badge badge-primary">NEW</span>
               </div>
             </template>
-            <react-post :topic_uuid="topic_uuid" :post="post" :baseurl="baseurl"></react-post>
+            <react-post :topic_uuid="topic_uuid" :post="post"
+                :baseurl="baseurl">
+            </react-post>
           </template>
         </div>
     </div>
@@ -207,58 +248,63 @@ Vue.component('react-topic', {
     </div>
   </div>
 `,
-  data: function () {
+  data: function() {
     return {
       posts: [],
       activeUploads: 0,
       initialPost: null,
       firstUnreadPost: null,
       postToFocusAndHighlight: null,
-    }
+    };
   },
-  props: ['baseurl',
-          'topic_uuid',
-          'topic_title',
-          'current_user_id',
-          'current_user_role'],
+  props: [
+    'baseurl',
+    'topic_uuid',
+    'topic_title',
+    'current_user_id',
+    'current_user_role'],
   methods: {
     refreshPosts: function(opts) {
-      if (!opts) { opts = {}; }
+      if (!opts) {
+        opts = {};
+      }
+
       this.firstUnreadPost = null;
 
       $.ajax({
-        url: this.baseurl+"feed/posts",
+        url: this.baseurl+'feed/posts',
         type: 'get',
-        data: { topicUuid: this.topic_uuid },
+        data: {topicUuid: this.topic_uuid},
         dataType: 'json',
         success: (json) => {
           if (json.length > 0) {
             this.initialPost = json.shift();
-            this.posts = opts.fullRefresh ? json : this.mergePosts(json, this.posts);
+            this.posts = opts.fullRefresh ?
+                json : this.mergePosts(json, this.posts);
 
             // FIXME IE support?
-            var firstUnreadPost = this.posts.find(function(post) {
+            const firstUnreadPost = this.posts.find(function(post) {
               return post.unread;
             });
             if (firstUnreadPost) {
-                firstUnreadPost.isFirstUnreadPost = true;
+              firstUnreadPost.isFirstUnreadPost = true;
             }
-
           } else {
             this.initialPost = null;
             this.posts = [];
           }
-        }
+        },
       });
     },
     mergePosts: function(newPosts, origPosts) {
-      // We want to preserve the unread statuses that were displayed at the point the page loaded.
-      var unreadStatuses = {};
+      // We want to preserve the unread statuses that were displayed at the
+      // point the page loaded.
+      const unreadStatuses = {};
       for (const post of origPosts) {
-        unreadStatuses[post.uuid] = post.unread
+        unreadStatuses[post.uuid] = post.unread;
       }
 
-      for (var post of newPosts) {
+      for (const post of newPosts) {
         if (unreadStatuses[post.uuid]) {
           post.unread = true;
         }
@@ -271,21 +317,19 @@ Vue.component('react-topic', {
     },
     markTopicRead: function(reloadPosts) {
       $.ajax({
-        url: this.baseurl+"mark-topic-read",
+        url: this.baseurl+'mark-topic-read',
         type: 'post',
-        data: { topicUuid: this.topic_uuid },
+        data: {topicUuid: this.topic_uuid},
         dataType: 'json',
         success: (json) => {
           if (reloadPosts) {
             this.refreshPosts({fullRefresh: true});
           }
-        }
+        },
       });
     },
     resetMarkTopicReadEvents: function() {
-      var autoMarkedAsRead = false;
-      var markAsRead = () => {
-        autoMarkedAsRead = true;
+      const markAsRead = () => {
         this.markTopicRead(false);
       };
 
@@ -305,44 +349,46 @@ Vue.component('react-topic', {
       });
     },
     focusAndHighlightPost: function(postUuid) {
-      var $post = $(this.$el).find('[data-post-uuid='+postUuid+']');
+      const $post = $(this.$el).find('[data-post-uuid='+postUuid+']');
       if ($post.length > 0) {
         $post[0].scrollIntoView({
           behavior: 'smooth',
-          block: 'center'
+          block: 'center',
         });
         $post.addClass('conversations-post-highlight');
         setTimeout(() => {
-            $post.removeClass('conversations-post-highlight');
+          $post.removeClass('conversations-post-highlight');
         }, 1000);
         return true;
       } else {
         return false;
       }
     },
-    iconForMimeType: function (mimeType) {
+    iconForMimeType: function(mimeType) {
       return this.$refs.postEditor.iconForMimeType(mimeType);
     },
-    urlForAttachmentKey: function (key) {
+    urlForAttachmentKey: function(key) {
       return this.$refs.postEditor.urlForAttachmentKey(key);
     },
     savePost: function(content, attachments) {
       $.ajax({
-        url: this.baseurl+"create-post",
+        url: this.baseurl+'create-post',
         type: 'post',
         data: {
           topicUuid: this.topic_uuid,
           content: content,
-          attachmentKeys: attachments.map((attachment) => { return attachment.key }),
+          attachmentKeys: attachments.map((attachment) => {
+            return attachment.key;
+          }),
         },
         dataType: 'json',
         success: (json) => {
           this.$refs.postEditor.clearEditor();
           this.postToFocusAndHighlight = json.uuid;
           this.refreshPosts();
-        }
+        },
       });
-    }
+    },
   },
   mounted: function() {
     this.refreshPosts();
@@ -353,14 +399,14 @@ Vue.component('react-topic', {
   },
   updated: function() {
     // If we added a new rich text area, enrich it!
-    this.$nextTick(function () {
+    this.$nextTick(() => {
       if (this.postToFocusAndHighlight) {
         if (this.focusAndHighlightPost(this.postToFocusAndHighlight)) {
           this.postToFocusAndHighlight = null;
         }
       }
     });
-  }
+  },
 });
 
 
@@ -369,7 +415,8 @@ Vue.component('post-editor', {
 <div class="conversations-post-form">
   <slot name="author"></slot>
   <div class="post-to-topic-textarea form-control">
-    <div class="stretchy-editor" v-bind:class='{ "full-editor-height": editorFocused }'>
+    <div class="stretchy-editor"
+        v-bind:class='{ "full-editor-height": editorFocused }'>
       <div class="topic-ckeditor"><slot name="content"></slot></div>
     </div>
     <div>
@@ -379,7 +426,9 @@ Vue.component('post-editor', {
       </button>
       <ul class="conversations-attachment-list">
         <li v-for="a in attachments">
-          <i class="fa" v-bind:class='a.icon'></i>&nbsp;<a :href='a.url'>{{a.name}}</a>
+          <i class="fa" v-bind:class='a.icon'></i>
+          &nbsp;
+          <a :href='a.url'>{{a.name}}</a>
         </li>
       </ul>
     </div>
@@ -393,8 +442,8 @@ Vue.component('post-editor', {
   <slot name="actions"></slot>
 </div>
 `,
-  data: function () {
-    var mimeToIconMap = {
+  data: function() {
+    const mimeToIconMap = {
       'application/pdf': 'fa-file-pdf-o',
       'text/pdf': 'fa-file-pdf-o',
 
@@ -435,7 +484,7 @@ Vue.component('post-editor', {
       'audio/aac': 'fa-file-audio-o',
     };
 
-    var existingAttachments = [];
+    const existingAttachments = [];
 
     if (this.existing_attachments) {
       this.existing_attachments.forEach((attachment) => {
@@ -454,23 +503,24 @@ Vue.component('post-editor', {
       activeUploads: 0,
       editor: null,
       mimeToIcon: mimeToIconMap,
-    }
+    };
   },
   computed: {
     topic_uuid: function() {
       return this.$parent.topic_uuid;
-    }
+    },
   },
   props: ['existing_attachments', 'baseurl'],
   methods: {
-    newAttachment: function() {},
     initRichTextareas: function() {
       $(this.$el).find('.topic-ckeditor').each((idx, elt) => {
         RichText.initialize({
           baseurl: this.baseurl,
           elt: elt,
           placeholder: 'React to the post...',
-          onCreate: (newEditor) => { this.editor = newEditor; },
+          onCreate: (newEditor) => {
+            this.editor = newEditor;
+          },
           onUploadEvent: (status) => {
             if (status === 'started') {
               this.activeUploads += 1;
@@ -486,41 +536,41 @@ Vue.component('post-editor', {
                 this.editorFocused = false;
               }
             }
-          }
+          },
         });
       });
     },
-    iconForMimeType: function (mimeType) {
+    iconForMimeType: function(mimeType) {
       return this.mimeToIcon[mimeType] || 'fa-file';
     },
-    urlForAttachmentKey: function (key) {
-      return this.baseurl + "file-view?mode=view&key=" + key;
+    urlForAttachmentKey: function(key) {
+      return this.baseurl + 'file-view?mode=view&key=' + key;
     },
-    newAttachment: function () {
-      var self = this;
-      var fileInput = $('<input type="file" style="display: none;"></input>');
+    newAttachment: function() {
+      const self = this;
+      const fileInput = $('<input type="file" style="display: none;"></input>');
 
       $(this.$el).append(fileInput);
 
       fileInput.click();
 
-      fileInput.on('change', function () {
-        var file = fileInput[0].files[0];
-        var formData = new FormData();
+      fileInput.on('change', function() {
+        const file = fileInput[0].files[0];
+        const formData = new FormData();
         formData.append('file', file);
         formData.append('mode', 'attachment');
 
         self.activeUploads += 1;
 
         $.ajax({
-          url: self.baseurl + "file-upload",
-          type: "POST",
+          url: self.baseurl + 'file-upload',
+          type: 'POST',
           contentType: false,
           cache: false,
           processData: false,
           data: formData,
           dataType: 'json',
-          success: function (response) {
+          success: function(response) {
             self.attachments.push({
               name: file.name,
               icon: self.iconForMimeType(file.type),
@@ -528,38 +578,37 @@ Vue.component('post-editor', {
               url: self.urlForAttachmentKey(response.key),
             });
           },
-          error: function (xhr, statusText) {},
-          complete: function () {
+          error: function(xhr, statusText) {},
+          complete: function() {
             self.activeUploads -= 1;
-          }
+          },
         });
-
       });
     },
-    clearEditor: function () {
+    clearEditor: function() {
       if (this.editor) {
-        this.attachments = []
-        this.editor.setData("");
+        this.attachments = [];
+        this.editor.setData('');
         this.editorFocused = false;
       }
     },
-    newPostContent: function () {
+    newPostContent: function() {
       if (this.editor) {
         return this.editor.getData();
       } else {
-        return "";
+        return '';
       }
     },
     savePost: function() {
-      var content = this.newPostContent().trim();
+      let content = this.newPostContent().trim();
 
-      if (content === "") {
+      if (content === '') {
         if (this.attachments.length === 0) {
           this.clearEditor();
           return;
         } else {
           // Blank content is OK if we have attachments.  Store a placeholder.
-          content = "&nbsp;";
+          content = '&nbsp;';
         }
       }
 
@@ -569,5 +618,5 @@ Vue.component('post-editor', {
   mounted: function() {
     this.initRichTextareas();
   },
-  updated: function() {}
+  updated: function() {},
 });
