@@ -1,5 +1,3 @@
-import Vue from 'vue';
-
 Vue.component('react-post', {
   template: `
 <div :class="css_classes" :data-post-uuid="post.uuid">
