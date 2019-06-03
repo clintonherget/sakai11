@@ -50,41 +50,41 @@ Vue.component('topic-listing', {
   data: function() {
     return {
       topics: [],
-        page: parseInt(this.initial_page),
+      page: parseInt(this.initial_page),
       order_by: this.initial_order_by,
       order_direction: this.initial_order_direction,
       maxPostersToDisplay: 5,
       count: 0,
-    }
+    };
   },
-  props: ['baseurl', 'initial_order_by', 'initial_order_direction', 'initial_page', "page_size"],
+  props: ['baseurl', 'initial_order_by', 'initial_order_direction', 'initial_page', 'page_size'],
   methods: {
     loadTopics: function() {
       $.ajax({
-        url: this.baseurl+"feed/topics",
+        url: this.baseurl+'feed/topics',
         type: 'get',
-        data: { page: this.page, order_by: this.order_by, order_direction: this.order_direction},
+        data: {page: this.page, order_by: this.order_by, order_direction: this.order_direction},
         dataType: 'json',
         success: (json) => {
           this.count = json.count || 0;
           this.topics = json.topics || [];
-        }
+        },
       });
     },
     capitalize: function(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
+      return string.charAt(0).toUpperCase() + string.slice(1);
     },
     formatEpochTime: function(epoch) {
-        return new Date(parseInt(epoch)).toLocaleString()
+      return new Date(parseInt(epoch)).toLocaleString();
     },
     buildPosterTooltip: function(poster) {
-        return poster.firstName + " " + poster.lastName + " last posted at " + this.formatEpochTime(poster.latestPostAt);
+      return poster.firstName + ' ' + poster.lastName + ' last posted at ' + this.formatEpochTime(poster.latestPostAt);
     },
     buildPosterProfilePicAlt(poster) {
-        return "Profile picture for " + poster.netId;
+      return 'Profile picture for ' + poster.netId;
     },
     buildPosterProfilePicSrc(poster) {
-        return "/direct/profile/" + poster.userId + "/image";
+      return '/direct/profile/' + poster.userId + '/image';
     },
     toggleSort: function(column) {
       this.page = 0;
@@ -101,9 +101,9 @@ Vue.component('topic-listing', {
       this.loadTopics();
     },
     sortClassesForColumn: function(column) {
-      var classes = ['conversations-sortable'];
+      const classes = ['conversations-sortable'];
       if (column === this.order_by) {
-        var sort_direction = this.order_direction.toLowerCase();
+        const sort_direction = this.order_direction.toLowerCase();
         classes.push('conversations-sortable-active');
         classes.push('conversations-sortable-active-'+sort_direction);
       }
@@ -115,11 +115,11 @@ Vue.component('topic-listing', {
       } else {
         return posters.slice(0, this.maxPostersToDisplay);
       }
-    }
+    },
   },
   mounted: function() {
     this.loadTopics();
-  }
+  },
 });
 
 
@@ -150,49 +150,49 @@ Vue.component('listing-pagination', {
   data: function() {
     return {
       number_of_pages: 10,
-    }
+    };
   },
   props: [],
   methods: {
-      currentPage: function() {
-          return this.$parent.page;
-      },
-      firstPage: function() {
-          return Math.max(this.$parent.page - this.number_of_pages / 2, 0);
-      },
-      lastPage: function() {
-          return Math.min(this.firstPage() + this.number_of_pages, this.maxPage());
-      },
-      maxPage: function() {
-          return parseInt(this.$parent.count / this.$parent.page_size);
-      },
-      pagesToDisplay: function() {
-        var result = [];
-        for (var i = this.firstPage(); i <= this.lastPage(); i++) {
-          result.push(i);
-        }
-        return result;
-      },
-      showPage: function(pageToShow) {
-          this.$parent.page = pageToShow;
-          this.$parent.loadTopics();
-      },
-      debug: function() {
-          console.log("--- pagination");
-          console.log("initial_page:" + this.$parent.initial_page);
-          console.log("page:" + this.$parent.page);
-          console.log("page_size:" + this.$parent.page_size);
-          console.log("number_of_results:" + this.$parent.count);
-          console.log("firstPage:" + this.firstPage());
-          console.log("lastPage:" + this.lastPage());
-          console.log("maxPage:" + this.maxPage());
-          console.log("pagesToDisplay:" + this.pagesToDisplay());
-      },
-  },
-    updated: function() {
-        this.debug();
+    currentPage: function() {
+      return this.$parent.page;
     },
-    mounted: function() {
-        this.debug();
-    }
+    firstPage: function() {
+      return Math.max(this.$parent.page - this.number_of_pages / 2, 0);
+    },
+    lastPage: function() {
+      return Math.min(this.firstPage() + this.number_of_pages, this.maxPage());
+    },
+    maxPage: function() {
+      return parseInt(this.$parent.count / this.$parent.page_size);
+    },
+    pagesToDisplay: function() {
+      const result = [];
+      for (let i = this.firstPage(); i <= this.lastPage(); i++) {
+        result.push(i);
+      }
+      return result;
+    },
+    showPage: function(pageToShow) {
+      this.$parent.page = pageToShow;
+      this.$parent.loadTopics();
+    },
+    debug: function() {
+      console.log('--- pagination');
+      console.log('initial_page:' + this.$parent.initial_page);
+      console.log('page:' + this.$parent.page);
+      console.log('page_size:' + this.$parent.page_size);
+      console.log('number_of_results:' + this.$parent.count);
+      console.log('firstPage:' + this.firstPage());
+      console.log('lastPage:' + this.lastPage());
+      console.log('maxPage:' + this.maxPage());
+      console.log('pagesToDisplay:' + this.pagesToDisplay());
+    },
+  },
+  updated: function() {
+    this.debug();
+  },
+  mounted: function() {
+    this.debug();
+  },
 });

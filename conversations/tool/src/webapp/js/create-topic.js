@@ -76,21 +76,21 @@ Vue.component('create-topic-workflow', {
     </template>
   </div>
 `,
-  data: function () {
+  data: function() {
     return {
       step: 'SELECT_TYPE',
       topicType: null,
-      topicTitle: "",
+      topicTitle: '',
       editorFocused: false,
     };
   },
   props: ['baseurl'],
   methods: {
-    firstPostContent: function () {
+    firstPostContent: function() {
       if (this.editor) {
         return this.editor.getData();
       } else {
-        return "";
+        return '';
       }
     },
     selectTopicType: function(type) {
@@ -98,12 +98,12 @@ Vue.component('create-topic-workflow', {
       this.step = 'SET_TITLE';
     },
     selectTopicTitle: function() {
-      if (this.topicTitle != "") {
+      if (this.topicTitle != '') {
         this.step = 'CREATE_FIRST_POST';
       }
     },
     createTopic: function() {
-      if (this.firstPostContent() != "") {
+      if (this.firstPostContent() != '') {
         $.ajax({
           url: this.baseurl + 'create-topic',
           method: 'post',
@@ -114,7 +114,7 @@ Vue.component('create-topic-workflow', {
           },
           success: function() {
             location.reload();
-          }
+          },
         });
       }
     },
@@ -124,19 +124,21 @@ Vue.component('create-topic-workflow', {
           baseurl: this.baseurl,
           elt: elt,
           placeholder: 'Add initial topic post content...',
-          onCreate: (newEditor) => { this.editor = newEditor; },
+          onCreate: (newEditor) => {
+            this.editor = newEditor;
+          },
           onFocus: (event, name, isFocused) => {
             if (isFocused) {
               this.editorFocused = isFocused;
             }
-          }
+          },
         });
       });
     },
   },
   updated: function() {
     this.initRichTextareas();
-  }
+  },
 });
 
 Vue.component('create-topic-modal', {
@@ -161,18 +163,18 @@ Vue.component('create-topic-modal', {
     </div>
   </div>
 `,
-  data: function () {
+  data: function() {
     return {};
   },
   props: ['baseurl'],
   methods: {
     show: function() {
-      var $dialog = $(this.$refs.dialog);
+      const $dialog = $(this.$refs.dialog);
       $(this.$refs.dialog).modal();
       this.resize();
     },
     resize: function() {
-      var $dialog = $(this.$refs.dialog);
+      const $dialog = $(this.$refs.dialog);
       if ($dialog.find('.modal-dialog').is(':visible')) {
         $dialog.find('.modal-dialog').width('95%');
         $dialog.find('.modal-content').height($(window).height() - 70);
@@ -184,13 +186,13 @@ Vue.component('create-topic-modal', {
       this.resize();
     });
 
-    var $dialog = $(this.$refs.dialog);
+    const $dialog = $(this.$refs.dialog);
     $dialog.on('shown.bs.modal', function() {
       $(document.body).css('overflow', 'hidden');
     }).on('hidden.bs.modal', function() {
       $(document.body).css('overflow', '');
     });
-  }
+  },
 });
 
 Vue.component('create-topic-wrapper', {
@@ -200,7 +202,7 @@ Vue.component('create-topic-wrapper', {
     <create-topic-modal ref="createTopicModal" :baseurl="baseurl"></create-topic-modal>
   </div>
 `,
-  data: function () {
+  data: function() {
     return {};
   },
   props: ['baseurl'],
@@ -210,5 +212,5 @@ Vue.component('create-topic-wrapper', {
     },
   },
   mounted: function() {
-  }
+  },
 });

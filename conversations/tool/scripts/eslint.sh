@@ -9,5 +9,5 @@ for js in "${jsdir}/"*.js; do
         continue;
     fi
 
-    eslint --format unix --config "$jsdir/.eslintrc.json" "$js"
+    eslint --format unix --config "$jsdir/.eslintrc.json" "$js" ${1+"$@"}
 done
