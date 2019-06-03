@@ -7,7 +7,9 @@
     "extends": "google",
     "globals": {
         "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
+        "SharedArrayBuffer": "readonly",
+        "Vue": "readonly",
+        "RichText": "readonly"
     },
     "parserOptions": {
         "ecmaVersion": 2018,
@@ -17,5 +19,6 @@
         "vue"
     ],
     "rules": {
+        "max-len": "off"
     }
 }
