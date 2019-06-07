@@ -325,6 +325,29 @@ public class ConversationsStorage {
             });
     }
 
+    public String updateTopicSettings(final String topicUuid, TopicSettings settings) {
+        return DB.transaction
+                ("Update topic settings",
+                        (DBConnection db) -> {
+                            db.run(
+                                    "UPDATE conversations_topic_settings" +
+                                     " SET availability = ?, published = ?, graded = ?, allow_comments = ?, allow_like = ?, require_post = ?" +
+                                     " WHERE topic_uuid = ?")
+                                    .param(settings.getAvailability())
+                                    .param(settings.isPublished() ? 1 : 0)
+                                    .param(settings.isGraded() ? 1 : 0)
+                                    .param(settings.isAllowComments() ? 1 : 0)
+                                    .param(settings.isAllowLike() ? 1 : 0)
+                                    .param(settings.isRequirePost() ? 1 : 0)
+                                    .param(topicUuid)
+                                    .executeUpdate();
+
+                            db.commit();
+
+                            return topicUuid;
+                        });
+    }
+
     public Optional<Topic> getTopic(String uuid, final String siteId) {
         return DB.transaction
             ("Find a topic by uuid for a site",

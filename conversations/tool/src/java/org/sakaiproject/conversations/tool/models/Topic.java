@@ -119,10 +119,12 @@ public class Topic implements Comparable<Topic> {
         obj.put("lastActivityAt", this.lastActivityAt);
 
         JSONArray postersJSON = new JSONArray();
-        for (Poster poster : this.posters) {
-            postersJSON.add(poster.asJSONObject());
+        if (this.posters != null) {
+            for (Poster poster : this.posters) {
+                postersJSON.add(poster.asJSONObject());
+            }
+            obj.put("posters", postersJSON);
         }
-        obj.put("posters", postersJSON);
 
         if (this.settings != null) {
             obj.put("settings", this.settings.asJSONObject());

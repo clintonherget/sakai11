@@ -77,9 +77,7 @@ public class TopicsFeedHandler implements Handler {
                         topic.setPosters(topicPosters.get(topic.getUuid()));
                     }
                     if (postCounts.containsKey(topic.getUuid())) {
-                        if (postCounts.get(topic.getUuid()) > 1) {
-                            topic.setPostCount(postCounts.get(topic.getUuid()));
-                        }
+                        topic.setPostCount(postCounts.get(topic.getUuid()));
                     }
 //                    if (lastActivityTimes.containsKey(topic.getUuid())) {
 //                        topic.setLastActivityTime(lastActivityTimes.get(topic.getUuid()));

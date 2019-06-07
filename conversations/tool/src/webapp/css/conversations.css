@@ -43,20 +43,20 @@
     content: '\f0de';
 }
 
-/* Create workflow */
-.conversations-create-topic-modal .modal-content {
+/* Create/Edit topic workflow */
+.conversations-modal .modal-content {
     background-color: #FAFAFA;
 }
-.conversations-create-topic-modal .modal-content .modal-header {
+.conversations-modal .modal-content .modal-header {
     background-color: #FFFFFF;
 }
 
-.conversations-create-topic-modal .modal-content .modal-body {
+.conversations-modal .modal-content .modal-body {
     background-color: transparent;
 }
 
 .conversations-create-topic-modal .conversations-topic,
-.conversations-create-topic-modal .conversations-settings-section {
+.topic-settings-form .conversations-settings-section {
     background-color: #FFFFFF;
 /*    border: 1px solid #CCCCCC;*/
     box-shadow: 1px 1px 5px #999;

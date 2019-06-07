@@ -1,3 +1,71 @@
+Vue.component('topic-settings-form', {
+  template: `
+  <div class="row topic-settings-form">
+    <div class="col-sm-6 col-sm-offset-2" style="border-right: 1px solid #EEE;">
+      <h3 class="center-text">Choose Your Settings:</h3>
+      <div class="conversations-settings-section">
+        <div class="row">
+          <div class="col-sm-8"><label for="published">Published to Students</label></div>
+          <div class="col-sm-4 text-right">
+            <input id="published" type="checkbox" name="published" v-model="settings.published"/>
+          </div>
+        </div>
+        <template v-if="settings.published">
+          <br>
+          <div class="row">
+            <div class="col-sm-12">Who has access</div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12"><label><input type="radio" name="availability" value="ENTIRE_SITE" v-model="settings.availability"/> Available to <strong>entite site</strong></label></div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <label><input type="radio" name="availability" value="GROUPS" v-model="settings.availability"/> Available to <strong>select groups</strong></label>
+            </div>
+            <template v-if="settings.availability === 'GROUPS'">
+              <div class="col-sm-12">TODO</div>
+            </template>
+          </div>
+        </template>
+      </div>
+      <br>
+      <div class="conversations-settings-section">
+        <div class="row">
+          <div class="col-sm-8"><label for="graded">Graded Topic</label></div>
+          <div class="col-sm-4 text-right">
+            <input id="graded" type="checkbox" name="graded" v-model="settings.graded"/>
+          </div>
+        </div>
+        <template v-if="settings.graded">
+          <div class="row">
+            <div class="col-sm-12">TODO</div>
+          </div>
+        </template>
+      </div>
+    </div>
+    <div class="col-sm-4" >
+      <h3 class="center-text">Additional Options:</h3>
+      <div class="row">
+        <div class="col-sm-12">
+          <label><input type="checkbox" name="allow_comments" v-model="settings.allow_comments"/> Allow Comments</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <label><input type="checkbox" name="allow_like" v-model="settings.allow_like"/> Likes</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <label><input type="checkbox" name="require_post" v-model="settings.require_post"/> Require post before showing others' posts</label>
+        </div>
+      </div>
+    </div>
+  </div>
+`,
+  props: ['settings'],
+});
+
 Vue.component('create-topic-workflow', {
   template: `
   <div class="conversations-create-topic-workflow">
@@ -55,68 +123,7 @@ Vue.component('create-topic-workflow', {
           <i class="fa fa-arrow-left" aria-hidden="true"></i> <a href="#" v-on:click="step = 'SET_TITLE'">Back to topic title</a>
         </div>
       </div>
-      <div class="row">
-        <div class="col-sm-6 col-sm-offset-2" style="border-right: 1px solid #EEE;">
-          <h3 class="center-text">Choose Your Settings:</h3>
-          <div class="conversations-settings-section">
-            <div class="row">
-              <div class="col-sm-8"><label for="published">Published to Students</label></div>
-              <div class="col-sm-4 text-right">
-                <input id="published" type="checkbox" name="published" v-model="settings.published"/>
-              </div>
-            </div>
-            <template v-if="settings.published">
-              <br>
-              <div class="row">
-                <div class="col-sm-12">Who has access</div>
-              </div>
-              <div class="row">
-                <div class="col-sm-12"><label><input type="radio" name="availability" value="ENTIRE_SITE" v-model="settings.availability"/> Available to <strong>entite site</strong></label></div>
-              </div>
-              <div class="row">
-                <div class="col-sm-12">
-                  <label><input type="radio" name="availability" value="GROUPS" v-model="settings.availability"/> Available to <strong>select groups</strong></label>
-                </div>
-                <template v-if="settings.availability === 'GROUPS'">
-                  <div class="col-sm-12">TODO</div>
-                </template>
-              </div>
-            </template>
-          </div>
-          <br>
-          <div class="conversations-settings-section">
-            <div class="row">
-              <div class="col-sm-8"><label for="graded">Graded Topic</label></div>
-              <div class="col-sm-4 text-right">
-                <input id="graded" type="checkbox" name="graded" v-model="settings.graded"/>
-              </div>
-            </div>
-            <template v-if="settings.graded">
-              <div class="row">
-                <div class="col-sm-12">TODO</div>
-              </div>
-            </template>
-          </div>
-        </div>
-        <div class="col-sm-4" >
-          <h3 class="center-text">Additional Options:</h3>
-          <div class="row">
-            <div class="col-sm-12">
-              <label><input type="checkbox" name="allow_comments" v-model="settings.allow_comments"/> Allow Comments</label>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
-              <label><input type="checkbox" name="allow_like" v-model="settings.allow_like"/> Likes</label>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
-              <label><input type="checkbox" name="require_post" v-model="settings.require_post"/> Require post before showing others' posts</label>
-            </div>
-          </div>
-        </div>
-      </div>
+      <topic-settings-form settings="topic.settings"></topic-settings-form>
       <br>
       <div class="row">
         <div class="col-sm-12">
@@ -232,7 +239,7 @@ Vue.component('create-topic-workflow', {
 
 Vue.component('create-topic-modal', {
   template: `
-  <div class="conversations-create-topic-modal">
+  <div class="conversations-modal conversations-create-topic-modal">
     <div class="modal" ref="dialog" role="dialog">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -297,6 +304,117 @@ Vue.component('create-topic-wrapper', {
   methods: {
     showModal: function() {
       this.$refs.createTopicModal.show();
+    },
+  },
+  mounted: function() {
+  },
+});
+
+Vue.component('update-topic-settings-modal', {
+  template: `
+  <div class="conversations-modal conversations-update-topic-modal">
+    <div class="modal" ref="dialog" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="text-center">
+              <span class="modal-title text-center">Edit Topic Settings</span>
+            </div>
+          </div>
+          <div class="modal-body">
+            <template v-if="topic != null">
+              <topic-settings-form :settings="topic.settings"></topic-settings-form>
+            </template>
+          </div>
+          <div class="modal-footer">
+            <div class="row">
+              <div class="col-sm-12">
+                <p class="text-center">
+                  <button class="button" @click="saveSettings()">Save Settings</button>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+`,
+  data: function() {
+    return {
+        topic: null,
+    };
+  },
+  props: ['baseurl', 'topic_uuid'],
+  methods: {
+    show: function() {
+      this.fetchTopic();
+      $(this.$refs.dialog).modal();
+      this.resize();
+    },
+    resize: function() {
+      const $dialog = $(this.$refs.dialog);
+      if ($dialog.find('.modal-dialog').is(':visible')) {
+        $dialog.find('.modal-dialog').width('95%');
+        $dialog.find('.modal-content').height($(window).height() - 70);
+      }
+    },
+    saveSettings: function() {
+      $.ajax({
+        url: this.baseurl + 'update-topic',
+        method: 'post',
+        data: {
+          uuid: this.topic_uuid,
+          settings: this.topic.settings,
+        },
+        success: function() {
+          location.reload();
+        },
+      });
+    },
+    fetchTopic: function() {
+      $.ajax({
+        url: this.baseurl+'feed/topic',
+        type: 'get',
+        data: {topicUuid: this.topic_uuid},
+        dataType: 'json',
+        success: (json) => {
+           this.topic = json;
+        },
+      });
+    },
+  },
+  mounted: function() {
+    $(window).resize(() => {
+      this.resize();
+    });
+
+    const $dialog = $(this.$refs.dialog);
+    $dialog.on('shown.bs.modal', function() {
+      $(document.body).css('overflow', 'hidden');
+    }).on('hidden.bs.modal', function() {
+      $(document.body).css('overflow', '');
+    });
+  },
+});
+
+Vue.component('edit-topic-settings-wrapper', {
+  template: `
+  <span>
+    <a href="javascript:void(0)" @click="showModal()">Edit</a>
+    <update-topic-settings-modal ref="updateTopicSettingsModal" :baseurl="baseurl" :topic_uuid="topic.uuid"></update-topic-settings-modal>
+  </div>
+`,
+  data: function() {
+    return {};
+  },
+  props: ['baseurl', 'topic'],
+  methods: {
+    showModal: function() {
+      this.$refs.updateTopicSettingsModal.show();
     },
   },
   mounted: function() {

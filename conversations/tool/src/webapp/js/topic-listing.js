@@ -42,6 +42,7 @@ Vue.component('topic-listing', {
             <td>{{formatEpochTime(topic.lastActivityAt)}}</td>
             <td>
               <a :href="baseurl+'topic?uuid='+topic.uuid">View</a>
+              <edit-topic-settings-wrapper :topic="topic" :baseurl="baseurl"></edit-topic-settings-wrapper>
             </td>
           </tr>
       </tbody>

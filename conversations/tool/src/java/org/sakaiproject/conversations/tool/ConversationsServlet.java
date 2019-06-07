@@ -137,10 +137,14 @@ public class ConversationsServlet extends HttpServlet {
             return new NewTopicHandler();
         } else if (path.equals("/create-topic")) {
             return new CreateTopicHandler();
+        } else if (path.equals("/update-topic")) {
+            return new UpdateTopicSettingsHandler();
         } else if (path.equals("/topic")) {
             return new TopicHandler();
         } else if (path.equals("/feed/posts")) {
             return new PostsFeedHandler();
+        } else if (path.equals("/feed/topic")) {
+            return new TopicFeedHandler();
         } else if (path.equals("/feed/topics")) {
             return new TopicsFeedHandler();
         } else if (path.equals("/create-post")) {
