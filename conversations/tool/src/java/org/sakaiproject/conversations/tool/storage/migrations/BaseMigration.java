@@ -103,11 +103,17 @@ abstract public class BaseMigration {
                     return (n1 - n2);
                 });
 
-
             // Create our instances
             for (String migrationClassName : migrationClasses) {
                 Class<?> migrationClass = Class.forName(MIGRATION_PKG + "." + migrationClassName);
                 migrations.add((BaseMigration) migrationClass.getConstructor().newInstance());
+            }
+
+            // Migrations must be strictly increasing
+            for (int i = 0; i < migrations.size() - 1; i++) {
+                if (migrations.get(i).getVersion() == migrations.get(i + 1).getVersion()) {
+                    throw new RuntimeException("Version number repeated in migrations: " + migrations.get(i).getVersion());
+                }
             }
         }
 
