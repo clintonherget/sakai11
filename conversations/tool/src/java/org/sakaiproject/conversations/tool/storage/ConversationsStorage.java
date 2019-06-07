@@ -38,7 +38,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.sakaiproject.conversations.tool.models.Attachment;
@@ -47,8 +46,16 @@ import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
 
+import org.sakaiproject.conversations.tool.storage.migrations.BaseMigration;
+
+
 @Slf4j
 public class ConversationsStorage {
+
+    public void runDBMigrations() {
+        BaseMigration.runMigrations();
+    }
+
 
     public void storeFileMetadata(final String key, final String mimeType, final String fileName, final String role) {
         DB.transaction
@@ -70,8 +77,7 @@ public class ConversationsStorage {
                 db.commit();
 
                 return null;
-            }
-             );
+            });
     }
 
     public Optional<Attachment> readFileMetadata(final String key) {

@@ -54,11 +54,15 @@ import org.slf4j.LoggerFactory;
 
 import org.sakaiproject.conversations.tool.handlers.*;
 
+import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
+
 public class ConversationsServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConversationsServlet.class);
 
     public void init(ServletConfig config) throws ServletException {
+        new ConversationsStorage().runDBMigrations();
+
         super.init(config);
     }
 
