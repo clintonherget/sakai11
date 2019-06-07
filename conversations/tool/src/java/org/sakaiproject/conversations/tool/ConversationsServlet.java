@@ -265,6 +265,14 @@ public class ConversationsServlet extends HttpServlet {
             }
         });
 
+        handlebars.registerHelper("escape", new Helper<Object>() {
+            @Override
+            public CharSequence apply(final Object context, final Options options) {
+                String escapeMe = options.param(0);
+                return new Handlebars.SafeString(escapeMe);
+            }
+        });
+
         handlebars.registerHelper("selected", new Helper<Object>() {
             @Override
             public CharSequence apply(final Object context, final Options options) {

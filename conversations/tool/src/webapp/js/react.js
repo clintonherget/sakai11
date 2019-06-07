@@ -55,56 +55,58 @@ Vue.component('react-post', {
       </div>
       <div class="conversations-post-content">
         <span v-html="post.content"></span>
-        <div class="conversations-post-comments">
-          <ul class="conversations-attachment-list">
-            <li v-for="a in post.attachments">
-              <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'>
-              </i>
-              &nbsp;
-              <a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
-            </li>
-          </ul>
-          <template v-if="showCommentForm">
-            <div class="conversations-comment-form">
-              <textarea class="form-control" placeholder="Comment on post..."
-                  v-model="commentContent"></textarea>
-              <button class="button" v-on:click="addComment()">
-                Post Comment
-              </button>
-              <button class="button" v-on:click="toggleCommentForm()">
-                Cancel
-              </button>
+        <template v-if="allowComments">
+            <div class="conversations-post-comments">
+              <ul class="conversations-attachment-list">
+                <li v-for="a in post.attachments">
+                  <i class="fa" v-bind:class='$parent.iconForMimeType(a.mimeType)'>
+                  </i>
+                  &nbsp;
+                  <a :href='$parent.urlForAttachmentKey(a.key)'>{{a.fileName}}</a>
+                </li>
+              </ul>
+              <template v-if="showCommentForm">
+                <div class="conversations-comment-form">
+                  <textarea class="form-control" placeholder="Comment on post..."
+                      v-model="commentContent"></textarea>
+                  <button class="button" v-on:click="addComment()">
+                    Post Comment
+                  </button>
+                  <button class="button" v-on:click="toggleCommentForm()">
+                    Cancel
+                  </button>
+                </div>
+              </template>
+              <template v-else>
+                <button class="button" v-on:click="toggleCommentForm()">
+                  Comment
+                </button>
+              </template>
+              <template v-if="post.comments && post.comments.length > 0">
+                <div v-for="comment in post.comments"
+                      class="conversations-post-comment"
+                      :data-post-uuid="comment.uuid">
+                  <div class="conversations-postedby-photo">
+                    <img :src="'/direct/profile/'+comment.postedBy + '/image'"/>
+                  </div>
+                  <div>
+                    <span v-if="comment.unread"
+                          class="badge badge-primary">NEW</span>
+                    <small class="text-muted">
+                      <strong>
+                        {{comment.postedByDisplayName}}
+                      </strong>
+                      &nbsp;&nbsp;&nbsp;
+                      {{formatEpochTime(comment.postedAt)}}
+                    </small>
+                  </div>
+                  <div class="conversations-comment-content">
+                    {{comment.content}}
+                  </div>
+                </div>
+              </template>
             </div>
-          </template>
-          <template v-else>
-            <button class="button" v-on:click="toggleCommentForm()">
-              Comment
-            </button>
-          </template>
-          <template v-if="post.comments && post.comments.length > 0">
-            <div v-for="comment in post.comments"
-                  class="conversations-post-comment"
-                  :data-post-uuid="comment.uuid">
-              <div class="conversations-postedby-photo">
-                <img :src="'/direct/profile/'+comment.postedBy + '/image'"/>
-              </div>
-              <div>
-                <span v-if="comment.unread"
-                      class="badge badge-primary">NEW</span>
-                <small class="text-muted">
-                  <strong>
-                    {{comment.postedByDisplayName}}
-                  </strong>
-                  &nbsp;&nbsp;&nbsp;
-                  {{formatEpochTime(comment.postedAt)}}
-                </small>
-              </div>
-              <div class="conversations-comment-content">
-                {{comment.content}}
-              </div>
-            </div>
-          </template>
-        </div>
+        </template>
       </div>
     </template>
   </template>
@@ -138,6 +140,9 @@ Vue.component('react-post', {
         classes.push('unread');
       }
       return classes.join(' ');
+    },
+    allowComments: function() {
+        return this.$parent.allowComments;
     },
   },
   methods: {
@@ -253,12 +258,14 @@ Vue.component('react-topic', {
       initialPost: null,
       firstUnreadPost: null,
       postToFocusAndHighlight: null,
+      settings: JSON.parse(this.settings_json),
     };
   },
   props: [
     'baseurl',
     'topic_uuid',
     'topic_title',
+    'settings_json',
     'current_user_id',
     'current_user_role'],
   methods: {
@@ -387,6 +394,11 @@ Vue.component('react-topic', {
         },
       });
     },
+  },
+  computed: {
+      allowComments: function() {
+          return this.settings.allow_comments;
+      }
   },
   mounted: function() {
     this.refreshPosts();

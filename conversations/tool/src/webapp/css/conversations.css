@@ -64,8 +64,15 @@
     border-radius: 5px;
 }
 
+.conversations-create-topic-workflow .conversations-topics {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
 /* React Topic Type */
-.conversations-topics {
+.conversations-body .conversations-topic.react {
     display: flex;
     flex-wrap: nowrap;
     justify-content: space-between;

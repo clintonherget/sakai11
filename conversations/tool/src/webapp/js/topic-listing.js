@@ -15,7 +15,12 @@ Vue.component('topic-listing', {
       </thead>
       <tbody>
           <tr v-for="topic in topics">
-            <td>{{topic.title}}</td>
+            <td>
+                <template v-if="!topic.settings.published">
+                    <span class="text-muted">[DRAFT]</span>
+                </template>
+                {{topic.title}}
+            </td>
             <td>{{capitalize(topic.type)}}</td>
             <td>
               <!-- FIXME limit to first 6 and add plus number of others -->
@@ -29,8 +34,7 @@ Vue.component('topic-listing', {
               </template>
             </td>
             <td>
-              <!-- FIXME do permissions -->
-              Entire Site
+              {{topic.settings.availability}}
             </td>
             <td>
               {{topic.postCount}}

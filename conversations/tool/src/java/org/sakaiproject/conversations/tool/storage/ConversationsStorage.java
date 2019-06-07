@@ -114,6 +114,7 @@ public class ConversationsStorage {
                 try (DBResults results = db.run(
                                                 "SELECT *" +
                                                 " FROM conversations_topic" +
+                                                " INNER JOIN conversations_topic_settings ON conversations_topic_settings.topic_uuid = conversations_topic.uuid" +
                                                 " WHERE uuid in (" +
                                                 "   SELECT uuid FROM (" +
                                                 "     SELECT uuid, rownum rnk FROM (" +
@@ -129,14 +130,24 @@ public class ConversationsStorage {
                      .param(String.valueOf(maxRowNum))
                      .executeQuery()) {
                     for (ResultSet result : results) {
-                        topics.add(
-                                   new Topic(
-                                             result.getString("uuid"),
-                                             result.getString("title"),
-                                             result.getString("type"),
-                                             result.getString("created_by"),
-                                             result.getLong("created_at"),
-                                             result.getLong("last_activity_at")));
+                        Topic topic = new Topic(result.getString("uuid"),
+                                                result.getString("title"),
+                                                result.getString("type"),
+                                                result.getString("created_by"),
+                                                result.getLong("created_at"),
+                                                result.getLong("last_activity_at"));
+
+                        TopicSettings settings = new TopicSettings(result.getString("uuid"),
+                                result.getString("availability"),
+                                result.getInt("published") == 1,
+                                result.getInt("graded") == 1,
+                                result.getInt("allow_comments") == 1,
+                                result.getInt("allow_like") == 1,
+                                result.getInt("require_post") == 1);
+
+                        topic.setSettings(settings);
+
+                        topics.add(topic);
                     }
 
                     return topics;
@@ -318,17 +329,32 @@ public class ConversationsStorage {
         return DB.transaction
             ("Find a topic by uuid for a site",
              (DBConnection db) -> {
-                try (DBResults results = db.run("SELECT * from conversations_topic WHERE uuid = ? AND site_id = ?")
+                try (DBResults results = db.run(
+                    "SELECT * from conversations_topic" +
+                        " INNER JOIN conversations_topic_settings ON conversations_topic_settings.topic_uuid = conversations_topic.uuid" +
+                        " WHERE conversations_topic.uuid = ? AND conversations_topic.site_id = ?")
                      .param(uuid)
                      .param(siteId)
                      .executeQuery()) {
                     for (ResultSet result : results) {
-                        return Optional.of(new Topic(result.getString("uuid"),
-                                                     result.getString("title"),
-                                                     result.getString("type"),
-                                                     result.getString("created_by"),
-                                                     result.getLong("created_at"),
-                                                     result.getLong("last_activity_at")));
+                        TopicSettings settings = new TopicSettings(result.getString("uuid"),
+                                                                   result.getString("availability"),
+                                                                   result.getInt("published") == 1,
+                                                                   result.getInt("graded") == 1,
+                                                                   result.getInt("allow_comments") == 1,
+                                                                   result.getInt("allow_like") == 1,
+                                                                   result.getInt("require_post") == 1);
+
+                        Topic topic = new Topic(result.getString("uuid"),
+                                                result.getString("title"),
+                                                result.getString("type"),
+                                                result.getString("created_by"),
+                                                result.getLong("created_at"),
+                                                result.getLong("last_activity_at"));
+
+                        topic.setSettings(settings);
+
+                        return Optional.of(topic);
                     }
 
                     Optional<Topic> result = Optional.empty();

@@ -51,6 +51,9 @@ public class Topic implements Comparable<Topic> {
     private Long createdAt;
     @Getter
     private Long lastActivityAt;
+    @Getter
+    @Setter
+    private TopicSettings settings;
 
     public Topic(String uuid, String title, String type, String createdBy, Long createdAt, Long lastActivityAt) {
         this.uuid = uuid;
@@ -120,6 +123,10 @@ public class Topic implements Comparable<Topic> {
             postersJSON.add(poster.asJSONObject());
         }
         obj.put("posters", postersJSON);
+
+        if (this.settings != null) {
+            obj.put("settings", this.settings.asJSONObject());
+        }
 
         return obj;
     }

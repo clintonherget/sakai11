@@ -59,8 +59,9 @@ public class TopicHandler implements Handler {
                 // FIXME
                 throw new RuntimeException("Topic not found for uuid");
             }
-
+            
             context.put("topic", topic.get());
+            context.put("settings_json", topic.get().getSettings().asJSONObject().toString());
             context.put("subpage", topic.get().getType().toLowerCase());
 
         } catch (Exception e) {
