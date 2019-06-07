@@ -49,6 +49,83 @@ Vue.component('create-topic-workflow', {
         </div>
       </div>
     </template>
+    <template v-else-if="step == 'TOPIC_SETTINGS'">
+      <div class="row">
+        <div class="col-sm-12">
+          <i class="fa fa-arrow-left" aria-hidden="true"></i> <a href="#" v-on:click="step = 'SET_TITLE'">Back to topic title</a>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-2" style="border-right: 1px solid #EEE;">
+          <h3 class="center-text">Choose Your Settings:</h3>
+          <div class="conversations-settings-section">
+            <div class="row">
+              <div class="col-sm-8"><label for="published">Published to Students</label></div>
+              <div class="col-sm-4 text-right">
+                <input id="published" type="checkbox" name="published" v-model="settings.published"/>
+              </div>
+            </div>
+            <template v-if="settings.published">
+              <br>
+              <div class="row">
+                <div class="col-sm-12">Who has access</div>
+              </div>
+              <div class="row">
+                <div class="col-sm-12"><label><input type="radio" name="availability" value="ENTIRE_SITE" v-model="settings.availability"/> Available to <strong>entite site</strong></label></div>
+              </div>
+              <div class="row">
+                <div class="col-sm-12">
+                  <label><input type="radio" name="availability" value="GROUPS" v-model="settings.availability"/> Available to <strong>select groups</strong></label>
+                </div>
+                <template v-if="settings.availability === 'GROUPS'">
+                  <div class="col-sm-12">TODO</div>
+                </template>
+              </div>
+            </template>
+          </div>
+          <br>
+          <div class="conversations-settings-section">
+            <div class="row">
+              <div class="col-sm-8"><label for="graded">Graded Topic</label></div>
+              <div class="col-sm-4 text-right">
+                <input id="graded" type="checkbox" name="graded" v-model="settings.graded"/>
+              </div>
+            </div>
+            <template v-if="settings.graded">
+              <div class="row">
+                <div class="col-sm-12">TODO</div>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="col-sm-4" >
+          <h3 class="center-text">Additional Options:</h3>
+          <div class="row">
+            <div class="col-sm-12">
+              <label><input type="checkbox" name="allow_comments" v-model="settings.allow_comments"/> Allow Comments</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <label><input type="checkbox" name="allow_like" v-model="settings.allow_like"/> Likes</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <label><input type="checkbox" name="require_post" v-model="settings.require_post"/> Require post before showing others' posts</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-sm-12">
+          <p class="text-center">
+            <button class="button" v-on:click="setTopicSettings()">Next <i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+          </p>
+        </div>
+      </div>
+    </template>
     <template v-else-if="step == 'CREATE_FIRST_POST'">
       <div class="row">
         <div class="col-sm-12">
@@ -82,6 +159,14 @@ Vue.component('create-topic-workflow', {
       topicType: null,
       topicTitle: '',
       editorFocused: false,
+      settings: {
+        published: false,
+        availability: 'ENTIRE_SITE',
+        graded: false,
+        allow_comments: true,
+        allow_like: false,
+        require_post: false,
+      },
     };
   },
   props: ['baseurl'],
@@ -99,8 +184,11 @@ Vue.component('create-topic-workflow', {
     },
     selectTopicTitle: function() {
       if (this.topicTitle != '') {
-        this.step = 'CREATE_FIRST_POST';
+        this.step = 'TOPIC_SETTINGS';
       }
+    },
+    setTopicSettings: function() {
+      this.step = 'CREATE_FIRST_POST';
     },
     createTopic: function() {
       if (this.firstPostContent() != '') {
@@ -110,6 +198,7 @@ Vue.component('create-topic-workflow', {
           data: {
             title: this.topicTitle,
             type: this.topicType,
+            settings: this.settings,
             post: this.firstPostContent(),
           },
           success: function() {

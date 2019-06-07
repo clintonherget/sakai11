@@ -55,7 +55,8 @@
     background-color: transparent;
 }
 
-.conversations-create-topic-modal .conversations-topic {
+.conversations-create-topic-modal .conversations-topic,
+.conversations-create-topic-modal .conversations-settings-section {
     background-color: #FFFFFF;
 /*    border: 1px solid #CCCCCC;*/
     box-shadow: 1px 1px 5px #999;
@@ -64,7 +65,7 @@
 }
 
 /* React Topic Type */
-.conversations-topic {
+.conversations-topics {
     display: flex;
     flex-wrap: nowrap;
     justify-content: space-between;

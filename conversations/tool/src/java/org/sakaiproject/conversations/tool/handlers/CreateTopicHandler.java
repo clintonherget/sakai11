@@ -34,6 +34,7 @@ import org.json.simple.JSONObject;
 
 import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Topic;
+import org.sakaiproject.conversations.tool.models.TopicSettings;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
@@ -70,9 +71,18 @@ public class CreateTopicHandler implements Handler {
 
             Topic topic = new Topic(title, type);
 
+            TopicSettings topicSettings = new TopicSettings(
+                    null,
+                    p.getString("settings[availability]", TopicSettings.AVAILABILITY_ENTIRE_SITE),
+                    "true".equals(p.getString("settings[published]", null)),
+                    "true".equals(p.getString("settings[graded]", null)),
+                    "true".equals(p.getString("settings[allow_comments]", null)),
+                    "true".equals(p.getString("settings[allow_like]", null)),
+                    "true".equals(p.getString("settings[require_post]", null)));
+
             User currentUser = UserDirectoryService.getCurrentUser();
 
-            String topicUuid = new ConversationsStorage().createTopic(topic, siteId, currentUser.getId());
+            String topicUuid = new ConversationsStorage().createTopic(topic, siteId, currentUser.getId(), topicSettings);
 
             if (initialPost != null) {
                 if (initialPost.startsWith("<p>#IMPORTDEMO")) {

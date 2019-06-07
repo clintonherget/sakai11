@@ -45,7 +45,7 @@ import org.sakaiproject.conversations.tool.models.MissingUuidException;
 import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
-
+import org.sakaiproject.conversations.tool.models.TopicSettings;
 import org.sakaiproject.conversations.tool.storage.migrations.BaseMigration;
 
 
@@ -276,7 +276,7 @@ public class ConversationsStorage {
             });
     }
 
-    public String createTopic(Topic topic, String siteId, String userId) {
+    public String createTopic(Topic topic, String siteId, String userId, TopicSettings settings) {
         return DB.transaction
             ("Create a topic for a site",
              (DBConnection db) -> {
@@ -295,6 +295,18 @@ public class ConversationsStorage {
                     .param(createdAt)
                     .param(createdAt)
                     .executeUpdate();
+
+                 db.run(
+                         "INSERT INTO conversations_topic_settings (topic_uuid, availability, published, graded, allow_comments, allow_like, require_post)" +
+                                 " VALUES (?, ?, ?, ?, ?, ?, ?)")
+                         .param(id)
+                         .param(settings.getAvailability())
+                         .param(settings.isPublished() ? 1 : 0)
+                         .param(settings.isGraded() ? 1 : 0)
+                         .param(settings.isAllowComments() ? 1 : 0)
+                         .param(settings.isAllowLike() ? 1 : 0)
+                         .param(settings.isRequirePost() ? 1 : 0)
+                         .executeUpdate();
 
                 db.commit();
 
