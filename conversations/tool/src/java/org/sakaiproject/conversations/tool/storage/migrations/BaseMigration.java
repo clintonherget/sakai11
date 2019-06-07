@@ -43,17 +43,18 @@ abstract public class BaseMigration {
                                System.err.println("*** Running migrations from " + version);
 
                                for (BaseMigration migration : migrations) {
-                                   if (migration.getVersion() <= version) {
+                                   if (migration.getVersion() <= version && !migration.alwaysRun()) {
                                        continue;
                                    }
 
                                    System.err.println(String.format("*** Running migration: %s", migration));
                                    try {
                                        migration.migrate(db);
-                                       version++;
-
-                                       db.run("update " + MIGRATION_TABLE + " set version = ?").param(version).executeUpdate();
-                                       db.commit();
+                                       version = migration.getVersion();
+                                       if (!migration.alwaysRun()) {
+                                           db.run("update " + MIGRATION_TABLE + " set version = ?").param(version).executeUpdate();
+                                           db.commit();
+                                       }
                                    } catch (Exception migrationError) {
                                        System.err.println(String.format("*** ERROR IN DB MIGRATION %s: %s",
                                                                         migration,
@@ -120,4 +121,9 @@ abstract public class BaseMigration {
     }
 
     abstract void migrate(DBConnection db) throws Exception;
+
+    // If a migration is marked as "alwaysRun", it gets run on every invocation.
+    public boolean alwaysRun() {
+        return false;
+    }
 }
