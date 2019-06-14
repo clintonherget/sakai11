@@ -123,7 +123,7 @@ Vue.component('create-topic-workflow', {
           <i class="fa fa-arrow-left" aria-hidden="true"></i> <a href="#" v-on:click="step = 'SET_TITLE'">Back to topic title</a>
         </div>
       </div>
-      <topic-settings-form settings="topic.settings"></topic-settings-form>
+      <topic-settings-form :settings="settings"></topic-settings-form>
       <br>
       <div class="row">
         <div class="col-sm-12">
