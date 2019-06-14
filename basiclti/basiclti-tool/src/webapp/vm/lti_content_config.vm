@@ -67,6 +67,9 @@ $(document).ready( function() {
         $(window).resize( function() {
                 setMainFrameHeight('sakai-basiclti-admin-iframe');
         });
+
+        // CLASSES-3680 change field order
+        $('[id="title.input"]').insertBefore($('.longtext[id="description.input"]'));
 });
 </script>
 #end

@@ -145,7 +145,8 @@ public class CommonsEntityProvider extends AbstractEntityProvider implements Req
                     pageSize = 10;
                 }
 
-                int start  = page * pageSize;
+                // Page 0 starts at 0; page 1 starts at 10; page 2 starts at 30; ...
+                int start = (page == 0) ? 0 : (page * pageSize) - 10;
 
                 if (start >= data.postsTotal) {
                     data.status = "END";

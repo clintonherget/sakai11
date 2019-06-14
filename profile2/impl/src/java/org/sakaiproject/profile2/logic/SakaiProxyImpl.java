@@ -592,10 +592,10 @@ public class SakaiProxyImpl implements SakaiProxy {
 				mtba.setMimeType(resource.getContentType());
 				return mtba;
 			} catch (final Exception e) {
-				log.error("SakaiProxy.getResource() failed for resourceId: " + resourceId + " : " + e.getClass() + " : " + e.getMessage());
+				log.debug("SakaiProxy.getResource() failed for resourceId: {} : {} : {}", resourceId, e.getClass(), e.getMessage());
 			}
 		} catch (final Exception e) {
-			log.error("SakaiProxy.getResource():" + e.getClass() + ":" + e.getMessage());
+			log.debug("SakaiProxy.getResource(): {} : {}", e.getClass(), e.getMessage());
 		} finally {
 			disableSecurityAdvisor();
 		}
@@ -1088,6 +1088,29 @@ public class SakaiProxyImpl implements SakaiProxy {
 		return this.serverConfigurationService.getBoolean(
 				"profile2.profile.student.enabled",
 				ProfileConstants.SAKAI_PROP_PROFILE2_PROFILE_STUDENT_ENABLED);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isNamePronunciationProfileEnabled() {
+		return isNamePronunciationEnabledInAnyUserSite() &&
+				this.serverConfigurationService.getBoolean(
+				"profile2.profile.name.pronunciation.enabled",
+				ProfileConstants.SAKAI_PROP_PROFILE2_PROFILE_PRONUNCIATION_ENABLED);
+	}
+
+	/* Checks if the user belongs to a site with this feature */
+	private boolean isNamePronunciationEnabledInAnyUserSite() {
+		List<Site> sites = this.getUserSites();
+		for(Site site : sites){
+			String siteProperty = site.getProperties().getProperty("roster-name-pronunciation");
+			if("true".equals(siteProperty)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1826,6 +1849,22 @@ public class SakaiProxyImpl implements SakaiProxy {
 			log.error("SakaiProxy.getFirstInstanceOfTool() failed for siteId: " + siteId + " and toolId: " + toolId);
 			return null;
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getNamePronunciationExamplesLink() {
+		return this.serverConfigurationService.getString("profile2.profile.name.pronunciation.examples.link", "");
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getNamePronunciationDuration() {
+		return this.serverConfigurationService.getInt("profile2.profile.name.pronunciation.duration", 10);
 	}
 
 	/**

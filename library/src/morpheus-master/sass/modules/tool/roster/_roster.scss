@@ -107,6 +107,39 @@
                 .roster-user-properties {
                     list-style: none;
                 }
+
+                &.roster-user-name-pronunciation-cell {
+                    span+.nameAudioPlayer{
+                        margin-left: 10px;
+                    }
+                    .nameAudioPlayer {
+                        @include align-items(center);
+                        @include justify-content(center);
+                        display: -webkit-inline-flex;
+                        display: -ms-inline-flexbox;
+                        display: inline-flex;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 16px;
+                        background-color: #ddd;
+                        border: 1px solid #bbb;
+                        cursor: pointer;
+
+                        &:hover, &:active, &:focus {
+                            background-color: darken(#ddd, 10%);
+                        }
+
+                        &.playing {
+                            background-color: #3a77a4;
+                            border-color: #2b506a;
+
+                            .fa {
+                                color: #fff;
+                            }
+                        }
+                    }
+                }
+
             }
             .roster-last-visit-time-cell {
                 font-size: 0.9em;

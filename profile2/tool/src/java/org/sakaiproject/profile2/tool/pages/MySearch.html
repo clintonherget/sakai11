@@ -54,7 +54,7 @@
 						</div>
 					</div>
 					
-					<div class="profileContent">
+					<div class="profileContent" style="display:none;">
 						<div wicket:id="searchTypeRadioGroup">
 							<h4 wicket:id="searchTypeNameLabel">[searchTypeNameLabel]</h4>
 							<div class="radio">
@@ -75,12 +75,14 @@
 
 					<div class="profileContent">
 
+						<div style="display:none;">
 						<h4 wicket:id="connectionsLabel">[connectionsLabel]</h4>
 						<div class="checkbox">
 							<label for="includeconnectionsinput">
 								<input type="checkbox" wicket:id="connectionsCheckBox"  />
 								<wicket:message key="accessibility.search.connections" />
 							</label>
+						</div>
 						</div>
 
 						<h4 wicket:id="worksiteLabel">[worksiteLabel]</h4>

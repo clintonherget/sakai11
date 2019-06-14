@@ -9,7 +9,7 @@ commons.postsRendered = 0;
 commons.urlRegex = /(ftp|http|https):\/\/[^ "]+/;
 
 commons.LOCAL_STORAGE_KEY = 'commons';
-commons.AJAX_TIMEOUT = 5000;
+commons.AJAX_TIMEOUT = 120000; // NYU increase timeout to 2min
 
 Handlebars.registerPartial('comment', Handlebars.partials['comment']);
 Handlebars.registerPartial('wrapped_comment', Handlebars.partials['wrapped_comment']);

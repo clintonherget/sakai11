@@ -117,6 +117,7 @@ public class MySearch extends BasePage {
 		
 		//heading
 		Label searchHeading = new Label("searchHeading", new ResourceModel("heading.search"));
+		searchHeading.setVisible(false);
 		add(searchHeading);
 		
 		//setup form
@@ -125,13 +126,13 @@ public class MySearch extends BasePage {
         searchForm.setOutputMarkupId(true);
         
         //search field
-        searchForm.add(new Label("searchLabel", new ResourceModel("text.search.terms.label")));
+        searchForm.add(new Label("searchLabel", new ResourceModel("text.search.terms.label")).setVisible(false));
         searchField = new TextField<String>("searchField", new PropertyModel<String>(searchStringModel, "string"));
         searchField.setRequired(true);
         searchField.setMarkupId("searchinput");
         searchField.setOutputMarkupId(true);
         searchForm.add(searchField);
-        searchForm.add(new IconWithClueTip("searchToolTip", ProfileConstants.INFO_IMAGE, new ResourceModel("text.search.terms.tooltip")));
+        searchForm.add(new IconWithClueTip("searchToolTip", ProfileConstants.INFO_IMAGE, new ResourceModel("text.search.terms.tooltip")).setVisible(false));
 		
         //by name or by interest radio group        
 		searchTypeRadioGroup = new RadioGroup<String>("searchTypeRadioGroup");
@@ -515,6 +516,7 @@ public class MySearch extends BasePage {
 		 */
 		
 		final WebMarkupContainer searchHistoryContainer = new WebMarkupContainer("searchHistoryContainer");
+		searchHistoryContainer.setVisible(false);
 		searchHistoryContainer.setOutputMarkupPlaceholderTag(true);
 		
 		Label searchHistoryLabel = new Label("searchHistoryLabel", new ResourceModel("text.search.history"));
