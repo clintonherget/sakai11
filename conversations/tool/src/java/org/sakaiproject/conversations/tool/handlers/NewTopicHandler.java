@@ -30,6 +30,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sakaiproject.conversations.tool.ConversationsServlet;
 import org.sakaiproject.conversations.tool.models.Topic;
 
 public class NewTopicHandler implements Handler {
@@ -68,5 +69,10 @@ public class NewTopicHandler implements Handler {
 
     public Map<String, List<String>> getFlashMessages() {
         return new HashMap<String, List<String>>();
+    }
+
+    @Override
+    public boolean isRolePermitted(final String role) {
+        return ConversationsServlet.ROLE_INSTRUCTOR.equals(role);
     }
 }

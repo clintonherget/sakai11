@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
+import org.sakaiproject.conversations.tool.ConversationsServlet;
 import org.sakaiproject.conversations.tool.lib.HTMLSanitizer;
 import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Topic;
@@ -116,4 +117,5 @@ public class CreatePostHandler implements Handler {
     public boolean hasTemplate() {
         return false;
     }
+
 }

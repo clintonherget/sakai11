@@ -211,6 +211,10 @@ Vue.component('create-topic-workflow', {
           success: function() {
             location.reload();
           },
+          error: (jqXHR, textStatus, errorThrown) => {
+            var $error = $('<div class="alertMessage">').text(jqXHR.responseText);
+            $(this.$el).find('.modal-body').prepend($error);
+          }
         });
       }
     },
@@ -373,6 +377,10 @@ Vue.component('update-topic-settings-modal', {
         success: function() {
           location.reload();
         },
+        error: (jqXHR, textStatus, errorThrown) => {
+          var $error = $('<div class="alertMessage">').text(jqXHR.responseText);
+          $(this.$el).find('.modal-body').prepend($error);
+        }
       });
     },
     fetchTopic: function() {
@@ -384,6 +392,10 @@ Vue.component('update-topic-settings-modal', {
         success: (json) => {
            this.topic = json;
         },
+        error: (jqXHR, textStatus, errorThrown) => {
+          var $error = $('<div class="alertMessage">').text(jqXHR.responseText);
+          $(this.$el).find('.modal-body').prepend($error);
+        }
       });
     },
   },

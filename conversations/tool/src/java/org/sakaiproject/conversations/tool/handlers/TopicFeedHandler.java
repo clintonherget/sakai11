@@ -26,6 +26,7 @@ package org.sakaiproject.conversations.tool.handlers;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.sakaiproject.conversations.tool.ConversationsServlet;
 import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
@@ -93,5 +94,10 @@ public class TopicFeedHandler implements Handler {
     @Override
     public boolean hasTemplate() {
         return false;
+    }
+
+    @Override
+    public boolean isRolePermitted(final String role) {
+        return ConversationsServlet.ROLE_INSTRUCTOR.equals(role);
     }
 }

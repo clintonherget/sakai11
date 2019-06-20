@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
 
+import org.sakaiproject.conversations.tool.ConversationsServlet;
 import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.models.TopicSettings;
@@ -197,5 +198,10 @@ public class CreateTopicHandler implements Handler {
     @Override
     public boolean hasTemplate() {
         return false;
+    }
+
+    @Override
+    public boolean isRolePermitted(final String role) {
+        return ConversationsServlet.ROLE_INSTRUCTOR.equals(role);
     }
 }

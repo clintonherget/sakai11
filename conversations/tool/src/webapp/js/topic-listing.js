@@ -42,7 +42,9 @@ Vue.component('topic-listing', {
             <td>{{formatEpochTime(topic.lastActivityAt)}}</td>
             <td>
               <a :href="baseurl+'topic?uuid='+topic.uuid">View</a>
-              <edit-topic-settings-wrapper :topic="topic" :baseurl="baseurl"></edit-topic-settings-wrapper>
+              <template v-if="is_instructor">
+                <edit-topic-settings-wrapper :topic="topic" :baseurl="baseurl"></edit-topic-settings-wrapper>
+              </template>
             </td>
           </tr>
       </tbody>
@@ -62,7 +64,12 @@ Vue.component('topic-listing', {
       count: 0,
     };
   },
-  props: ['baseurl', 'initial_order_by', 'initial_order_direction', 'initial_page', 'page_size'],
+  props: ['baseurl',
+          'initial_order_by',
+          'initial_order_direction',
+          'initial_page',
+          'page_size',
+          'is_instructor'],
   methods: {
     loadTopics: function() {
       $.ajax({

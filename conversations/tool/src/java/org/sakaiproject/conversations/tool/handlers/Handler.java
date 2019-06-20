@@ -70,4 +70,8 @@ public interface Handler {
     public default boolean hasTemplate() {
         return true;
     }
+
+    public default boolean isRolePermitted(final String role) {
+        return true;
+    }
 }

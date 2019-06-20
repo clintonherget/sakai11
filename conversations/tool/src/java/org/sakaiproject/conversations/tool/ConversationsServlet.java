@@ -60,6 +60,9 @@ public class ConversationsServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConversationsServlet.class);
 
+    public static final String ROLE_INSTRUCTOR = "instructor";
+    public static final String ROLE_STUDENT = "student";
+
     public void init(ServletConfig config) throws ServletException {
         new ConversationsStorage().runDBMigrations();
 
@@ -92,13 +95,20 @@ public class ConversationsServlet extends HttpServlet {
 
             User currentUser = UserDirectoryService.getCurrentUser();
             context.put("currentUserId", currentUser.getId());
-            String role = "student";
+            String role = ROLE_STUDENT;
             if (SecurityService.unlock("site.upd", SiteService.siteReference(ToolManager.getCurrentPlacement().getContext()))) {
-                role = "instructor";
+                role = ROLE_INSTRUCTOR;
             }
             context.put("currentUserRole", role);
+            context.put("isInstructor", ROLE_INSTRUCTOR.equals(role));
 
             Handler handler = handlerForRequest(request);
+
+            if (!handler.isRolePermitted(role)) {
+                response.setStatus(403);
+                response.getWriter().write("Insufficient privileges");
+                return;
+            }
 
             handler.handle(request, response, context);
 
