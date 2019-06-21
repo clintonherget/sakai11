@@ -24,17 +24,19 @@
 
 package org.sakaiproject.conversations.tool.handlers;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sakaiproject.conversations.tool.models.Poster;
-import org.sakaiproject.conversations.tool.models.Topic;
-import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.site.api.Group;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.cover.SiteService;
 
 public class IndexHandler implements Handler {
 
@@ -48,42 +50,33 @@ public class IndexHandler implements Handler {
         try {
             RequestParams p = new RequestParams(request);
 
-            String siteId = (String)context.get("siteId");
-
-            ConversationsStorage storage = new ConversationsStorage();
-
-//            List<Topic> topics = storage.getAllTopics(siteId);
-//            List<String> topicUuids = new ArrayList<String>();
-//
-//            for (Topic topic : topics) {
-//                topicUuids.add(topic.getUuid());
-//            }
-//
-//            Map<String, List<Poster>> topicPosters = storage.getPostersForTopics(topicUuids);
-//            Map<String, Long> postCounts = storage.getPostCountsForTopics(topicUuids);
-//            Map<String, Long> lastActivityTimes = storage.getLastActivityTimeForTopics(topicUuids);
-//
-//            for (Topic topic : topics) {
-//                if (topicPosters.containsKey(topic.getUuid())) {
-//                    topic.setPosters(topicPosters.get(topic.getUuid()));
-//                }
-//                if (postCounts.containsKey(topic.getUuid())) {
-//                    if (postCounts.get(topic.getUuid()) > 1) {
-//                        topic.setPostCount(postCounts.get(topic.getUuid()));
-//                    }
-//                }
-//                if (lastActivityTimes.containsKey(topic.getUuid())) {
-//                    topic.setLastActivityTime(lastActivityTimes.get(topic.getUuid()));
-//                }
-//            }
-//
-//            context.put("topics", topics);
-            
             context.put("page", 0);
             context.put("pageSize", TopicsFeedHandler.PAGE_SIZE);
             context.put("order_by", "last_activity_at");
             context.put("order_direction", "desc");
             context.put("subpage", "index");
+
+            if ((Boolean)context.get("isInstructor")) {
+                String siteId = (String)context.get("siteId");
+                Site site = SiteService.getSite(siteId);
+                Collection<Group> groups = site.getGroups();
+
+                JSONArray groupsJSON = new JSONArray();
+                for (Group group : groups) {
+                    JSONObject groupJSON = new JSONObject();
+                    groupJSON.put("name", group.getTitle());
+                    groupJSON.put("reference", group.getReference());
+                    ResourceProperties groupProperties = group.getProperties();
+                    if (groupProperties.get("sections_eid") != null) {
+                        groupJSON.put("type", "section");
+                    } else {
+                        groupJSON.put("type", "group");
+                    }
+                    groupsJSON.add(groupJSON);
+                }
+
+                context.put("siteGroupsJSON", groupsJSON.toJSONString());
+            }
 
         } catch (Exception e) {
             throw new RuntimeException(e);

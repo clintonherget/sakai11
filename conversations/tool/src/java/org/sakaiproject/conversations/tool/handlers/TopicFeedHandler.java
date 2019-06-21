@@ -30,6 +30,10 @@ import org.sakaiproject.conversations.tool.ConversationsServlet;
 import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
+import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.site.api.Group;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.cover.SiteService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,7 +68,27 @@ public class TopicFeedHandler implements Handler {
                 throw new RuntimeException("Topic not found for uuid");
             }
 
-            response.getWriter().write(topic.get().asJSONObject().toString());
+            Site site = SiteService.getSite(siteId);
+            Collection<Group> groups = site.getGroups();
+            JSONArray groupsJSON = new JSONArray();
+            for (Group group : groups) {
+                JSONObject groupJSON = new JSONObject();
+                groupJSON.put("name", group.getTitle());
+                groupJSON.put("reference", group.getReference());
+                ResourceProperties groupProperties = group.getProperties();
+                if (groupProperties.get("sections_eid") != null) {
+                    groupJSON.put("type", "section");
+                } else {
+                    groupJSON.put("type", "group");
+                }
+                groupsJSON.add(groupJSON);
+            }
+
+            JSONObject result = new JSONObject();
+            result.put("available_groups", groupsJSON);
+            result.put("topic", topic.get().asJSONObject());
+
+            response.getWriter().write(result.toString());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

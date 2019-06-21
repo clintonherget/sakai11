@@ -81,6 +81,8 @@ public class CreateTopicHandler implements Handler {
                     "true".equals(p.getString("settings[allow_like]", null)),
                     "true".equals(p.getString("settings[require_post]", null)));
 
+            topicSettings.setGroups(p.getStrings("settings[groups][]"));
+
             User currentUser = UserDirectoryService.getCurrentUser();
 
             String topicUuid = new ConversationsStorage().createTopic(topic, siteId, currentUser.getId(), topicSettings);

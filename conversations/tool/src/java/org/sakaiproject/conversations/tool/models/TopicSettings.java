@@ -26,7 +26,11 @@ package org.sakaiproject.conversations.tool.models;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TopicSettings {
     public static String AVAILABILITY_ENTIRE_SITE = "ENTIRE_SITE";
@@ -52,6 +56,9 @@ public class TopicSettings {
     @Setter
     @Getter
     private boolean requirePost = false;
+    @Setter
+    @Getter
+    private List<String> groups = new ArrayList<String>();
 
     public TopicSettings(String topicUuid, String availability, boolean published, boolean graded, boolean allowComments, boolean allowLike, boolean requirePost) {
         this.topicUuid = topicUuid;
@@ -73,6 +80,11 @@ public class TopicSettings {
         obj.put("allow_comments", this.allowComments);
         obj.put("allow_like", this.allowLike);
         obj.put("require_post", this.requirePost);
+        JSONArray groupsJSON = new JSONArray();
+        for (String groupRef : groups) {
+            groupsJSON.add(groupRef);
+        }
+        obj.put("groups", groupsJSON);
 
         return obj;
     }

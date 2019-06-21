@@ -50,8 +50,8 @@ abstract public class BaseMigration {
                                    System.err.println(String.format("*** Running migration: %s", migration));
                                    try {
                                        migration.migrate(db);
-                                       version = migration.getVersion();
                                        if (!migration.alwaysRun()) {
+                                           version = migration.getVersion();
                                            db.run("update " + MIGRATION_TABLE + " set version = ?").param(version).executeUpdate();
                                            db.commit();
                                        }

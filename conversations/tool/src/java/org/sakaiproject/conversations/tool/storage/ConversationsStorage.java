@@ -291,33 +291,42 @@ public class ConversationsStorage {
         return DB.transaction
             ("Create a topic for a site",
              (DBConnection db) -> {
-                String id = UUID.randomUUID().toString();
+                 String id = UUID.randomUUID().toString();
 
-                Long createdAt = System.currentTimeMillis();
+                 Long createdAt = System.currentTimeMillis();
 
-                db.run(
-                       "INSERT INTO conversations_topic (uuid, title, type, site_id, created_by, created_at, last_activity_at)" +
-                       " VALUES (?, ?, ?, ?, ?, ?, ?)")
-                    .param(id)
-                    .param(topic.getTitle())
-                    .param(topic.getType())
-                    .param(siteId)
-                    .param(userId)
-                    .param(createdAt)
-                    .param(createdAt)
-                    .executeUpdate();
+                 db.run(
+                        "INSERT INTO conversations_topic (uuid, title, type, site_id, created_by, created_at, last_activity_at)" +
+                        " VALUES (?, ?, ?, ?, ?, ?, ?)")
+                     .param(id)
+                     .param(topic.getTitle())
+                     .param(topic.getType())
+                     .param(siteId)
+                     .param(userId)
+                     .param(createdAt)
+                     .param(createdAt)
+                     .executeUpdate();
 
                  db.run(
                          "INSERT INTO conversations_topic_settings (topic_uuid, availability, published, graded, allow_comments, allow_like, require_post)" +
-                                 " VALUES (?, ?, ?, ?, ?, ?, ?)")
-                         .param(id)
-                         .param(settings.getAvailability())
-                         .param(settings.isPublished() ? 1 : 0)
-                         .param(settings.isGraded() ? 1 : 0)
-                         .param(settings.isAllowComments() ? 1 : 0)
-                         .param(settings.isAllowLike() ? 1 : 0)
-                         .param(settings.isRequirePost() ? 1 : 0)
-                         .executeUpdate();
+                         " VALUES (?, ?, ?, ?, ?, ?, ?)")
+                     .param(id)
+                     .param(settings.getAvailability())
+                     .param(settings.isPublished() ? 1 : 0)
+                     .param(settings.isGraded() ? 1 : 0)
+                     .param(settings.isAllowComments() ? 1 : 0)
+                     .param(settings.isAllowLike() ? 1 : 0)
+                     .param(settings.isRequirePost() ? 1 : 0)
+                     .executeUpdate();
+
+                for(String groupId : settings.getGroups()) {
+                    db.run(
+                           "INSERT INTO conversations_topic_group (topic_uuid, group_id)" +
+                           " VALUES (?, ?)")
+                        .param(id)
+                        .param(groupId)
+                        .executeUpdate();
+                }
 
                 db.commit();
 
@@ -333,14 +342,27 @@ public class ConversationsStorage {
                                     "UPDATE conversations_topic_settings" +
                                      " SET availability = ?, published = ?, graded = ?, allow_comments = ?, allow_like = ?, require_post = ?" +
                                      " WHERE topic_uuid = ?")
-                                    .param(settings.getAvailability())
-                                    .param(settings.isPublished() ? 1 : 0)
-                                    .param(settings.isGraded() ? 1 : 0)
-                                    .param(settings.isAllowComments() ? 1 : 0)
-                                    .param(settings.isAllowLike() ? 1 : 0)
-                                    .param(settings.isRequirePost() ? 1 : 0)
+                                .param(settings.getAvailability())
+                                .param(settings.isPublished() ? 1 : 0)
+                                .param(settings.isGraded() ? 1 : 0)
+                                .param(settings.isAllowComments() ? 1 : 0)
+                                .param(settings.isAllowLike() ? 1 : 0)
+                                .param(settings.isRequirePost() ? 1 : 0)
+                                .param(topicUuid)
+                                .executeUpdate();
+
+                            db.run("DELETE FROM conversations_topic_group WHERE topic_uuid = ?")
+                                .param(topicUuid)
+                                .executeUpdate();
+
+                            for(String groupId : settings.getGroups()) {
+                                db.run(
+                                       "INSERT INTO conversations_topic_group (topic_uuid, group_id)" +
+                                       " VALUES (?, ?)")
                                     .param(topicUuid)
+                                    .param(groupId)
                                     .executeUpdate();
+                            }
 
                             db.commit();
 
@@ -367,6 +389,16 @@ public class ConversationsStorage {
                                                                    result.getInt("allow_comments") == 1,
                                                                    result.getInt("allow_like") == 1,
                                                                    result.getInt("require_post") == 1);
+
+                        try (DBResults groupResults = db.run(
+                                    "SELECT * from conversations_topic_group" +
+                                    " WHERE topic_uuid = ?")
+                                .param(uuid)
+                                .executeQuery()){
+                            for (ResultSet groupResult : groupResults) {
+                                settings.getGroups().add(groupResult.getString("group_id"));
+                            }
+                        }
 
                         Topic topic = new Topic(result.getString("uuid"),
                                                 result.getString("title"),

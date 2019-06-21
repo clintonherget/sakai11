@@ -25,6 +25,9 @@ package org.sakaiproject.conversations.tool.handlers;
  **********************************************************************************/
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 class RequestParams {
 
@@ -41,6 +44,16 @@ class RequestParams {
             return defaultValue;
         } else {
             return result;
+        }
+    }
+
+    public List<String> getStrings(String param) {
+        String[] result = request.getParameterValues(param);
+
+        if (result == null) {
+            return new ArrayList<String>();
+        } else {
+            return Arrays.asList(result);
         }
     }
 }

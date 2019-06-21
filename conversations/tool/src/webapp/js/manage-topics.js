@@ -23,7 +23,30 @@ Vue.component('topic-settings-form', {
               <label><input type="radio" name="availability" value="GROUPS" v-model="settings.availability"/> Available to <strong>select groups</strong></label>
             </div>
             <template v-if="settings.availability === 'GROUPS'">
-              <div class="col-sm-12">TODO</div>
+              <div style="margin-left: 40px">
+                <template v-if="sections.length > 0">
+                  <div><strong>Sections</strong></div>
+                  <div v-for="section in sections">
+                    <label>
+                      <input type="checkbox"
+                             name="group[]"
+                             v-bind:value="section.reference"
+                             v-model="settings.groups"/> {{section.name}}
+                    </label>
+                  </div>
+                </template>
+                <template v-if="groups.length > 0">
+                  <div><strong>Groups</strong></div>
+                  <div v-for="group in groups">
+                    <label>
+                      <input type="checkbox"
+                             name="group[]"
+                             v-bind:value="group.reference"
+                             v-model="settings.groups"/> {{group.name}}
+                    </label>
+                  </div>
+                </template>
+              </div>
             </template>
           </div>
         </template>
@@ -63,7 +86,31 @@ Vue.component('topic-settings-form', {
     </div>
   </div>
 `,
-  props: ['settings'],
+  props: ['settings', 'available_groups'],
+  computed: {
+    sections: function() {
+      var result = [];
+
+      this.available_groups.forEach(function(group) {
+        if (group.type == 'section') {
+          result.push(group);
+        }
+      });
+
+      return result;
+    },
+    groups: function() {
+      var result = [];
+
+      this.available_groups.forEach(function(group) {
+        if (group.type == 'group') {
+          result.push(group);
+        }
+      });
+
+      return result;
+    },
+  },
 });
 
 Vue.component('create-topic-workflow', {
@@ -123,7 +170,7 @@ Vue.component('create-topic-workflow', {
           <i class="fa fa-arrow-left" aria-hidden="true"></i> <a href="#" v-on:click="step = 'SET_TITLE'">Back to topic title</a>
         </div>
       </div>
-      <topic-settings-form :settings="settings"></topic-settings-form>
+      <topic-settings-form :settings="settings" :available_groups="available_groups"></topic-settings-form>
       <br>
       <div class="row">
         <div class="col-sm-12">
@@ -173,10 +220,11 @@ Vue.component('create-topic-workflow', {
         allow_comments: true,
         allow_like: false,
         require_post: false,
+        groups: [],
       },
     };
   },
-  props: ['baseurl'],
+  props: ['baseurl', 'available_groups'],
   methods: {
     firstPostContent: function() {
       if (this.editor) {
@@ -256,7 +304,7 @@ Vue.component('create-topic-modal', {
             </div>
           </div>
           <div class="modal-body">
-            <create-topic-workflow :baseurl="baseurl"></create-topic-workflow>
+            <create-topic-workflow :baseurl="baseurl" :available_groups="available_groups"></create-topic-workflow>
           </div>
         </div>
       </div>
@@ -266,7 +314,7 @@ Vue.component('create-topic-modal', {
   data: function() {
     return {};
   },
-  props: ['baseurl'],
+  props: ['baseurl', 'available_groups'],
   methods: {
     show: function() {
       $(this.$refs.dialog).modal();
@@ -298,13 +346,18 @@ Vue.component('create-topic-wrapper', {
   template: `
   <div class="conversations-create-topic-wrapper">
     <button class="button" v-on:click="showModal()"><i class="fa fa-plus" aria-hidden="true"></i> New Topic</button>
-    <create-topic-modal ref="createTopicModal" :baseurl="baseurl"></create-topic-modal>
+    <create-topic-modal ref="createTopicModal"
+                        :baseurl="baseurl"
+                        :available_groups="available_groups">
+    </create-topic-modal>
   </div>
 `,
   data: function() {
-    return {};
+    return {
+        available_groups: JSON.parse(this.groups_json),
+    };
   },
-  props: ['baseurl'],
+  props: ['baseurl', 'groups_json'],
   methods: {
     showModal: function() {
       this.$refs.createTopicModal.show();
@@ -330,7 +383,9 @@ Vue.component('update-topic-settings-modal', {
           </div>
           <div class="modal-body">
             <template v-if="topic != null">
-              <topic-settings-form :settings="topic.settings"></topic-settings-form>
+              <topic-settings-form :settings="topic.settings"
+                                   :available_groups="available_groups">
+              </topic-settings-form>
             </template>
           </div>
           <div class="modal-footer">
@@ -350,6 +405,7 @@ Vue.component('update-topic-settings-modal', {
   data: function() {
     return {
         topic: null,
+        available_groups: [],
     };
   },
   props: ['baseurl', 'topic_uuid'],
@@ -390,7 +446,8 @@ Vue.component('update-topic-settings-modal', {
         data: {topicUuid: this.topic_uuid},
         dataType: 'json',
         success: (json) => {
-           this.topic = json;
+           this.topic = json.topic;
+           this.available_groups = json.available_groups;
         },
         error: (jqXHR, textStatus, errorThrown) => {
           var $error = $('<div class="alertMessage">').text(jqXHR.responseText);

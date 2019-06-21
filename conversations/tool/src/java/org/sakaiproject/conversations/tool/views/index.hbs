@@ -3,7 +3,7 @@
 
 <div class="vue-enabled">
   {{#if isInstructor}}
-    <create-topic-wrapper baseurl="{{baseURL}}"></create-topic-wrapper>
+    <create-topic-wrapper baseurl="{{baseURL}}" groups_json="{{siteGroupsJSON}}"></create-topic-wrapper>
   {{/if}}
 
   <topic-listing baseurl="{{baseURL}}"

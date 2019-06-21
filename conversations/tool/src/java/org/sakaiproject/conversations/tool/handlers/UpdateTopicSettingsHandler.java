@@ -78,6 +78,7 @@ public class UpdateTopicSettingsHandler implements Handler {
             settings.setAllowComments("true".equals(p.getString("settings[allow_comments]", String.valueOf(settings.isAllowComments()).toLowerCase())));
             settings.setAllowLike("true".equals(p.getString("settings[allow_like]", String.valueOf(settings.isAllowLike()).toLowerCase())));
             settings.setRequirePost("true".equals(p.getString("settings[require_post]", String.valueOf(settings.isRequirePost()).toLowerCase())));
+            settings.setGroups(p.getStrings("settings[groups][]"));
 
             storage.updateTopicSettings(topicUuid, settings);
 
