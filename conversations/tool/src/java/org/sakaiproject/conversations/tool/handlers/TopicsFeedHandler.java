@@ -31,6 +31,9 @@ import org.sakaiproject.conversations.tool.models.Post;
 import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
+import org.sakaiproject.site.api.Group;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
 
@@ -59,8 +62,23 @@ public class TopicsFeedHandler implements Handler {
 
             ConversationsStorage storage = new ConversationsStorage();
 
-            List<Topic> topics = storage.getTopics(siteId, page, PAGE_SIZE, orderBy, orderDirection);
-            Integer topicsCount = storage.getTopicsCount(siteId);
+            List<Topic> topics = new ArrayList<Topic>();
+            Integer topicsCount = 0;
+
+            if ((Boolean) context.get("isStudent")) {
+                List<String> userGroupIds = new ArrayList<String>();
+                User currentUser = UserDirectoryService.getCurrentUser();
+                Site site = SiteService.getSite(siteId);
+                for (Group group : site.getGroupsWithMember(currentUser.getId())) {
+                    userGroupIds.add(group.getReference());
+                }
+
+                topics = storage.getTopicsForStudent(siteId, page, PAGE_SIZE, orderBy, orderDirection, userGroupIds);
+                topicsCount = storage.getTopicsForStudentCount(siteId, userGroupIds);
+            } else {
+                topics = storage.getTopics(siteId, page, PAGE_SIZE, orderBy, orderDirection);
+                topicsCount = storage.getTopicsCount(siteId);
+            }
             List<String> topicUuids = new ArrayList<String>();
 
             for (Topic topic : topics) {

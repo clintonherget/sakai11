@@ -101,6 +101,7 @@ public class ConversationsServlet extends HttpServlet {
             }
             context.put("currentUserRole", role);
             context.put("isInstructor", ROLE_INSTRUCTOR.equals(role));
+            context.put("isStudent", ROLE_STUDENT.equals(role));
 
             Handler handler = handlerForRequest(request);
 

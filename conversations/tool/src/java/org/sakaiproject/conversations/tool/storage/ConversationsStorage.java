@@ -155,6 +155,83 @@ public class ConversationsStorage {
             });
     }
 
+    public List<Topic> getTopicsForStudent(final String siteId, final Integer page, final Integer pageSize, final String orderBy, final String orderDirection, final List<String> groupIds) {
+        // FIXME pagination
+        return DB.transaction
+                ("Get topics on page for site for student",
+                        (DBConnection db) -> {
+                            List<Topic> topics = new ArrayList<>();
+
+                            final int minRowNum = pageSize * page + 1;
+                            final int maxRowNum = pageSize * page + pageSize;
+
+                            String groupIdPlaceholders = groupIds.stream().map(_p -> "?").collect(Collectors.joining(","));
+
+                            try (PreparedStatement ps = db.prepareStatement(
+                                    "SELECT *" +
+                                            " FROM conversations_topic" +
+                                            " INNER JOIN conversations_topic_settings ON conversations_topic_settings.topic_uuid = conversations_topic.uuid" +
+                                            " WHERE uuid in (" +
+                                            "   SELECT uuid FROM (" +
+                                            "     SELECT uuid, rownum rnk FROM (" +
+                                            "       SELECT uuid FROM conversations_topic" +
+                                            "       INNER JOIN conversations_topic_settings ON conversations_topic_settings.topic_uuid = conversations_topic.uuid" +
+                                            "       WHERE conversations_topic.site_id = ?" +
+                                            "       AND conversations_topic_settings.published = 1" +
+                                            "       AND (" +
+                                            "         conversations_topic_settings.availability = 'ENTIRE_SITE'" +
+                                            "         OR (" +
+                                            "           conversations_topic_settings.availability = 'GROUPS' AND conversations_topic.uuid IN (" +
+                                            "             SELECT topic_uuid FROM conversations_topic_group WHERE group_id in (" + groupIdPlaceholders + ")" +
+                                            "           )" +
+                                            "         )" +
+                                            "       )" +
+                                            "       ORDER BY " + orderBy + " " + orderDirection.toUpperCase() +
+                                            "     )" +
+                                            "   ) WHERE rnk BETWEEN ? AND ?" +
+                                            " )" +
+                                            " ORDER BY " + orderBy + " " + orderDirection.toUpperCase())) {
+
+                                int index = 1;
+                                ps.setString(index, siteId);
+                                Iterator<String> it = groupIds.iterator();
+                                while (it.hasNext()) {
+                                    index += 1;
+                                    ps.setString(index, it.next());
+                                }
+                                index += 1;
+                                ps.setInt(index, minRowNum);
+                                index += 1;
+                                ps.setInt(index, maxRowNum);
+
+                                try (ResultSet rs = ps.executeQuery()) {
+                                    while (rs.next()) {
+                                        Topic topic = new Topic(rs.getString("uuid"),
+                                                rs.getString("title"),
+                                                rs.getString("type"),
+                                                rs.getString("created_by"),
+                                                rs.getLong("created_at"),
+                                                rs.getLong("last_activity_at"));
+
+                                        TopicSettings settings = new TopicSettings(rs.getString("uuid"),
+                                                rs.getString("availability"),
+                                                rs.getInt("published") == 1,
+                                                rs.getInt("graded") == 1,
+                                                rs.getInt("allow_comments") == 1,
+                                                rs.getInt("allow_like") == 1,
+                                                rs.getInt("require_post") == 1);
+
+                                        topic.setSettings(settings);
+
+                                        topics.add(topic);
+                                    }
+
+                                    return topics;
+                                }
+                            }
+                        });
+    }
+
     public Integer getTopicsCount(final String siteId) {
         return DB.transaction
             ("Count topics for site",
@@ -169,6 +246,46 @@ public class ConversationsStorage {
                 }
                 return count;
             });
+    }
+
+    public Integer getTopicsForStudentCount(final String siteId, final List<String> groupIds) {
+        return DB.transaction
+                ("Count topics for student in site",
+                        (DBConnection db) -> {
+                            Integer count = 0;
+                            String groupIdPlaceholders = groupIds.stream().map(_p -> "?").collect(Collectors.joining(","));
+                            try (PreparedStatement ps = db.prepareStatement(
+                                "SELECT count(*) as count" +
+                                        " FROM conversations_topic" +
+                                        " INNER JOIN conversations_topic_settings ON conversations_topic_settings.topic_uuid = conversations_topic.uuid" +
+                                        " WHERE conversations_topic.site_id = ?" +
+                                        " AND conversations_topic_settings.published = 1" +
+                                        " AND (" +
+                                        "   conversations_topic_settings.availability = 'ENTIRE_SITE'" +
+                                        "   OR (" +
+                                        "     conversations_topic_settings.availability = 'GROUPS'" +
+                                        "     AND conversations_topic.uuid IN (" +
+                                        "       SELECT topic_uuid FROM conversations_topic_group WHERE group_id in (" + groupIdPlaceholders + ")" +
+                                        "     )" +
+                                        "   )" +
+                                        " )"
+                            )) {
+                                int index = 1;
+                                ps.setString(index, siteId);
+                                Iterator<String> it = groupIds.iterator();
+                                while (it.hasNext()) {
+                                    index += 1;
+                                    ps.setString(index, it.next());
+                                }
+                                try (ResultSet rs = ps.executeQuery()) {
+                                    while (rs.next()) {
+                                        count = rs.getInt("count");
+                                    }
+                                }
+                            }
+
+                            return count;
+                        });
     }
 
     public void touchTopicLastActivityAt(final String topicUuid) {
