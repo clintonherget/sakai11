@@ -168,6 +168,8 @@ public class ConversationsServlet extends HttpServlet {
             return new FileHandler();
         } else if (path.equals("/file-view")) {
             return new FileHandler();
+        } else if (path.equals("/like-post")) {
+            return new LikePostHandler();
         }
 
         return new IndexHandler();

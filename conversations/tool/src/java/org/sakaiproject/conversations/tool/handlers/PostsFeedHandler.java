@@ -87,14 +87,20 @@ public class PostsFeedHandler implements Handler {
             for (Post post : posts) {
                 if (post.getPostedBy().equals(currentUser.getId())) {
                     post.setEditable(true);
+                    post.setLikeable(false);
                 } else {
                     post.setUnread(post.getPostedAt() > timeLastVisited);
+                    post.setLikeable(true);
                 }
 
                 if (post.getParentPostUuid() == null) {
                     topLevelPosts.put(post.getUuid(), post);
                 } else {
                     topLevelPosts.get(post.getParentPostUuid()).addComment(post);
+                }
+
+                if (post.getLikedBy().contains(currentUser.getId())) {
+                    post.setLiked(true);
                 }
             }
 
@@ -124,6 +130,9 @@ public class PostsFeedHandler implements Handler {
         obj.put("unread", post.isUnread());
         obj.put("editable", post.isEditable());
         obj.put("version", post.getVersion());
+        obj.put("liked", post.isLiked());
+        obj.put("likes", post.getLikedBy().size());
+        obj.put("likeable", post.isLikeable());
 
         JSONArray comments = new JSONArray();
         for (Post comment : post.getComments()) {

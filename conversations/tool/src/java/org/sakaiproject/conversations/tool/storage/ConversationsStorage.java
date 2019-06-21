@@ -603,17 +603,28 @@ public class ConversationsStorage {
                      .param(topicUuid)
                      .executeQuery()) {
                     for (ResultSet result : results) {
-                        posts.add(
-                                  new Post(
-                                           result.getString("uuid"),
-                                           result.getString("content"),
-                                           result.getString("posted_by"),
-                                           result.getLong("posted_at"),
-                                           result.getString("parent_post_uuid"),
-                                           result.getString("eid"),
-                                           result.getString("fname"),
-                                           result.getString("lname"),
-                                           result.getLong("version")));
+                        String postUuid = result.getString("uuid");
+                        Post post = new Post(
+                                postUuid,
+                                result.getString("content"),
+                                result.getString("posted_by"),
+                                result.getLong("posted_at"),
+                                result.getString("parent_post_uuid"),
+                                result.getString("eid"),
+                                result.getString("fname"),
+                                result.getString("lname"),
+                                result.getLong("version"));
+
+                        try (DBResults likeResults = db.run("SELECT * FROM conversations_post_like" +
+                                                            " WHERE post_uuid = ?")
+                                .param(postUuid)
+                                .executeQuery()) {
+                            for (ResultSet likeResult : likeResults) {
+                                post.getLikedBy().add(likeResult.getString("user_id"));
+                            }
+                        }
+
+                        posts.add(post);
                     }
 
                     loadAttachments(posts);
@@ -773,5 +784,28 @@ public class ConversationsStorage {
                     return 0L;
                 }
             });
+    }
+
+    public void likePost(final String postUuid, final String userId, final boolean like) {
+        DB.transaction
+                ("Like a post",
+                        (DBConnection db) -> {
+                            db.run("DELETE FROM conversations_post_like WHERE post_uuid = ? AND user_id = ?")
+                                    .param(postUuid)
+                                    .param(userId)
+                                    .executeUpdate();
+                            if (like) {
+                                db.run(
+                                        "INSERT INTO conversations_post_like (post_uuid, user_id)" +
+                                                " VALUES (?, ?)")
+                                        .param(postUuid)
+                                        .param(userId)
+                                        .executeUpdate();
+                            }
+
+                            db.commit();
+
+                            return null;
+                        });
     }
 }

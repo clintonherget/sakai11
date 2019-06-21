@@ -2,6 +2,26 @@ Vue.component('react-post', {
   template: `
 <div :class="css_classes" :data-post-uuid="post.uuid">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
+  <template v-if="allowLikes">
+      <span class="pull-right" style="margin-left: 10px;">
+        <small class="text-muted" v-if="post.likes > 0">{{post.likes}}</small>
+        <template v-if="post.likeable">
+          <template v-if="post.liked">
+            <a href='javascript:void(0)' title="Unlike Post" @click="toggleLike()">
+              <i class="fa fa-thumbs-up"></i>
+            </a>
+          </template>
+          <template v-else>
+            <a href='javascript:void(0)' title="Like Post" @click="toggleLike()">
+              <i class="fa fa-thumbs-o-up"></i>
+            </a>
+          </template>
+        </template>
+        <template v-else>
+          <i class="fa fa-thumbs-o-up"></i>
+        </template>
+      </span>
+  </template>
   <template v-if="post.editable && !editing">
     <a href="javascript:void(0)" class="edit pull-right" title="Edit Post"
         @click="edit()">
@@ -144,8 +164,26 @@ Vue.component('react-post', {
     allowComments: function() {
         return this.$parent.allowComments;
     },
+    allowLikes: function() {
+        return this.$parent.allowLikes;
+    },
   },
   methods: {
+    toggleLike: function() {
+      $.ajax({
+        url: this.baseurl+'like-post',
+        type: 'post',
+        data: {
+          post_uuid: this.post.uuid,
+          like: !this.post.liked,
+        },
+        dataType: 'json',
+        success: (json) => {
+          this.$parent.postToFocusAndHighlight = json.uuid;
+          this.$parent.refreshPosts();
+        },
+      });
+    },
     addComment: function() {
       if (this.commentContent.trim() == '') {
         this.commentContent = '';
@@ -396,9 +434,12 @@ Vue.component('react-topic', {
     },
   },
   computed: {
-      allowComments: function() {
-          return this.settings.allow_comments;
-      }
+    allowComments: function() {
+        return this.settings.allow_comments;
+    },
+    allowLikes: function() {
+        return this.settings.allow_like;
+    }
   },
   mounted: function() {
     this.refreshPosts();

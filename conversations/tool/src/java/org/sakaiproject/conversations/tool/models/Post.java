@@ -64,6 +64,15 @@ public class Post implements Comparable<Post> {
     @Setter
     @Getter
     private boolean editable = false;
+    @Setter
+    @Getter
+    private List<String> likedBy = new ArrayList<String>();
+    @Setter
+    @Getter
+    private boolean liked = false;
+    @Setter
+    @Getter
+    private boolean likeable = false;
 
     public Post(String uuid, String content, String postedBy, Long postedAt, String parentPostUuid, String postedByEid, String postedByFirstName, String postedByLastName, Long version) {
         this.uuid = uuid;
