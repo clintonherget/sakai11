@@ -2,7 +2,7 @@ Vue.component('react-post', {
   template: `
 <div :class="css_classes" :data-post-uuid="post.uuid">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
-  <template v-if="allowLikes">
+  <template v-if="!initialPost && allowLikes">
       <span class="pull-right" style="margin-left: 10px;">
         <small class="text-muted" v-if="post.likes > 0">{{post.likes}}</small>
         <template v-if="post.likeable">
