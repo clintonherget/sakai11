@@ -24,6 +24,7 @@
 
 package org.sakaiproject.conversations.tool.handlers;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -57,13 +58,29 @@ public class PostsFeedHandler implements Handler {
             }
 
             User currentUser = UserDirectoryService.getCurrentUser();
+            String siteId = (String) context.get("siteId");
 
             ConversationsStorage storage = new ConversationsStorage();
+
+
+            Optional<Topic> topic = storage.getTopic(topicUuid, siteId);
+
+            if (!topic.isPresent()) {
+                throw new RuntimeException("topicUuid does not exist");
+            }
 
             List<Post> posts = storage.getPosts(topicUuid);
             Long timeLastVisited = storage.getLastReadTopic(topicUuid, currentUser.getId());
 
             Collections.sort(posts);
+
+            if ((Boolean) context.get("isStudent")) {
+                if (topic.get().getSettings().isRequirePost()) {
+                    if (posts.stream().noneMatch(t -> currentUser.getId().equals(t.getPostedBy()))) {
+                        posts = Arrays.asList(posts.get(0));
+                    }
+                }
+            }
 
             Map<String, Post> topLevelPosts = new HashMap<String, Post>();
 
