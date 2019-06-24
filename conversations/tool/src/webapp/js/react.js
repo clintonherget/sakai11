@@ -284,8 +284,9 @@ Vue.component('react-topic', {
           </template>
         </div>
     </div>
-    <div class="conversations-topic-sidebar">
+    <div class="conversations-topic-right">
         <timeline :initialPost="initialPost" :posts="posts"></timeline>
+        <topic-sidebar :current_user_role="current_user_role" :topic_uuid="topic_uuid"></topic_sidebar>
     </div>
   </div>
 `,

@@ -82,12 +82,56 @@
     max-width: 900px;
     flex-grow: 1;
 }
-.conversations-topic-sidebar {
+.conversations-topic-right {
     min-width: 300px;
+    display: flex;
+}
+.conversations-topic-sidebar {
     background: #FFF;
-    padding: 20px;
     border: 1px solid #DDD;
     margin-left: 20px;
+}
+.conversations-topic-sidebar.collapsed {
+    width: 80px;
+}
+.conversations-topic-sidebar.collapsed .conversations-topic-sidebar-panel {
+    display: none;
+}
+.conversations-topic-sidebar.expanded {
+    width: 380px;
+    display: flex;
+    grid-column-gap: 20px;
+}
+.conversations-topic-sidebar.expanded .conversations-topic-sidebar-panel {
+    display: block;
+    border-left: 1px solid #DDD;
+    padding: 20px;
+    flex-grow: 1;
+}
+.conversations-topic-sidebar ul {
+    margin: 0;
+    padding: 20px 0 0 0;
+    list-style: none;
+    width: 80px;
+}
+.conversations-topic-sidebar ul li {
+    text-align: center;
+}
+.conversations-topic-sidebar ul li a {
+    height: 40px;
+    display: inline-block;
+    border: 1px solid #DDD;
+    text-align: center;
+    background-color: #FAFAFA;
+    border-radius: 50%;
+    width: 40px;
+    line-height: 38px;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+.conversations-topic-sidebar ul li a.active {
+    background-color: #EAF7FD;
+    border-color: #2525E1;
 }
 
 .conversations-post {
@@ -276,7 +320,7 @@ body.dark-mode .conversations-post-content {
 }
 
 .conversations-timeline li:hover .tick-label {
-    display: inline-block;
+/*    display: inline-block;*/
 }
 
 .conversations-attachment-list, .conversations-attachment-list a {
