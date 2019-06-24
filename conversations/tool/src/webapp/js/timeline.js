@@ -1,26 +1,26 @@
 Vue.component('timeline', {
   template: `
-<div class="conversations-timeline">
-    <strong>Timeline</strong>
-    <template v-if="initialPost">
-        <div>{{formatEpochDate(minDate)}}</div>
-        <ul>
-            <li v-for="tick in ticks" @click="tick.count > 0 ? scrollToPost(tick.firstPostInTick) : null">
-                <span class="tick-line" v-bind:style="{ width: '' + tick.size + 'px'}"></span>
-                <span class="tick-label">{{tick.label}}</span>
-            </li>
-        </ul>
-        <div>{{formatEpochDate(maxDate)}}</div>
-    </template>
-    <template v-else>
-        Loading timeline...
-    </template>
+<div class="conversations-timeline-wrapper">
+    <div class="conversations-timeline" ref="timeline">
+        <strong>Timeline</strong>
+        <template v-if="initialPost">
+            <div>{{formatEpochDate(minDate)}}</div>
+            <div class="timeline-slider-rail" ref="slider_rail">
+              <div class="timeline-slider" ref="slider"></div>
+            </div>
+            <div>{{formatEpochDate(maxDate)}}</div>
+        </template>
+        <template v-else>
+            <div>Loading timeline...</div>
+        </template>
+    </div>
 </div>
 `,
   data: function() {
     return {
       maxTicks: 12,
       minTickLength: 24 * 60 * 60 * 1000,
+      dragEnabled: false,
     };
   },
   props: ['posts', 'initialPost'],
@@ -87,8 +87,47 @@ Vue.component('timeline', {
     scrollToPost: function(post) {
       this.$parent.focusAndHighlightPost(post.uuid);
     },
+    resize: function() {
+        var height = $(window).height() - 240;
+      $(this.$refs.timeline).height(height);
+
+      var sliderRailHeight = $(this.$refs.slider_rail).height();
+      var sliderHeight = parseInt((window.innerHeight/document.body.offsetHeight) * sliderRailHeight);
+      $(this.$refs.slider).height(Math.min(sliderRailHeight, sliderHeight));
+    },
+    resyncSlider: function() {
+        $(this.$refs.slider).css('top', 0); // FIXME sync with body scrollbar
+    },
+    onScroll: function() {
+        // position at top
+        if (window.scrollY > 150) {
+            $(this.$el).addClass('fixed');
+        } else {
+            $(this.$el).removeClass('fixed');
+        }
+
+        // sync!
+        // FIXME
+    },
+  },
+  updated: function() {
+    if (!this.dragEnabled) {
+      $(this.$refs.slider).draggable({ axis: "y", containment: "parent"});
+      this.dragEnabled = true;
+      this.resize();
+    }
   },
   mounted: function() {
-    console.log(this.posts);
+      $(window).resize(() => {
+          this.resize();
+          this.resyncSlider();
+      });
+      this.$nextTick(() => {
+          this.resize();
+      });
+
+      $(window).on('scroll', () => {
+          this.onScroll();
+      });
   },
 });
