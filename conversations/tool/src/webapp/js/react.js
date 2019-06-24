@@ -286,7 +286,7 @@ Vue.component('react-topic', {
     </div>
     <div class="conversations-topic-right">
         <timeline :initialPost="initialPost" :posts="posts"></timeline>
-        <topic-sidebar :current_user_role="current_user_role" :topic_uuid="topic_uuid"></topic_sidebar>
+        <topic-sidebar :current_user_role="current_user_role" :topic="topic" :posts="posts" :initial_post="initialPost"></topic_sidebar>
     </div>
   </div>
 `,
@@ -297,13 +297,13 @@ Vue.component('react-topic', {
       initialPost: null,
       firstUnreadPost: null,
       postToFocusAndHighlight: null,
-      settings: JSON.parse(this.settings_json),
+      topic: JSON.parse(this.topic_json),
     };
   },
   props: [
     'baseurl',
     'topic_uuid',
-    'topic_title',
+    'topic_json',
     'settings_json',
     'current_user_id',
     'current_user_role'],
@@ -435,12 +435,18 @@ Vue.component('react-topic', {
     },
   },
   computed: {
+    settings: function() {
+      return this.topic.settings;
+    },
+    topic_title: function() {
+      return this.topic.title;
+    },
     allowComments: function() {
         return this.settings.allow_comments;
     },
     allowLikes: function() {
         return this.settings.allow_like;
-    }
+    },
   },
   mounted: function() {
     this.refreshPosts();

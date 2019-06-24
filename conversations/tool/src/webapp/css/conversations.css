@@ -85,6 +85,7 @@
 .conversations-topic-right {
     min-width: 300px;
     display: flex;
+    justify-content: flex-end;
 }
 .conversations-topic-sidebar {
     background: #FFF;
@@ -98,7 +99,7 @@
     display: none;
 }
 .conversations-topic-sidebar.expanded {
-    width: 380px;
+    width: 420px;
     display: flex;
     grid-column-gap: 20px;
 }
@@ -107,6 +108,15 @@
     border-left: 1px solid #DDD;
     padding: 20px;
     flex-grow: 1;
+}
+.conversations-topic-sidebar-panel-content .posters .creator {
+    border-right: 1px solid #EEE;
+    padding-right: 5px;
+    display: inline-block;
+}
+.conversations-topic-sidebar-panel-content .posters .topic-poster-photo {
+    margin-left: 5px;
+    
 }
 .conversations-topic-sidebar ul {
     margin: 0;
@@ -276,6 +286,26 @@ body.dark-mode .conversations-post-content {
 
 .stretchy-editor.full-editor-height {
   height: 30em !important;
+}
+/* Sidebar Panel */
+.conversations-topic-sidebar-panel {
+}
+.conversations-topic-sidebar-panel-header {
+    color: #336DBE;
+    font-size: 24px;
+    padding: 0 0 20px 0;
+}
+.conversations-topic-sidebar-panel-notice {
+    background: #336DBE;
+    text-align: center;
+    padding: 10px 20px;
+    color: white;
+    margin-bottom: 20px;
+    margin-left: -19px;
+    margin-right: -20px;
+}
+.conversations-topic-sidebar-panel-notice-count {
+    font-size: 30px;
 }
 
 /* Timeline */

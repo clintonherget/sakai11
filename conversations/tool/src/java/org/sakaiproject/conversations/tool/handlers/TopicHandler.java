@@ -24,6 +24,7 @@
 
 package org.sakaiproject.conversations.tool.handlers;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sakaiproject.conversations.tool.ConversationsServlet;
+import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.storage.ConversationsStorage;
 import org.sakaiproject.user.api.User;
@@ -54,15 +56,20 @@ public class TopicHandler implements Handler {
                 throw new RuntimeException("uuid required");
             }
 
-            Optional<Topic> topic = new ConversationsStorage().getTopic(topicUuid, siteId);
+            ConversationsStorage storage = new ConversationsStorage();
+
+            Optional<Topic> topic = storage.getTopic(topicUuid, siteId);
 
             if (!topic.isPresent()) {
                 // FIXME
                 throw new RuntimeException("Topic not found for uuid");
             }
-            
+
+            Map<String, List<Poster>> topicPosters = storage.getPostersForTopics(Arrays.asList(topicUuid));
+            topic.get().setPosters(topicPosters.get(topicUuid));
+
             context.put("topic", topic.get());
-            context.put("settings_json", topic.get().getSettings().asJSONObject().toString());
+            context.put("topic_json", topic.get().asJSONObject().toString());
             context.put("subpage", topic.get().getType().toLowerCase());
 
         } catch (Exception e) {
