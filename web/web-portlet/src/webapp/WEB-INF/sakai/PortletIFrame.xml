@@ -2,6 +2,17 @@
 
 <registration>
 	<tool
+	    id="sakai.iframe.qualtrics"
+	    title="Survey"
+	    description="Qualtrics Survey">
+		<configuration name="popup" value="false" />
+
+		<category name="course" />
+		<category name="project" />
+	</tool>
+
+
+	<tool
 			id="sakai.iframe"
 			title="Web Content"
 			description="For accessing internal resources or an external website within the site.">

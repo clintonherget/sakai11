@@ -198,6 +198,12 @@
                         roster.officialPictureMode = false;
                         roster.renderMembership({ replace: true });
                     });
+
+                    $('#switch-button').click(function(e) {
+                        if ($('#roster_official_picture_button').is(':checked')) $('#roster_profile_picture_button').click();
+                        else $('#roster_official_picture_button').click();
+                        $(this).toggleClass('on');
+                    });
                 }
 
                 roster.readySearchButton();
@@ -264,6 +270,12 @@
 
                         roster.officialPictureMode = false;
                         roster.renderMembership({ replace: true });
+                    });
+
+                    $('#switch-button').click(function(e) {
+                        if ($('#roster_official_picture_button').is(':checked')) $('#roster_profile_picture_button').click();
+                        else $('#roster_official_picture_button').click();
+                        $(this).toggleClass('on');
                     });
                 }
 
@@ -665,10 +677,10 @@
 
     roster.getRoleFragments = function (roleCounts) {
 
-        return Object.keys(roleCounts).map(function (key) {
+        return "(" + Object.keys(roleCounts).map(function (key) {
             var frag = roster.i18n.role_breakdown_fragment.replace(/\{0\}/, roleCounts[key]);
             return frag.replace(/\{1\}/, '<span class="role">' + key + '</span>');
-        }).join(", ");
+        }).join(", ") + ")";
     };
 
     roster.formatDate = function (time) {

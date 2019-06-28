@@ -119,7 +119,7 @@ public class IFrameToolRenderService implements ToolRenderService
 						"	width=\"100%\"").append("\n").append("	frameborder=\"0\"")
 				.append("\n").append("	marginwidth=\"0\"").append("\n").append(
 						"	marginheight=\"0\"").append("\n").append("	scrolling=\"auto\"")
-				.append(" allowfullscreen=\"allowfullscreen\"")
+				.append(" allowfullscreen=\"allowfullscreen\" allow=\"camera *; microphone *;\"")
 				.append("\n").append("	src=\"").append(toolUrl);
 
 				boolean isFirstParam = (toolUrl.indexOf('?') >=0 ? false : true);

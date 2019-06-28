@@ -15,11 +15,6 @@
 
     .rosterRoleTopLine {
         padding-top:10px;
-        padding-left:10px;
-    }
-
-    .rosterRoleBottomLine {
-        padding-left:10px;
     }
 
     .rosterActionAlignment {
@@ -57,13 +52,6 @@
         }
     }
 
-
-    #roster_type_selector {
-        margin-left: 10px;
-        margin-top: 1em;
-        margin-bottom: 15px;
-    }
-
     #roster-loading-image {
         display: none;
     }
@@ -92,10 +80,15 @@
                 white-space: nowrap;
 
                 .roster-picture {
-                    width: 80px;
-                    min-height: 60px;
-                    max-height: 140px;
-                    padding: 5px 0px 5px 5px;
+                    min-width: 55px;
+                    min-height: 55px;
+                    max-width: 55px;
+                    max-height: 55px;
+                    padding: 0;
+                    margin: 15px 0 15px 10px;
+                    border: 1px solid #666666;
+                    border-radius: 37.5px;
+                    object-fit: cover;
                 }
 
                 .roster-mobile-label {
@@ -189,15 +182,69 @@
     }
 
     #roster-filters {
-        div {
+        > div {
             display: inline-block;
-            margin-right: 20px;
         }
     }
 
     #roster-search-group {
-        div {
-            display: inline-block;
+        .form-group {
+            > div {
+                @include display-flex;
+                @include flex-direction(row);
+
+                > input {
+                    margin: 0;
+                    margin-right: 5px;
+                }
+            }
+        }
+    }
+
+    .form-group {
+        @media #{$nonPhone} {
+            @include display-flex;
+            @include flex-direction(row);
+            @include align-items(center);
+        }
+    }
+
+    #roster_type_selector {
+        .official-label {
+            @extend label;
+        }
+    }
+
+    .switch-button {
+        height: 26px;
+        width: 45px;
+        border: 1px solid #CCCCCC;
+        border-radius: 13px;
+        background-color: #DADADA;
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+
+        &::after {
+            content: " ";
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            background-color: #FFFFFF;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.45);
+            border-radius: 10px;
+            top: 2px;
+            left: 2px;
+        }
+
+        &.on {
+            border-color: #275779 !important;
+            background-color: #3675a1 !important;
+
+            &::after {
+                left: initial;
+                right: 2px;
+            }
         }
     }
 
@@ -227,6 +274,8 @@
 
                 .roster-picture {
                     width: 160px !important;
+                    height: 160px !important;
+                    border-radius: 80px !important;
                 }
             }
             .roster-name-cell {

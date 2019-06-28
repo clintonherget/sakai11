@@ -51,6 +51,13 @@
         </div>
     {{/if}}
 
+    {{#if ../viewEmail}}
+        <div class="roster-table-cell">
+            <div class="roster-mobile-label">{{translate 'facet_email'}}</div>
+            <a href="mailto:{{email}}" title="{{translate 'profile_email'}} {{email}}">{{email}}</a>
+        </div>
+    {{/if}}
+
     {{#if ../enrollmentsMode}}
         <div class="roster-table-cell">
             <div class="roster-mobile-label">{{translate 'facet_status'}}</div>
@@ -95,13 +102,6 @@
         <span class="roster-no-groups-label">{{translate 'roster_group_ungrouped'}}</span>
         {{/if}}
     </div>
-    {{/if}}
-
-    {{#if ../viewEmail}}
-        <div class="roster-table-cell">
-            <div class="roster-mobile-label">{{translate 'facet_email'}}</div>
-            <a href="mailto:{{email}}" title="{{translate 'profile_email'}} {{email}}">{{email}}</a>
-        </div>
     {{/if}}
 
     {{#if ../viewUserProperty}}

@@ -20,26 +20,27 @@
 	}
 
 	.recordButton {
-		border-radius: 17px;
-		padding: 7px 30px;
-		background: #D10029;
-		color: white;
-		border-color: #D10029;
-		box-shadow: 0 0 5px 0 rgba(0,0,0,0.25);
-		margin-bottom: 10px;
+		/*Adding !important to the record button because it's in conflict with other buttons in the NYU skin, this doesn't affect the community version.*/
+		border-radius: 17px !important;
+		padding: 7px 30px !important;
+		background: #D10029 !important;
+		color: white !important;
+		border-color: #D10029 !important;
+		box-shadow: 0 0 5px 0 rgba(0,0,0,0.25) !important;
+		margin-bottom: 10px !important;
 		@include display-flex;
 		@include flex-direction(row);
 		@include align-items(center);
 
 		&:active, &:hover, &:focus {
-			background: #b50024;
-			border-color: #b50024;
-			color: white;
+			background: #b50024 !important;
+			border-color: #b50024 !important;
+			color: white !important;
 		}
 	}
 
 	#prev-audio-player audio, .audioPlayer audio {
-		max-width: 100%;
+		max-width: 100% !important;
 	}
 
 	.content {

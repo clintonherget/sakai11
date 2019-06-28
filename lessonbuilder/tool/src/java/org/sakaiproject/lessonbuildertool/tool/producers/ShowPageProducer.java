@@ -3092,7 +3092,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							UISelectChoice multipleChoiceInput = UISelectChoice.make(answerContainer, "multipleChoiceAnswerRadio", multipleChoiceSelect.getFullID(), j);
 							
 							multipleChoiceInput.decorate(new UIFreeAttributeDecorator("id", multipleChoiceInput.getFullID()));
-							UIOutput.make(answerContainer, "multipleChoiceAnswerText", Integer.toString(j+1) + " : " + answers.get(j).getText())
+							UIOutput.make(answerContainer, "multipleChoiceAnswerText", answers.get(j).getText())
 								.decorate(new UIFreeAttributeDecorator("for", multipleChoiceInput.getFullID()));
 							
 							if(!isAvailable || response != null) {
