@@ -6,7 +6,13 @@ Vue.component('timeline', {
         <template v-if="initialPost">
             <div>{{formatEpochDate(minDate)}}</div>
             <div class="timeline-slider-rail" ref="slider_rail">
-              <div class="timeline-slider" ref="slider"></div>
+              <div class="timeline-slider" ref="slider">
+                <div class="timeline-slider-annotation">
+                  <template v-if="annotation">
+                    {{annotation}}
+                  </template>
+                </div>
+              </div>
             </div>
             <div>{{formatEpochDate(maxDate)}}</div>
         </template>
@@ -18,9 +24,9 @@ Vue.component('timeline', {
 `,
   data: function() {
     return {
-      maxTicks: 12,
-      minTickLength: 24 * 60 * 60 * 1000,
       dragEnabled: false,
+      offset: 0,
+      dragging: false,
     };
   },
   props: ['posts', 'initialPost'],
@@ -35,52 +41,48 @@ Vue.component('timeline', {
 
       return this.posts[this.posts.length - 1].postedAt;
     },
-    ticks: function() {
-      if (this.posts.length === 0) {
-        return [
-          {
-            size: 100,
-            epoch: this.minDate,
-            label: this.formatEpochDate(this.minDate),
-          },
-        ];
-      }
-
-      const range = this.maxDate - this.minDate;
-      const tickLength = Math.max(Math.ceil(range / this.maxTicks), this.minTickLength);
-      const allPosts = [this.initialPost].concat(this.posts);
-
-      const bucketedPosts = {};
-      let lastBucket = 0;
-
-      for (const post of allPosts) {
-        const bucket = Math.floor((post.postedAt - this.minDate) / tickLength);
-
-        bucketedPosts[bucket] = bucketedPosts[bucket] || [];
-        bucketedPosts[bucket].push(post);
-
-        if (bucket > lastBucket) {
-          lastBucket = bucket;
+    postsCount: function() {
+        return this.posts.length + 1;
+    },
+    targetPostIndex: function() {
+        if (this.offset == undefined) {
+          return undefined;
         }
-      }
-
-      const result = [];
-      for (let i = 0; i <= lastBucket; i++) {
-        const bucketPosts = bucketedPosts[i] || [];
-        const bucketEnd = this.minDate + ((i + 1) * tickLength);
-
-        result.push({
-          size: Math.max(Math.floor((bucketPosts.length / allPosts.length) * 100), 5),
-          firstPostInTick: bucketPosts[0],
-          label: this.formatEpochDate(bucketEnd),
-          count: bucketPosts.length,
-        });
-      }
-
-      return result;
+        if (this.initialPost) {
+            if (this.offset === 0) {
+                return 0;
+            } else {
+                var frac = this.offset / $(this.$refs.slider_rail).height();
+                var targetPostIndex = Math.max(Math.min(Math.round(frac * (this.postsCount)), this.postsCount), 0);
+                return targetPostIndex;
+            }
+        } else {
+            return undefined;
+        }
+    },
+    annotation: function() {
+        if (this.targetPostIndex != undefined) {
+            return "Post " + (this.targetPostIndex + 1) + " of " + this.postsCount;
+        } else {
+            return undefined;
+        }
     },
   },
   methods: {
+    syncTargetPost: function(callback) {
+      if (this.targetPostIndex != undefined) {
+        var targetPost = undefined;
+        if (this.targetPostIndex === 0) {
+          targetPost = this.initialPost;
+        } else {
+          targetPost = this.posts[this.targetPostIndex - 1];
+        }
+        if (targetPost) {
+          this.$parent.focusAndHighlightPost(targetPost.uuid);
+          setTimeout(callback, 2000);
+        }
+      }
+    },
     formatEpochDate: function(epoch) {
       return new Date(epoch).toLocaleDateString();
     },
@@ -88,12 +90,11 @@ Vue.component('timeline', {
       this.$parent.focusAndHighlightPost(post.uuid);
     },
     resize: function() {
-        var height = $(window).height() - 240;
+        var height = $(window).height() - 300;
       $(this.$refs.timeline).height(height);
 
       var sliderRailHeight = $(this.$refs.slider_rail).height();
-      var sliderHeight = parseInt((window.innerHeight/document.body.offsetHeight) * sliderRailHeight);
-      $(this.$refs.slider).height(Math.min(sliderRailHeight, sliderHeight));
+      var sliderHeight = 60;
     },
     resyncSlider: function() {
         $(this.$refs.slider).css('top', 0); // FIXME sync with body scrollbar
@@ -106,13 +107,52 @@ Vue.component('timeline', {
             $(this.$el).removeClass('fixed');
         }
 
-        // sync!
-        // FIXME
+        if (!this.dragging) {
+          $(this.$refs.slider).addClass('scrolling');
+          setTimeout(() => {
+            $(this.$refs.slider).removeClass('scrolling')
+          }, 1000);
+          if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+            this.offset = 300;
+            $(this.$refs.slider).css('top', this.offset + 'px');
+            return;
+          }
+
+          var $posts = $('.conversations-post', this.$parent.$el);
+          for (var i=0; i<$posts.length; i++) {
+            var boundProps = $posts[i].getBoundingClientRect();
+            if (boundProps.y < 0 && (boundProps.y + boundProps.height) > 0) {
+              if (i == 0 ) {
+                this.offset = 0;
+              } else {
+                this.offset = (i / this.postsCount) * 400;
+              }
+              $(this.$refs.slider).css('top', this.offset + 'px');
+
+              return;
+            }
+          }
+        }
     },
   },
   updated: function() {
     if (!this.dragEnabled) {
-      $(this.$refs.slider).draggable({ axis: "y", containment: "parent"});
+      $(this.$refs.slider).draggable({
+        axis: "y",
+        containment: "parent",
+        start: () => {
+          this.offset = undefined;
+          this.dragging = true;
+        },
+        drag: () => {
+          this.offset = parseInt($(this.$refs.slider).css('top'));
+        },
+        stop: () => {
+          this.syncTargetPost(() => {
+            this.dragging = false;
+          });
+        }
+      });
       this.dragEnabled = true;
       this.resize();
     }

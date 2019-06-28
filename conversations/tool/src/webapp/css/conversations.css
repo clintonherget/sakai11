@@ -319,7 +319,7 @@ body.dark-mode .conversations-post-content {
 .conversations-timeline {
     display: flex;
     flex-direction: column;
-    max-height: 600px;
+    max-height: 400px;
     width: 80px;
 }
 .conversations-timeline .timeline-slider-rail {
@@ -340,6 +340,17 @@ body.dark-mode .conversations-post-content {
     border-radius: 4px;
     min-height: 40px;
     cursor: move;
+}
+.conversations-timeline .timeline-slider-rail .timeline-slider.scrolling {
+    transition: top 0.5s;
+}
+.conversations-timeline .timeline-slider-rail .timeline-slider-annotation {
+    font-size: 10px;
+    position: absolute;
+    width: 80px;
+    left: 10px;
+    color: #666;
+    top: 12px;
 }
 .conversations-attachment-list, .conversations-attachment-list a {
     list-style: none;
