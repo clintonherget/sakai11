@@ -67,6 +67,13 @@ Vue.component('timeline', {
             return undefined;
         }
     },
+    popupDisplayString: function() {
+      if (this.targetPostIndex != undefined) {
+          return (this.targetPostIndex + 1) + " / " + this.postsCount;
+      } else {
+          return undefined;
+      }
+    },
   },
   methods: {
     syncTargetPost: function(callback) {

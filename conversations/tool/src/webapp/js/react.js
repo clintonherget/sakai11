@@ -255,7 +255,7 @@ Vue.component('react-post', {
 Vue.component('react-topic', {
   template: `
   <div class="conversations-topic react">
-    <div class="conversations-topic-main">
+    <div class="conversations-topic-main" ref="main">
         <template v-if="initialPost">
           <react-post :post="initialPost" initial_post="true"></react-post>
         </template>
@@ -285,7 +285,19 @@ Vue.component('react-topic', {
         </div>
     </div>
     <div class="conversations-topic-right">
-        <timeline :initialPost="initialPost" :posts="posts"></timeline>
+        <template v-if="popupTimeline">
+            <div :class="this.popupTimelinePopped ? 'conversations-timeline-toggle expanded' : 'conversations-timeline-toggle collapsed'" ref="timelineToggle">
+              <a href="#" @click="togglePopupTimeline()">
+                {{timelineDisplayString()}}
+              </a>
+              <div class="conversations-timeline-toggle-container">
+                  <timeline :initialPost="initialPost" :posts="posts" ref="timeline"></timeline>
+              </div>
+            </div>
+        </template>
+        <template v-else>
+            <timeline :initialPost="initialPost" :posts="posts"></timeline>
+        </template>
         <topic-sidebar :current_user_role="current_user_role" :topic="topic" :posts="posts" :initial_post="initialPost"></topic_sidebar>
     </div>
   </div>
@@ -298,6 +310,8 @@ Vue.component('react-topic', {
       firstUnreadPost: null,
       postToFocusAndHighlight: null,
       topic: JSON.parse(this.topic_json),
+      popupTimeline: false,
+      popupTimelinePopped: false,
     };
   },
   props: [
@@ -433,6 +447,40 @@ Vue.component('react-topic', {
         },
       });
     },
+    handleResize: function() {
+      if ($(window).width() < 1280) {
+        if (this.popupTimeline === false) {
+          this.popupTimelinePopped = false;
+        }
+        this.popupTimeline = true;
+        this.$nextTick(() => {
+          var collapsedHeight = $(this.$refs.timelineToggle).find('> a').outerHeight();
+          $(this.$refs.timelineToggle).height(collapsedHeight);
+        });
+      } else {
+        if (this.popupTimeline === true) {
+          this.popupTimelinePopped = false;
+        }
+        this.popupTimeline = false;
+      }
+    },
+    timelineDisplayString: function() {
+      if (this.$refs.timeline) {
+        return  this.$refs.timeline.popupDisplayString || '...' ;
+      } else {
+        return '...';
+      }
+    },
+    togglePopupTimeline: function() {
+      this.popupTimelinePopped = !this.popupTimelinePopped;
+      if (this.popupTimelinePopped) {
+        var expandedHeight = $(this.$refs.timelineToggle).find('.conversations-timeline').height() + $(this.$refs.timelineToggle).find('> a').outerHeight();
+        $(this.$refs.timelineToggle).height(expandedHeight);
+      } else {
+        var collapsedHeight = $(this.$refs.timelineToggle).find('> a').outerHeight();
+        $(this.$refs.timelineToggle).height(collapsedHeight);
+      }
+    },
   },
   computed: {
     settings: function() {
@@ -454,6 +502,10 @@ Vue.component('react-topic', {
       this.refreshPosts();
     }, 5*1000);
     this.resetMarkTopicReadEvents();
+    $(window).on('resize', () => {
+      this.handleResize();
+    });
+    this.handleResize();
   },
   updated: function() {
     // If we added a new rich text area, enrich it!

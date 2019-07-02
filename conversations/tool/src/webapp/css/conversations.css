@@ -87,6 +87,36 @@
     display: flex;
     justify-content: flex-end;
 }
+@media (max-width: 1280px) {
+    .conversations-topic-right {
+        min-width: 100px;
+    }
+}
+.conversations-timeline-toggle {
+    position: fixed;
+    bottom: 0;
+    background: #FFF;
+    border: 1px solid #336DBE;
+    border-bottom: none;
+    border-radius: 5px 5px 0 0;
+    right: 100px;
+}
+.conversations-timeline-toggle > a {
+    padding: 10px 40px;
+    display: block;
+}
+.conversations-timeline-toggle {
+    transition-property: height;
+    transition-duration: 0.5s;
+    overflow: hidden;
+    box-shadow: 0 -1px 4px #AAA;
+}
+.conversations-timeline-toggle.collapsed .conversations-timeline-toggle-container {
+    display: none;
+}
+.conversations-timeline-toggle-container {
+    padding: 0 20px;
+}
 .conversations-topic-sidebar {
     background: #FFF;
     border: 1px solid #DDD;
@@ -309,10 +339,10 @@ body.dark-mode .conversations-post-content {
 }
 
 /* Timeline */
-.conversations-timeline-wrapper.fixed {
+.conversations-topic-right > .conversations-timeline-wrapper.fixed {
     width: 80px
 }
-.conversations-timeline-wrapper.fixed .conversations-timeline  {
+.conversations-topic-right > .conversations-timeline-wrapper.fixed .conversations-timeline  {
     position: fixed;
     top: 50px;
 }
