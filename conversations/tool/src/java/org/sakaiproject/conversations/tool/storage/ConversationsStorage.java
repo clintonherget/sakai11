@@ -167,6 +167,11 @@ public class ConversationsStorage {
 
                             String groupIdPlaceholders = groupIds.stream().map(_p -> "?").collect(Collectors.joining(","));
 
+                            // FIXME handle no groups!
+                            if (groupIds.isEmpty()) {
+                                groupIdPlaceholders = "'__NO_GROUPS_TO_MATCH__'";
+                            }
+
                             try (PreparedStatement ps = db.prepareStatement(
                                     "SELECT *" +
                                             " FROM conversations_topic" +
@@ -254,6 +259,10 @@ public class ConversationsStorage {
                         (DBConnection db) -> {
                             Integer count = 0;
                             String groupIdPlaceholders = groupIds.stream().map(_p -> "?").collect(Collectors.joining(","));
+                            // FIXME handle no groups!
+                            if (groupIds.isEmpty()) {
+                                groupIdPlaceholders = "'__NO_GROUPS_TO_MATCH__'";
+                            }
                             try (PreparedStatement ps = db.prepareStatement(
                                 "SELECT count(*) as count" +
                                         " FROM conversations_topic" +
