@@ -13946,7 +13946,19 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			}
 		}
 		
-		
+		// post process the sectionHash to ensure `attached` doesn't count collaborative sites
+		List<String> sectionEids = new ArrayList<String>();
+		for (Object sectionList : sectionHash.values()) {
+			for (SectionObject section : ((List<SectionObject>) sectionList)) {
+				sectionEids.add(section.getEid());
+			}
+		}
+		List<String> availableSectionEids = nyuDbHelper.getReallyAvailableSections(sectionEids);
+		for (Object sectionList : sectionHash.values()) {
+			for (SectionObject section : ((List<SectionObject>) sectionList)) {
+				section.attached = !availableSectionEids.contains(section.eid);
+			}
+		}
 	} // prepareCourseAndSectionMap
 
 	private void getCourseOfferingAndSectionMap(String academicSessionEid, HashMap courseOfferingHash, HashMap sectionHash, String sectionEid, Section section) {
