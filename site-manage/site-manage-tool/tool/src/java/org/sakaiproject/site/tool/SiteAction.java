@@ -10367,7 +10367,29 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 
 	private void addRosterToCollaborativeSite(ParameterParser params, SessionState state) {
 		String stem = params.getString("stem");
+		Site site = getStateSite(state);
+		String siteId = site.getId();
+		String realm = SiteService.siteReference(siteId);
 		System.out.println("addRosterToCollaborativeSite");
+		try {
+			AuthzGroup realmEdit = authzGroupService.getAuthzGroup(realm);
+			String providerRealm = buildExternalRealm(siteId, state, Arrays.asList(stem), StringUtils.trimToNull(realmEdit.getProviderGroupId()));
+			realmEdit.setProviderGroupId(providerRealm);
+			authzGroupService.save(realmEdit);
+		} catch (GroupNotDefinedException e) {
+			log.error(this + ".addRosterToCollaborativeSite: IdUnusedException, not found, or not an AuthzGroup object", e);
+			addAlert(state, rb.getString("java.realm"));
+		}
+		catch (AuthzPermissionException e)
+		{
+			log.warn(this + rb.getString("java.notaccess"));
+			addAlert(state, rb.getString("java.notaccess"));
+		}
+		try {
+			SiteService.save(site);
+		} catch (IdUnusedException | PermissionException e) {
+			// do nuffin
+		}
 	}
 
 	/**
