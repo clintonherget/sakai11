@@ -3956,6 +3956,9 @@ public class SiteAction extends PagedResourceActionII {
 			//scheduleTopRefresh();
 
 			return TEMPLATE[63];
+
+			case 10099:
+				return "-addCollaborativeRoster";
 		}
 
 		// should never be reached
@@ -8333,6 +8336,12 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				.getPortletSessionState(((JetspeedRunData) data).getJs_peid());
 
 		Site site = getStateSite(state);
+
+		if ("true".equals(site.getProperties().get("collaborative_site"))) {
+			state.setAttribute(STATE_TEMPLATE_INDEX, "10099");
+			return;
+		}
+
 		String termEid = site.getProperties().getProperty(Site.PROP_SITE_TERM_EID);
 		if (termEid == null)
 		{
@@ -10350,10 +10359,17 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				state.setAttribute(NYU_CUSTOM_WORKFLOW_CREATING_FROM_TEMPLATE, "no");
 			}
 			break;
-		}
 
+		case 10099:
+			addRosterToCollaborativeSite(params, state);
+		}
 	}// actionFor Template
-	
+
+	private void addRosterToCollaborativeSite(ParameterParser params, SessionState state) {
+		String stem = params.getString("stem");
+		System.out.println("addRosterToCollaborativeSite");
+	}
+
 	/**
 	 * 
 	 */
@@ -15445,7 +15461,13 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 
 		state.setAttribute(VM_CONT_NO_ROSTER_ENABLED, ServerConfigurationService.getBoolean(SAK_PROP_CONT_NO_ROSTER_ENABLED, false));
 	}
-	
+
+	public void doAddCollaborativeRoster(RunData data) {
+		SessionState state = ((JetspeedRunData) data).getPortletSessionState(((JetspeedRunData) data).getJs_peid());
+		ParameterParser params = data.getParameters();
+		doContinue(data);
+	}
+
 	public void doEdit_site_info(RunData data)
 	{
 

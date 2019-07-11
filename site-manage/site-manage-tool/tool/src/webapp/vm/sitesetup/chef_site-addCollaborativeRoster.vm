@@ -1,0 +1,9 @@
+<form name="typeform" id="typeform" action="#toolForm("$action")&special=upload" method="post">
+  <div>
+    Stem: <input type="text" name="stem"/>
+  </div>
+   <input type="hidden" name="templateIndex" value="10099">
+   <input type="hidden" name="eventSubmit_doAddCollaborativeRoster" value="x">
+   <input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
+   <input type="submit" accesskey="s" class="active" name="continue" value="Add Roster" onclick="SPNR.disableControlsAndSpin( this, null );">
+ </form>
