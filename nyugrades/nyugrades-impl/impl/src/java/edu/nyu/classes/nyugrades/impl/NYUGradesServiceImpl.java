@@ -62,86 +62,25 @@ public class NYUGradesServiceImpl implements NYUGradesService
     }
 
 
-    // Provider lists are strings containing realm names separated by '+' characters.
-    private List<String> buildProviderLikeClauses(String section)
-    {
-        List<String> clauses = new ArrayList<String>();
-
-        String escaped = section.replace("_", "\\_");
-
-        clauses.add(escaped);               // The sole provider
-        clauses.add(escaped + "+%");        // At the beginning of the list
-        clauses.add("%+" + escaped);        // At the end of a list
-        clauses.add("%+" + escaped + "+%"); // In the middle of a list
-
-        return clauses;
-    }
-
-
-    private String buildSQLForSection(String sectionEid, List<String> likeClauses)
-    {
-        likeClauses.addAll(buildProviderLikeClauses(sectionEid));
-
-        StringBuilder whereClause = new StringBuilder();
-
-        for (String clause : likeClauses) {
-            if (whereClause.length() > 0) {
-                whereClause.append(" OR ");
-            }
-
-            whereClause.append("provider_id LIKE ?");
-
-            if (db.isOracle()) {
-                whereClause.append(" ESCAPE '\\'");
-            }
-        }
-
-        return ("SELECT realm_id FROM sakai_realm where realm_key in (" +
-                "  SELECT realm_key FROM sakai_realm_provider WHERE " + whereClause.toString() +
-                ")");
-    }
-
-
-    private Pattern realmRegexp = Pattern.compile("(?i)^/site/([^/]+)$");
-
-
     private String getSiteId(String sectionEid)
         throws SiteNotFoundForSectionException, MultipleSitesFoundForSectionException
     {
-        List<String> likeClauses = new ArrayList<String>();
-        String sql = buildSQLForSection(sectionEid, likeClauses);
+        String sql = "SELECT ncs.site_id" +
+            " FROM sakai_realm sr" +
+            " INNER JOIN sakai_realm_provider srp on srp.realm_key = sr.realm_key" +
+            " INNER JOIN NYU_V_NON_COLLAB_SITES ncs on concat('/site/', ncs.site_id) = sr.realm_id" +
+            " WHERE srp.provider_id = ?";
 
         LOG.debug("SQL is " + sql);
-        LOG.debug("Clauses are " + likeClauses);
 
-        List<Object[]> rows = db.executeQuery(sql, likeClauses.toArray(new Object[0]));
+        List<Object[]> rows = db.executeQuery(sql, new String[] { sectionEid });
 
         if (rows.isEmpty()) {
             throw new SiteNotFoundForSectionException(sectionEid);
-        }
-
-        // The logic here is a bit funny.  We check all results because we want
-        // to throw an error if more than one site contains a given section.  We
-        // can't do a simple size check on the result, though, because a given
-        // section might be attached to several groups within a site.  We skip
-        // over those entries because they won't match realmRegexp.
-        String result = null;
-        for (Object[] row : rows) {
-            String realm_id = (String)row[0];
-            Matcher m = realmRegexp.matcher(realm_id);
-            if (m.matches()) {
-                if (result == null) {
-                    result = m.group(1);
-                } else {
-                    throw new MultipleSitesFoundForSectionException(sectionEid);
-                }
-            }
-        }
-
-        if (result != null) {
-            return result;
+        } else if (rows.size() > 1) {
+            throw new MultipleSitesFoundForSectionException(sectionEid);
         } else {
-            throw new SiteNotFoundForSectionException(sectionEid);
+            return (String)rows.get(0)[0];
         }
     }
 
