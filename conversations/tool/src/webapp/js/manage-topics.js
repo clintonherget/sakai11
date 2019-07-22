@@ -125,20 +125,32 @@ Vue.component('create-topic-workflow', {
       <div class="row">
         <div class="col-sm-3">
           <div class="conversations-topic">
-            <p><strong>React</strong></p>
-            <p><button class="button" v-on:click="selectTopicType('react')">Select Topic Type</button></p>
+            <div class="conversations-topic-banner react"></div>
+            <div class="conversations-topic-content">
+                <p><strong>React</strong></p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <p><button class="button" v-on:click="selectTopicType('react')">Select Topic Type</button></p>
+            </div>
           </div>
         </div>
         <div class="col-sm-3">
           <div class="conversations-topic">
-            <p><strong>Brainstorm</strong></p>
-            <p>Coming soon.</p>
+            <div class="conversations-topic-banner brainstorm"></div>
+            <div class="conversations-topic-content">
+                <p><strong>Brainstorm</strong></p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <p style="font-style: italic;">Coming soon.</p>
+            </div>
           </div>
         </div>
         <div class="col-sm-3">
           <div class="conversations-topic">
-            <p><strong>Discuss</strong></p>
-            <p>Coming soon.</p>
+            <div class="conversations-topic-banner discuss"></div>
+            <div class="conversations-topic-content">
+                <p><strong>Discuss</strong></p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <p style="font-style: italic;">Coming soon.</p>
+            </div>
           </div>
         </div>
       </div>

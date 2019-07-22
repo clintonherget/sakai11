@@ -60,7 +60,6 @@
     background-color: #FFFFFF;
 /*    border: 1px solid #CCCCCC;*/
     box-shadow: 1px 1px 5px #999;
-    padding: 30px;
     border-radius: 5px;
 }
 
@@ -69,6 +68,52 @@
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: stretch;
+}
+.conversations-create-topic-workflow .conversations-topic-banner {
+    border-radius: 5px 5px 0 0;
+    height: 100px;
+    width: 100%;
+    position: relative;
+}
+.conversations-create-topic-workflow .conversations-topic-banner:before {
+    display: block;
+    width: 100%;
+    height: 100px;
+    text-align: center;
+    background-repeat: no-repeat;
+    background-size: 80px;
+    position: absolute;
+    left: 50%;
+    margin-left: -40px;
+    content: ' ';
+}
+.conversations-create-topic-workflow .conversations-topic-banner.react {
+    background-image: linear-gradient(153deg, #60B7AF 10%, #2E8A81 100%);
+}
+.conversations-create-topic-workflow .conversations-topic-banner.react:before {
+    background-image: url(../images/react_shadow.png);
+    bottom: -28px;
+}
+.conversations-create-topic-workflow .conversations-topic-banner.brainstorm {
+    background-image: linear-gradient(153deg, #A285D4 5%, #7959B0 100%);
+}
+.conversations-create-topic-workflow .conversations-topic-banner.brainstorm:before {
+    background-image: url(../images/brainstorm_shadow.png);
+    bottom: -20px;
+}
+.conversations-create-topic-workflow .conversations-topic-banner.discuss {
+    background-image: linear-gradient(153deg, #EB817F 11%, #DA524E 100%);
+}
+.conversations-create-topic-workflow .conversations-topic-banner.discuss:before {
+    background-image: url(../images/discuss_shadow.png);
+    bottom: -30px;
+}
+.conversations-create-topic-workflow .conversations-topic button {
+    width: 100%;
+}
+.conversations-create-topic-workflow .conversations-topic-content,
+.topic-settings-form .conversations-settings-section {
+    padding: 30px;
 }
 
 /* React Topic Type */
