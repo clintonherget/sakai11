@@ -388,6 +388,7 @@ public class AttendanceGoogleReportExport {
                                                               " INNER JOIN nyu_t_student_enrollments se on se.stem_name = cc.stem_name" +
                                                               " INNER JOIN sakai_realm_provider srp on srp.provider_id = REPLACE(cc.stem_name, ':', '_')" +
                                                               " INNER JOIN sakai_realm rlm ON rlm.realm_key = srp.realm_key" +
+                                                              " INNER JOIN NYU_V_NON_COLLAB_SITES ncs on concat('/site/', ncs.site_id) = rlm.realm_id" +
                                                               " INNER JOIN sakai_site site on CONCAT('/site/', site.site_id) = rlm.realm_id" +
                                                               " INNER JOIN attendance_site_t att ON att.site_id = site.site_id" +
                                                               " INNER JOIN nyu_t_users usr ON usr.netid = se.netid" +

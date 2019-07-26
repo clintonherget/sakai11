@@ -49,6 +49,7 @@ public class SyllabusFeedServlet extends HttpServlet {
         (" from nyu_t_course_catalog cc " +
          " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
          " inner join sakai_realm sr on sr.realm_key = srp.realm_key " +
+         " inner join NYU_V_NON_COLLAB_SITES ncs on concat('/site/', ncs.site_id) = sr.realm_id" +
          " inner join sakai_site ss on concat('/site/', ss.site_id) = sr.realm_id" +
          " inner join sakai_syllabus_item ssi on ssi.contextId = ss.site_id" +
          " inner join sakai_syllabus_data ssd on ssd.surrogateKey = ssi.id AND ssd.status = 'posted'" +
