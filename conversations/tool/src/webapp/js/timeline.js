@@ -53,8 +53,8 @@ Vue.component('timeline', {
                 return 0;
             } else {
                 var frac = this.offset / $(this.$refs.slider_rail).height();
-                var targetPostIndex = Math.max(Math.min(Math.round(frac * (this.postsCount)), this.postsCount), 0);
-                return targetPostIndex;
+                var postIndex = Math.max(Math.min(Math.round(frac * (this.postsCount)), this.postsCount), 0);
+                return postIndex;
             }
         } else {
             return undefined;
@@ -107,6 +107,8 @@ Vue.component('timeline', {
         $(this.$refs.slider).css('top', 0); // FIXME sync with body scrollbar
     },
     onScroll: function() {
+        var maxOffset = $(this.$refs.slider_rail).height() - $(this.$refs.slider).height();
+
         // position at top
         if (window.scrollY > 150) {
             $(this.$el).addClass('fixed');
@@ -120,9 +122,15 @@ Vue.component('timeline', {
             $(this.$refs.slider).removeClass('scrolling')
           }, 1000);
           if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-            this.offset = 300;
+            this.offset = maxOffset;
             $(this.$refs.slider).css('top', this.offset + 'px');
             return;
+          }
+
+          if (window.scrollY == 0) {
+              this.offset = 0;
+              $(this.$refs.slider).css('top', '0px');
+              return;
           }
 
           var $posts = $('.conversations-post', this.$parent.$el);
@@ -132,7 +140,7 @@ Vue.component('timeline', {
               if (i == 0 ) {
                 this.offset = 0;
               } else {
-                this.offset = (i / this.postsCount) * 400;
+                this.offset = (i / this.postsCount) * maxOffset;
               }
               $(this.$refs.slider).css('top', this.offset + 'px');
 
