@@ -2,26 +2,6 @@ Vue.component('react-post', {
   template: `
 <div :class="css_classes" :data-post-uuid="post.uuid">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
-  <template v-if="!initialPost && allowLikes">
-      <span class="pull-right" style="margin-left: 10px;">
-        <small class="text-muted" v-if="post.likes > 0">{{post.likes}}</small>
-        <template v-if="post.likeable">
-          <template v-if="post.liked">
-            <a href='javascript:void(0)' title="Unlike Post" @click="toggleLike()">
-              <i class="fa fa-thumbs-up"></i>
-            </a>
-          </template>
-          <template v-else>
-            <a href='javascript:void(0)' title="Like Post" @click="toggleLike()">
-              <i class="fa fa-thumbs-o-up"></i>
-            </a>
-          </template>
-        </template>
-        <template v-else>
-          <i class="fa fa-thumbs-o-up"></i>
-        </template>
-      </span>
-  </template>
   <template v-if="post.editable && !editing">
     <a href="javascript:void(0)" class="edit pull-right" title="Edit Post"
         @click="edit()">
@@ -75,6 +55,26 @@ Vue.component('react-post', {
       </div>
       <div class="conversations-post-content">
         <span v-html="post.content"></span>
+        <template v-if="!initialPost && allowLikes">
+            <span class="pull-right" style="margin-left: 10px;">
+              <small class="text-muted" v-if="post.likes > 0">{{post.likes}}</small>
+              <template v-if="post.likeable">
+                <template v-if="post.liked">
+                  <a href='javascript:void(0)' title="Unlike Post" @click="toggleLike()">
+                    <i class="fa fa-thumbs-up"></i>
+                  </a>
+                </template>
+                <template v-else>
+                  <a href='javascript:void(0)' title="Like Post" @click="toggleLike()">
+                    <i class="fa fa-thumbs-o-up"></i>
+                  </a>
+                </template>
+              </template>
+              <template v-else-if="post.likes > 0">
+                <i class="fa fa-thumbs-o-up"></i>
+              </template>
+            </span>
+        </template>
         <template v-if="allowComments">
             <div class="conversations-post-comments">
               <ul class="conversations-attachment-list">
