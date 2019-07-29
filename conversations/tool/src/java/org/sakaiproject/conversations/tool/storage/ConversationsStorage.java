@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,6 +48,10 @@ import org.sakaiproject.conversations.tool.models.Poster;
 import org.sakaiproject.conversations.tool.models.Topic;
 import org.sakaiproject.conversations.tool.models.TopicSettings;
 import org.sakaiproject.conversations.tool.storage.migrations.BaseMigration;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.site.api.Group;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.cover.SiteService;
 
 
 @Slf4j
@@ -110,7 +115,6 @@ public class ConversationsStorage {
                 final int minRowNum = pageSize * page + 1;
                 final int maxRowNum = pageSize * page + pageSize;
 
-                // SELECT uuid from (SELECT uuid, rownum rnk FROM (SELECT uuid FROM conversations_topic WHERE site_id = 'ded0dc82-d306-43ce-bff2-d21aefba9fec' ORDER BY last_activity_at desc)) WHERE rnk between 1 and 5)
                 try (DBResults results = db.run(
                                                 "SELECT *" +
                                                 " FROM conversations_topic" +
@@ -121,7 +125,7 @@ public class ConversationsStorage {
                                                 "       SELECT uuid FROM conversations_topic" +
                                                 "       WHERE site_id = ?" +
                                                 "       ORDER BY " + orderBy + " " + orderDirection.toUpperCase() +
-                                                "     )" + 
+                                                "     )" +
                                                 "   ) WHERE rnk BETWEEN ? AND ?" +
                                                 " )" +
                                                 " ORDER BY " + orderBy + " " + orderDirection.toUpperCase())
@@ -130,14 +134,16 @@ public class ConversationsStorage {
                      .param(String.valueOf(maxRowNum))
                      .executeQuery()) {
                     for (ResultSet result : results) {
-                        Topic topic = new Topic(result.getString("uuid"),
+                        String topicUuid = result.getString("uuid");
+
+                        Topic topic = new Topic(topicUuid,
                                                 result.getString("title"),
                                                 result.getString("type"),
                                                 result.getString("created_by"),
                                                 result.getLong("created_at"),
                                                 result.getLong("last_activity_at"));
 
-                        TopicSettings settings = new TopicSettings(result.getString("uuid"),
+                        TopicSettings settings = new TopicSettings(topicUuid,
                                 result.getString("availability"),
                                 result.getInt("published") == 1,
                                 result.getInt("graded") == 1,
@@ -146,6 +152,30 @@ public class ConversationsStorage {
                                 result.getInt("require_post") == 1);
 
                         topic.setSettings(settings);
+
+                        if ("GROUPS".equals(settings.getAvailability())) {
+                            try {
+                                Site site = SiteService.getSite(siteId);
+                                Collection<Group> groups = site.getGroups();
+                                try (DBResults groupResults = db.run(
+                                    "SELECT * from conversations_topic_group" +
+                                    " WHERE topic_uuid = ?")
+                                    .param(topicUuid)
+                                    .executeQuery()) {
+                                    for (ResultSet groupResult : groupResults) {
+                                        String groupRef = groupResult.getString("group_id");
+                                        settings.getGroups().add(groupRef);
+                                        for (Group group : groups) {
+                                            if (groupRef.endsWith(group.getId())) {
+                                                settings.getGroupIdToName().put(groupResult.getString("group_id"), group.getTitle());
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (IdUnusedException e) {
+                                throw new RuntimeException(e.getMessage());
+                            }
+                        }
 
                         topics.add(topic);
                     }

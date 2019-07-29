@@ -43,6 +43,15 @@
     content: '\f0de';
 }
 
+.conversations-topics-listing table tbody tr {
+    cursor: pointer;
+}
+
+.conversations-topics-listing tbody td .button {
+    margin: 0;
+    padding: 2px 8px;
+}
+
 /* Create/Edit topic workflow */
 .conversations-modal .modal-content {
     background-color: #FAFAFA;
@@ -53,6 +62,8 @@
 
 .conversations-modal .modal-content .modal-body {
     background-color: transparent;
+    overflow: auto;
+    height: calc(100% - 62px);
 }
 
 .conversations-create-topic-modal .conversations-topic,

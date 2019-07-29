@@ -485,7 +485,7 @@ Vue.component('update-topic-settings-modal', {
 Vue.component('edit-topic-settings-wrapper', {
   template: `
   <span>
-    <a href="javascript:void(0)" @click="showModal()">Edit</a>
+    <a href="javascript:void(0)" @click="showModal()" title="Edit Topic" class="button"><i class="fa fa-pencil"></i></a>
     <update-topic-settings-modal ref="updateTopicSettingsModal" :baseurl="baseurl" :topic_uuid="topic.uuid"></update-topic-settings-modal>
   </div>
 `,

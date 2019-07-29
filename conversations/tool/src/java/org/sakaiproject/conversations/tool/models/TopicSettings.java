@@ -30,7 +30,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TopicSettings {
     public static String AVAILABILITY_ENTIRE_SITE = "ENTIRE_SITE";
@@ -59,6 +61,9 @@ public class TopicSettings {
     @Setter
     @Getter
     private List<String> groups = new ArrayList<String>();
+    @Setter
+    @Getter
+    private Map<String,String> groupIdToName = new HashMap<>();
 
     public TopicSettings(String topicUuid, String availability, boolean published, boolean graded, boolean allowComments, boolean allowLike, boolean requirePost) {
         this.topicUuid = topicUuid;
@@ -85,6 +90,13 @@ public class TopicSettings {
             groupsJSON.add(groupRef);
         }
         obj.put("groups", groupsJSON);
+        if (!this.groupIdToName.isEmpty()) {
+            JSONObject groupNamesJSON = new JSONObject();
+            for (String groupRef : this.groupIdToName.keySet()) {
+                groupNamesJSON.put(groupRef, this.groupIdToName.get(groupRef));
+            }
+            obj.put("group_names", groupNamesJSON);
+        }
 
         return obj;
     }

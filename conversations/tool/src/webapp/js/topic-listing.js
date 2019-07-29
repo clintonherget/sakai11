@@ -4,17 +4,17 @@ Vue.component('topic-listing', {
   <table class="table table-hover table-condensed">
       <thead>
           <tr>
-              <th :class="'col-sm-4' + sortClassesForColumn('title')" v-on:click="toggleSort('title')">Topic Title</th>
+              <th :class="'col-sm-3' + sortClassesForColumn('title')" v-on:click="toggleSort('title')">Topic Title</th>
               <th :class="'col-sm-1' + sortClassesForColumn('type')" v-on:click="toggleSort('type')">Topic Type</th>
               <th class="col-sm-2">Posters</th>
-              <th class="col-sm-1">Available To</th>
+              <th class="col-sm-2">Available To</th>
               <th class="col-sm-1">Posts</th>
               <th :class="'col-sm-2' + sortClassesForColumn('last_activity_at')" v-on:click="toggleSort('last_activity_at')">Last Activity</th>
               <th></th>
           </tr>
       </thead>
       <tbody>
-          <tr v-for="topic in topics">
+          <tr v-for="topic in topics" @click="handleClick(topic)" v-bind:class="{ 'info': isSelected(topic) }">
             <td>
                 <template v-if="!topic.settings.published">
                     <span class="text-muted">[DRAFT]</span>
@@ -34,14 +34,30 @@ Vue.component('topic-listing', {
               </template>
             </td>
             <td>
-              {{topic.settings.availability}}
+              <template v-if="topic.settings.availability == 'GROUPS'">
+                  <template v-if="topic.settings.groups.length > 5">
+                      <span :title="buildGroupNamesDisplay(topic)">{{topic.settings.groups.length}} Groups</span>
+                  </template>
+                  <template v-if="topic.settings.groups.length == 0">
+                      Groups: <span class="text-muted">None</span>
+                  </template>
+                  <template v-else>
+                    Groups: {{buildGroupNamesDisplay(topic)}}
+                  </template>
+              </template>
+              <template v-else-if="topic.settings.availability == 'ENTIRE_SITE'">
+                Entire Site
+              </template>
+              <template v-else>
+                {{topic.settings.availability}}
+              </template>
             </td>
             <td>
               {{topic.postCount}}
             </td>
             <td>{{formatEpochTime(topic.lastActivityAt)}}</td>
             <td>
-              <a :href="baseurl+'topic?uuid='+topic.uuid">View</a>
+              <a :href="baseurl+'topic?uuid='+topic.uuid" title="View Topic" class="button"><i class="fa fa-external-link"></i></a>
               <template v-if="is_instructor">
                 <edit-topic-settings-wrapper :topic="topic" :baseurl="baseurl"></edit-topic-settings-wrapper>
               </template>
@@ -62,6 +78,9 @@ Vue.component('topic-listing', {
       order_direction: this.initial_order_direction,
       maxPostersToDisplay: 5,
       count: 0,
+      selected: undefined,
+      clicks: 0,
+      click_timer: undefined,
     };
   },
   props: ['baseurl',
@@ -71,6 +90,9 @@ Vue.component('topic-listing', {
           'page_size',
           'is_instructor'],
   methods: {
+    isSelected: function(topic) {
+      return topic === this.selected;
+    },
     loadTopics: function() {
       $.ajax({
         url: this.baseurl+'feed/topics',
@@ -97,6 +119,15 @@ Vue.component('topic-listing', {
     },
     buildPosterProfilePicSrc(poster) {
       return '/direct/profile/' + poster.userId + '/image';
+    },
+    buildGroupNamesDisplay(topic) {
+      var names = [];
+      topic.settings.groups.forEach(function(groupId) {
+        if (topic.settings.group_names[groupId]) {
+          names.push(topic.settings.group_names[groupId])
+        }
+      });
+      return names.join(', ')
     },
     toggleSort: function(column) {
       this.page = 0;
@@ -128,6 +159,18 @@ Vue.component('topic-listing', {
         return posters.slice(0, this.maxPostersToDisplay);
       }
     },
+    handleClick: function(topic) {
+      this.clicks++;
+      if (this.clicks === 1) {
+        this.selected = topic;
+        this.click_timer = setTimeout(() => {
+          this.clicks = 0;
+        }, 200);
+      } else{
+         clearTimeout(this.click_timer);
+         location.href = this.baseurl+'topic?uuid='+topic.uuid;
+      }
+    }
   },
   mounted: function() {
     this.loadTopics();
