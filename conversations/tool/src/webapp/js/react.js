@@ -3,10 +3,18 @@ Vue.component('react-post', {
 <div :class="css_classes" :data-post-uuid="post.uuid">
   <span v-if="post.unread" class="badge badge-primary">NEW</span>
   <template v-if="post.editable && !editing">
-    <a href="javascript:void(0)" class="edit pull-right" title="Edit Post"
-        @click="edit()">
-      <i class="fa fa-pencil" aria-hidden="true"></i>
-    </a>
+    <div class="btn-group pull-right">
+      <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
+        <i class="fa fa-lg fa-ellipsis-h"></i>
+      </a>
+      <ul class="dropdown-menu" role="menu">
+        <li>
+          <a href="javascript:void(0)" title="Edit Post" @click="edit()">
+            Edit Post
+          </a>
+        </li>
+      </ul>
+    </div>
   </template>
   <template v-if="editing">
     <div class="conversations-post-content">
