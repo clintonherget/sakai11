@@ -13895,6 +13895,35 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		return academicSessions;
 	}
 
+
+	public Collection<SectionObject> getAvailableSectionsForCurrentUser(String academicSessionEid) {
+		nyuDbHelper = new NYUDbHelper();
+
+		User user = UserDirectoryService.getCurrentUser();
+
+		HashMap courseOfferingHash = new HashMap();
+		HashMap sectionHash = new HashMap();
+
+		prepareCourseAndSectionMap(user.getEid(),
+					   academicSessionEid,
+					   courseOfferingHash,
+					   sectionHash);
+
+		sectionHash = reGroupSectionsBasedOnNYUCrosslistings(sectionHash);
+
+		List<SectionObject> result = new ArrayList<>();
+
+		// Flatten
+		for (ArrayList<SectionObject> sections : (Collection<ArrayList<SectionObject>>)sectionHash.values()) {
+			for (SectionObject section : sections) {
+				result.add(section);
+			}
+		}
+
+		return result;
+	}
+
+
 	/**
 	 * rewrote for 2.4
 	 * 
