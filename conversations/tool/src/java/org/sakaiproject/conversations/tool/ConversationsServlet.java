@@ -64,7 +64,9 @@ public class ConversationsServlet extends HttpServlet {
     public static final String ROLE_STUDENT = "student";
 
     public void init(ServletConfig config) throws ServletException {
-        new ConversationsStorage().runDBMigrations();
+        if (ServerConfigurationService.getBoolean("auto.ddl", false) || ServerConfigurationService.getBoolean("auto.ddl.conversations", false)) {
+            new ConversationsStorage().runDBMigrations();
+        }
 
         super.init(config);
     }
