@@ -32,8 +32,13 @@ import java.util.Collection;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.sakaiproject.authz.api.AuthzGroup;
+import org.sakaiproject.authz.api.AuthzGroupService;
+import org.sakaiproject.authz.api.GroupProvider;
+import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 import org.sakaiproject.coursemanagement.api.AcademicSession;
+import org.sakaiproject.site.cover.SiteService;
 
 public class CollabSitesService extends HttpServlet
 {
@@ -84,15 +89,22 @@ public class CollabSitesService extends HttpServlet
 
     private void handleSectionsForSession(HttpServletRequest req, HttpServletResponse res) throws Exception {
         String sessionEid = getParameterOrDie(req, "sessionEid");
+        String siteId = getParameterOrDie(req, "siteId");
 
         SiteAction siteAction = new SiteAction();
         Collection<SiteAction.SectionObject> sections = siteAction.getAvailableSectionsForCurrentUser(sessionEid);
+
+        AuthzGroupService ags = (AuthzGroupService) org.sakaiproject.component.cover.ComponentManager.get("org.sakaiproject.authz.api.AuthzGroupService");
+        GroupProvider groupProvider = (GroupProvider) ComponentManager.get("org.sakaiproject.authz.api.GroupProvider");
+
+        AuthzGroup siteRealm = ags.getAuthzGroup(SiteService.siteReference(siteId));
+        List<String> realmProviders = Arrays.asList(groupProvider.unpackId(siteRealm.getProviderGroupId()));
 
         Map<String, SectionOfInterest> result = new HashMap<>();
 
         for (SiteAction.SectionObject section : sections) {
             result.put(section.getEid(),
-                       new SectionOfInterest(section.getEid(), section.getTitle(), section.getSponsorSectionEid()));
+                       new SectionOfInterest(section.getEid(), section.getTitle(), section.getSponsorSectionEid(), realmProviders.contains(section.getEid())));
         }
 
         List<String> sectionKeys = new ArrayList(result.keySet());
@@ -123,14 +135,16 @@ public class CollabSitesService extends HttpServlet
         public String sectionEid;
         public String sectionTitle;
         public String sponsorSection;
+        public Boolean added;
 
         public List<SectionOfInterest> crosslistedNonSponsors;
 
-        public SectionOfInterest(String sectionEid, String sectionTitle, String sponsorSection) {
+        public SectionOfInterest(String sectionEid, String sectionTitle, String sponsorSection, boolean added) {
             this.sectionEid = sectionEid;
             this.sectionTitle = sectionTitle;
             this.sponsorSection = sponsorSection;
             this.crosslistedNonSponsors = new ArrayList<>();
+            this.added = added; 
         }
 
         public JSONObject toJSON() {
@@ -138,6 +152,7 @@ public class CollabSitesService extends HttpServlet
 
             result.put("sectionEid", sectionEid);
             result.put("sectionTitle", sectionTitle);
+            result.put("added", added);
 
             JSONArray crosslisted = new JSONArray();
             for (SectionOfInterest nonsponsor : this.crosslistedNonSponsors) {

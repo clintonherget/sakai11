@@ -8,7 +8,7 @@
 
   NYUCollabSiteRosterForm.prototype.setupSessionDropdown = function() {
       var self = this;
-      self.$sections = $('<div>').attr('id', 'sections');
+      self.$sections = $('<div style="padding: 20px;">').attr('id', 'sections');
       self.$form.prepend(self.$sections);
       $.getJSON('/sakai-site-manage-tool/nyu-collab-service/?action=list-sessions', function(json) {
           
@@ -42,10 +42,32 @@
                     json.forEach(function(section) {
                       var $div = $('<div>');
                       var $checkbox = $("<input type='checkbox' name='section_eid[]'>").val(section.sectionEid).attr('id', section.sectionEid);
+                      if (section.added) {
+                        $checkbox.prop('disabled', true);
+                        $checkbox.prop('checked', true);
+                      }
                       var $label = $('<label>').attr('for', section.sectionEid);
-                      $label.text(section.sectionTitle);
+                      $label.text(' ' + section.sectionTitle);
                       $label.prepend($checkbox);
                       $div.append($label);
+                      $label.append($('<div>').html($('<small class="text-muted" style="padding-left: 2em; font-weight: normal;">').text(section.sectionEid)));
+                      if (section.crosslistedNonSponsors.length > 0) {
+                        var $crosslisted = $('<div style="padding-left: 2em">');
+                        $crosslisted.append('<div><small>Crosslisted with:</small></div>');
+                        section.crosslistedNonSponsors.forEach(function(nonsponsor) {
+                          var $nonsponsor = $('<div class="text-muted">');
+                          $nonsponsor.append($('<input type="hidden" name="section_eid[]" disabled>').val(nonsponsor.sectionEid));
+                          $nonsponsor.append($('<small>').text(nonsponsor.sectionTitle));
+                          $nonsponsor.append(' ');
+                          $nonsponsor.append($('<small>').text('(' + nonsponsor.sectionEid + ')'));
+                          $crosslisted.append($nonsponsor);
+                        });
+                        $div.append($crosslisted);
+
+                        $checkbox.on('change', function() {
+                          $crosslisted.find(':hidden').prop('disabled', !$(this).is(':checked'));
+                        });
+                      }
                       self.$sections.append($div);
                     });
                   });
@@ -54,4 +76,4 @@
 
   exports.NYUCollabSiteRosterForm = NYUCollabSiteRosterForm;
 
-})(window); 
+})(window);
