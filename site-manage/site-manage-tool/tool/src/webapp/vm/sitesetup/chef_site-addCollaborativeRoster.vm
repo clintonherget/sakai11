@@ -1,10 +1,14 @@
 <form name="typeform" id="typeform" action="#toolForm("$action")&special=upload" method="post">
-  <div>
-    Stem: <input type="text" name="stem"/>
-  </div>
-   <input type="hidden" name="templateIndex" value="10099">
-   <input type="hidden" name="eventSubmit_doAddCollaborativeRoster" value="x">
-   <input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
-   <input type="hidden" name="continue" value="43" />
-   <button class="active" type="submit" onclick="SPNR.disableControlsAndSpin( this, null );">Add Roster</button>
- </form>
+  <input type="hidden" name="templateIndex" value="10099">
+  <input type="hidden" name="eventSubmit_doAddCollaborativeRoster" value="x">
+  <input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
+  <input type="hidden" name="continue" value="43" />
+  <button class="active" type="submit" onclick="SPNR.disableControlsAndSpin( this, null );">Add Roster</button>
+</form>
+
+<script src="/sakai-site-manage-tool/js/nyu-collab-sites.js"></script>
+<script>
+  $(function() {
+    new window.NYUCollabSiteRosterForm($("#typeform"), "$!siteId");
+  });
+</script>

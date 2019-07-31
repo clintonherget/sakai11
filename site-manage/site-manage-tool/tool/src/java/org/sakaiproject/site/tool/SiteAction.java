@@ -3958,6 +3958,7 @@ public class SiteAction extends PagedResourceActionII {
 			return TEMPLATE[63];
 
 			case 10099:
+				context.put("siteId", ToolManager.getCurrentPlacement().getContext());
 				return "-addCollaborativeRoster";
 		}
 
@@ -10366,14 +10367,15 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	}// actionFor Template
 
 	private void addRosterToCollaborativeSite(ParameterParser params, SessionState state) {
-		String stem = params.getString("stem");
+		String[] sectionEids = params.getStrings("section_eid[]");
+
 		Site site = getStateSite(state);
 		String siteId = site.getId();
 		String realm = SiteService.siteReference(siteId);
-		System.out.println("addRosterToCollaborativeSite");
+
 		try {
 			AuthzGroup realmEdit = authzGroupService.getAuthzGroup(realm);
-			String providerRealm = buildExternalRealm(siteId, state, Arrays.asList(stem), StringUtils.trimToNull(realmEdit.getProviderGroupId()));
+			String providerRealm = buildExternalRealm(siteId, state, Arrays.asList(sectionEids), StringUtils.trimToNull(realmEdit.getProviderGroupId()));
 			realmEdit.setProviderGroupId(providerRealm);
 			authzGroupService.save(realmEdit);
 		} catch (GroupNotDefinedException e) {
