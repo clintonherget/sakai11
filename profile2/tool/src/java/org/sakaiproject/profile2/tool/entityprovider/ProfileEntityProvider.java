@@ -475,6 +475,9 @@ public class ProfileEntityProvider extends AbstractEntityProvider implements Cor
 			//check for binary
 			if(bytes != null && bytes.length > 0) {
 				try {
+					// NYU set mime type here before header is sent
+					requestGetter.getResponse().setContentType("audio/ogg");
+
 					out.write(bytes);
 					ActionReturn actionReturn = new ActionReturn(StandardCharsets.UTF_8.name(), "audio/ogg", out);
 

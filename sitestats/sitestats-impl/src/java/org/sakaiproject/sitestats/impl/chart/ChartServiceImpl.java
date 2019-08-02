@@ -67,8 +67,8 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.ui.RectangleInsets;
-import org.jfree.util.SortOrder;
+import org.jfree.chart.ui.RectangleInsets;
+import org.jfree.chart.util.SortOrder;
 
 import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.exception.IdUnusedException;
@@ -336,11 +336,12 @@ public class ChartServiceImpl implements ChartService {
 			boolean render3d, float transparency,
 			boolean itemLabelsVisible, 
 			boolean smallFontInDomainAxis) {
-		JFreeChart chart = null;
-		if(render3d)
-			chart = ChartFactory.createBarChart3D(null, null, null, dataset, PlotOrientation.VERTICAL, true, false, false);
-		else
-			chart = ChartFactory.createBarChart(null, null, null, dataset, PlotOrientation.VERTICAL, true, false, false);
+		// JFreeChart chart = null;
+		// JFreechart 1.5 doesn't support 3D rendering anymore.
+		// if(render3d)
+		// 	chart = ChartFactory.createBarChart3D(null, null, null, dataset, PlotOrientation.VERTICAL, true, false, false);
+		// else
+		JFreeChart chart = ChartFactory.createBarChart(null, null, null, dataset, PlotOrientation.VERTICAL, true, false, false);
 		CategoryPlot plot = (CategoryPlot) chart.getPlot();
 		
 		// set transparency
@@ -378,7 +379,7 @@ public class ChartServiceImpl implements ChartService {
 		// item labels
 		if(itemLabelsVisible) {
 			plot.getRangeAxis().setUpperMargin(0.2);
-			barrenderer.setItemLabelGenerator(new StandardCategoryItemLabelGenerator() {
+			barrenderer.setDefaultItemLabelGenerator(new StandardCategoryItemLabelGenerator() {
 				private static final long	serialVersionUID	= 1L;
 
 				@Override
@@ -391,8 +392,8 @@ public class ChartServiceImpl implements ChartService {
 					return "";
 				}			
 			});
-			barrenderer.setItemLabelFont(new Font("SansSerif", Font.PLAIN, 8));
-			barrenderer.setItemLabelsVisible(true);
+			barrenderer.setDefaultItemLabelFont(new Font("SansSerif", Font.PLAIN, 8));
+			barrenderer.setDefaultItemLabelsVisible(true);
 		}
 
 		BufferedImage img = chart.createBufferedImage(width, height);
@@ -410,11 +411,12 @@ public class ChartServiceImpl implements ChartService {
 			boolean render3d, float transparency,
 			boolean itemLabelsVisible, 
 			boolean smallFontInDomainAxis) {
-		JFreeChart chart = null;
-		if(render3d)
-			chart = ChartFactory.createLineChart3D(null, null, null, dataset, PlotOrientation.VERTICAL, true, false, false);
-		else
-			chart = ChartFactory.createLineChart(null, null, null, dataset, PlotOrientation.VERTICAL, true, false, false);
+		// JFreechart 1.5 doesn't support 3D rendering anymore.
+		// JFreeChart chart = null;
+		// if(render3d)
+		// 	chart = ChartFactory.createLineChart3D(null, null, null, dataset, PlotOrientation.VERTICAL, true, false, false);
+		// else
+		JFreeChart chart = ChartFactory.createLineChart(null, null, null, dataset, PlotOrientation.VERTICAL, true, false, false);
 		CategoryPlot plot = (CategoryPlot) chart.getPlot();
 		
 		// set transparency
@@ -444,7 +446,7 @@ public class ChartServiceImpl implements ChartService {
 		// item labels
 		if(itemLabelsVisible) {
 			plot.getRangeAxis().setUpperMargin(0.2);
-			renderer.setItemLabelGenerator(new StandardCategoryItemLabelGenerator() {
+			renderer.setDefaultItemLabelGenerator(new StandardCategoryItemLabelGenerator() {
 				private static final long	serialVersionUID	= 1L;
 
 				@Override
@@ -456,8 +458,8 @@ public class ChartServiceImpl implements ChartService {
 					return "";
 				}			
 			});
-			renderer.setItemLabelFont(new Font("SansSerif", Font.PLAIN, 8));
-			renderer.setItemLabelsVisible(true);
+			renderer.setDefaultItemLabelFont(new Font("SansSerif", Font.PLAIN, 8));
+			renderer.setDefaultItemLabelsVisible(true);
 		}
 
 		BufferedImage img = chart.createBufferedImage(width, height);
@@ -568,9 +570,12 @@ public class ChartServiceImpl implements ChartService {
 			TimeSeriesCollection tsc = (TimeSeriesCollection) dataset;
 			if(tsc.getSeriesCount() > 0) {
 				timePeriodClass = tsc.getSeries(0).getTimePeriodClass();
-			}else{
+			}
+
+			if (timePeriodClass == null) {
 				timePeriodClass = org.jfree.data.time.Day.class;
 			}
+
 			periodaxis.setAutoRangeTimePeriodClass(timePeriodClass);
 		}
         PeriodAxisLabelInfo aperiodaxislabelinfo[] = null;
@@ -618,8 +623,8 @@ public class ChartServiceImpl implements ChartService {
         if(renderer instanceof XYLineAndShapeRenderer) {	
 	        XYLineAndShapeRenderer r = (XYLineAndShapeRenderer) renderer;		
 	        r.setDrawSeriesLineAsPath(true);
-	        r.setShapesVisible(true);
-	        r.setShapesFilled(true);
+	        r.setDefaultShapesVisible(true);
+	        r.setDefaultShapesFilled(true);
         }else if(renderer instanceof XYBarRenderer) {
         	//XYBarRenderer r = (XYBarRenderer) renderer;
         	ClusteredXYBarRenderer r = new ClusteredXYBarRenderer();
@@ -635,7 +640,7 @@ public class ChartServiceImpl implements ChartService {
 		// item labels
 		if(itemLabelsVisible) {
 			plot.getRangeAxis().setUpperMargin(0.2);
-			renderer.setItemLabelGenerator(new XYItemLabelGenerator() {
+			renderer.setDefaultItemLabelGenerator(new XYItemLabelGenerator() {
 				private static final long	serialVersionUID	= 1L;
 
 				public String generateLabel(XYDataset dataset, int series, int item) {
@@ -647,8 +652,8 @@ public class ChartServiceImpl implements ChartService {
 
 						
 			});
-			renderer.setItemLabelFont(new Font("SansSerif", Font.PLAIN, 8));
-			renderer.setItemLabelsVisible(true);
+			renderer.setDefaultItemLabelFont(new Font("SansSerif", Font.PLAIN, 8));
+			renderer.setDefaultItemLabelsVisible(true);
 		}
 
 		BufferedImage img = chart.createBufferedImage(width, height);
@@ -1036,7 +1041,7 @@ public class ChartServiceImpl implements ChartService {
 		if(!visitsTotalsChart && seriesFrom == null){
 			// without additional series
 			String name = msgs.getString("th_total"); 
-			TimeSeries ts = new TimeSeries(name, periodGrouping);		
+			TimeSeries ts = new TimeSeries(name);		
 			for(Stat s : reportData){
 				RegularTimePeriod key = (RegularTimePeriod) getStatValue(s, dataSource, periodGrouping);
 				if(key != null) {
@@ -1062,7 +1067,7 @@ public class ChartServiceImpl implements ChartService {
 					// determine appropriate serie
 					TimeSeries ts = null;
 					if(!series.containsKey(serie)) {
-						ts = new TimeSeries(serie.toString(), periodGrouping);
+						ts = new TimeSeries(serie.toString());
 						series.put(serie, ts);
 					}else{
 						ts = series.get(serie);
@@ -1084,8 +1089,8 @@ public class ChartServiceImpl implements ChartService {
 			}
 		}else if(visitsTotalsChart){
 			// 2 series: visits & unique visitors
-			TimeSeries tsV = new TimeSeries(msgs.getString("th_visits"), periodGrouping);
-			TimeSeries tsUV = new TimeSeries(msgs.getString("th_uniquevisitors"), periodGrouping);	
+			TimeSeries tsV = new TimeSeries(msgs.getString("th_visits"));
+			TimeSeries tsUV = new TimeSeries(msgs.getString("th_uniquevisitors"));
 			for(Stat _s : reportData){
 				SiteVisits s = (SiteVisits) _s;
 				RegularTimePeriod key = (RegularTimePeriod) getStatValue(s, dataSource, periodGrouping);

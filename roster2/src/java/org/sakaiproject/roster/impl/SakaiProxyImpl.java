@@ -34,6 +34,7 @@
 
 package org.sakaiproject.roster.impl;
 
+import java.util.concurrent.TimeUnit;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -45,6 +46,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.time.StopWatch;
 
 import org.sakaiproject.api.privacy.PrivacyManager;
 import org.sakaiproject.authz.api.AuthzGroup;
@@ -1272,52 +1274,97 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
     /**
      * {@inheritDoc}
      */
+    public String getProfileToolLink() {
+        try {
+            Site site = siteService.getSite(siteService.getUserSiteId(getCurrentUserId()));
+            return site.getUrl() + "/tool/" + site.getToolForCommonId("sakai.profile2").getId();
+        } catch(Exception e){
+            log.error("Error getting tool for profile on user workspace {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean isNamePronunciationEnabledInSite() {
+        return isSitePropertyEnabled(NAME_PRONUNCIATION_SITE_PROPERTY);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isOfficialPhotoEnabledInSite() {
+        return isSitePropertyEnabled(OFFICIAL_PHOTO_SITE_PROPERTY);
+    }
+
+    private boolean isSitePropertyEnabled(String propertyName){
         Site site = getSite(getCurrentSiteId());
         if(site != null){
-            String siteProperty = site.getProperties().getProperty("roster-name-pronunciation");
+            String siteProperty = site.getProperties().getProperty(propertyName);
             if("true".equals(siteProperty)){
                 return true;
             }
         }
         return false;
     }
-
     public void update(Observable o, Object arg) {
 
         if (arg instanceof Event) {
             Event event = (Event) arg;
             String eventName = event.getEvent();
+
+            //CLASSES-3695 When a user changes the name pronunciation, the changes need to be reflected in roster
+            if(ProfileConstants.EVENT_PROFILE_NAME_PRONUN_UPDATE.equals(eventName)){
+				StopWatch watch = new StopWatch();
+				watch.start();
+				String userId = StringUtils.remove(event.getResource(), "/profile/");
+				log.info("The user {} has updated the name pronunciation in the profile, clearing the caches of the sites that the user belongs to.", userId);
+				List<Site> userSites = siteService.getUserSites();
+				if(userSites != null && !userSites.isEmpty()){
+					for(Site site : userSites){
+						log.info("Attempting to cleaning up the roster cache of the site {}", site.getId());
+						this.removeSiteRosterCache(site.getId());
+					}
+				}
+				watch.stop();
+				log.info("The caches of the sites have been cleared, {} sites, total time spent {} ms", userSites.size(), TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
+				return;
+            }
+
             if (SiteService.SECURE_UPDATE_SITE_MEMBERSHIP.equals(eventName)
                     || SiteService.SECURE_UPDATE_GROUP_MEMBERSHIP.equals(eventName)) {
                 log.debug("Site membership or groups updated. Clearing caches ...");
                 String siteId = event.getContext();
+                this.removeSiteRosterCache(siteId);
+            }
+        }
+    }
 
-                if (siteId == null) {
-                    log.debug("siteId was null, skipping");
-                    return;
-                }
+    private void removeSiteRosterCache(String siteId){
+        if (siteId == null) {
+            log.debug("siteId was null, skipping");
+            return;
+        }
 
-                Cache enrollmentsCache = getCache(ENROLLMENTS_CACHE);
-                enrollmentsCache.remove(siteId);
+        Cache enrollmentsCache = getCache(ENROLLMENTS_CACHE);
+        enrollmentsCache.remove(siteId);
 
-                Cache searchIndexCache = memoryService.getCache(SEARCH_INDEX_CACHE);
-                searchIndexCache.remove(siteId);
+        Cache searchIndexCache = memoryService.getCache(SEARCH_INDEX_CACHE);
+        searchIndexCache.remove(siteId);
 
-                Cache membershipsCache = getCache(MEMBERSHIPS_CACHE);
+        Cache membershipsCache = getCache(MEMBERSHIPS_CACHE);
 
-                synchronized(this) {
-                    membershipsCache.remove(siteId);
-                    Site site = getSite(siteId);
-                    if (site != null) {
-                        Set<Role> roles = site.getRoles();
-                        for (Group group : site.getGroups()) {
-                            String gId = group.getId();
-                            membershipsCache.remove(siteId + "#" + gId);
-                            for (Role role : roles) {
-                                membershipsCache.remove(siteId + "#" + gId + "#" + role.getId());
-                            }
-                        }
+        synchronized(this) {
+            membershipsCache.remove(siteId);
+            Site site = getSite(siteId);
+            if (site != null) {
+                Set<Role> roles = site.getRoles();
+                for (Group group : site.getGroups()) {
+                    String gId = group.getId();
+                    membershipsCache.remove(siteId + "#" + gId);
+                    for (Role role : roles) {
+                        membershipsCache.remove(siteId + "#" + gId + "#" + role.getId());
                     }
                 }
             }

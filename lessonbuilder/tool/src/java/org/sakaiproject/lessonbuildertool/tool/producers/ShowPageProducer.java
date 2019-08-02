@@ -54,6 +54,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
@@ -1890,7 +1891,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						    // allowfullscreen="true" allowScriptAccess="always"
 						    // width="640" height="390"></object>
 
-						    item = UIOutput.make(tableRow, "youtubeIFrame");
+						    item = UIOutput.make(tableRow, "youtubeIFrame")
+									.decorate(new UIFreeAttributeDecorator("allow", String.join(";",
+											Optional.ofNullable(ServerConfigurationService.getStrings("browser.feature.allow"))
+													.orElseGet(() -> new String[]{}))));
 						    // youtube seems ok with length and width
 						    if(lengthOk(height)) {
 							    item.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
@@ -2204,7 +2208,11 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						} else  {
 						    UIOutput.make(tableRow, "iframe-link-div");
 						    UILink.make(tableRow, "iframe-link-link", messageLocator.getMessage("simplepage.open_new_window"), itemUrl);
-						    item = UIOutput.make(tableRow, "iframe").decorate(new UIFreeAttributeDecorator("src", itemUrl));
+						    item = UIOutput.make(tableRow, "iframe")
+									.decorate(new UIFreeAttributeDecorator("src", itemUrl))
+									.decorate(new UIFreeAttributeDecorator("allow", String.join(";",
+											Optional.ofNullable(ServerConfigurationService.getStrings("browser.feature.allow"))
+													.orElseGet(() -> new String[]{}))));
 						    // if user specifies auto, use Javascript to resize the
 						    // iframe when the
 						    // content changes. This only works for URLs with the
@@ -3570,7 +3578,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 				UIOutput.make(tofill, "startupHelp")
 				    .decorate(new UIFreeAttributeDecorator("src", helpUrl))
-				    .decorate(new UIFreeAttributeDecorator("id", "iframe"));
+				    .decorate(new UIFreeAttributeDecorator("id", "iframe"))
+                    .decorate(new UIFreeAttributeDecorator("allow", String.join(";",
+                            Optional.ofNullable(ServerConfigurationService.getStrings("browser.feature.allow"))
+                                    .orElseGet(() -> new String[]{}))));
 				if (!iframeJavascriptDone) {
 				    UIOutput.make(tofill, "iframeJavascript");
 				    iframeJavascriptDone = true;
@@ -3919,7 +3930,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			if (i.getHeight() != null && !i.getHeight().equals(""))
 			    height = i.getHeight().replace("px","");  // just in case
 			
-			UIComponent iframe = UIOutput.make(container, "blti-iframe");
+			UIComponent iframe = UIOutput.make(container, "blti-iframe")
+					.decorate(new UIFreeAttributeDecorator("allow", String.join(";",
+							Optional.ofNullable(ServerConfigurationService.getStrings("browser.feature.allow"))
+									.orElseGet(() -> new String[]{}))));
 			if (lessonEntity != null)
 			    iframe.decorate(new UIFreeAttributeDecorator("src", lessonEntity.getUrl()));
 			

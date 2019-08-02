@@ -110,9 +110,9 @@
                     <f:subview id="authorImage" rendered="#{PrivateMessagesTool.showProfileInfoMsg}">
                         <h:panelGroup styleClass="authorImage">
                             <h:outputLink value="#{PrivateMessagesTool.serverUrl}/direct/profile/#{PrivateMessagesTool.detailMsg.msg.authorId}/formatted" styleClass="authorProfile" rendered="#{PrivateMessagesTool.showProfileLink}">
-                                <h:graphicImage value="#{PrivateMessagesTool.serverUrl}/direct/profile/#{PrivateMessagesTool.detailMsg.msg.authorId}/image/thumb" alt="#{message.message.author}" />
+                                <h:graphicImage value="#{PrivateMessagesTool.serverUrl}/direct/profile/#{PrivateMessagesTool.detailMsg.msg.authorId}/image/thumb?siteId=#{PrivateMessagesTool.currentSite.id}" alt="#{message.message.author}" />
                             </h:outputLink>
-                            <h:graphicImage value="#{PrivateMessagesTool.serverUrl}/direct/profile/#{PrivateMessagesTool.detailMsg.msg.authorId}/image/thumb" alt="#{message.message.author}" rendered="#{!PrivateMessagesTool.showProfileLink}"/>
+                            <h:graphicImage value="#{PrivateMessagesTool.serverUrl}/direct/profile/#{PrivateMessagesTool.detailMsg.msg.authorId}/image/thumb?siteId=#{PrivateMessagesTool.currentSite.id}" alt="#{message.message.author}" rendered="#{!PrivateMessagesTool.showProfileLink}"/>
                         </h:panelGroup>
                     </f:subview>
                 </div>

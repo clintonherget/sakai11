@@ -200,11 +200,11 @@ public class MembershipAction extends PagedResourceActionII
 		{
 			if (sortAsc)
 			{
-				rv = SITE_SERV.getSites(SelectionType.MEMBER, null, search, null, SortType.TITLE_ASC, page);
+				rv = SITE_SERV.getSites(SelectionType.MEMBER, null, search, null, SortType.CREATED_ON_ASC, page);
 			}
 			else
 			{
-				rv = SITE_SERV.getSites(SelectionType.MEMBER, null, search, null, SortType.TITLE_DESC, page);
+				rv = SITE_SERV.getSites(SelectionType.MEMBER, null, search, null, SortType.CREATED_ON_DESC, page);
 			}
 		}
 

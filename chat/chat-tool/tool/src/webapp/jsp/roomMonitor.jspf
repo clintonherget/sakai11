@@ -36,7 +36,7 @@
                 <c:out value="<li data-message-id='${message.chatMessage.id}' data-owner-id='${message.chatMessage.owner}'>" escapeXml="false" />
             </c:otherwise>
         </c:choose>        
-            <c:out value="<span class='chatUserAvatar' style=\"background-image: url(/direct/profile/${message.chatMessage.owner}/image)\">" escapeXml="false"/>
+            <c:out value="<span class='chatUserAvatar' style=\"background-image: url(/direct/profile/${message.chatMessage.owner}/image?siteId=${ChatTool.worksite.id})\">" escapeXml="false"/>
             <c:out value="<span class='chatUserOnline'></span>" escapeXml="false" />
             <c:out value="</span>" escapeXml="false" />
 

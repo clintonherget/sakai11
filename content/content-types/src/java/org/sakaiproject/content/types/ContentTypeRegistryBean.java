@@ -43,6 +43,7 @@ public class ContentTypeRegistryBean {
 			resourceTypeRegistry.register(new TextDocumentType());
 			resourceTypeRegistry.register(new HtmlDocumentType());
 			resourceTypeRegistry.register(new UrlResourceType());
+			resourceTypeRegistry.register(new GoogleDriveItemType());
 		}
 	}
 	

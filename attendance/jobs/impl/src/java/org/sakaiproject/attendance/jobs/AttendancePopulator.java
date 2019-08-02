@@ -103,6 +103,7 @@ public class AttendancePopulator implements Job {
                                                                   " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
                                                                   " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
                                                                   " inner join sakai_site ss on sr.realm_id = concat('/site/', ss.site_id)" +
+                                                                  " inner join NYU_V_NON_COLLAB_SITES ncs on concat('/site/', ncs.site_id) = sr.realm_id" +
                                                                   " left join sakai_site_property ssp on ssp.site_id = ss.site_id AND ssp.name = ?" +
                                                                   " where cc.location = ? AND cc.strm >= ? AND ssp.value is null")) {
                     ps.setString(1, ATTENDANCE_PREPOPULATED);

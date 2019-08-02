@@ -31,8 +31,19 @@
                 <span class="namePronunciation">
                 {{#if pronunciation}}
                     {{{pronunciation}}}
+                    {{#ifCond ../currentUserId userId}}
+                        <a href="{{../profileNamePronunciationLink}}">{{translate 'name_pronunciation_profile_edit_link'}}</a>
+                    {{/ifCond}}
                 {{else}}
-                    {{{translate 'name_pronunciation_not_provided'}}}
+                    {{#ifCond ../currentUserId userId}}
+                        {{#if ../profileNamePronunciationLink}}
+                            <a href="{{../profileNamePronunciationLink}}">{{translate 'name_pronunciation_profile_link'}}</a>
+                        {{else}}
+                            {{{translate 'name_pronunciation_not_provided'}}}
+                        {{/if}}
+                    {{else}}
+                        {{{translate 'name_pronunciation_not_provided'}}}
+                    {{/ifCond}}
                 {{/if}}
                 </span>
         </div>

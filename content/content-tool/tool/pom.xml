@@ -92,6 +92,37 @@
       <groupId>org.quartz-scheduler</groupId>
       <artifactId>quartz</artifactId>
     </dependency>
+    <!-- Google Drive related -->
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.api-client</groupId>
+      <artifactId>google-api-client</artifactId>
+      <version>1.22.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-drive</artifactId>
+      <version>v3-rev82-1.22.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.jknack</groupId>
+      <artifactId>handlebars</artifactId>
+      <version>${handlebars4.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.nyu.classes.groupersync</groupId>
+      <artifactId>groupersync-api</artifactId>
+      <version>0.1</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <build>
     <resources>
@@ -99,6 +130,12 @@
         <directory>${basedir}/src/bundle</directory>
         <includes>
           <include>**/*.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>${basedir}/src/java</directory>
+        <includes>
+          <include>**/*.hbs</include>
         </includes>
       </resource>
      </resources>

@@ -38,6 +38,7 @@
                 hideSingleGroupFilter: ${hideSingleGroupFilter},
                 viewUserDisplayId: ${viewUserDisplayId},
                 viewUserNamePronunciation: ${viewUserNamePronunciation},
+                profileNamePronunciationLink: '${profileNamePronunciationLink}',
                 viewUserProperty: ${viewUserProperty},
                 officialPictureMode: ${officialPicturesByDefault},
                 viewEmail: ${viewEmail},

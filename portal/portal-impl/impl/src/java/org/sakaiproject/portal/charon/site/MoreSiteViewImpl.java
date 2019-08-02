@@ -397,7 +397,7 @@ public class MoreSiteViewImpl extends AbstractSiteViewImpl
 			result.sitesInRightPane.put(term, new ArrayList());
 
 			for (Map site : (List<Map>)tabsMoreTerms.get(term)) {
-				if (isCourseType((String)site.get("siteType"))) {
+				if (isCourseType((String)site.get("siteType")) && !isNYUSpecialTerm(term)) {
 					result.sitesInLeftPane.get(term).add(site);
 				} else {
 					result.sitesInRightPane.get(term).add(site);
@@ -406,6 +406,10 @@ public class MoreSiteViewImpl extends AbstractSiteViewImpl
 		}
 
 		return result;
+	}
+
+	private boolean isNYUSpecialTerm(String term) {
+		return "Sandboxes".equals(term);
 	}
 
 

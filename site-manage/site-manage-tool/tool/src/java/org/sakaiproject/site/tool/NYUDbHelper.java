@@ -4,6 +4,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -339,6 +344,91 @@ public class NYUDbHelper {
 		}
 
 		return false;
+	}
+
+	public List<String> getReallyAvailableSections(List<String> sectionEids) {
+		Map<String, Integer> counts = new HashMap<>();
+
+		for (String eid : sectionEids) {
+			counts.put(eid, 0);
+		}
+
+		Connection db = null;
+
+		try {
+			db = sqlService.borrowConnection();
+
+			String placeholders = sectionEids.stream().map(e -> "?").collect(Collectors.joining(", "));
+
+			String sitesQuery = String.format("SELECT srp.PROVIDER_ID " +
+							" from SAKAI_REALM_PROVIDER srp " +
+							" inner join SAKAI_REALM sr on sr.REALM_KEY = srp.REALM_KEY " +
+							" inner join SAKAI_SITE ss on CONCAT('/site/', ss.SITE_ID) = sr.REALM_ID " +
+							" where srp.PROVIDER_ID in (%s)",
+					placeholders);
+
+			String colabSitesQuery = String.format("SELECT srp.PROVIDER_ID, TO_CHAR(ssp.VALUE) as IS_COLAB_SITE" +
+							" from SAKAI_REALM_PROVIDER srp " +
+							" inner join SAKAI_REALM sr on sr.REALM_KEY = srp.REALM_KEY " +
+							" inner join SAKAI_SITE ss on CONCAT('/site/', ss.SITE_ID) = sr.REALM_ID " +
+							" inner join SAKAI_SITE_PROPERTY ssp on ssp.SITE_ID = ss.SITE_ID AND ssp.NAME = 'collaborative_site'" +
+							" where srp.PROVIDER_ID in (%s)",
+					placeholders);
+
+
+			PreparedStatement ps;
+			ps = db.prepareStatement(sitesQuery);
+
+			for (int i=0; i<sectionEids.size(); i++) {
+				ps.setString(i+1, sectionEids.get(i));
+			}
+
+			ResultSet rs = null;
+			try {
+				rs = ps.executeQuery();
+				while (rs.next()) {
+					String eid = rs.getString("PROVIDER_ID");
+					counts.put(eid, counts.get(eid) + 1);
+				}
+			} finally {
+				if (rs != null) { rs.close(); }
+				if (ps != null) { ps.close(); }
+			}
+
+
+			ps = db.prepareStatement(colabSitesQuery);
+
+			for (int i=0; i<sectionEids.size(); i++) {
+				ps.setString(i+1, sectionEids.get(i));
+			}
+
+			rs = null;
+			try {
+				rs = ps.executeQuery();
+				while (rs.next()) {
+					String eid = rs.getString("PROVIDER_ID");
+					counts.put(eid, counts.get(eid) - 1);
+				}
+			} finally {
+				if (rs != null) { rs.close(); }
+				if (ps != null) { ps.close(); }
+			}
+
+		} catch (SQLException e) {
+			M_log.warn(this + ".getReallyAvailableSections: " + e);
+		} finally {
+			sqlService.returnConnection(db);
+		}
+
+		List<String> result = new ArrayList<>();
+
+		for (String eid : counts.keySet()) {
+			if (counts.get(eid) == 0) {
+				result.add(eid);
+			}
+		}
+
+		return result;
 	}
 
 }

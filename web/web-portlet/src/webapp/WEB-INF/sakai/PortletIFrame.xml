@@ -6,10 +6,25 @@
 	    title="Survey"
 	    description="Qualtrics Survey">
 		<configuration name="popup" value="false" />
-
 		<category name="course" />
 		<category name="project" />
+
+
+
 	</tool>
+
+
+	<tool
+	    id="nyu.ls-global-image-gallery"
+	    title="Global Image Gallery"
+	    description="Global Image Gallery">
+	  <configuration name="popup" value="true" />
+	  <configuration name="sakai.properties.url.key" value="nyu.ls-global-image-gallery.url" />
+
+	  <category name="course" />
+	  <category name="project" />
+	</tool>
+
 
 
 	<tool

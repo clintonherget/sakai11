@@ -1466,7 +1466,7 @@ cannot be altered by by the instructor.  -->
 	<tool
 			id="nyu.zoom"
 			title="Zoom - Quick Launch"
-			description="Conduct web conferencing sessions for synchronous online/blended courses. &lt;br&gt;Note: before adding this tool to your site's left menu, please complete the Zoom certification training and activate your Zoom account.">
+			description="Integration with Zoom web conferencing tool. Please activate your NYU Zoom account at https://nyu.zoom.us before using the tool.">
 		<configuration name="sakai:portlet-pre-render" value="true" />
 		<category name="course" />
 		<category name="project" />
@@ -1514,7 +1514,7 @@ cannot be altered by by the instructor.  -->
 	<tool
 			id="nyu.zoom.enhanced"
 			title="Zoom"
-			description="Conduct web conferencing sessions for synchronous online/blended courses. &lt;br&gt;Note: before adding this tool to your site's left menu, please complete the Zoom certification training and activate your Zoom account.">
+			description="Integration with Zoom web conferencing tool. Please activate your NYU Zoom account at https://nyu.zoom.us before using the tool.">
 		<configuration name="sakai:portlet-pre-render" value="true" />
 		<category name="course" />
 		<category name="project" />
@@ -1562,7 +1562,7 @@ cannot be altered by by the instructor.  -->
 	<tool
 			id="nyu.zoom.pro"
 			title="Zoom"
-			description="Integration with Zoom web conferencing tool">
+			description="Integration with Zoom web conferencing tool. Please activate your NYU Zoom account at https://nyu.zoom.us before using the tool.">
 		<configuration name="sakai:portlet-pre-render" value="true" />
 		<category name="course" />
 		<category name="project" />
@@ -1831,6 +1831,54 @@ cannot be altered by by the instructor.  -->
 		<configuration name="imsti.key" />
 		<configuration name="imsti.pagetitle" value="Gradescope"/>
 		<configuration name="imsti.tooltitle" value="Gradescope"/>
+		<configuration name="imsti.newpage" value="on" />
+		<configuration name="imsti.maximize" value="on" />
+		<configuration name="imsti.frameheight" value="1024" />
+		<configuration name="imsti.debug" />
+		<configuration name="imsti.releasename" value="on"/>
+		<configuration name="imsti.releaseemail" value="on"/>
+		<configuration name="imsti.custom" />
+		<configuration name="imsti.allowsettings" value="on"/>
+		<configuration name="imsti.allowroster" value="off"/>
+		<configuration name="imsti.allowoutcomes" value="off"/>
+		<configuration name="imsti.allowlori" value="off"/>
+		<configuration name="imsti.contentlink" />
+		<configuration name="final.launch" value="true"/>
+		<configuration name="final.xml" value="true"/>
+		<configuration name="final.secret" value="true"/>
+		<configuration name="final.key" value="true"/>
+		<configuration name="final.pagetitle" value="true"/>
+		<configuration name="final.tooltitle" value="true"/>
+		<configuration name="final.newpage" value="true"/>
+		<configuration name="final.maximize" value="true"/>
+		<configuration name="final.frameheight" value="true"/>
+		<configuration name="final.debug" value="true"/>
+		<configuration name="final.releasename" value="true"/>
+		<configuration name="final.releaseemail" value="true"/>
+		<configuration name="final.custom" value="true"/>
+		<configuration name="final.allowsettings" value="true"/>
+		<configuration name="final.allowroster" value="true"/>
+		<configuration name="final.allowoutcomes" value="true"/>
+		<configuration name="final.allowlori" value="true"/>
+		<configuration name="final.contentlink" value="true"/>
+	</tool>
+
+	<tool
+			id="nyu.coursenetworking"
+			title="ePortfolio"
+			description="ePortfolio">
+		<configuration name="sakai:portlet-pre-render" value="true" />
+		<category name="course" />
+		<category name="project" />
+		<category name="portfolio" />
+		<configuration name="functions.require" />
+		<configuration name="sakai:menuClass" value="icon-sakai--sakai-basiclti"/>
+		<configuration name="imsti.launch" />
+		<configuration name="imsti.xml" />
+		<configuration name="imsti.secret" />
+		<configuration name="imsti.key" />
+		<configuration name="imsti.pagetitle" value="ePortfolio"/>
+		<configuration name="imsti.tooltitle" value="ePortfolio"/>
 		<configuration name="imsti.newpage" value="on" />
 		<configuration name="imsti.maximize" value="on" />
 		<configuration name="imsti.frameheight" value="1024" />

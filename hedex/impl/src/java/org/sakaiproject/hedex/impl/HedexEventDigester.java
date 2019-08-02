@@ -1,6 +1,7 @@
 package org.sakaiproject.hedex.impl;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -93,6 +94,8 @@ public class HedexEventDigester implements Observer {
     @Setter
     private TransactionTemplate transactionTemplate;
 
+    private AtomicBoolean tomcatStarted = new AtomicBoolean(false);
+
     /**
      * Every hedex.site.update.interval minutes, this will be updated with the
      * site ids and agents of sites marked up with the hedex-agent property.
@@ -114,6 +117,7 @@ public class HedexEventDigester implements Observer {
         log.debug("init()");
 
         if (serverConfigurationService.getBoolean("hedex.digester.enabled", true)) {
+            waitForTomcatStartup();
             eventTrackingService.addLocalObserver(this);
 
             // Load the map with the agent keyed list of sites
@@ -126,6 +130,11 @@ public class HedexEventDigester implements Observer {
             desiredProps.put(hedexAgentProperty , "");
             siteIdRefresher = Executors.newSingleThreadScheduledExecutor();
             siteIdRefresher.scheduleAtFixedRate(() -> {
+                    if (!tomcatStarted.get()) {
+                        log.info("Skipping run of Hedex siteIdRefresher while Tomcat starts up.");
+                        return;
+                    }
+
                     log.debug("Refreshing agent caches ...");
                     siteAgents.clear();
                     memberAgents.clear();
@@ -153,6 +162,37 @@ public class HedexEventDigester implements Observer {
         } else {
             log.info("HEDEX event digester not enabled on this server");
         }
+    }
+
+
+    private void waitForTomcatStartup() {
+        Thread tomcatStartupMonitor = new Thread(() -> {
+                Thread[] allThreads = new Thread[4096];
+                while (true) {
+                    int threadCount = Thread.enumerate(allThreads);
+
+                    boolean startingUp = false;
+                    for (int i = 0; i < threadCount; i++) {
+                        if (allThreads[i].getName().indexOf("-startStop-") >= 0) {
+                            startingUp = true;
+                        }
+                    }
+
+                    if (!startingUp) {
+                        break;
+                    }
+
+                    try {
+                        log.info("Waiting for Tomcat to start up before enabling HedexEventDigester thread");
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {}
+                }
+
+                tomcatStarted.set(true);
+                log.info("Tomcat started: HedexEventDigester now enabled.");
+        });
+
+        tomcatStartupMonitor.start();
     }
 
     public void destroy() {

@@ -31,6 +31,8 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +57,9 @@ import org.sakaiproject.profile2.util.Messages;
 import org.sakaiproject.profile2.util.ProfileConstants;
 import org.sakaiproject.profile2.util.ProfileUtils;
 import org.sakaiproject.user.api.User;
+
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Implementation of ProfileImageLogic API
@@ -218,7 +223,12 @@ public class ProfileImageLogicImpl implements ProfileImageLogic {
 		if(!allowed) {
 			allowed = privacyLogic.isActionAllowed(userUuid, currentUserUuid, PrivacyType.PRIVACY_OPTION_PROFILEIMAGE);
 		}
-		
+
+		//CLASSES-3690 - After all the permissions, if the user has access to the site, it should view the photo in the site context.
+		if(!allowed){
+			allowed = sakaiProxy.isUserAllowedInSite(currentUserUuid, "site.visit", siteId);
+		}
+
 		//default if still not allowed
 		if(!allowed){
 			image.setExternalImageUrl(defaultImageUrl);
@@ -403,7 +413,50 @@ public class ProfileImageLogicImpl implements ProfileImageLogic {
 				image.setExternalImageUrl(defaultImageUrl);
 				image.setDefault(true);
 			}
+		} else if(StringUtils.equals(officialImageSource, ProfileConstants.OFFICIAL_IMAGE_SETTING_NYU)){
+			//get the path based on the config from sakai.properties, basedir, pattern etc
+			String filename = getOfficialImageFileSystemPathNYU(userUuid);
+
+			File file = new File(filename);
+
+			boolean useAvatarInitials = Boolean.valueOf(sakaiProxy.getServerConfigurationParameter("profile2.avatar.initials.enabled", "true"));
+
+			if (!file.exists()) {
+			    if (useAvatarInitials) {
+				image = this.getProfileAvatarInitials(userUuid);
+				image.setMimeType("image/png");
+			    } else {
+				image.setExternalImageUrl(defaultImageUrl);
+				image.setDefault(true);
+			    }
+			} else {
+			    try {
+				byte[] data = getBytesFromFile(file);
+				if(data != null) {
+				    image.setUploadedImage(data);
+				} else {
+				    if (useAvatarInitials) {
+					image = this.getProfileAvatarInitials(userUuid);
+					image.setMimeType("image/png");
+				    } else {
+					image.setExternalImageUrl(defaultImageUrl);
+					image.setDefault(true);
+				    }
+				}
+			    }
+			    catch (IOException e) {
+				log.error("Could not find/read official profile image file: " + filename + ". The default profile image will be used instead.");
+				if (useAvatarInitials) {
+				    image = this.getProfileAvatarInitials(userUuid);
+				    image.setMimeType("image/png");
+				} else {
+				    image.setExternalImageUrl(defaultImageUrl);
+				    image.setDefault(true);
+				}
+			    }
+			}
 		}
+
 		image.setAltText(getAltText(userUuid, isSameUser, true));
 				
 		return image;
@@ -1027,6 +1080,32 @@ public class ProfileImageLogicImpl implements ProfileImageLogic {
 		
 		return filename;
 	}
+	
+	private String getOfficialImageFileSystemPathNYU(String userUuid) {
+	    //get basepath, common to all
+	    String basepath = sakaiProxy.getOfficialImagesDirectory();
+
+	    //get user, common for all
+	    User user = sakaiProxy.getUserById(userUuid);
+	    String userEid = user.getEid();
+
+	    try {
+		MessageDigest digest = MessageDigest.getInstance("SHA-1");
+		digest.update(userEid.getBytes("UTF-8"));
+		byte[] hash = digest.digest();
+
+		return Paths.get(basepath,
+				 String.format("%02x", hash[0] & 0xff),
+				 String.format("%02x", hash[1] & 0xff),
+				 String.format("%02x", hash[2] & 0xff),
+				 String.format("%02x", hash[3] & 0xff),
+				 String.format("%02x", hash[4] & 0xff),
+				 userEid + ".png").toString();
+	    } catch (NoSuchAlgorithmException|UnsupportedEncodingException e) {
+		return "/will-never-exist";
+	    }
+	}
+
 	
 	/**
 	 * Get a URL resource as a byte[]

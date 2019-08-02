@@ -204,6 +204,7 @@ var chatscript = {
 			var lastMessageOwnerId = $("#topForm\\:chatList li[class!='divisorNewMessages']").last().attr("data-owner-id");
 			var messageId = messages[i].id;
 			var ownerId = messages[i].owner;
+			var siteId = portal.siteId;
 			var ownerDisplayName = messages[i].ownerDisplayName;
 
 			var messageDate = messages[i].messageDate;
@@ -221,7 +222,7 @@ var chatscript = {
 				messageItem.removeAttr("id");
 				messageItem.attr("data-message-id", messageId);
 				messageItem.attr("data-owner-id", ownerId);
-				messageItem.find(".chatUserAvatar").css("background-image", "url(/direct/profile/" + ownerId + "/image)");
+				messageItem.find(".chatUserAvatar").css("background-image", "url(/direct/profile/" + ownerId + "/image?siteId="+siteId+")");
 				messageItem.find(".chatMessage").attr("data-message-id", messageId);
 				messageItem.find(".chatName").attr("id", ownerId);
 				messageItem.find(".chatName").text(ownerDisplayName);

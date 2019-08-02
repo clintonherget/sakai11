@@ -47,6 +47,7 @@
   .icon-sakai--nyu-panopto-engineering         { @extend .fa-film; }
   .icon-sakai--nyu-panopto-campusmedia         { @extend .fa-film; }
   .icon-sakai--nyu-panopto-courant             { @extend .fa-film; }
+  .icon-sakai--nyu-ls-global-image-gallery     { @extend .fa-globe; }
 
   .icon-sakai--sakai-blogwow                   { @extend .fa-feed; }
   .icon-sakai--sakai-bbb                       {
@@ -158,5 +159,9 @@
 
   .icon-sakai--sakai-iframe-qualtrics {
     @extend .fa-paper-plane;
+  }
+
+  .icon-sakai--sakai-conversations {
+    @extend .fa-comments;
   }
 }

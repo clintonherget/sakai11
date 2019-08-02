@@ -1122,9 +1122,9 @@ body {
 // -------------------------------------------------------------------------------------------------------------------
 body {
   .#{$namespace}sakai-site-roster2 {
-    #roster_type_selector {
+    /*#roster_type_selector {
       display: none;
-    }
+    }*/
 
     #roster-members {
       .roster-info {

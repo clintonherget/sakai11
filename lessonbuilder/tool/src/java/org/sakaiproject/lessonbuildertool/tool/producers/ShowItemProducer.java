@@ -23,6 +23,7 @@ package org.sakaiproject.lessonbuildertool.tool.producers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.Arrays;
 import java.io.BufferedReader;
@@ -489,7 +490,10 @@ public class ShowItemProducer implements ViewComponentProducer, NavigationCaseRe
 		    }
 	    }
 
-	    UIComponent iframe = UILink.make(tofill, "iframe1", source);
+	    UIComponent iframe = UILink.make(tofill, "iframe1", source)
+				.decorate(new UIFreeAttributeDecorator("allow", String.join(";",
+						Optional.ofNullable(ServerConfigurationService.getStrings("browser.feature.allow"))
+								.orElseGet(() -> new String[]{}))));
 	    if (item != null && item.getType() == SimplePageItem.BLTI) {
 		String height = item.getHeight();
 		if (height == null || height.equals(""))

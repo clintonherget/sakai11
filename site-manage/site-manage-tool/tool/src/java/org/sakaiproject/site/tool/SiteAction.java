@@ -3956,6 +3956,10 @@ public class SiteAction extends PagedResourceActionII {
 			//scheduleTopRefresh();
 
 			return TEMPLATE[63];
+
+			case 10099:
+				context.put("siteId", ToolManager.getCurrentPlacement().getContext());
+				return "-addCollaborativeRoster";
 		}
 
 		// should never be reached
@@ -8333,6 +8337,12 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				.getPortletSessionState(((JetspeedRunData) data).getJs_peid());
 
 		Site site = getStateSite(state);
+
+		if ("true".equals(site.getProperties().get("collaborative_site"))) {
+			state.setAttribute(STATE_TEMPLATE_INDEX, "10099");
+			return;
+		}
+
 		String termEid = site.getProperties().getProperty(Site.PROP_SITE_TERM_EID);
 		if (termEid == null)
 		{
@@ -10350,10 +10360,44 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				state.setAttribute(NYU_CUSTOM_WORKFLOW_CREATING_FROM_TEMPLATE, "no");
 			}
 			break;
-		}
 
+		case 10099:
+			addRosterToCollaborativeSite(params, state);
+		}
 	}// actionFor Template
-	
+
+	private void addRosterToCollaborativeSite(ParameterParser params, SessionState state) {
+		String[] sectionEids = params.getStrings("section_eid[]");
+
+                if (sectionEids == null) {
+                    return;
+                }
+
+		Site site = getStateSite(state);
+		String siteId = site.getId();
+		String realm = SiteService.siteReference(siteId);
+
+		try {
+			AuthzGroup realmEdit = authzGroupService.getAuthzGroup(realm);
+			String providerRealm = buildExternalRealm(siteId, state, Arrays.asList(sectionEids), StringUtils.trimToNull(realmEdit.getProviderGroupId()));
+			realmEdit.setProviderGroupId(providerRealm);
+			authzGroupService.save(realmEdit);
+		} catch (GroupNotDefinedException e) {
+			log.error(this + ".addRosterToCollaborativeSite: IdUnusedException, not found, or not an AuthzGroup object", e);
+			addAlert(state, rb.getString("java.realm"));
+		}
+		catch (AuthzPermissionException e)
+		{
+			log.warn(this + rb.getString("java.notaccess"));
+			addAlert(state, rb.getString("java.notaccess"));
+		}
+		try {
+			SiteService.save(site);
+		} catch (IdUnusedException | PermissionException e) {
+			// do nuffin
+		}
+	}
+
 	/**
 	 * 
 	 */
@@ -13857,6 +13901,35 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		return academicSessions;
 	}
 
+
+	public Collection<SectionObject> getAvailableSectionsForCurrentUser(String academicSessionEid) {
+		nyuDbHelper = new NYUDbHelper();
+
+		User user = UserDirectoryService.getCurrentUser();
+
+		HashMap courseOfferingHash = new HashMap();
+		HashMap sectionHash = new HashMap();
+
+		prepareCourseAndSectionMap(user.getEid(),
+					   academicSessionEid,
+					   courseOfferingHash,
+					   sectionHash);
+
+		sectionHash = reGroupSectionsBasedOnNYUCrosslistings(sectionHash);
+
+		List<SectionObject> result = new ArrayList<>();
+
+		// Flatten
+		for (ArrayList<SectionObject> sections : (Collection<ArrayList<SectionObject>>)sectionHash.values()) {
+			for (SectionObject section : sections) {
+				result.add(section);
+			}
+		}
+
+		return result;
+	}
+
+
 	/**
 	 * rewrote for 2.4
 	 * 
@@ -13908,7 +13981,19 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			}
 		}
 		
-		
+		// post process the sectionHash to ensure `attached` doesn't count collaborative sites
+		List<String> sectionEids = new ArrayList<String>();
+		for (Object sectionList : sectionHash.values()) {
+			for (SectionObject section : ((List<SectionObject>) sectionList)) {
+				sectionEids.add(section.getEid());
+			}
+		}
+		List<String> availableSectionEids = nyuDbHelper.getReallyAvailableSections(sectionEids);
+		for (Object sectionList : sectionHash.values()) {
+			for (SectionObject section : ((List<SectionObject>) sectionList)) {
+				section.attached = !availableSectionEids.contains(section.eid);
+			}
+		}
 	} // prepareCourseAndSectionMap
 
 	private void getCourseOfferingAndSectionMap(String academicSessionEid, HashMap courseOfferingHash, HashMap sectionHash, String sectionEid, Section section) {
@@ -15445,7 +15530,13 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 
 		state.setAttribute(VM_CONT_NO_ROSTER_ENABLED, ServerConfigurationService.getBoolean(SAK_PROP_CONT_NO_ROSTER_ENABLED, false));
 	}
-	
+
+	public void doAddCollaborativeRoster(RunData data) {
+		SessionState state = ((JetspeedRunData) data).getPortletSessionState(((JetspeedRunData) data).getJs_peid());
+		ParameterParser params = data.getParameters();
+		doContinue(data);
+	}
+
 	public void doEdit_site_info(RunData data)
 	{
 

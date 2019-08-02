@@ -123,6 +123,7 @@ public class ProfileConstants {
 	public static final String OFFICIAL_IMAGE_SETTING_URL = "url";
 	public static final String OFFICIAL_IMAGE_SETTING_PROVIDER = "provider";
 	public static final String OFFICIAL_IMAGE_SETTING_FILESYSTEM = "filesystem";
+	public static final String OFFICIAL_IMAGE_SETTING_NYU = "nyu";
 	
 	public static final String OFFICIAL_IMAGE_SETTING_DEFAULT = OFFICIAL_IMAGE_SETTING_URL;
 

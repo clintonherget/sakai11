@@ -1,16 +1,12 @@
 package edu.nyu.classes.groupersync.tool;
 
 import com.github.jknack.handlebars.Handlebars;
-import com.github.jknack.handlebars.Handlebars;
-import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.Template;
-import com.github.jknack.handlebars.Template;
+import edu.nyu.classes.groupersync.api.AddressFormatter;
 import edu.nyu.classes.groupersync.api.GrouperSyncService;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,8 +15,7 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.sakaiproject.authz.api.AuthzGroup;
-import org.sakaiproject.component.cover.ServerConfigurationService;
+
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;

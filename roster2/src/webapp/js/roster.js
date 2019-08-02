@@ -147,9 +147,9 @@
                     membersTotal: roster.i18n.currently_displaying_participants.replace(/\{0\}/, roster.site.membersTotal),
                     roleFragments: roster.getRoleFragments(roster.site.roleCounts),
                     roles: roster.site.userRoles,
-                    checkOfficialPicturesButton: roster.officialPictureMode,
+                    checkOfficialPicturesButton: false,
                     viewGroup : roster.currentUserPermissions.viewGroup,
-                    viewOfficialPhoto: roster.currentUserPermissions.viewOfficialPhoto },
+                    viewOfficialPhoto: roster.currentUserPermissions.viewOfficialPhoto && roster.officialPictureMode },
                 'roster_content');
 
             $(document).ready(function () {
@@ -185,7 +185,7 @@
                 roster.setupPrintButton();
                 roster.setupPicturesButton();
 
-                if (roster.currentUserPermissions.viewOfficialPhoto) {
+                if (roster.currentUserPermissions.viewOfficialPhoto && roster.officialPictureMode) {
 
                     $('#roster_official_picture_button').click(function (e) {
 
@@ -233,7 +233,7 @@
                 { enrollmentSets: roster.site.siteEnrollmentSets,
                     onlyOne: roster.site.siteEnrollmentSets.length == 1,
                     enrollmentStatusCodes: roster.site.enrollmentStatusCodes,
-                    viewOfficialPhoto: roster.currentUserPermissions.viewOfficialPhoto },
+                    viewOfficialPhoto: roster.currentUserPermissions.viewOfficialPhoto && roster.officialPictureMode },
                 'roster_content');
 
             $(document).ready(function () {
@@ -258,7 +258,7 @@
                 roster.setupPrintButton();
                 roster.setupPicturesButton();
 
-                if (roster.currentUserPermissions.viewOfficialPhoto) {
+                if (roster.currentUserPermissions.viewOfficialPhoto && roster.officialPictureMode) {
 
                     $('#roster_official_picture_button').click(function (e) {
 
@@ -591,12 +591,13 @@
                 viewEmail: roster.viewEmail,
                 viewUserDisplayId: roster.viewUserDisplayId,
                 viewUserNamePronunciation: roster.viewUserNamePronunciation,
+                profileNamePronunciationLink: roster.profileNamePronunciationLink,
                 viewUserProperty: roster.viewUserProperty,
                 viewProfile: roster.currentUserPermissions.viewProfile,
                 viewGroup : roster.currentUserPermissions.viewGroup,
                 viewPicture: true,
                 currentUserId: roster.userId,
-                viewOfficialPhoto: roster.currentUserPermissions.viewOfficialPhoto,
+                viewOfficialPhoto: roster.currentUserPermissions.viewOfficialPhoto && roster.officialPictureMode,
                 enrollmentsMode: enrollmentsMode,
                 viewSiteVisits: roster.currentUserPermissions.viewSiteVisits,
                 viewConnections: ((undefined != window.friendStatus) && roster.viewConnections),
@@ -652,7 +653,7 @@
                 viewProfile: roster.currentUserPermissions.viewProfile,
                 viewPicture: true,
                 currentUserId: roster.userId,
-                viewOfficialPhoto: roster.currentUserPermissions.viewOfficialPhoto,
+                viewOfficialPhoto: roster.currentUserPermissions.viewOfficialPhoto && roster.officialPictureMode,
                 enrollmentsMode: enrollmentsMode
             };
         var t = Handlebars.templates['pictures'];
@@ -761,6 +762,13 @@
         return roster.site.permissions[role].indexOf(perm) != -1;
     });
 
+    Handlebars.registerHelper('ifCond', function(v1, v2, options) {
+      if(v1 === v2) {
+        return options.fn(this);
+      }
+      return options.inverse(this);
+    });
+
     roster.init = function () {
 
         roster.i18n = $.i18n.map;
@@ -798,7 +806,7 @@
 
         
 
-        if (!roster.currentUserPermissions.viewOfficialPhoto) {
+        if (!roster.currentUserPermissions.viewOfficialPhoto && roster.officialPictureMode) {
             // The official photo permission should always override the
             // roster.display.officialPicturesByDefault property
             roster.officialPictureMode = false;

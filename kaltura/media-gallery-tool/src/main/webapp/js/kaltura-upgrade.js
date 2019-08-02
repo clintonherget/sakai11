@@ -87,29 +87,25 @@ function processKalturaLtiMedia() {
 
         createIFrame: function(media, source) {
             var src = source(media);
-            var iframe = $("<iframe src='" + src + "' allowfullscreen webkitallowfullscreen mozAllowFullScreen />");
+            var iframe = $("<iframe src='" + src + "' allowfullscreen webkitallowfullscreen mozAllowFullScreen allow='autoplay *; fullscreen *; encrypted-media *' />");
             iframe.css("border", "none");
-            iframe.css("position", "absolute");
-            iframe.css("top", "0");
-            iframe.css("left", "0");
             iframe.css("height", "100%");
             iframe.css("width", "100%");
 
             var kvdiv = $("<div id='kaltura-video'/>");
+            var height = ( ( $(media).attr("height") || 0 ) > 0 ) ? $(media).attr("height") :
+                         ( ( $(media).height() || 0 ) > 0 ) ? $(media).height() :
+                         285;
             kvdiv.css("position", "relative");
-            kvdiv.css("padding-top", "30px");
-            kvdiv.css("padding-bottom", "56.25%");
-            kvdiv.css("height", "0");
+            kvdiv.css("height", height + "px");
             kvdiv.append(iframe);
 
             var kvcdiv = $("<div id='kaltura-video-container'/>");
+            var width = ( ( $(media).attr("width") || 0 ) > 0 ) ? $(media).attr("width") :
+                        ( ( $(media).width() || 0 ) > 0 ) ? $(media).width() :
+                        400;
             kvcdiv.css("position", "relative");
-            // NYU patch to respect placeholder image width
-            if ($(media).attr("width")) {
-                kvcdiv.css("max-width", $(media).attr("width") + "px");
-            } else if ($(media).css("width")) {
-                kvcdiv.css("max-width", $(media).css("width"));
-            }
+            kvcdiv.css("max-width", width + "px");
             kvcdiv.append(kvdiv);
             return kvcdiv;
         },

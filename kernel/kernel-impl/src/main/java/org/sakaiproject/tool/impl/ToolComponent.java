@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -297,6 +298,7 @@ public abstract class ToolComponent implements ToolManager
 		private final String SCHOOL_PROPERTY = "School";
 		private final String DEPARTMENT_PROPERTY = "Department";
 		private final String LOCATION_PROPERTY = "Location";
+		private final String COLLABORATIVE_SITE_PROPERTY = "collaborative_site";
 
 		public Ruling classify(Tool tool, Set categories, Set keywords, FindToolsContext context) {
 			try {
@@ -345,10 +347,11 @@ public abstract class ToolComponent implements ToolManager
 				}
 
 				return stealthStatus(tool, rules,
-						(String)siteProperties.get(SCHOOL_PROPERTY),
-						(String)siteProperties.get(DEPARTMENT_PROPERTY),
-						(String)siteProperties.get(LOCATION_PROPERTY),
-						subjects);
+						     (String)siteProperties.get(SCHOOL_PROPERTY),
+						     (String)siteProperties.get(DEPARTMENT_PROPERTY),
+						     (String)siteProperties.get(LOCATION_PROPERTY),
+						     subjects,
+						     "true".equals((String)siteProperties.get(COLLABORATIVE_SITE_PROPERTY)));
 			}
 
 			return Ruling.UNKNOWN;
@@ -402,10 +405,10 @@ public abstract class ToolComponent implements ToolManager
 					commaSeparatedList.endsWith("," + needle));
 		}
 
-		private Ruling stealthStatus(Tool tool, String rules, String school, String department, String location, List<String> subjects) {
+		private Ruling stealthStatus(Tool tool, String rules, String school, String department, String location, List<String> subjects, boolean isCollaborativeSite) {
 			for (String ruleStr : rules.trim().split(" *; *")) {
 				NYURule rule = new NYURule(ruleStr);
-				if (rule.matches(school, department, location, subjects)) {
+				if (rule.matches(school, department, location, subjects, isCollaborativeSite)) {
 					return rule.getOutcome();
 				}
 			}
@@ -417,6 +420,7 @@ public abstract class ToolComponent implements ToolManager
 			private String school;
 			private String department;
 			private String location;
+			private Optional<Boolean> collaborativeSite = Optional.empty();
 			private List<String> subjects = Collections.EMPTY_LIST;
 			private Ruling outcome;
 
@@ -445,12 +449,24 @@ public abstract class ToolComponent implements ToolManager
 						if (!"*".equals(value)) {
 							this.subjects = Arrays.asList(value.split(", ?"));
 						}
+					} else if ("collaborativeSite".equals(field)) {
+						if ("true".equals(value)) {
+							this.collaborativeSite = Optional.of(true);
+						} else if ("false".equals(value)) {
+							this.collaborativeSite = Optional.of(false);
+						} else if ("*".equals(value)) {
+							this.collaborativeSite = Optional.empty();
+						} else {
+							log.warn("Malformed value for collaborativeSite: " + value);
+							ruleValid = false;
+						}
 					} else if ("outcome".equals(field)) {
 						if ("stealth".equals(value)) {
 							this.outcome = Ruling.STEALTH;
 						} else if ("visible".equals(value)) {
 							this.outcome = Ruling.VISIBLE;
 						} else {
+							log.warn("Malformed value for outcome: " + value);
 							ruleValid = false;
 						}
 					} else {
@@ -459,15 +475,16 @@ public abstract class ToolComponent implements ToolManager
 				}
 			}
 
-			public boolean matches(String school, String department, String location, List<String> subjects) {
+			public boolean matches(String school, String department, String location, List<String> subjects, boolean isCollaborativeSite) {
 				if (!ruleValid) {
 					return false;
 				}
 
 				return (("*".equals(this.school) || inList(school, this.school)) &&
-						("*".equals(this.department) || inList(department, this.department)) &&
-						("*".equals(this.location) || inList(location, this.location)) &&
-						(this.subjects.isEmpty() || listsOverlap(subjects, this.subjects)));
+					("*".equals(this.department) || inList(department, this.department)) &&
+					("*".equals(this.location) || inList(location, this.location)) &&
+					(this.subjects.isEmpty() || listsOverlap(subjects, this.subjects)) &&
+					(!this.collaborativeSite.isPresent() || (this.collaborativeSite.get() == isCollaborativeSite)));
 			}
 
 			public Ruling getOutcome() {

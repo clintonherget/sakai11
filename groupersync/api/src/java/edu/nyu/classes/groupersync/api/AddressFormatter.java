@@ -1,6 +1,6 @@
-package edu.nyu.classes.groupersync.tool;
+package edu.nyu.classes.groupersync.api;
 
-class AddressFormatter {
+public class AddressFormatter {
 
     public static String format(String grouperId) {
         return grouperId.replace(":", "-") + "@nyu.edu";

@@ -66,6 +66,8 @@ public interface SakaiProxy {
 	public final static Boolean DEFAULT_VIEW_USER_NAME_PRONUNCIATION = false;
 	public final static Integer DEFAULT_ROSTER_STATE = 0;
 	
+	public final static String NAME_PRONUNCIATION_SITE_PROPERTY = "roster-name-pronunciation";
+	public final static String OFFICIAL_PHOTO_SITE_PROPERTY = "roster_official_photo_view";
 	/**
 	 * Returns the ID of the current user.
 	 * 
@@ -283,9 +285,23 @@ public interface SakaiProxy {
     public Boolean getViewUserNamePronunciation();
 
     /**
+     * Returns the profile tool link. Null if user doesn't have profile tool.
+     *
+     * @return the profile tool link. Null if user doesn't have profile tool.
+     */
+    public String getProfileToolLink();
+
+    /**
      * Returns if the name pronunciation feature is enabled in this site, using the "roster-name-pronunciation" property.
      *
      * @return true if is enabled in the site, false otherwise.
      */
     public boolean isNamePronunciationEnabledInSite();
+
+    /**
+     * Returns if the official photo toggle and feature is enabled in this site, using the "roster_official_photo_view" property.
+     *
+     * @return true if is enabled in the site, false otherwise.
+     */
+    public boolean isOfficialPhotoEnabledInSite();
 }

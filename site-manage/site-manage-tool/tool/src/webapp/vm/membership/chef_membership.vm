@@ -124,17 +124,17 @@
 			<div class="table-responsive">
 				<table class="table table-bordered table-hover table-striped" summary ="$tlang.getString('joinable.list.summary')" id="currentSites">
 					<tr>
-						<th id="checkbox" scope="col" class="screenOnly attach">
+						<th id="checkbox" scope="col" class="screenOnly attach" style="width: 1%">
 							<input title="$tlang.getString("mb.selectalltitle")" type="checkbox" name="selunselall" id="selunselallid"/>
 						</th>
-						<th id="worksite" scope="col" class="attach">
-							$tlang.getString("gen.worksite")
+						<th id="worksite" scope="col" class="attach" style="width: 20%">
+							Site
 						</th>
-						<th scope="col" id="instructor">Instructor</th>
-						<th scope="col" id="description">$tlang.getString("gen.description")</th>
-						<th scope="col" id="term">Term</th>
-						<th scope="col" id="datecreated">Date Created</th>
-						<th scope="col" id="status">Status</th>
+						<th scope="col" id="instructor" style="width: 15%">Instructor</th>
+						<th scope="col" id="description" style="width: 30%">$tlang.getString("gen.description")</th>
+						<th scope="col" id="term" style="width: 10%">Term</th>
+						<th scope="col" id="datecreated" style="width: 15%">Date Created</th>
+						<th scope="col" id="status" style="width: 10%">Status</th>
 
 					</tr>
 					<tbody>
