@@ -6387,7 +6387,14 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	state.setAttribute("nyuExternalTools", externalTools);
 	//if (externalTools.size() > 0)
 	//	toolGroup.put(externaltoolgroupname, externalTools);
-	
+
+	// CLASSES-3712 add Pilot/Beta tools to end of toolGroup list
+	String pilotToolsGroupName = rb.getString("pilot.tools.group.name");
+	List pilotTools = getPilotToolGroup(pilotToolsGroupName, moreInfoDir, site);
+	if(!pilotTools.isEmpty()){
+		toolGroup.put(pilotToolsGroupName, pilotTools);
+	}
+
 	// Home page should be auto-selected
 	if (checkhome==true) {
 		state.setAttribute(STATE_TOOL_HOME_SELECTED, new Boolean(true));
@@ -6740,6 +6747,78 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 
 	}
 
+	//CLASSES-3712 - Gets the pilot tools from the table.
+	private List getPilotToolGroup(String groupName, File moreInfoDir, Site site) {
+		List <MyTool> pilotTools = new ArrayList<>();
+
+		//Get the NYU specific properties//get the first sectionEid attached to this site
+		// Fields added by NYU
+		String school = site.getProperties().getProperty("School");
+		String department = site.getProperties().getProperty("Department");
+		List<String> realmProviders = new ArrayList<String>();
+		try{
+			AuthzGroup realm = authzGroupService.getAuthzGroup(SiteService.siteReference(site.getId()));
+			realmProviders = Arrays.asList(groupProvider.unpackId(realm.getProviderGroupId()));
+		} catch(Exception ex){
+			log.error("getPilotToolGroup: Error getting the realm providers {}.", ex);
+		}
+
+		log.debug("getPilotToolGroup: Getting pilot tools for the site {} using the school {} and department {} properties.", site.getId(), school, department);
+
+		List<NYUPilotTool> nyuPilotTools = new ArrayList<NYUPilotTool>();
+		NYUPilotToolsDbHelper pilotToolsDbHelper = new NYUPilotToolsDbHelper();
+		nyuPilotTools = pilotToolsDbHelper.getPilotToolsFromDb();
+		log.debug("Found {} pilot tools in the database.", nyuPilotTools.size());
+
+		for(NYUPilotTool pilotTool : nyuPilotTools){
+			String relativeWebPath = null;
+			MyTool newTool = new MyTool();
+			newTool.required = false;
+			newTool.selected = false;
+			newTool.group = groupName;
+			newTool.title = pilotTool.getToolName();
+			newTool.id = pilotTool.getToolName();
+			newTool.description = pilotTool.getToolDescription();
+			relativeWebPath = pilotTool.getToolLearnMoreUrl();
+			if (StringUtils.isNotEmpty(relativeWebPath)) {
+				newTool.moreInfo = relativeWebPath;
+			}
+
+			boolean addToPilotList = false;
+
+			//If the tool doesn't have any restriction, it should be available to all the sites.
+			if(StringUtils.isEmpty(pilotTool.getSchool()) && StringUtils.isEmpty(pilotTool.getDepartment()) && StringUtils.isEmpty(pilotTool.getSubjectCode())){
+				addToPilotList = true;
+			}
+
+			//Check if the tool is restricted by School
+			if(StringUtils.isNotEmpty(pilotTool.getSchool()) && StringUtils.isNotEmpty(school) && pilotTool.getSchool().contains(school)){
+				addToPilotList = true;
+			}
+
+			//Check if the tool is restricted by Department
+			if(StringUtils.isNotEmpty(pilotTool.getDepartment()) && StringUtils.isNotEmpty(department) && pilotTool.getDepartment().contains(department)){
+				addToPilotList = true;
+			}
+
+			//Check if the tool is restricted by Subject Code, it should be inside the realm provider list
+			if(StringUtils.isNotEmpty(pilotTool.getSubjectCode()) && !realmProviders.isEmpty()){
+				for(String realmProvider : realmProviders){
+					if(realmProvider.contains(pilotTool.getSubjectCode())){
+						addToPilotList = true;
+					}
+				}
+			}
+
+			if(addToPilotList){
+				log.debug("The tool pilot tool {} has been added to the list for the site {}.", pilotTool.getToolName(), site.getId());
+				pilotTools.add(newTool);
+			}
+		}
+
+		return pilotTools;
+
+	}
 
 	/**
 	 * Set the state variables for tool registration list basd on site type
