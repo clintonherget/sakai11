@@ -186,6 +186,7 @@
                 roster.setupPicturesButton();
 
                 if (roster.currentUserPermissions.viewOfficialPhoto && roster.officialPictureMode) {
+                    roster.officialPictureMode = false;
 
                     $('#roster_official_picture_button').click(function (e) {
 
