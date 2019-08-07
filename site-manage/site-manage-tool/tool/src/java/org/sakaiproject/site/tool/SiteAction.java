@@ -6803,8 +6803,10 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 
 			//Check if the tool is restricted by Subject Code, it should be inside the realm provider list
 			if(StringUtils.isNotEmpty(pilotTool.getSubjectCode()) && !realmProviders.isEmpty()){
+				//Subject code may use this format _MHA-GP_
+				String subjectCode = String.format("_%s_", pilotTool.getSubjectCode());
 				for(String realmProvider : realmProviders){
-					if(realmProvider.contains(pilotTool.getSubjectCode())){
+					if(realmProvider.contains(subjectCode)){
 						addToPilotList = true;
 					}
 				}
