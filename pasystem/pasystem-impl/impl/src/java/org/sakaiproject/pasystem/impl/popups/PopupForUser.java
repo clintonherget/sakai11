@@ -109,11 +109,15 @@ public class PopupForUser {
                             new DBAction<Popup>() {
                                 @Override
                                 public Popup call(DBConnection db) throws SQLException {
+                                    org.sakaiproject.telemetry.cover.Telemetry.TelemetryTimer timer = org.sakaiproject.telemetry.cover.Telemetry.startTimer("pasystem_query");
+
                                     try (DBResults results = db.run(sql)
                                             .param(userId).param(userId)
                                             .param(now).param(now).param(now)
                                             .param(getTemporaryTimeoutMilliseconds())
                                             .executeQuery()) {
+                                        org.sakaiproject.telemetry.cover.Telemetry.finishTimer(timer);
+
                                         for (ResultSet result : results) {
                                             Clob contentClob = result.getClob("template_content");
                                             String templateContent = contentClob.getSubString(1, (int) contentClob.length());
