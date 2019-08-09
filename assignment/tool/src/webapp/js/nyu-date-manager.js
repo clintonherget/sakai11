@@ -3,12 +3,15 @@ Vue.component('date-manager', {
 <span>
   <a ref="button" href="javascript:void(0);" @click="showManager()" class="button"><i class="fa fa-calendar"></i> Manage Assignment Dates <span class="badge">NEW</span></a>
   <page-modal ref="modal" v-on:hide="onModelClose" v-on:show="onModalShow">
-    <date-manager-form></date-manager-form>
+    <template v-if="visible">
+      <date-manager-form></date-manager-form>
+    </template>
   </page-modal>
 </span>
 `,
   data: function() {
     return {
+      visible: false,
     };
   },
   props: [],
@@ -23,9 +26,11 @@ Vue.component('date-manager', {
       $('#pageBody').hide();
     },
     showPopup: function() {
+      this.visible = true;
       this.$refs.modal.show();
     },
     onModelClose: function() {
+      this.visible = false;
       $('#pageBody').show();
       $(this.$refs.button).focus();
       
@@ -49,31 +54,33 @@ Vue.component('date-manager-form', {
     <p>Manage the dates and published status of your assignments, all from one place.</p>
   </center>
  
-  <template v-if="loaded">
-    <table class="table table-condensed table-striped table-bordered">
-      <thead>
-        <tr>
-          <th>Assignment</th>
-          <th>Open Date</th>
-          <th>Due Date</th>
-          <th>Accept Until</th>
-          <th>Published Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="assignment in assignments">
-          <td>{{assignment.name}}</td>
-          <td><input type="text"/></td>
-          <td><input type="text"/></td>
-          <td><input type="text"/></td>
-          <td><input type="text"/></td>
-        </tr>
-      </tbody>
-    </table>
-  </template>
-  <template v-else>
-    <p>Loading assignment data...</p>
-  </template>
+  <div aria-atomic="true" v-bind:aria-busy="!loaded">
+    <template v-if="loaded">
+      <table class="table table-condensed table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Assignment</th>
+            <th>Open Date</th>
+            <th>Due Date</th>
+            <th>Accept Until</th>
+            <th>Published Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="assignment in assignments">
+            <td>{{assignment.name}}</td>
+            <td><input type="text"/></td>
+            <td><input type="text"/></td>
+            <td><input type="text"/></td>
+            <td><input type="text"/></td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+    <template v-else>
+      <p>Loading assignment data...</p>
+    </template>
+  </div>
 </div>
 `,
   data: function() {
