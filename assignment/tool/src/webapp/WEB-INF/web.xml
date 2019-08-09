@@ -19,6 +19,11 @@
         <filter-class>org.sakaiproject.util.RequestFilter</filter-class>
     </filter>
 
+    <filter>
+        <filter-name>nyu.assignmentsdatemanager.request</filter-name>
+        <filter-class>org.sakaiproject.assignment.datemanager.DateManagerFilter</filter-class>
+    </filter>
+
     <filter-mapping>
         <filter-name>sakai.request</filter-name>
         <servlet-name>sakai.assignment</servlet-name>
@@ -33,6 +38,14 @@
         <dispatcher>REQUEST</dispatcher>
         <dispatcher>FORWARD</dispatcher>
         <dispatcher>INCLUDE</dispatcher>
+    </filter-mapping>
+
+    <filter-mapping>
+      <filter-name>nyu.assignmentsdatemanager.request</filter-name>
+      <servlet-name>sakai.resources</servlet-name>
+      <dispatcher>REQUEST</dispatcher>
+      <dispatcher>FORWARD</dispatcher>
+      <dispatcher>INCLUDE</dispatcher>
     </filter-mapping>
 
 	<!-- the vm handling servlet : used direct by name, not by URL path -->
