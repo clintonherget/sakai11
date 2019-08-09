@@ -130,7 +130,7 @@ Vue.component('page-modal', {
   methods: {
     show: function() {
       $(this.$el).attr('aria-hidden', 'false').show();
-      $(this.$el).on('resize', (event) => {
+      $(window).on('resize', (event) => {
         this.resize();
       });
       this.resize();
@@ -140,7 +140,9 @@ Vue.component('page-modal', {
       $(this.$el).height($(window).height() - $(this.$el).offset().top + 'px');
     },
     hide: function() {
-      $(this.$el).off('resize');
+      $(this.$el).off('resize', (event) => {
+        this.resize();
+      });
       $(this.$el).attr('aria-hidden', 'true').hide();
       this.$emit('hide');
     },
