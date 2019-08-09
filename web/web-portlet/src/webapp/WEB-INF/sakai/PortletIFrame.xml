@@ -3,8 +3,8 @@
 <registration>
 	<tool
 	    id="sakai.iframe.qualtrics"
-	    title="Survey"
-	    description="Qualtrics Survey">
+	    title="Course Feedback"
+	    description="Course Feedback">
 		<configuration name="popup" value="false" />
 		<category name="course" />
 		<category name="project" />
