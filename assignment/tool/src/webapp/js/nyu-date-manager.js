@@ -4,7 +4,7 @@ Vue.component('date-manager', {
   <a ref="button" href="javascript:void(0);" @click="showManager()" class="button"><i class="fa fa-calendar"></i> Manage Assignment Dates <span class="badge">NEW</span></a>
   <page-modal ref="modal" v-on:hide="onModelClose" v-on:show="onModalShow">
     <template v-if="visible">
-      <date-manager-form></date-manager-form>
+      <date-manager-form :toolurl="toolurl"></date-manager-form>
     </template>
   </page-modal>
 </span>
@@ -14,7 +14,7 @@ Vue.component('date-manager', {
       visible: false,
     };
   },
-  props: [],
+  props: ['toolurl'],
   computed: {
   },
   methods: {
@@ -68,11 +68,11 @@ Vue.component('date-manager-form', {
         </thead>
         <tbody>
           <tr v-for="assignment in assignments">
-            <td>{{assignment.name}}</td>
-            <td><input type="text"/></td>
-            <td><input type="text"/></td>
-            <td><input type="text"/></td>
-            <td><input type="text"/></td>
+            <td>{{assignment.title}}</td>
+            <td><input class="form-control" type="text" v-model="assignment.open_date"/></td>
+            <td><input class="form-control" type="text" v-model="assignment.due_date"/></td>
+            <td><input class="form-control" type="text" v-model="assignment.accept_until"/></td>
+            <td><input class="form-control" type="checkbox" v-model="assignment.published"/></td>
           </tr>
         </tbody>
       </table>
@@ -89,23 +89,21 @@ Vue.component('date-manager-form', {
       assignments: [],
     };
   },
-  props: [],
+  props: ['toolurl'],
   computed: {
   },
   methods: {
     loadAssignments: function() {
-      this.assignments = [{
-        'name': "TEST",
-      }];
-      this.loaded = true;
+      $.getJSON(this.toolurl + "/date-manager/assignments", (json) => {
+        this.assignments = json;
+        this.loaded = true;
+      });
     },
   },
   updated: function() {
   },
   mounted: function() {
-    setTimeout(() => {
-      this.loadAssignments();
-    }, 2000);
+    this.loadAssignments();
   },
 });
 
@@ -167,14 +165,15 @@ Vue.component('page-modal', {
 });
 
 
-function NYUDateManager() {
+function NYUDateManager(toolURL) {
+  this.toolURL = toolURL;
   this.insertButton();
   this.initVue();
 };
 
 NYUDateManager.prototype.insertButton = function() {
   var $container = $('<div>').addClass('vue-enabled').addClass('pull-right');
-  var $component = $('<date-manager>');
+  var $component = $('<date-manager>').attr('toolurl', this.toolURL);
   $container.append($component);
   $('#content .page-header').before($container);
 };

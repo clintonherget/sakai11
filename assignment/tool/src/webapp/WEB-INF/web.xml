@@ -26,7 +26,7 @@
 
     <filter-mapping>
       <filter-name>nyu.assignmentsdatemanager.request</filter-name>
-      <servlet-name>sakai.assignment</servlet-name>
+      <servlet-name>sakai.assignment.grades</servlet-name>
       <dispatcher>REQUEST</dispatcher>
       <dispatcher>FORWARD</dispatcher>
       <dispatcher>INCLUDE</dispatcher>

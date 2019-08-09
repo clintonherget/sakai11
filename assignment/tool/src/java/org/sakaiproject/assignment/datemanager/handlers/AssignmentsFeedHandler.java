@@ -33,6 +33,10 @@ public class AssignmentsFeedHandler implements Handler {
             for (Assignment assignment : assignments) {
                 JSONObject assobj = new JSONObject();
                 assobj.put("title", assignment.getTitle());
+                assobj.put("due_date", assignment.getDueDate().toString());
+                assobj.put("open_date", assignment.getOpenDate().toString());
+                assobj.put("accept_until", assignment.getCloseDate().toString());
+                assobj.put("published", !assignment.getDraft());
                 result.add(assobj);
             }
 
