@@ -957,6 +957,12 @@ var setupCategTools = function(){
         $('#moreInfoHolder').dialog('open');
     });
 
+    $('.pilotBetaTool').click(function(e){
+        e.preventDefault();
+        var learnMoreUrl = this.getAttribute("href");
+        window.open(learnMoreUrl);
+    });
+
     if ($('.toolGroup').length <= 2) {
         $('.sel_unsel_core, #collExpContainer').hide();
     }

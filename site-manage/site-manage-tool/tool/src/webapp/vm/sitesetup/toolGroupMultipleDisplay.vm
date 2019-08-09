@@ -22,7 +22,10 @@
                         <h4 class="$escapedKey specialLink">
                             <a  #if ($groupCount ==1) class="open toggleNone"#elseif ($!expandedGroups.contains($mapEntry.key)) class="open" #else href="#" #end>
                                 <span class="catTitle">$mapEntry.key</span>
+                                ## START OF CLASSES-3712
+                                #if (!$mapEntry.key.equals($tlang.getString("pilot.tools.group.name")))
                                 <span class="checkedCount"></span>
+                                #end
                                 #if ($groupCount == 1) 
                                     <span class="sel_unsel_core">
                                         <em id="selectAll" class="selectAll" href="#" style="display: none;">$tlang.getString("feat.select.all")</em>
@@ -32,6 +35,11 @@
                             </a>
                         </h4>
                         <ul class="toolGroup" #if ($!expandedGroups.contains($mapEntry.key)) style="display:block" #end>
+                            ## START OF CLASSES-3712
+                            #if ($mapEntry.key.equals($tlang.getString("pilot.tools.group.name")))
+                                <li><div class="toolListControl"><label style="font-weight:normal;">$tlang.getString("pilot.tools.group.description")</label></div></li>
+                            #end
+                            ## END OF CLASSES-3712
                             ## list those extra tools (added outside Site Info tool with tool id not listed as the allowed tool for current site type) as hidded input
                             #foreach($tool in $!extraSelectedToolList)
                                 <input type="hidden" name="selectedTools" value="$tool" />
@@ -56,6 +64,8 @@
                                      #else 
                                      	<li id="row-$rowCount">
                                             <div class="toolListControl" id="$toolId.replace(".","_")_wrap">
+                                                ## START OF CLASSES-3712
+                                                #if (!$mapEntry.key.equals($tlang.getString("pilot.tools.group.name")))
                                                 <input type="checkbox" name="selectedTools" value="$toolId" id="$toolId"
                                                 #if ($tool.isRequired())
                                                     checked="checked" 
@@ -78,6 +88,8 @@
                                                     #end
                                                 #end
                                                 />
+                                                #end
+                                                ## END OF CLASSES-3712
                                                 <label for="$toolId">
                                                     #set($title=$validator.escapeHtml($tool.getTitle()))
                                                     $title
@@ -104,9 +116,15 @@
                                                             #end)
                                                         #end
                                                     #end
+	                                                ## START OF CLASSES-3712
+                                                    #if ($tool.getMoreInfo() && ($tool.getMoreInfo() != "") && ($mapEntry.key.equals($tlang.getString("pilot.tools.group.name"))))
+                                                        &nbsp;<a class="pilotBetaTool" title='$tlang.getString("feat.learn.more")' href="$tool.getMoreInfo()" target="_blank">$tlang.getString("feat.learn.more")</a>
+                                                    #else
                                                     #if ($tool.getMoreInfo() && ($tool.getMoreInfo() != ""))
                                                         &nbsp;(<a class="moreInfoTool" title='$tool.getTitle()' href="$tool.getMoreInfo()" target="_blank">$tlang.getString("feat.more.info")</a>)
                                                      #end
+                                                    #end
+                                                    ## END OF CLASSES-3712
                                             </div>
                                      #end
                                         </li>
