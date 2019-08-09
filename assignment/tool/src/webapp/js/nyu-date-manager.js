@@ -76,6 +76,9 @@ Vue.component('date-manager-form', {
           </tr>
         </tbody>
       </table>
+      <center>
+        <p><a href="javascript:void(0);" class="button_color" @click="submitChanges">Save Changes</a> <a href="javascript:void(0);"  class="button" @click="cancelChanges">Cancel</a><p>
+      </center>
     </template>
     <template v-else>
       <p>Loading assignment data...</p>
@@ -98,6 +101,13 @@ Vue.component('date-manager-form', {
         this.assignments = json;
         this.loaded = true;
       });
+    },
+    submitChanges: function() {
+      console.log("--- DO A THING ---");
+      console.log(this.assignments);
+    },
+    cancelChanges: function() {
+      this.$parent.hide();
     },
   },
   updated: function() {
