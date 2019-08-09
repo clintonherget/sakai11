@@ -28,6 +28,7 @@ Vue.component('date-manager', {
     onModelClose: function() {
       $('#pageBody').show();
       $(this.$refs.button).focus();
+      
     },
     onModalShow: function() {
     },
@@ -47,6 +48,7 @@ Vue.component('date-manager-form', {
     <h2>Manage Assignment Dates</h2>
     <p>Manage the dates and published status of your assignments, all from one place.</p>
   </center>
+ 
   <template v-if="loaded">
     <table class="table table-condensed table-striped table-bordered">
       <thead>
@@ -61,10 +63,10 @@ Vue.component('date-manager-form', {
       <tbody>
         <tr v-for="assignment in assignments">
           <td>{{assignment.name}}</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
+          <td><input type="text"/></td>
+          <td><input type="text"/></td>
+          <td><input type="text"/></td>
+          <td><input type="text"/></td>
         </tr>
       </tbody>
     </table>
@@ -103,7 +105,7 @@ Vue.component('date-manager-form', {
 
 Vue.component('page-modal', {
   template: `
-<div style="display:none; overflow: auto; " aria-hidden="true">
+<div style="display:none; overflow: auto; " aria-hidden="true" id="pageModal">
   <div style="background: #eeffff; padding: 10px; border-bottom: #aadddd solid 1px;} solid 1px;">A public service announcement</div>
   <div ref="content" class="page-modal" style="padding: 20px; background: #FFF" tabindex="0">
     <a href="javascript:void(0)" class="pull-right" @click="hide">X</a>
@@ -135,10 +137,23 @@ Vue.component('page-modal', {
       $(this.$el).attr('aria-hidden', 'true').hide();
       this.$emit('hide');
     },
+    captureBlur: function() {
+      $(this.$el).off('blur').on('blur', ':focusable', (event) => {
+        if (event.relatedTarget === null) {
+          $(this.$refs.content).focus();
+          return true;
+        } else if ($(event.relatedTarget).closest('#pageModal').length == 0) {
+          // can only focus above the modal, so loop back to bottom of modal
+          $('#pageModal :focusable:last').focus();
+          return true;
+        }
+      });
+    }
   },
   updated: function() {
   },
   mounted: function() {
+    this.captureBlur();
   },
 });
 
