@@ -29,6 +29,7 @@
 						<td headers="class">
 							<h5><label for="pcl$providerCourseListNum" title="$id">
 								$!providerCourseTitles.get($id)
+								<br><small class="text-muted">$id</small>
 							</label></h5>
 						</td>
 						<td headers="remove" class="screenOnly">
