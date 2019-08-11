@@ -1,19 +1,29 @@
 package org.sakaiproject.assignment.datemanager.handlers;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.sakaiproject.assignment.api.model.Assignment;
 import org.sakaiproject.assignment.api.AssignmentService;
 import org.sakaiproject.component.cover.ComponentManager;
-import org.sakaiproject.site.api.Group;
-import org.sakaiproject.site.api.Site;
-import org.sakaiproject.site.cover.SiteService;
-import org.sakaiproject.user.api.User;
-import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.time.api.TimeService;
+import org.sakaiproject.tool.cover.SessionManager;
+import org.sakaiproject.user.api.Preferences;
+import org.sakaiproject.user.cover.PreferencesService;
+import org.sakaiproject.util.ResourceLoader;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
 
 public class AssignmentsFeedHandler implements Handler {
     private String redirectTo = null;
@@ -33,9 +43,9 @@ public class AssignmentsFeedHandler implements Handler {
             for (Assignment assignment : assignments) {
                 JSONObject assobj = new JSONObject();
                 assobj.put("title", assignment.getTitle());
-                assobj.put("due_date", assignment.getDueDate().toString());
-                assobj.put("open_date", assignment.getOpenDate().toString());
-                assobj.put("accept_until", assignment.getCloseDate().toString());
+                assobj.put("due_date", formatDateToString(assignment.getDueDate()));
+                assobj.put("open_date", formatDateToString(assignment.getOpenDate()));
+                assobj.put("accept_until", formatDateToString(assignment.getCloseDate()));
                 assobj.put("published", !assignment.getDraft());
                 result.add(assobj);
             }
@@ -44,6 +54,37 @@ public class AssignmentsFeedHandler implements Handler {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String formatDateToString(Instant dateTime) {
+        return DateTimeFormatter.ofLocalizedDateTime( FormatStyle.SHORT )
+                 .withLocale(getUserLocale())
+                 .withZone(getUserTimeZone().toZoneId())
+                 .format(dateTime);
+    }
+
+    private String getCurrentUserId() {
+        return SessionManager.getCurrentSessionUserId();
+    }
+
+    private Locale getUserLocale() {
+        final ResourceLoader rl = new ResourceLoader();
+        return rl.getLocale();
+    }
+
+    private TimeZone getUserTimeZone() {
+        TimeZone timezone;
+        final Preferences prefs = PreferencesService.getPreferences(getCurrentUserId());
+        final ResourceProperties props = prefs.getProperties(TimeService.APPLICATION_ID);
+        final String tzPref = props.getProperty(TimeService.TIMEZONE_KEY);
+
+        if (StringUtils.isNotBlank(tzPref)) {
+            timezone = TimeZone.getTimeZone(tzPref);
+        } else {
+            timezone = TimeZone.getDefault();
+        }
+
+        return timezone;
     }
 
     public boolean hasRedirect() {

@@ -74,6 +74,12 @@ public class DateManagerFilter implements Filter {
             }
         } catch (Exception e) {
             LOG.warn("Something failed", e);
+            response.reset();
+            response.setStatus(500);
+            try {
+                e.printStackTrace(response.getWriter());
+            } catch (IOException ioe) {
+            }
         }
     }
 
