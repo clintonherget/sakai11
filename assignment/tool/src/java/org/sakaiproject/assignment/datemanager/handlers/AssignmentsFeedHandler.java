@@ -58,8 +58,7 @@ public class AssignmentsFeedHandler implements Handler {
     }
 
     private String formatDateToString(Instant dateTime) {
-        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-                 .withLocale(getUserLocale())
+        return DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm")
                  .withZone(getUserTimeZone().toZoneId())
                  .format(dateTime);
     }

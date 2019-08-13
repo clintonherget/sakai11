@@ -185,10 +185,7 @@ public class AssignmentsUpdateHandler implements Handler {
 
     private Instant parseStringToInstant(String dateTime) {
         try {
-            return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-                .withLocale(getUserLocale())
-                .withZone(getUserTimeZone().toZoneId())
-                .parse(dateTime, Instant::from);
+            return DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(dateTime, Instant::from);
         } catch (DateTimeParseException e) {
             return null;
         }

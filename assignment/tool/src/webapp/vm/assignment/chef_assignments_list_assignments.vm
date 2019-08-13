@@ -676,6 +676,7 @@
 	#end
 </div>
 
+<script type="text/javascript" src="/library/js/lang-datepicker/lang-datepicker.js"></script>
 <script src="/sakai-assignment-tool/js/vue.min.js"></script>
 <script src="/sakai-assignment-tool/js/nyu-date-manager.js"></script>
 <script>new NYUDateManager("#toolForm("")");</script>

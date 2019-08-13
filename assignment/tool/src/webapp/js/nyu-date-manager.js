@@ -80,15 +80,18 @@ Vue.component('date-manager-form', {
                 <div><small class="errors"></small></div>
             </td>
             <td style="width: 20%" :id="'cell_open_date_' + idx">
-                <input class="form-control" type="text" v-model="assignment.open_date"/>
+                <input type="hidden" :data-idx="idx" data-field="open_date" v-model="assignment.open_date"/>
+                <input class="form-control datepicker" type="text"/>
                 <small class="errors"></small>
             </td>
             <td style="width: 20%" :id="'cell_due_date_' + idx">
-                <input class="form-control" type="text" v-model="assignment.due_date"/>
+                <input type="hidden" :data-idx="idx" data-field="due_date" v-model="assignment.due_date"/>
+                <input class="form-control datepicker" type="text"/>
                 <small class="errors"></small>
             </td>
             <td style="width: 20%" :id="'cell_accept_until_' + idx">
-                <input class="form-control" type="text" v-model="assignment.accept_until"/>
+                <input type="hidden" :data-idx="idx" data-field="accept_until" v-model="assignment.accept_until"/>
+                <input class="form-control datepicker" type="text"/>
                 <small class="errors"></small>
             </td>
             <td style="width: 5%">
@@ -119,13 +122,41 @@ Vue.component('date-manager-form', {
   },
   methods: {
     loadAssignments: function() {
+      var self = this;
       $.getJSON(this.toolurl + "/date-manager/assignments", (json) => {
         this.assignments = json.map(function (elt) {
           elt.publishedOnServer = elt.published;
           return elt;
         });
+
         this.loaded = true;
-      });
+
+        self.$nextTick(function () {
+          $('.datepicker').each(function (idx, elt) {
+            $(elt).css("width", "calc(100% - 50px)").css("display", "inline-block");
+            var hidden = $(elt).closest('td').find('input:hidden');
+
+            // Vue doesn't track changes to input type=hidden, so we handle our own binding.
+            $(hidden).on('change', function () {
+              var idx = $(this).data('idx');
+              var field = $(this).data('field');
+
+              self.assignments[idx][field] = $(this).val();
+            });
+
+            hidden.attr('id', 'hidden_datepicker_' + idx);
+            localDatePicker({
+              input: elt,
+              useTime: 1,
+              parseFormat: 'YYYY-MM-DD HH:mm',
+              val: hidden.val(),
+              ashidden: {
+                iso8601: 'hidden_datepicker_' + idx,
+              }
+            });
+          });
+        });
+      })
     },
     submitChanges: function() {
       var self = this;
@@ -158,7 +189,6 @@ Vue.component('date-manager-form', {
       $('.danger').removeClass('danger');
 
       $(val).each(function (idx, elt) {
-        console.log(elt);
         var id = ['cell', elt.field, elt.idx].join('_');
         var cell = $(document.getElementById(id));
         cell.addClass('danger');
