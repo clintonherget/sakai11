@@ -56,7 +56,16 @@ Vue.component('date-manager-form', {
 
   <div>
     <a href="javascript:void(0);" ref="smartDateUpdaterButton" @click="showSmartDateUpdater()" class="button"><i aria-hidden="true" class="fa fa-magic"></i> Smart Date Updater</a>
-    <smart-date-updater-modal ref="smartDateUpdaterModal"></smart-date-updater-modal>
+    <smart-date-updater-modal ref="smartDateUpdaterModal" :assignments="assignments">
+      <center>
+        <h4 class="modal-title">Smart Date Updater</h4>
+      </center>
+      <smart-date-updater ref="updater" :assignments="assignments" v-on:assignmentDatesUpdated="handleDateChanges()"></smart-date-updater>
+      <center>
+        <a href="javascript:void(0);" class="button_color" @click="doUpdates()">Apply Date Updates</a>
+        <a href="javascript:void(0);" class="button" @click="hideUpdater()">Cancel</a>
+      </center>
+    </smart-date-updater-modal>
   </div>
 
   <div aria-atomic="true" v-bind:aria-busy="!loaded">
@@ -126,11 +135,27 @@ Vue.component('date-manager-form', {
   computed: {
   },
   methods: {
+    handleDateChanges: function() {
+      var self = this;
+      self.$nextTick(function() {
+        $('.datepicker').each(function (idx, elt) {
+          var hidden = $(elt).closest('td').find('input:hidden');
+          $(elt).datetimepicker('setDate', new Date(moment(hidden.val())));
+        });
+      });
+    },
+    doUpdates: function() {
+      this.$refs.updater.applyChanges();
+    },
+    hideUpdater: function() {
+      this.$refs.smartDateUpdaterModal.hide();
+    },
     loadAssignments: function() {
       var self = this;
       $.getJSON(this.toolurl + "/date-manager/assignments", (json) => {
-        this.assignments = json.map(function (elt) {
+        json.map(function (elt) {
           elt.publishedOnServer = elt.published;
+          self.assignments.push(elt);
           return elt;
         });
 
@@ -277,28 +302,57 @@ Vue.component('smart-date-updater', {
     <p>Note: Weekends and holidays are not automatically accounted for. You can add substitutions for days of the week below.
   </center>
   <div>
-    <p>DO THINGS HERE</p>
+    <div class="row">
+      <div class="col-sm-6 text-right"><label for="magicopendate">Set earliest Open Date:</label></div>
+      <div class="col-sm-6">
+        <input type="text" id="magicopendate" name="magicopendate" v-model="magicopendate"/>
+        <div><small class="text-muted">Currently: {{earliestOpenDate}}</small></div>
+      </div>
+    </div>
   </div>
 </div>
 `,
   data: function() {
-    return {};
+    return {
+      magicopendate: '',
+    };
+  },
+  props: ['assignments'],
+  computed: {
+    earliestOpenDate: function() {
+      var allOpenDates = this.assignments.map(function(assignment) {
+        return assignment.open_date;
+      });
+      var sorted = allOpenDates.sort(function(a, b) {
+        return moment(a).valueOf() - moment(b).valueOf();
+      });
+
+      return moment(sorted[0]).startOf('day');
+    },
+  },
+  methods: {
+    applyDiffToAssignmentDateString: function(isoDateTimeString, diffInDays) {
+      var newDate = moment(isoDateTimeString).add(diffInDays, 'days');
+
+      return newDate.format();
+    },
+    applyChanges: function() {
+      var self = this;
+      var diffInDays = moment(this.magicopendate).diff(moment(this.earliestOpenDate), 'days');
+      self.assignments.forEach(function(assignment) {
+        assignment.open_date = self.applyDiffToAssignmentDateString(assignment.open_date, diffInDays)
+        assignment.due_date = self.applyDiffToAssignmentDateString(assignment.due_date, diffInDays)
+        assignment.accept_until = self.applyDiffToAssignmentDateString(assignment.accept_until, diffInDays)
+      });
+      this.$emit('assignmentDatesUpdated');
+    }
   },
 });
 
 Vue.component('smart-date-updater-modal', {
   template: `
 <div v-if="visible">
-  <center>
-    <h4 class="modal-title">Smart Date Updater</h4>
-  </center>
-
-  <smart-date-updater></smart-date-updater>
-
-  <center>
-    <a href="javascript:void(0);" class="button_color">Apply Date Updates</a>
-    <a href="javascript:void(0);" class="button" @click="hide()">Cancel</a>
-  </center>
+  <slot></slot>
 </div>
 `,
   data: function() {
