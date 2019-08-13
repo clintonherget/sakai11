@@ -92,7 +92,7 @@ Vue.component('date-manager-form', {
                 <small class="errors"></small>
             </td>
             <td style="width: 5%">
-                <input class="form-control" type="checkbox" v-model="assignment.published" :disabled="assignment.published ? 'disabled' : null"/>
+                <input class="form-control" type="checkbox" v-model="assignment.published" :disabled="assignment.publishedOnServer ? 'disabled' : null"/>
             </td>
           </tr>
         </tbody>
@@ -120,7 +120,10 @@ Vue.component('date-manager-form', {
   methods: {
     loadAssignments: function() {
       $.getJSON(this.toolurl + "/date-manager/assignments", (json) => {
-        this.assignments = json;
+        this.assignments = json.map(function (elt) {
+          elt.publishedOnServer = elt.published;
+          return elt;
+        });
         this.loaded = true;
       });
     },
