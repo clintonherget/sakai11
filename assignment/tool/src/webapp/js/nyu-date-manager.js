@@ -54,6 +54,11 @@ Vue.component('date-manager-form', {
     <p>Manage the dates and published status of your assignments, all from one place.</p>
   </center>
 
+  <div>
+    <a href="javascript:void(0);" ref="smartDateUpdaterButton" @click="showSmartDateUpdater()" class="button"><i aria-hidden="true" class="fa fa-magic"></i> Smart Date Updater</a>
+    <smart-date-updater-modal ref="smartDateUpdaterModal"></smart-date-updater-modal>
+  </div>
+
   <div aria-atomic="true" v-bind:aria-busy="!loaded">
     <template v-if="loaded">
       <div class="alert alert-danger" v-if="errors.length > 0">
@@ -180,6 +185,9 @@ Vue.component('date-manager-form', {
     cancelChanges: function() {
       this.$parent.hide();
     },
+    showSmartDateUpdater: function() {
+      this.$refs.smartDateUpdaterModal.show();
+    },
   },
   updated: function() {
   },
@@ -244,6 +252,9 @@ Vue.component('page-modal', {
         if (event.relatedTarget === null) {
           $(this.$refs.content).focus();
           return true;
+        } else if ($(event.relatedTarget).is('.featherlight-content')) {
+          // this is cool.
+          return false;
         } else if ($(event.relatedTarget).closest('#pageModal').length == 0) {
           // can only focus above the modal, so loop back to bottom of modal
           $('#pageModal :focusable:last').focus();
@@ -256,6 +267,68 @@ Vue.component('page-modal', {
   },
   mounted: function() {
     this.captureBlur();
+  },
+});
+
+Vue.component('smart-date-updater', {
+  template: `
+<div>
+  <center>
+    <p>Note: Weekends and holidays are not automatically accounted for. You can add substitutions for days of the week below.
+  </center>
+  <div>
+    <p>DO THINGS HERE</p>
+  </div>
+</div>
+`,
+  data: function() {
+    return {};
+  },
+});
+
+Vue.component('smart-date-updater-modal', {
+  template: `
+<div v-if="visible">
+  <center>
+    <h4 class="modal-title">Smart Date Updater</h4>
+  </center>
+
+  <smart-date-updater></smart-date-updater>
+
+  <center>
+    <a href="javascript:void(0);" class="button_color">Apply Date Updates</a>
+    <a href="javascript:void(0);" class="button" @click="hide()">Cancel</a>
+  </center>
+</div>
+`,
+  data: function() {
+    return {
+      'visible': false,
+    }
+  },
+  methods: {
+    hide: function() {
+      $.featherlight.current().close();
+    },
+    show: function() {
+      this.visible = true;
+      this.$nextTick(() => {
+        $(document.body).append(this.$el);
+        $.featherlight("<div>", {
+          afterOpen: () => {
+            setTimeout(function() {
+              $.featherlight.current().$content.closest('.featherlight-content').attr('tabindex', '0').focus();
+            });
+
+            // FIXME BLOCK TAB TO BELOW...
+          },
+          afterClose: () => {
+            this.$parent.$refs.smartDateUpdaterButton.focus();
+          }
+        });
+        $.featherlight.current().$content.append(this.$el);
+      });
+    },
   },
 });
 
