@@ -92,7 +92,7 @@ Vue.component('date-manager-form', {
                 <small class="errors"></small>
             </td>
             <td style="width: 5%">
-                <input class="form-control" type="checkbox" v-model="assignment.published"/>
+                <input class="form-control" type="checkbox" v-model="assignment.published" :disabled="assignment.published ? 'disabled' : null"/>
             </td>
           </tr>
         </tbody>
@@ -228,7 +228,7 @@ Vue.component('page-modal', {
 
 
 function NYUDateManager(toolURL) {
-  this.toolURL = toolURL;
+  this.toolURL = toolURL.replace(/\?.*/, '');
   this.insertButton();
   this.initVue();
 };

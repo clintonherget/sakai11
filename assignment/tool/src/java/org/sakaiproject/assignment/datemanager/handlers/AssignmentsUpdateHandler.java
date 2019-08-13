@@ -32,14 +32,14 @@ public class AssignmentsUpdateHandler implements Handler {
     private String redirectTo = null;
 
     private class AssignmentUpdate {
-        public String id;
+        public Assignment assignment;
         public Instant openDate;
         public Instant dueDate;
         public Instant acceptUntilDate;
         public boolean published;
 
-        public AssignmentUpdate(String id, Instant openDate, Instant dueDate, Instant acceptUntilDate, boolean published) {
-            this.id = id;
+        public AssignmentUpdate(Assignment assignment, Instant openDate, Instant dueDate, Instant acceptUntilDate, boolean published) {
+            this.assignment = assignment;
             this.openDate = openDate;
             this.dueDate = dueDate;
             this.acceptUntilDate = acceptUntilDate;
@@ -120,9 +120,21 @@ public class AssignmentsUpdateHandler implements Handler {
                     continue;
                 }
 
-                AssignmentUpdate update = new AssignmentUpdate(assignmentId,
+                Assignment assignment = assignmentService.getAssignment(assignmentId);
+
+                if (assignment == null) {
+                    errors.add(new Error("assignment", "Assignment could not be found", i));
+                    continue;
+                }
+
+                AssignmentUpdate update = new AssignmentUpdate(assignment,
                                                                openDate, dueDate, acceptUntil,
                                                                (Boolean)jsonAssignment.get("published"));
+
+                if (!update.published && !assignment.getDraft()) {
+                    errors.add(new Error("assignment", "Can't unpublish an already published assignment", i));
+                    continue;
+                }
 
                 if (!update.openDate.isBefore(update.dueDate)) {
                     errors.add(new Error("open_date", "Open date must fall before due date", i));
@@ -139,11 +151,12 @@ public class AssignmentsUpdateHandler implements Handler {
 
             if (errors.isEmpty()) {
                 for (AssignmentUpdate update : updates) {
-                    Assignment assignment = assignmentService.getAssignment(update.id);
+                    Assignment assignment = update.assignment;
 
                     assignment.setOpenDate(update.openDate);
                     assignment.setDueDate(update.dueDate);
                     assignment.setCloseDate(update.acceptUntilDate);
+                    assignment.setDraft(!update.published);
 
                     assignmentService.updateAssignment(assignment);
                 }
