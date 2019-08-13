@@ -5,6 +5,7 @@ import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.Template;
 import org.sakaiproject.assignment.datemanager.handlers.AssignmentsFeedHandler;
+import org.sakaiproject.assignment.datemanager.handlers.AssignmentsUpdateHandler;
 import org.sakaiproject.assignment.datemanager.handlers.Handler;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
@@ -58,7 +59,7 @@ public class DateManagerFilter implements Filter {
         URL toolBaseURL = determineBaseURL();
 
         try {
-            Map<String, Object> context = new HashMap<String, Object>();
+            Map<String, Object> context = new HashMap<>();
 
             context.put("baseURL", toolBaseURL);
 
@@ -94,6 +95,8 @@ public class DateManagerFilter implements Filter {
 
         if (path.startsWith("/assignments")) {
             return new AssignmentsFeedHandler();
+        } else if (path.startsWith("/update")) {
+            return new AssignmentsUpdateHandler();
         }
 
         throw new RuntimeException("Path not supported by assignment-date-manager handlers: " + path);

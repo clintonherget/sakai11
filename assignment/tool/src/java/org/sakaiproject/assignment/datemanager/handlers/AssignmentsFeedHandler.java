@@ -42,6 +42,7 @@ public class AssignmentsFeedHandler implements Handler {
 
             for (Assignment assignment : assignments) {
                 JSONObject assobj = new JSONObject();
+                assobj.put("id", assignment.getId());
                 assobj.put("title", assignment.getTitle());
                 assobj.put("due_date", formatDateToString(assignment.getDueDate()));
                 assobj.put("open_date", formatDateToString(assignment.getOpenDate()));
@@ -57,7 +58,7 @@ public class AssignmentsFeedHandler implements Handler {
     }
 
     private String formatDateToString(Instant dateTime) {
-        return DateTimeFormatter.ofLocalizedDateTime( FormatStyle.SHORT )
+        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
                  .withLocale(getUserLocale())
                  .withZone(getUserTimeZone().toZoneId())
                  .format(dateTime);

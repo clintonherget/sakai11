@@ -53,9 +53,16 @@ Vue.component('date-manager-form', {
     <h2>Manage Assignment Dates</h2>
     <p>Manage the dates and published status of your assignments, all from one place.</p>
   </center>
- 
+
   <div aria-atomic="true" v-bind:aria-busy="!loaded">
     <template v-if="loaded">
+      <div class="alert alert-danger" v-if="errors.length > 0">
+          <p>Your update could not be saved due to the following errors:</p>
+          <ul>
+              <li v-for="error in errors">{{assignments[error.idx].title}} - {{error.msg}}</li>
+          </ul>
+      </div>
+
       <table class="table table-condensed table-striped table-bordered">
         <thead>
           <tr>
@@ -67,12 +74,26 @@ Vue.component('date-manager-form', {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="assignment in assignments">
-            <td>{{assignment.title}}</td>
-            <td><input class="form-control" type="text" v-model="assignment.open_date"/></td>
-            <td><input class="form-control" type="text" v-model="assignment.due_date"/></td>
-            <td><input class="form-control" type="text" v-model="assignment.accept_until"/></td>
-            <td><input class="form-control" type="checkbox" v-model="assignment.published"/></td>
+          <tr v-for="(assignment, idx) in assignments">
+            <td style="width: 35%" :id="'cell_assignment_' + idx">
+                {{assignment.title}}
+                <div><small class="errors"></small></div>
+            </td>
+            <td style="width: 20%" :id="'cell_open_date_' + idx">
+                <input class="form-control" type="text" v-model="assignment.open_date"/>
+                <small class="errors"></small>
+            </td>
+            <td style="width: 20%" :id="'cell_due_date_' + idx">
+                <input class="form-control" type="text" v-model="assignment.due_date"/>
+                <small class="errors"></small>
+            </td>
+            <td style="width: 20%" :id="'cell_accept_until_' + idx">
+                <input class="form-control" type="text" v-model="assignment.accept_until"/>
+                <small class="errors"></small>
+            </td>
+            <td style="width: 5%">
+                <input class="form-control" type="checkbox" v-model="assignment.published"/>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -88,6 +109,7 @@ Vue.component('date-manager-form', {
 `,
   data: function() {
     return {
+      errors: [],
       loaded: false,
       assignments: [],
     };
@@ -103,14 +125,44 @@ Vue.component('date-manager-form', {
       });
     },
     submitChanges: function() {
-      console.log("--- DO A THING ---");
-      console.log(this.assignments);
+      var self = this;
+
+      this.errors = [];
+      $.post(this.toolurl + "/date-manager/update",
+             {
+               json: JSON.stringify(this.assignments),
+             }).done(
+               function (response) {
+                 if (response.status === 'ERROR') {
+                   self.errors = response.errors;
+                 } else {
+                   window.location.reload();
+                 }
+                 console.log(response);
+               }).fail(function () {
+                 console.error("POST failed");
+               });
     },
     cancelChanges: function() {
       this.$parent.hide();
     },
   },
   updated: function() {
+  },
+  watch: {
+    errors: function (val) {
+      $('.errors').empty();
+      $('.danger').removeClass('danger');
+
+      $(val).each(function (idx, elt) {
+        console.log(elt);
+        var id = ['cell', elt.field, elt.idx].join('_');
+        var cell = $(document.getElementById(id));
+        cell.addClass('danger');
+        $(document.getElementById(id)).find('.errors').text(elt.msg);
+      });
+
+    }
   },
   mounted: function() {
     this.loadAssignments();
