@@ -312,11 +312,31 @@ Vue.component('smart-date-updater', {
   </center>
   <div>
     <div class="row">
-      <div class="col-sm-6 text-right"><label for="magicopendate">Set earliest Open Date:</label></div>
+      <div class="col-sm-6 text-right">
+        <label for="magicopendate" style="padding: 12px 0;">Set earliest Open Date:</label>
+      </div>
       <div class="col-sm-6">
-        <input type="text" id="magicopendate" class="datepicker" />
+        <input type="text" id="magicopendate" class="form-control datepicker" style="width: calc(100% - 100px);display: inline-block;"/>
         <div><small class="text-muted">Currently: {{earliestOpenDate.open_date_label}}</small></div>
       </div>
+    </div>
+  </div>
+  <div v-for="(substitution, idx) in substitutions" class="row">
+    <div class="col-sm-12">
+      <label :for="'substitution_from_' + idx">If dates occur on </label>
+      <select id="'substitution_from_' + idx" v-model="substitution.from">
+        <option v-for="day in availableDaysForSubstitution(substitution.from)">{{day}}</option>
+      </select>
+      <label :for="'substitution_to_' + idx"> change to </label>
+      <select id="'substitution_to_' + idx" v-model="substitution.to">
+        <option v-for="day in allDays">{{day}}</option>
+      </select>
+      <a href="javascript:void(0)" @click.prevent.stop="removeSubstitution(substitution)" aria-label="Remove substitution" class="button"><i aria-hidden="true" class="fa fa-trash"></i></a>
+    </div>
+  </div>
+  <div class="row" v-if="daysWithSubstitutions.length < 7">
+    <div class="col-sm-12">
+      <a href="javascript:void(0);" @click.prevent.stop="addSubstitution()" class="button">Add Day of Week Substitution</a>
     </div>
   </div>
 </div>
@@ -324,6 +344,8 @@ Vue.component('smart-date-updater', {
   data: function() {
     return {
       magicopendate: '',
+      substitutions: [],
+      allDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     };
   },
   props: ['assignments'],
@@ -333,8 +355,27 @@ Vue.component('smart-date-updater', {
         return (min.open_date < elt.open_date) ? min : elt;
       })
     },
+    daysWithSubstitutions: function() {
+      var days = [];
+      this.substitutions.forEach(function(substitution) {
+        days.push(substitution.from);
+      });
+      return days;
+    },
   },
   methods: {
+    availableDaysForSubstitution: function(current) {
+      var self = this;
+      var days = [];
+
+      self.allDays.forEach(function(day) {
+        if (current === day || self.daysWithSubstitutions.indexOf(day) < 0) {
+          days.push(day);
+        }
+      });
+
+      return days;
+    },
     applyDiffToAssignmentDateString: function(isoDateTimeString, diffInDays) {
       var newDate = moment(isoDateTimeString).add(diffInDays, 'days');
 
@@ -359,6 +400,21 @@ Vue.component('smart-date-updater', {
                  this.$emit('assignmentDatesUpdated');
                });
     },
+    addSubstitution: function() {
+      this.substitutions.push({
+        from: this.availableDaysForSubstitution(undefined)[0],
+        to: this.allDays[0],
+      });
+    },
+    removeSubstitution: function(substitutionToRemove) {
+      var substitutionsToKeep = [];
+      this.substitutions.forEach(function(substitution) {
+        if (substitution.from != substitutionToRemove.from) {
+          substitutionsToKeep.push(substitution)
+        }
+      });
+      this.substitutions = substitutionsToKeep;
+    }
   },
   mounted: function () {
     localDatePicker({
