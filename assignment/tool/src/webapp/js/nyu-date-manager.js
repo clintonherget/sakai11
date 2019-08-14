@@ -54,6 +54,9 @@ Vue.component('date-manager-form', {
     <p>Manage the dates and published status of your assignments, all from one place.</p>
   </center>
 
+  <pre>{{assignments}}</pre>
+
+
   <div>
     <a href="javascript:void(0);" ref="smartDateUpdaterButton" @click="showSmartDateUpdater()" class="button"><i aria-hidden="true" class="fa fa-magic"></i> Smart Date Updater</a>
     <smart-date-updater-modal ref="smartDateUpdaterModal" :assignments="assignments">
@@ -114,6 +117,7 @@ Vue.component('date-manager-form', {
           </tr>
         </tbody>
       </table>
+      <div v-if="timezone" style="text-align: right">All times shown are in timezone {{timezone.replace('_', ' ')}}</div>
       <center>
         <p><a href="javascript:void(0);" class="button_color" @click="submitChanges">Save Changes</a> <a href="javascript:void(0);"  class="button" @click="cancelChanges">Cancel</a><p>
       </center>
@@ -153,10 +157,11 @@ Vue.component('date-manager-form', {
     loadAssignments: function() {
       var self = this;
       $.getJSON(this.toolurl + "/date-manager/assignments", (json) => {
-        json.map(function (elt) {
+        this.timezone = json.timezone;
+
+        json.assignments.forEach(function (elt) {
           elt.publishedOnServer = elt.published;
           self.assignments.push(elt);
-          return elt;
         });
 
         this.loaded = true;
@@ -171,7 +176,11 @@ Vue.component('date-manager-form', {
               var idx = $(this).data('idx');
               var field = $(this).data('field');
 
-              self.assignments[idx][field] = $(this).val();
+              // Take the value but drop the timezone.  The date picker blindly
+              // assumes that the user's browser zone is what's in use, but we
+              // know better.
+              self.assignments[idx][field] = $(this).val().split('+')[0];
+              self.assignments[idx][field + '_label'] = $(this).siblings('input.datepicker').val();
             });
 
             hidden.attr('id', 'hidden_datepicker_' + idx);
@@ -305,8 +314,8 @@ Vue.component('smart-date-updater', {
     <div class="row">
       <div class="col-sm-6 text-right"><label for="magicopendate">Set earliest Open Date:</label></div>
       <div class="col-sm-6">
-        <input type="text" id="magicopendate" name="magicopendate" v-model="magicopendate"/>
-        <div><small class="text-muted">Currently: {{earliestOpenDate}}</small></div>
+        <input type="text" id="magicopendate" class="datepicker" />
+        <div><small class="text-muted">Currently: {{earliestOpenDate.open_date_label}}</small></div>
       </div>
     </div>
   </div>
@@ -320,14 +329,9 @@ Vue.component('smart-date-updater', {
   props: ['assignments'],
   computed: {
     earliestOpenDate: function() {
-      var allOpenDates = this.assignments.map(function(assignment) {
-        return assignment.open_date;
-      });
-      var sorted = allOpenDates.sort(function(a, b) {
-        return moment(a).valueOf() - moment(b).valueOf();
-      });
-
-      return moment(sorted[0]).startOf('day');
+      return this.assignments.reduce(function (min, elt) {
+        return (min.open_date < elt.open_date) ? min : elt;
+      })
     },
   },
   methods: {
@@ -338,14 +342,34 @@ Vue.component('smart-date-updater', {
     },
     applyChanges: function() {
       var self = this;
-      var diffInDays = moment(this.magicopendate).diff(moment(this.earliestOpenDate), 'days');
-      self.assignments.forEach(function(assignment) {
-        assignment.open_date = self.applyDiffToAssignmentDateString(assignment.open_date, diffInDays)
-        assignment.due_date = self.applyDiffToAssignmentDateString(assignment.due_date, diffInDays)
-        assignment.accept_until = self.applyDiffToAssignmentDateString(assignment.accept_until, diffInDays)
-      });
-      this.$emit('assignmentDatesUpdated');
-    }
+
+      console.log("NEW DATE", );
+
+      $.post(self.toolurl + "/date-manager/smart-update-calculate",
+             {
+               old_earliest: self.earliestOpenDate.open_date,
+               new_earliest: $('#hidden_datepicker_magicopendate').val().split('+')[0],
+               json: JSON.stringify(self.assignments),
+             }).done(
+               function (response) {
+                 // We're going to get back a new `assignments` response that we need to merge
+                 // On the server side: calculate days difference with this new date, parse each json date and increment it
+                 // Remember to parse relative to the user's profile timezone
+
+                 this.$emit('assignmentDatesUpdated');
+               });
+    },
+  },
+  mounted: function () {
+    localDatePicker({
+      input: $('#magicopendate'),
+      useTime: 1,
+      parseFormat: 'YYYY-MM-DD HH:mm',
+      val: this.earliestOpenDate.open_date,
+      ashidden: {
+        iso8601: 'hidden_datepicker_magicopendate',
+      }
+    });
   },
 });
 

@@ -38,7 +38,8 @@ public class AssignmentsFeedHandler implements Handler {
             AssignmentService assignmentService = ComponentManager.get(AssignmentService.class);
             Collection<Assignment> assignments = assignmentService.getAssignmentsForContext(siteId);
 
-            JSONArray result = new JSONArray();
+            JSONObject result = new JSONObject();
+            JSONArray jsonAssignments = new JSONArray();
 
             for (Assignment assignment : assignments) {
                 JSONObject assobj = new JSONObject();
@@ -48,8 +49,11 @@ public class AssignmentsFeedHandler implements Handler {
                 assobj.put("open_date", formatDateToString(assignment.getOpenDate()));
                 assobj.put("accept_until", formatDateToString(assignment.getCloseDate()));
                 assobj.put("published", !assignment.getDraft());
-                result.add(assobj);
+                jsonAssignments.add(assobj);
             }
+
+            result.put("timezone", getUserTimeZone().getID());
+            result.put("assignments", jsonAssignments);
 
             response.getWriter().write(result.toString());
         } catch (Exception e) {
