@@ -6751,6 +6751,11 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 	private List getPilotToolGroup(String groupName, File moreInfoDir, Site site) {
 		List <MyTool> pilotTools = new ArrayList<>();
 
+                if (site == null) {
+                    // New site: nothing to see here.  Only want to show pilot tools under add/edit tools.
+                    return pilotTools;
+                }
+
 		//Get the NYU specific properties//get the first sectionEid attached to this site
 		// Fields added by NYU
 		String school = site.getProperties().getProperty("School");
