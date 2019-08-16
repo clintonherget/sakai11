@@ -159,8 +159,8 @@ Vue.component('date-manager-form', {
     },
     loadAssignments: function() {
       var self = this;
-      $.getJSON(this.toolurl + "/date-manager/assignments", (json) => {
-        this.timezone = json.timezone;
+      $.getJSON(self.toolurl + "/date-manager/assignments", function(json) {
+        self.timezone = json.timezone;
 
         json.assignments.forEach(function (elt) {
           elt.publishedOnServer = elt.published;
@@ -170,7 +170,7 @@ Vue.component('date-manager-form', {
           self.assignments.push(elt);
         });
 
-        this.loaded = true;
+        self.loaded = true;
 
         self.$nextTick(function () {
           $('.datepicker').each(function (idx, elt) {
@@ -271,27 +271,31 @@ Vue.component('page-modal', {
   },
   methods: {
     show: function() {
-      $(this.$el).attr('aria-hidden', 'false').show();
-      $(window).on('resize', (event) => {
-        this.resize();
+      var self = this;
+      $(self.$el).attr('aria-hidden', 'false').show();
+      $(window).on('resize', function(event) {
+        self.resize();
       });
-      this.resize();
-      $(this.$refs.content).focus()
+      self.resize();
+      $(self.$refs.content).focus()
     },
     resize: function() {
       $(this.$el).height($(window).height() - $(this.$el).offset().top + 'px');
     },
     hide: function() {
-      $(this.$el).off('resize', (event) => {
-        this.resize();
+      var self = this;
+      $(self.$el).off('resize', function(event) {
+        self.resize();
       });
-      $(this.$el).attr('aria-hidden', 'true').hide();
-      this.$emit('hide');
+      $(self.$el).attr('aria-hidden', 'true').hide();
+      self.$emit('hide');
     },
-    captureBlur: function() {
-      $(this.$el).off('blur').on('blur', ':focusable', (event) => {
+    captureUserInput: function() {
+      var self = this;
+
+      $(self.$el).off('blur').on('blur', ':focusable', function(event) {
         if (event.relatedTarget === null) {
-          $(this.$refs.content).focus();
+          $(self.$refs.content).focus();
           return true;
         } else if ($(event.relatedTarget).is('.featherlight-content')) {
           // this is cool.
@@ -302,12 +306,19 @@ Vue.component('page-modal', {
           return true;
         }
       });
+      $(self.$el).off('keydown').on('keydown', function(event) {
+        if (event.key == 'Escape') {
+          self.hide();
+          return false;
+        }
+        return true;
+      });
     }
   },
   updated: function() {
   },
   mounted: function() {
-    this.captureBlur();
+    this.captureUserInput();
   },
 });
 
@@ -463,22 +474,42 @@ Vue.component('smart-date-updater-modal', {
       $.featherlight.current().close();
     },
     show: function() {
-      this.visible = true;
-      this.$nextTick(() => {
-        $(document.body).append(this.$el);
+      var self = this;
+
+      self.visible = true;
+      self.$nextTick(function() {
+        $(document.body).append(self.$el);
         $.featherlight("<div>", {
-          afterOpen: () => {
+          afterOpen: function() {
             setTimeout(function() {
               $.featherlight.current().$content.closest('.featherlight-content').attr('tabindex', '0').focus();
             });
 
-            // FIXME BLOCK TAB TO BELOW...
+            $.featherlight.current().$instance.off('keydown').on('keydown', ':focusable', function(event) {
+              if (event.keyCode === 9) {
+                var $first = $.featherlight.current().$instance.find(':focusable:first')[0];
+                var $last = $.featherlight.current().$instance.find(':focusable:last')[0];
+                if (event.shiftKey && $first == document.activeElement) {
+                  event.preventDefault();
+                  $last.focus();
+                  return false;
+                } else if (!event.shiftKey && $last == document.activeElement) {
+                  event.preventDefault();
+                  $first.focus();
+                  return false;
+                } else {
+                  return true;
+                }
+              } else {
+                return true;
+              }
+            });
           },
-          afterClose: () => {
-            this.$parent.$refs.smartDateUpdaterButton.focus();
+          afterClose: function() {
+            self.$parent.$refs.smartDateUpdaterButton.focus();
           }
         });
-        $.featherlight.current().$content.append(this.$el);
+        $.featherlight.current().$content.append(self.$el);
       });
     },
   },
