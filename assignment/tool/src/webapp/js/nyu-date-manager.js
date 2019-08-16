@@ -1,3 +1,18 @@
+var DateManagerUtils = {
+  dropTimeZone: function (iso8601_str) {
+    if (iso8601_str) {
+      var matches = iso8601_str.match(/([0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+)[\-+Z].+/);
+
+      if (matches && matches.length == 2) {
+        return matches[1];
+      }
+    }
+
+    return iso8601_str;
+  }
+};
+
+
 Vue.component('date-manager', {
   template: `
 <span>
@@ -200,7 +215,7 @@ Vue.component('date-manager-form', {
               // Take the value but drop the timezone.  The date picker blindly
               // assumes that the user's browser zone is what's in use, but we
               // know better.
-              self.assignments[idx][field] = $(this).val().split('+')[0];
+              self.assignments[idx][field] = DateManagerUtils.dropTimeZone($(this).val());
               self.assignments[idx][field + '_label'] = $(this).siblings('input.datepicker').val();
               self.assignments[idx][field + '_day_of_week'] = self.dayOfWeek(self.assignments[idx][field]);
             });
@@ -421,7 +436,7 @@ Vue.component('smart-date-updater', {
              {
                browser_zone: jstz.determine().name(),
                old_earliest: self.earliestOpenDate.open_date,
-               new_earliest: $('#hidden_datepicker_magicopendate').val().split('+')[0],
+               new_earliest: DateManagerUtils.dropTimeZone($('#hidden_datepicker_magicopendate').val()),
                substitutions: JSON.stringify(self.substitutions),
                assignments: JSON.stringify(self.assignments),
              }).done(
