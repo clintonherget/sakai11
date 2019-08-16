@@ -56,6 +56,7 @@ Vue.component('date-manager-form', {
 
   <div>
     <a href="javascript:void(0);" ref="smartDateUpdaterButton" @click="showSmartDateUpdater()" class="button"><i aria-hidden="true" class="fa fa-magic"></i> Smart Date Updater</a>
+    <a href="javascript:void(0);" @click="publishAll()" class="pull-right">Publish All</a>
     <smart-date-updater-modal ref="smartDateUpdaterModal" :assignments="assignments">
       <center>
         <h4 class="modal-title">Smart Date Updater</h4>
@@ -139,6 +140,11 @@ Vue.component('date-manager-form', {
   computed: {
   },
   methods: {
+    publishAll: function() {
+      this.assignments.forEach(function(assignment) {
+        assignment.published = true;
+      });
+    },
     dayOfWeek: function(dateString) {
       if (dateString === '') {
         return ''
@@ -162,7 +168,16 @@ Vue.component('date-manager-form', {
       $.getJSON(self.toolurl + "/date-manager/assignments", function(json) {
         self.timezone = json.timezone;
 
-        json.assignments.forEach(function (elt) {
+        var sortedAssignments = json.assignments.sort(function(a, b) {
+          if (a.open_date > b.open_date) {
+            return 1;
+          } else if (a.open_date < b.open_date) {
+            return -1;
+          }
+          return 0;
+        });
+
+        sortedAssignments.forEach(function (elt) {
           elt.publishedOnServer = elt.published;
           elt.open_date_day_of_week = undefined;
           elt.due_date_day_of_week = undefined;
