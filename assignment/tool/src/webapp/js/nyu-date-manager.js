@@ -96,17 +96,20 @@ Vue.component('date-manager-form', {
             <td style="width: 20%" :id="'cell_open_date_' + idx">
                 <input type="hidden" :data-idx="idx" data-field="open_date" v-model="assignment.open_date"/>
                 <input class="form-control datepicker field_type_open_date" type="text"/>
-                <small class="errors"></small>
+                <div><small class="text-muted">{{assignment.open_date_day_of_week}}</small></div>
+                <div><small class="errors"></small></div>
             </td>
             <td style="width: 20%" :id="'cell_due_date_' + idx">
                 <input type="hidden" :data-idx="idx" data-field="due_date" v-model="assignment.due_date"/>
                 <input class="form-control datepicker field_type_due_date" type="text"/>
-                <small class="errors"></small>
+                <div><small class="text-muted">{{assignment.due_date_day_of_week}}</small></div>
+                <div><small class="errors"></small></div>
             </td>
             <td style="width: 20%" :id="'cell_accept_until_' + idx">
                 <input type="hidden" :data-idx="idx" data-field="accept_until" v-model="assignment.accept_until"/>
                 <input class="form-control datepicker field_type_accept_until" type="text"/>
-                <small class="errors"></small>
+                <div><small class="text-muted">{{assignment.accept_until_day_of_week}}</small></div>
+                <div><small class="errors"></small></div>
             </td>
             <td style="width: 5%">
                 <input class="form-control" type="checkbox" v-model="assignment.published" :disabled="assignment.publishedOnServer ? 'disabled' : null"/>
@@ -136,8 +139,20 @@ Vue.component('date-manager-form', {
   computed: {
   },
   methods: {
+    dayOfWeek: function(dateString) {
+      if (dateString === '') {
+        return ''
+      }
+
+      return moment(dateString).format('dddd');
+    },
     doUpdates: function() {
-      this.$refs.updater.applyChanges();
+      var self = this;
+      self.$refs.updater.applyChanges();
+
+      setTimeout(function() {
+        self.hideUpdater();
+      });
     },
     hideUpdater: function() {
       this.$refs.smartDateUpdaterModal.hide();
@@ -149,6 +164,9 @@ Vue.component('date-manager-form', {
 
         json.assignments.forEach(function (elt) {
           elt.publishedOnServer = elt.published;
+          elt.open_date_day_of_week = undefined;
+          elt.due_date_day_of_week = undefined;
+          elt.accept_until_day_of_week = undefined;
           self.assignments.push(elt);
         });
 
@@ -169,6 +187,7 @@ Vue.component('date-manager-form', {
               // know better.
               self.assignments[idx][field] = $(this).val().split('+')[0];
               self.assignments[idx][field + '_label'] = $(this).siblings('input.datepicker').val();
+              self.assignments[idx][field + '_day_of_week'] = self.dayOfWeek(self.assignments[idx][field]);
             });
 
             hidden.attr('id', 'hidden_datepicker_' + idx);
@@ -391,9 +410,9 @@ Vue.component('smart-date-updater', {
 
                    $(['open_date', 'due_date', 'accept_until']).each(function (_idx, property) {
                      if (assignment[property + '_adjusted']) {
-                       console.log(assignment[property + '_adjusted'], new Date(assignment[property + '_adjusted']));
-                       console.log($('#' + assignment.id).find('.datepicker.field_type_' + property)[0]);
                        $('#' + assignment.id).find('.datepicker.field_type_' + property).datetimepicker('setDate', new Date(assignment[property + '_adjusted']));
+                       $('#' + assignment.id).find('.datepicker.field_type_' + property).trigger('select');
+                       $('#' + assignment.id).find('.datepicker.field_type_' + property).datepicker('hide');
                      }
                    })
                  });
@@ -416,8 +435,6 @@ Vue.component('smart-date-updater', {
     }
   },
   mounted: function () {
-    console.log(this.earliestOpenDate.open_date);
-
     localDatePicker({
       input: $('#magicopendate'),
       useTime: 0,
@@ -469,8 +486,6 @@ Vue.component('smart-date-updater-modal', {
 
 
 function NYUDateManager(toolURL) {
-  console.log("tool url is: " + toolURL);
-
   this.toolURL = toolURL.replace(/\?.*/, '');
   this.insertButton();
   this.initVue();
