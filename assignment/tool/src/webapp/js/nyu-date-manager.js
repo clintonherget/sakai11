@@ -255,7 +255,7 @@ Vue.component('date-manager-form', {
 Vue.component('page-modal', {
   template: `
 <div style="display:none; overflow: auto; " aria-hidden="true" id="pageModal">
-  <div style="background: #eeffff; padding: 10px; border-bottom: #aadddd solid 1px;} solid 1px;">A public service announcement</div>
+  <div aria-hidden="true" style="display: none; background: #eeffff; padding: 10px; border-bottom: #aadddd solid 1px;} solid 1px;">A public service announcement</div>
   <div ref="content" class="page-modal" style="padding: 20px; background: #FFF" tabindex="0">
     <a href="javascript:void(0)" class="pull-right" @click="hide">X</a>
     <slot></slot>
