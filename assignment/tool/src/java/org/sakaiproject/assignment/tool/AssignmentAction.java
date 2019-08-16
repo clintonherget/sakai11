@@ -69,6 +69,7 @@ import org.sakaiproject.calendar.api.CalendarService;
 import org.sakaiproject.cheftool.*;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.content.api.*;
 import org.sakaiproject.contentreview.dao.ContentReviewConstants;
 import org.sakaiproject.contentreview.service.ContentReviewService;
@@ -1092,6 +1093,8 @@ public class AssignmentAction extends PagedResourceActionII {
         // allow update site?
         boolean allowUpdateSite = siteService.allowUpdateSite((String) state.getAttribute(STATE_CONTEXT_STRING));
         context.put("allowUpdateSite", Boolean.valueOf(allowUpdateSite));
+
+        context.put("showDateManager", Boolean.valueOf(allowUpdateSite) && "true".equals(HotReloadConfigurationService.getString("nyu.assignment.showdatemanager", "true")));
 
         //group related settings
         context.put("siteAccess", Assignment.Access.SITE);

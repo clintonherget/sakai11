@@ -677,7 +677,9 @@
 </div>
 
 <script type="text/javascript" src="/library/js/lang-datepicker/lang-datepicker.js"></script>
+#if ($!showDateManager)
 <script src="/sakai-assignment-tool/js/vue.min.js"></script>
 <script src="/sakai-assignment-tool/js/nyu-date-manager.js"></script>
 <script>new NYUDateManager("#toolForm("")");</script>
+#end
 <!-- end: chef_assignments_list_assignments.vm  -->
