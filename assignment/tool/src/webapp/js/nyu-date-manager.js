@@ -272,7 +272,7 @@ Vue.component('page-modal', {
 <div style="display:none; overflow: auto; " aria-hidden="true" id="pageModal">
   <div aria-hidden="true" style="display: none; background: #eeffff; padding: 10px; border-bottom: #aadddd solid 1px;} solid 1px;">A public service announcement</div>
   <div ref="content" class="page-modal" style="padding: 20px; background: #FFF" tabindex="0">
-    <a href="javascript:void(0)" class="pull-right" @click="hide">X</a>
+    <a href="javascript:void(0)" class="pull-right" @click="hide" aria-label="Hide Popup"><i aria-hidden="true" class="fa fa-times fa-2x"></i></a>
     <slot></slot>
   </div>
 </div>
