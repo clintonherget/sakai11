@@ -51,6 +51,10 @@
   .icon-sakai--nyu-panopto-courant             { @extend .fa-film; }
   .icon-sakai--nyu-ls-global-image-gallery     { @extend .fa-globe; }
 
+  .icon-sakai--nyu-connect {
+    @extend .fa-life-ring;
+  }
+
   .icon-sakai--sakai-blogwow                   { @extend .fa-feed; }
   .icon-sakai--sakai-bbb                       {
     font-family: 'nyu-classes-icons' !important;

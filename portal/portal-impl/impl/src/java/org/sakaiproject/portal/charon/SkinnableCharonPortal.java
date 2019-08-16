@@ -781,12 +781,16 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		// Must have site.upd to see the Edit button
 		if (renderResult.getJSR168EditUrl() != null && site != null)
 		{
-			if (securityService.unlock(SiteService.SECURE_UPDATE_SITE, site
-					.getReference()))
-			{
-				String editUrl = Web.serverUrl(req) + renderResult.getJSR168EditUrl();
-				toolMap.put("toolJSR168Edit", editUrl);
-				toolMap.put("toolJSR168EditEncode", URLUtils.encodeUrl(editUrl));
+			if (placement != null && placement.getToolId() != null && "true".equals(HotReloadConfigurationService.getString(placement.getToolId() + ".suppress-edit", "false"))) {
+				// No edit!
+			} else {
+				if (securityService.unlock(SiteService.SECURE_UPDATE_SITE, site
+							   .getReference()))
+				{
+					String editUrl = Web.serverUrl(req) + renderResult.getJSR168EditUrl();
+					toolMap.put("toolJSR168Edit", editUrl);
+					toolMap.put("toolJSR168EditEncode", URLUtils.encodeUrl(editUrl));
+				}
 			}
 		}
 

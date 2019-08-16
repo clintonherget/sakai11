@@ -200,4 +200,12 @@
 
     </tool>
 
+    <tool id="nyu.connect"
+	  title="NYU Connect"
+	  description="NYU Connect">
+      <configuration name="sakai.properties.url.key" value="nyu.connect.url" />
+      <category name="myworkspace" />
+    </tool>
+
+
 </registration>
