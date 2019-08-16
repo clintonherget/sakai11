@@ -137,7 +137,17 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <!-- Date Manager related -->
+        <dependency>
+          <groupId>com.googlecode.json-simple</groupId>
+          <artifactId>json-simple</artifactId>
+          <version>1.1.1</version>
+        </dependency>
+        <dependency>
+          <groupId>com.github.jknack</groupId>
+          <artifactId>handlebars</artifactId>
+          <version>${handlebars4.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
