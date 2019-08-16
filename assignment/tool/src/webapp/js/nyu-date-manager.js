@@ -54,16 +54,13 @@ Vue.component('date-manager-form', {
     <p>Manage the dates and published status of your assignments, all from one place.</p>
   </center>
 
-  <pre>{{assignments}}</pre>
-
-
   <div>
     <a href="javascript:void(0);" ref="smartDateUpdaterButton" @click="showSmartDateUpdater()" class="button"><i aria-hidden="true" class="fa fa-magic"></i> Smart Date Updater</a>
     <smart-date-updater-modal ref="smartDateUpdaterModal" :assignments="assignments">
       <center>
         <h4 class="modal-title">Smart Date Updater</h4>
       </center>
-      <smart-date-updater ref="updater" :assignments="assignments" v-on:assignmentDatesUpdated="handleDateChanges()"></smart-date-updater>
+      <smart-date-updater ref="updater" :toolurl="toolurl" :assignments="assignments"></smart-date-updater>
       <center>
         <a href="javascript:void(0);" class="button_color" @click="doUpdates()">Apply Date Updates</a>
         <a href="javascript:void(0);" class="button" @click="hideUpdater()">Cancel</a>
@@ -91,24 +88,24 @@ Vue.component('date-manager-form', {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(assignment, idx) in assignments">
+          <tr v-for="(assignment, idx) in assignments" :id="assignment.id">
             <td style="width: 35%" :id="'cell_assignment_' + idx">
                 {{assignment.title}}
                 <div><small class="errors"></small></div>
             </td>
             <td style="width: 20%" :id="'cell_open_date_' + idx">
                 <input type="hidden" :data-idx="idx" data-field="open_date" v-model="assignment.open_date"/>
-                <input class="form-control datepicker" type="text"/>
+                <input class="form-control datepicker field_type_open_date" type="text"/>
                 <small class="errors"></small>
             </td>
             <td style="width: 20%" :id="'cell_due_date_' + idx">
                 <input type="hidden" :data-idx="idx" data-field="due_date" v-model="assignment.due_date"/>
-                <input class="form-control datepicker" type="text"/>
+                <input class="form-control datepicker field_type_due_date" type="text"/>
                 <small class="errors"></small>
             </td>
             <td style="width: 20%" :id="'cell_accept_until_' + idx">
                 <input type="hidden" :data-idx="idx" data-field="accept_until" v-model="assignment.accept_until"/>
-                <input class="form-control datepicker" type="text"/>
+                <input class="form-control datepicker field_type_accept_until" type="text"/>
                 <small class="errors"></small>
             </td>
             <td style="width: 5%">
@@ -139,15 +136,6 @@ Vue.component('date-manager-form', {
   computed: {
   },
   methods: {
-    handleDateChanges: function() {
-      var self = this;
-      self.$nextTick(function() {
-        $('.datepicker').each(function (idx, elt) {
-          var hidden = $(elt).closest('td').find('input:hidden');
-          $(elt).datetimepicker('setDate', new Date(moment(hidden.val())));
-        });
-      });
-    },
     doUpdates: function() {
       this.$refs.updater.applyChanges();
     },
@@ -348,7 +336,7 @@ Vue.component('smart-date-updater', {
       allDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     };
   },
-  props: ['assignments'],
+  props: ['assignments', 'toolurl'],
   computed: {
     earliestOpenDate: function() {
       return this.assignments.reduce(function (min, elt) {
@@ -384,20 +372,31 @@ Vue.component('smart-date-updater', {
     applyChanges: function() {
       var self = this;
 
-      console.log("NEW DATE", );
-
-      $.post(self.toolurl + "/date-manager/smart-update-calculate",
+      $.post(self.toolurl + "/date-manager/smart-updater-calculate",
              {
+               browser_zone: jstz.determine().name(),
                old_earliest: self.earliestOpenDate.open_date,
                new_earliest: $('#hidden_datepicker_magicopendate').val().split('+')[0],
-               json: JSON.stringify(self.assignments),
+               substitutions: JSON.stringify(self.substitutions),
+               assignments: JSON.stringify(self.assignments),
              }).done(
                function (response) {
                  // We're going to get back a new `assignments` response that we need to merge
                  // On the server side: calculate days difference with this new date, parse each json date and increment it
                  // Remember to parse relative to the user's profile timezone
 
-                 this.$emit('assignmentDatesUpdated');
+                 adjustments = {}
+                 $(response).each(function (_idx, assignment) {
+                   adjustments[assignment.id] = {};
+
+                   $(['open_date', 'due_date', 'accept_until']).each(function (_idx, property) {
+                     if (assignment[property + '_adjusted']) {
+                       console.log(assignment[property + '_adjusted'], new Date(assignment[property + '_adjusted']));
+                       console.log($('#' + assignment.id).find('.datepicker.field_type_' + property)[0]);
+                       $('#' + assignment.id).find('.datepicker.field_type_' + property).datetimepicker('setDate', new Date(assignment[property + '_adjusted']));
+                     }
+                   })
+                 });
                });
     },
     addSubstitution: function() {
@@ -417,11 +416,13 @@ Vue.component('smart-date-updater', {
     }
   },
   mounted: function () {
+    console.log(this.earliestOpenDate.open_date);
+
     localDatePicker({
       input: $('#magicopendate'),
-      useTime: 1,
-      parseFormat: 'YYYY-MM-DD HH:mm',
-      val: this.earliestOpenDate.open_date,
+      useTime: 0,
+      parseFormat: 'YYYY-MM-DD',
+      val: this.earliestOpenDate.open_date.split('T')[0],
       ashidden: {
         iso8601: 'hidden_datepicker_magicopendate',
       }
@@ -468,6 +469,8 @@ Vue.component('smart-date-updater-modal', {
 
 
 function NYUDateManager(toolURL) {
+  console.log("tool url is: " + toolURL);
+
   this.toolURL = toolURL.replace(/\?.*/, '');
   this.insertButton();
   this.initVue();

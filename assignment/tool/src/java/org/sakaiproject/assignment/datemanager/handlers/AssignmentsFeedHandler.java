@@ -62,7 +62,7 @@ public class AssignmentsFeedHandler implements Handler {
     }
 
     private String formatDateToString(Instant dateTime) {
-        return DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm")
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
                  .withZone(getUserTimeZone().toZoneId())
                  .format(dateTime);
     }

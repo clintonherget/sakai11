@@ -97,9 +97,11 @@ public class AssignmentsUpdateHandler implements Handler {
                     continue;
                 }
 
-                Instant openDate = parseStringToInstant((String)jsonAssignment.get("open_date"));
-                Instant dueDate = parseStringToInstant((String)jsonAssignment.get("due_date"));
-                Instant acceptUntil = parseStringToInstant((String)jsonAssignment.get("accept_until"));
+                TimeZone userTimeZone = getUserTimeZone();
+
+                Instant openDate = parseStringToInstant((String)jsonAssignment.get("open_date"), userTimeZone);
+                Instant dueDate = parseStringToInstant((String)jsonAssignment.get("due_date"), userTimeZone);
+                Instant acceptUntil = parseStringToInstant((String)jsonAssignment.get("accept_until"), userTimeZone);
 
                 boolean errored = false;
 
@@ -183,9 +185,11 @@ public class AssignmentsUpdateHandler implements Handler {
         }
     }
 
-    private Instant parseStringToInstant(String dateTime) {
+    private Instant parseStringToInstant(String timestamp, TimeZone userTimeZone) {
         try {
-            return DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(dateTime, Instant::from);
+            return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                .withZone(userTimeZone.toZoneId())
+                .parse(timestamp, Instant::from);
         } catch (DateTimeParseException e) {
             return null;
         }

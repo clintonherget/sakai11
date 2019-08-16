@@ -6,6 +6,7 @@ import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.Template;
 import org.sakaiproject.assignment.datemanager.handlers.AssignmentsFeedHandler;
 import org.sakaiproject.assignment.datemanager.handlers.AssignmentsUpdateHandler;
+import org.sakaiproject.assignment.datemanager.handlers.AssignmentsSmartUpdaterHandler;
 import org.sakaiproject.assignment.datemanager.handlers.Handler;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
@@ -97,6 +98,8 @@ public class DateManagerFilter implements Filter {
             return new AssignmentsFeedHandler();
         } else if (path.startsWith("/update")) {
             return new AssignmentsUpdateHandler();
+        } else if (path.startsWith("/smart-updater-calculate")) {
+            return new AssignmentsSmartUpdaterHandler();
         }
 
         throw new RuntimeException("Path not supported by assignment-date-manager handlers: " + path);
