@@ -61,7 +61,7 @@ Vue.component('topic-settings-form', {
         </div>
         <template v-if="settings.graded">
           <div class="row">
-            <div class="col-sm-12">TODO</div>
+            <div class="col-sm-12"><p style="font-style: italic;">Coming soon.</p></div>
           </div>
         </template>
       </div>
@@ -128,7 +128,7 @@ Vue.component('create-topic-workflow', {
             <div class="conversations-topic-banner react"></div>
             <div class="conversations-topic-content">
                 <p><strong>React</strong></p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <p>Allows students to respond to an initial prompt.</p>
                 <p><button class="button" v-on:click="selectTopicType('react')">Select Topic Type</button></p>
             </div>
           </div>
@@ -138,7 +138,6 @@ Vue.component('create-topic-workflow', {
             <div class="conversations-topic-banner brainstorm"></div>
             <div class="conversations-topic-content">
                 <p><strong>Brainstorm</strong></p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
                 <p style="font-style: italic;">Coming soon.</p>
             </div>
           </div>
@@ -148,7 +147,6 @@ Vue.component('create-topic-workflow', {
             <div class="conversations-topic-banner discuss"></div>
             <div class="conversations-topic-content">
                 <p><strong>Discuss</strong></p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
                 <p style="font-style: italic;">Coming soon.</p>
             </div>
           </div>
@@ -399,10 +397,9 @@ Vue.component('update-topic-settings-modal', {
                                    :available_groups="available_groups">
               </topic-settings-form>
             </template>
-          </div>
-          <div class="modal-footer">
             <div class="row">
               <div class="col-sm-12">
+                <br>
                 <p class="text-center">
                   <button class="button" @click="saveSettings()">Save Settings</button>
                 </p>
@@ -423,6 +420,7 @@ Vue.component('update-topic-settings-modal', {
   props: ['baseurl', 'topic_uuid'],
   methods: {
     show: function() {
+      $(document.body).append(this.$el);
       this.fetchTopic();
       $(this.$refs.dialog).modal();
       this.resize();
@@ -485,7 +483,7 @@ Vue.component('update-topic-settings-modal', {
 Vue.component('edit-topic-settings-wrapper', {
   template: `
   <span>
-    <a href="javascript:void(0)" @click="showModal()" title="Edit Topic" class="button"><i class="fa fa-pencil"></i></a>
+    <a href="javascript:void(0)" @click.stop.prevent="showModal()" title="Edit Topic" class="button"><i class="fa fa-pencil"></i></a>
     <update-topic-settings-modal ref="updateTopicSettingsModal" :baseurl="baseurl" :topic_uuid="topic.uuid"></update-topic-settings-modal>
   </div>
 `,

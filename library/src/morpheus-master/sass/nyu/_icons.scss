@@ -9,6 +9,7 @@
   }
 
   .icon-sakai--nyu-ares,
+  .icon-sakai--nyu-library-resources,
   .icon-sakai--nyu-libraries {
     font-family: 'nyu-classes-icons' !important;
     &:before {
@@ -42,12 +43,17 @@
   .icon-sakai--nyu-mediasite-engineering       { @extend .fa-film; }
   .icon-sakai--nyu-mediasite-stern             { @extend .fa-film; }
   .icon-sakai--nyu-mediasite-libraries         { @extend .fa-film; }
+  .icon-sakai--nyu-mediasite-stern-lti         { @extend .fa-film; }
   .icon-sakai--nyu-panopto-law                 { @extend .fa-film; }
   .icon-sakai--nyu-panopto-poly                { @extend .fa-film; }
   .icon-sakai--nyu-panopto-engineering         { @extend .fa-film; }
   .icon-sakai--nyu-panopto-campusmedia         { @extend .fa-film; }
   .icon-sakai--nyu-panopto-courant             { @extend .fa-film; }
   .icon-sakai--nyu-ls-global-image-gallery     { @extend .fa-globe; }
+
+  .icon-sakai--nyu-connect {
+    @extend .fa-life-ring;
+  }
 
   .icon-sakai--sakai-blogwow                   { @extend .fa-feed; }
   .icon-sakai--sakai-bbb                       {

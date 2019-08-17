@@ -3,8 +3,8 @@
 <registration>
 	<tool
 	    id="sakai.iframe.qualtrics"
-	    title="Survey"
-	    description="Qualtrics Survey">
+	    title="Course Feedback"
+	    description="Course Feedback">
 		<configuration name="popup" value="false" />
 		<category name="course" />
 		<category name="project" />
@@ -199,5 +199,13 @@
       <configuration name="functions.require" /> 
 
     </tool>
+
+    <tool id="nyu.connect"
+	  title="NYU Connect"
+	  description="NYU Connect">
+      <configuration name="sakai.properties.url.key" value="nyu.connect.url" />
+      <category name="myworkspace" />
+    </tool>
+
 
 </registration>

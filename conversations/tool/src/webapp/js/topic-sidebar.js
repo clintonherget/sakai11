@@ -86,7 +86,7 @@ Vue.component('topic-sidebar', {
             </div>
         </template>
         <template v-else>
-            FIXME Show {{this.panel}}
+            <p style="font-style: italic;">Coming soon.</p>
         </template>
     </div>
 </div>
@@ -155,7 +155,7 @@ Vue.component('topic-sidebar', {
           return this.topic.settings.allowGrading;
       },
       averageGrade: function() {
-          return 'TODO';
+          return 'Coming soon.';
       },
       initialPoster: function() {
         var result = undefined;

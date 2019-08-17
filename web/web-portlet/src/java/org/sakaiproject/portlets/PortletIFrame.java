@@ -46,6 +46,7 @@ import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.cover.EntityManager;
 import org.sakaiproject.event.api.EventTrackingService;
@@ -359,6 +360,10 @@ public class PortletIFrame extends GenericPortlet {
             // Compute the URL
             String url = sourceUrl(special, source, placement.getContext(), macroExpansion, passPid, placement.getId(), sakaiPropertiesUrlKey);
 
+	    if ("true".equals(HotReloadConfigurationService.getString(placement.getToolId() + ".force-popup", "false"))) {
+		popup = true;
+	    }
+
             //log.info("special="+special+" source="+source+" pgc="+placement.getContext()+" macroExpansion="+macroExpansion+" passPid="+passPid+" PGID="+placement.getId()+" sakaiPropertiesUrlKey="+sakaiPropertiesUrlKey+" url="+url);
 
 			if ( url != null && url.trim().length() > 0 ) {
@@ -370,6 +375,7 @@ public class PortletIFrame extends GenericPortlet {
 
 				// Check if the site sets X-Frame options
 				popup = popup || popupXFrame(request, placement, url);
+
 
                 Session session = SessionManager.getCurrentSession();
                 String csrfToken = (String) session.getAttribute(UsageSessionService.SAKAI_CSRF_SESSION_ATTRIBUTE);
