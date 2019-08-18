@@ -1077,13 +1077,32 @@ public class ProfileImageLogicImpl implements ProfileImageLogic {
 		digest.update(userEid.getBytes("UTF-8"));
 		byte[] hash = digest.digest();
 
-		return Paths.get(basepath,
-				 String.format("%02x", hash[0] & 0xff),
-				 String.format("%02x", hash[1] & 0xff),
-				 String.format("%02x", hash[2] & 0xff),
-				 String.format("%02x", hash[3] & 0xff),
-				 String.format("%02x", hash[4] & 0xff),
-				 userEid + ".png").toString();
+		String imagePath = Paths.get(basepath,
+					     String.format("%02x", hash[0] & 0xff),
+					     String.format("%02x", hash[1] & 0xff),
+					     userEid + ".png").toString();
+
+		// This "legacy" business is temporary while we get harvested
+		// photos storing under the new format.  Once the harvester has
+		// been updated to put photos into the new locations, we can
+		// remove this code.
+		String legacyImagePath = Paths.get(basepath,
+					     String.format("%02x", hash[0] & 0xff),
+					     String.format("%02x", hash[1] & 0xff),
+					     String.format("%02x", hash[2] & 0xff),
+					     String.format("%02x", hash[3] & 0xff),
+					     String.format("%02x", hash[4] & 0xff),
+					     userEid + ".png").toString();
+
+		if (new File(imagePath).exists()) {
+		    return imagePath;
+		} else if (new File(legacyImagePath).exists()) {
+		    log.warn(String.format("Using legacy image path for user '%s': %s", userEid, legacyImagePath));
+		    return legacyImagePath;
+		} else {
+		    return imagePath;
+		}
+
 	    } catch (NoSuchAlgorithmException|UnsupportedEncodingException e) {
 		return "/will-never-exist";
 	    }

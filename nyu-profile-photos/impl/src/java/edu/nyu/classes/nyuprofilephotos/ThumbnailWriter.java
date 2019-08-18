@@ -42,9 +42,6 @@ class ThumbnailWriter {
         Path outpath = Paths.get(this.outputDir,
                                  String.format("%02x", hash[0] & 0xff),
                                  String.format("%02x", hash[1] & 0xff),
-                                 String.format("%02x", hash[2] & 0xff),
-                                 String.format("%02x", hash[3] & 0xff),
-                                 String.format("%02x", hash[4] & 0xff),
                                  netid + ".png");
 
         String pathStr = outpath.toString();
