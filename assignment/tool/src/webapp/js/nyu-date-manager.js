@@ -553,10 +553,11 @@ function NYUDateManager(toolURL) {
 };
 
 NYUDateManager.prototype.insertButton = function() {
-  var $container = $('<div>').addClass('vue-enabled').addClass('pull-right');
+  var $container = $('<div>').addClass('vue-enabled').addClass('pull-right').addClass('nyu-date-manager');
   var $component = $('<date-manager>').attr('toolurl', this.toolURL);
   $container.append($component);
-  $('#content .page-header').before($container);
+  $('#content .page-header h1').css('display', 'inline-block');
+  $('#content .page-header').append($container);
 };
 
 NYUDateManager.prototype.initVue = function() {
