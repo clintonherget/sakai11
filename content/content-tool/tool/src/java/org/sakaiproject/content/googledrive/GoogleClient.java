@@ -42,6 +42,7 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,8 +63,6 @@ public class GoogleClient {
     private static final Logger LOG = LoggerFactory.getLogger(GoogleClient.class);
     private static final String APPLICATION = "Sakai Drive";
 
-    public static final String GOOGLE_DOMAIN = "nyu.edu";
-
     private int requestsPerBatch = 100;
 
     // FIXME: What should this number be?
@@ -82,6 +81,10 @@ public class GoogleClient {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String getGoogleDomain() {
+        return HotReloadConfigurationService.getString("resources-google-domain", "nyu.edu");
     }
 
     public GoogleAuthorizationCodeFlow getAuthFlow() throws Exception {
@@ -309,7 +312,7 @@ public class GoogleClient {
     }
 
     public static String getCurrentGoogleUser() {
-        return org.sakaiproject.user.cover.UserDirectoryService.getCurrentUser().getEid() + "@" + GOOGLE_DOMAIN;
+        return org.sakaiproject.user.cover.UserDirectoryService.getCurrentUser().getEid() + "@" + getGoogleDomain();
     }
 
     public static String getRedirectURL() {
