@@ -38,6 +38,7 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.DataStore;
+import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -89,7 +90,7 @@ public class GoogleClient {
 
     public GoogleAuthorizationCodeFlow getAuthFlow() throws Exception {
         File dataStoreLocation = new File(ServerConfigurationService.getSakaiHomePath() + "/google-data-store");
-        FileDataStoreFactory store = new FileDataStoreFactory(dataStoreLocation);
+        DataStoreFactory store = new DBDataStoreFactory();
 
         // set up authorization code flow
         return new GoogleAuthorizationCodeFlow.Builder(
