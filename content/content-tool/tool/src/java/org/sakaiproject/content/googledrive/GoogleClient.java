@@ -62,7 +62,6 @@ import java.util.Map;
 // FIXME: split this class up.  Maybe want a .google package?
 public class GoogleClient {
     private static final Logger LOG = LoggerFactory.getLogger(GoogleClient.class);
-    private static final String APPLICATION = "Sakai Drive";
 
     private int requestsPerBatch = 100;
 
@@ -86,6 +85,10 @@ public class GoogleClient {
 
     public static String getGoogleDomain() {
         return HotReloadConfigurationService.getString("resources-google-domain", "nyu.edu");
+    }
+
+    public static String getApplicationName() {
+        return HotReloadConfigurationService.getString("resources-application-name", "NYU Classes");
     }
 
     public GoogleAuthorizationCodeFlow getAuthFlow() throws Exception {
@@ -168,7 +171,7 @@ public class GoogleClient {
 
     public Drive getDrive(String googleUser) throws Exception {
         return new Drive.Builder(httpTransport, jsonFactory, getCredential(googleUser))
-                .setApplicationName(APPLICATION)
+                .setApplicationName(getApplicationName())
                 .build();
     }
 
