@@ -47,13 +47,16 @@ import org.sakaiproject.service.gradebook.shared.GradeDefinition;
 import org.sakaiproject.service.gradebook.shared.GradebookNotFoundException;
 import org.sakaiproject.service.gradebook.shared.GradebookService;
 import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.site.api.SiteService.SelectionType;
 import org.sakaiproject.site.api.SiteService.SortType;
+import org.sakaiproject.site.api.ToolConfiguration;
 import org.sakaiproject.starfish.model.StarfishAssessment;
 import org.sakaiproject.starfish.model.StarfishScore;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionManager;
+import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.tool.gradebook.Gradebook;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
@@ -80,6 +83,7 @@ public class StarfishExport implements InterruptableJob {
 	private final static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 	private final static SimpleDateFormat tsFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private final static String nowTimestamp = tsFormatter.format(new Date());
+	private final static String[] GRADEBOOK_TOOLS = {"sakai.gradebook.tool", "sakai.gradebookng", "sakai.gradebook.gwt.rpc"};
 
 	@Setter
 	private SessionManager sessionManager;
@@ -103,6 +107,8 @@ public class StarfishExport implements InterruptableJob {
 	private CourseManagementService courseManagementService;
 	@Setter
 	private SecurityService securityService;
+	@Setter
+	private ToolManager toolManager;
 
 	// This job can be interrupted
 	private boolean run = true;
@@ -140,7 +146,9 @@ public class StarfishExport implements InterruptableJob {
 		scoreMappingStrategy.setType(StarfishScore.class);
 		scoreMappingStrategy.setColumnMapping(StarfishScore.HEADER);
 		
-		boolean useProvider = serverConfigurationService.getBoolean("starfish.use.provider", false);
+		final boolean useProvider = serverConfigurationService.getBoolean("starfish.use.provider", false);
+		final boolean excludeUnpublishedSites = serverConfigurationService.getBoolean("starfish.exclude.unpublished", false);
+		final boolean hideUnreleasedFromStudents = serverConfigurationService.getBoolean("starfish.hide.unreleased", false);
 
 		try (
 				BufferedWriter assessmentWriter = Files.newBufferedWriter(assessmentFile, StandardCharsets.UTF_8);
@@ -162,7 +170,7 @@ public class StarfishExport implements InterruptableJob {
 			for (String termEid : termEids) {
 				if (!run) break;
 	
-				List<Site> sites = getSites(termEid);
+				List<Site> sites = getSites(termEid, excludeUnpublishedSites);
 				log.info("Sites to process for term " + termEid + ": " + sites.size());
 	
 				for (Site s : sites) {
@@ -250,6 +258,7 @@ public class StarfishExport implements InterruptableJob {
 	
 					try {
 						gradebook = (Gradebook)gradebookService.getGradebook(siteId);
+						final boolean itemsReleased = hideUnreleasedFromStudents ? gradebook.isAssignmentsDisplayed() : true;
 	
 						//get list of assignments in gradebook, skip if none
 						assignments = gradebookService.getAssignments(gradebook.getUid());
@@ -266,8 +275,8 @@ public class StarfishExport implements InterruptableJob {
 							String description = a.getExternalAppName() != null ? "From " + a.getExternalAppName() : "";
 							String dueDate = a.getDueDate() != null ? dateFormatter.format(a.getDueDate()) : "";
 							int isCounted = a.isCounted() ? 1 : 0;
+							int isVisible = (itemsReleased && a.isReleased()) ? 1 : 0;
 							String isExempt = a.isCounted() ? "0" : "1";
-							int isVisible = a.isReleased() ? 1 : 0;
 							
 							if (!providerUserMap.isEmpty()) {
 								// Write out one CSV row per section (provider)
@@ -381,168 +390,10 @@ public class StarfishExport implements InterruptableJob {
 			log.error("Missing required field for CSV", e);
 		}
 
-		writeOutputsToSite(assessmentFile, scoreFile);
-
 		log.info(JOB_NAME + " ended.");
 	}
-
-
-	private void makeFolder(String folderName, String path) throws Exception {
-		// Ensure the folder exists in resources
-		try {
-			org.sakaiproject.content.api.ContentCollectionEdit edit =
-				org.sakaiproject.content.cover.ContentHostingService.addCollection(path);
-			edit.getPropertiesEdit().addProperty(org.sakaiproject.entity.api.ResourceProperties.PROP_DISPLAY_NAME, folderName);
-			org.sakaiproject.content.cover.ContentHostingService.commitCollection(edit);
-		} catch (org.sakaiproject.exception.IdUsedException e) {}
-
-	}
-
-	public static java.io.InputStream gzipInputStream(java.io.InputStream input) throws Exception {
-		byte[] buf = new byte[4096];
-
-		java.io.File tempPath = java.io.File.createTempFile("patrick", "starfish");
-		java.util.zip.GZIPOutputStream tempfile = new java.util.zip.GZIPOutputStream(new java.io.FileOutputStream(tempPath));
-
-		int len;
-		while ((len = input.read(buf)) >= 0) {
-			tempfile.write(buf, 0, len);
-		}
-
-		tempfile.close();
-
-		java.io.InputStream result = new java.io.FileInputStream(tempPath);
-
-		tempPath.delete();
-
-		return result;
-	}
-
-	private void writeOutputsToSite(java.nio.file.Path assessmentFile, java.nio.file.Path scoreFile) {
-		try {
-			String exportSiteId = org.sakaiproject.component.cover.HotReloadConfigurationService.getString("nyu.starfish-export-site", "");
-
-			if (exportSiteId == null || exportSiteId.isEmpty()) {
-				log.info("Not doing export because nyu.starfish-export-site is not set.");
-				return;
-			}
-
-			String folderName = "starfish_exports";
-			String exportDir = org.sakaiproject.content.cover.ContentHostingService.getSiteCollection(exportSiteId) + folderName + "/";
-
-			makeFolder(folderName, exportDir);
-
-			String archiveDir = exportDir + "archives" + "/";
-			makeFolder("archives", archiveDir);
-
-			// Expire old archives
-			for (Object obj : org.sakaiproject.content.cover.ContentHostingService.getAllEntities(exportDir + "archives/")) {
-				if (obj instanceof org.sakaiproject.content.api.ContentCollection) {
-					org.sakaiproject.content.api.ContentCollection collection = (org.sakaiproject.content.api.ContentCollection) obj;
-
-					if (collection.getId().matches("^.*/archives/2[0-9]{3}-[0-9][0-9]/$")) {
-						String dateString = collection.getId().replaceAll("^.*/archives/(.*?)/", "$1");
-
-						Date archiveDate = new java.text.SimpleDateFormat("yyyy-MM").parse(dateString);
-
-						if ((new Date().getTime() - archiveDate.getTime()) > (365L * 24 * 60 * 60 * 1000)) {
-							// Expire this archive folder
-							org.sakaiproject.content.cover.ContentHostingService.removeCollection(collection.getId());
-						}
-					}
-				}
-			}
-
-
-			String now = new java.text.SimpleDateFormat("YYYY-MM-dd").format(new Date());
-
-			String thisMonth = new java.text.SimpleDateFormat("YYYY-MM").format(new Date());
-			String currentArchiveDir = archiveDir + thisMonth + "/";
-			makeFolder(thisMonth, currentArchiveDir);
-
-
-			// Remove existing files
-			List<String> deleteMe = new ArrayList<>();
-			for (Object resourceObject : org.sakaiproject.content.cover.ContentHostingService.getAllResources(exportDir)) {
-				org.sakaiproject.content.api.ContentResource resource = (org.sakaiproject.content.api.ContentResource) resourceObject;
-
-				if (resource.getId().endsWith(".csv")) {
-					deleteMe.add(resource.getId());
-				}
-			}
-
-			for (String resourceId : deleteMe) {
-				org.sakaiproject.content.cover.ContentHostingService.removeResource(resourceId);
-				org.sakaiproject.content.cover.ContentHostingService.removeDeletedResource(resourceId);
-			};
-
-			// Write assessments (archive copy)
-			try (java.io.InputStream assessmentsInputStream = gzipInputStream(new java.io.FileInputStream(assessmentFile.toFile()))) {
-				org.sakaiproject.content.api.ContentResourceEdit assessmentsResource =
-					org.sakaiproject.content.cover.ContentHostingService.addResource(currentArchiveDir,
-													 String.format("%s_assessments", now),
-													 "csv.gz",
-													 10);
-
-				assessmentsResource.setContentType("application/gzip");
-				assessmentsResource.setContent(assessmentsInputStream);
-
-				org.sakaiproject.content.cover.ContentHostingService.commitResource(assessmentsResource,
-												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
-			}
-
-			// Write scores (archive copy)
-			try (java.io.InputStream scoresInputStream = gzipInputStream(new java.io.FileInputStream(scoreFile.toFile()))) {
-				org.sakaiproject.content.api.ContentResourceEdit scoresResource =
-					org.sakaiproject.content.cover.ContentHostingService.addResource(currentArchiveDir,
-													 String.format("%s_scores", now),
-													 "csv.gz",
-													 10);
-
-				scoresResource.setContentType("application/gzip");
-				scoresResource.setContent(scoresInputStream);
-
-				org.sakaiproject.content.cover.ContentHostingService.commitResource(scoresResource,
-												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
-			}
-
-
-			// Write assessments
-			try (java.io.InputStream assessmentsInputStream = new java.io.FileInputStream(assessmentFile.toFile())) {
-				org.sakaiproject.content.api.ContentResourceEdit assessmentsResource =
-					org.sakaiproject.content.cover.ContentHostingService.addResource(exportDir,
-													 "assessments",
-													 "csv",
-													 10);
-
-				assessmentsResource.setContentType("text/csv");
-				assessmentsResource.setContent(assessmentsInputStream);
-
-				org.sakaiproject.content.cover.ContentHostingService.commitResource(assessmentsResource,
-												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
-			}
-
-			// Write scores
-			try (java.io.InputStream scoresInputStream = new java.io.FileInputStream(scoreFile.toFile())) {
-				org.sakaiproject.content.api.ContentResourceEdit scoresResource =
-					org.sakaiproject.content.cover.ContentHostingService.addResource(exportDir,
-													 "scores",
-													 "csv",
-													 10);
-
-				scoresResource.setContentType("text/csv");
-				scoresResource.setContent(scoresInputStream);
-
-				org.sakaiproject.content.cover.ContentHostingService.commitResource(scoresResource,
-												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
-			}
-
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-
+	
+	
 	/**
 	 * Start a session for the admin user and the given jobName
 	 */
@@ -574,9 +425,10 @@ public class StarfishExport implements InterruptableJob {
 	
 	/**
 	 * Get all sites that match the criteria, filter out special sites and my workspace sites
+	 * @param excludeUnpublishedSites 
 	 * @return
 	 */
-	private List<Site> getSites(String termEid) {
+	private List<Site> getSites(String termEid, boolean excludeUnpublishedSites) {
 
 		//setup property criteria
 		//this could be extended to dynamically fill the map with properties and values from sakai.props
@@ -596,6 +448,22 @@ public class StarfishExport implements InterruptableJob {
 			//filter special sites
 			if(siteService.isSpecialSite(s.getId())){
 				continue;
+			}
+			
+			if (excludeUnpublishedSites && !s.isPublished()) {
+				continue;
+			}
+			else if (excludeUnpublishedSites) {
+				boolean gradebooksAllHidden = true;
+				for (ToolConfiguration gradebookToolConfig : s.getTools(GRADEBOOK_TOOLS)) {
+					if (toolManager.isVisible(s, gradebookToolConfig)) {
+						gradebooksAllHidden = false;
+						break;
+					}
+				}
+				if (gradebooksAllHidden) {
+					continue;
+				}
 			}
 			
 			log.debug("Site: " + s.getId());
