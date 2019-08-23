@@ -114,7 +114,14 @@ public class StarfishExport implements InterruptableJob {
 	private boolean run = true;
 
 	public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-		
+		Set<String> siteIdsForUATTesting = new java.util.HashSet<>();
+
+		siteIdsForUATTesting.add("025d2c1d-9901-4098-885b-d51d041d68ef");
+		siteIdsForUATTesting.add("03090ca8-573e-4d8e-ac18-d5a4579b0a9c");
+		siteIdsForUATTesting.add("07b8a6ed-3a87-4f0b-ac41-9b5b4b661037");
+		siteIdsForUATTesting.add("0af3dfee-e0d6-49c9-9eda-4db21a2d4c07");
+		siteIdsForUATTesting.add("0bedcac6-4f7d-4097-87bc-76a834b6c96b");
+
 		log.info(JOB_NAME + " started.");
 
 		//get admin session
@@ -175,6 +182,11 @@ public class StarfishExport implements InterruptableJob {
 	
 				for (Site s : sites) {
 					if (!run) break;
+
+					if (!siteIdsForUATTesting.contains(s.getId())) {
+						log.info("Skipping site: " + s.getId());
+						continue;
+					}
 
 					String siteId = s.getId();
 					Map<String, Set<String>> providerUserMap = new HashMap<>();
