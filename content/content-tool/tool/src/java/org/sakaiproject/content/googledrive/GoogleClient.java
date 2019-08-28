@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -91,8 +92,19 @@ public class GoogleClient {
         return HotReloadConfigurationService.getString("resources-application-name", "NYU Classes");
     }
 
+    public void migrateOAuthTokens() throws IOException {
+        File oldDataStoreLocation = new File(ServerConfigurationService.getSakaiHomePath() + "/google-data-store");
+        DataStoreFactory store = new DBDataStoreFactory();
+
+        if (oldDataStoreLocation.exists()) {
+            // Migrate to our new store
+            LOG.info("Migrating OAuth tokens from old data store...");
+            ((DBDataStore)store.getDataStore("StoredCredential")).populateFrom(new FileDataStoreFactory(oldDataStoreLocation).getDataStore("StoredCredential"));
+            oldDataStoreLocation.renameTo(new File(ServerConfigurationService.getSakaiHomePath() + "/google-data-store.migrated"));
+        }
+    }
+
     public GoogleAuthorizationCodeFlow getAuthFlow() throws Exception {
-        File dataStoreLocation = new File(ServerConfigurationService.getSakaiHomePath() + "/google-data-store");
         DataStoreFactory store = new DBDataStoreFactory();
 
         // set up authorization code flow

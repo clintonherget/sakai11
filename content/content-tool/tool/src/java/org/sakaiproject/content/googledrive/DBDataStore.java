@@ -50,6 +50,14 @@ public class DBDataStore<V extends Serializable> implements DataStore<V> {
         return this.id;
     }
 
+    public void populateFrom(DataStore<V> otherStore) throws IOException {
+        for (String key : otherStore.keySet()) {
+            if (!containsKey(key)) {
+                set(key, get(key));
+            }
+        }
+    }
+
     /** Returns the number of stored keys. */
     public int size() throws IOException {
         return executeQuery("select count(1) from nyu_t_google_datastore where store_id = ?",
