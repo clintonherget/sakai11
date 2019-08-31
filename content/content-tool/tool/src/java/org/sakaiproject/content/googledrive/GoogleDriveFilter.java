@@ -33,6 +33,11 @@ public class GoogleDriveFilter implements Filter {
 
 
     public void init(FilterConfig config) throws ServletException {
+        try {
+            new GoogleClient().migrateOAuthTokens();
+        } catch (IOException e) {
+            throw new ServletException(e);
+        }
     }
 
     @Override

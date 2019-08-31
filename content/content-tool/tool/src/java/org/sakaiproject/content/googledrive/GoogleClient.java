@@ -38,16 +38,19 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.DataStore;
+import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,9 +63,6 @@ import java.util.Map;
 // FIXME: split this class up.  Maybe want a .google package?
 public class GoogleClient {
     private static final Logger LOG = LoggerFactory.getLogger(GoogleClient.class);
-    private static final String APPLICATION = "Sakai Drive";
-
-    public static final String GOOGLE_DOMAIN = "nyu.edu";
 
     private int requestsPerBatch = 100;
 
@@ -84,9 +84,28 @@ public class GoogleClient {
         }
     }
 
+    public static String getGoogleDomain() {
+        return HotReloadConfigurationService.getString("resources-google-domain", "nyu.edu");
+    }
+
+    public static String getApplicationName() {
+        return HotReloadConfigurationService.getString("resources-application-name", "NYU Classes");
+    }
+
+    public void migrateOAuthTokens() throws IOException {
+        File oldDataStoreLocation = new File(ServerConfigurationService.getSakaiHomePath() + "/google-data-store");
+        DataStoreFactory store = new DBDataStoreFactory();
+
+        if (oldDataStoreLocation.exists()) {
+            // Migrate to our new store
+            LOG.info("Migrating OAuth tokens from old data store...");
+            ((DBDataStore)store.getDataStore("StoredCredential")).populateFrom(new FileDataStoreFactory(oldDataStoreLocation).getDataStore("StoredCredential"));
+            oldDataStoreLocation.renameTo(new File(ServerConfigurationService.getSakaiHomePath() + "/google-data-store.migrated"));
+        }
+    }
+
     public GoogleAuthorizationCodeFlow getAuthFlow() throws Exception {
-        File dataStoreLocation = new File(ServerConfigurationService.getSakaiHomePath() + "/google-data-store");
-        FileDataStoreFactory store = new FileDataStoreFactory(dataStoreLocation);
+        DataStoreFactory store = new DBDataStoreFactory();
 
         // set up authorization code flow
         return new GoogleAuthorizationCodeFlow.Builder(
@@ -164,7 +183,7 @@ public class GoogleClient {
 
     public Drive getDrive(String googleUser) throws Exception {
         return new Drive.Builder(httpTransport, jsonFactory, getCredential(googleUser))
-                .setApplicationName(APPLICATION)
+                .setApplicationName(getApplicationName())
                 .build();
     }
 
@@ -309,7 +328,7 @@ public class GoogleClient {
     }
 
     public static String getCurrentGoogleUser() {
-        return org.sakaiproject.user.cover.UserDirectoryService.getCurrentUser().getEid() + "@" + GOOGLE_DOMAIN;
+        return org.sakaiproject.user.cover.UserDirectoryService.getCurrentUser().getEid() + "@" + getGoogleDomain();
     }
 
     public static String getRedirectURL() {
