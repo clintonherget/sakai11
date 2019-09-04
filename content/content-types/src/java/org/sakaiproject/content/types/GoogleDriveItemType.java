@@ -165,6 +165,10 @@ public class GoogleDriveItemType extends BaseResourceType
 		if (ActionType.NEW_GOOGLE_DRIVE_ITEMS.equals(type)) {
 			boolean showGoogleDrive = false;
 
+			if (ToolManager.getCurrentPlacement() == null) {
+				return new ArrayList<>();
+			}
+
 			try {
 				Site site = SiteService.getSite(ToolManager.getCurrentPlacement().getContext());
 				showGoogleDrive = (site != null && "true".equals(site.getProperties().get("google-drive-enabled")));
