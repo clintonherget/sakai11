@@ -89,6 +89,7 @@ import org.sakaiproject.tool.assessment.integration.helper.ifc.GradebookServiceH
 import org.sakaiproject.tool.assessment.services.assessment.EventLogService;
 import org.sakaiproject.tool.assessment.services.assessment.PublishedAssessmentService;
 import org.sakaiproject.tool.assessment.util.ExtendedTimeDeliveryService;
+import org.sakaiproject.tool.assessment.util.NYUSamigoLogger;
 import org.sakaiproject.tool.assessment.util.SamigoExpressionError;
 import org.sakaiproject.tool.assessment.util.SamigoExpressionParser;
 
@@ -1511,6 +1512,9 @@ public class GradingService
   public double getAnswerScore(ItemGradingData data, Map publishedAnswerHash)
   {
     AnswerIfc answer = (AnswerIfc) publishedAnswerHash.get(data.getPublishedAnswerId());
+
+    NYUSamigoLogger.logGetAnswerScore(data, answer, publishedAnswerHash);
+
     if (answer == null || answer.getScore() == null) {
     	return (double) 0;
     }
