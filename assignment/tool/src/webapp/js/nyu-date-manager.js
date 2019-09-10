@@ -285,7 +285,9 @@ Vue.component('date-manager-form', {
 Vue.component('page-modal', {
   template: `
 <div style="display:none; overflow: auto; " aria-hidden="true" id="pageModal">
-  <div aria-hidden="true" style="display: none; background: #eeffff; padding: 10px; border-bottom: #aadddd solid 1px;} solid 1px;">A public service announcement</div>
+  <div style="background: #c7e4f4; padding: 10px; border-bottom: 1px solid rgba(165,138,29,0.1);">
+    How do you like the new "Manage Assignment Dates" feature? <a href="https://nyu.qualtrics.com/jfe/form/SV_2taVZyT3BVLumod" target="_blank">Send us your feedback!</a>
+  </div>
   <div ref="content" class="page-modal" style="padding: 20px; background: #FFF" tabindex="0">
     <a href="javascript:void(0)" class="pull-right" @click="hide" aria-label="Hide Popup"><i aria-hidden="true" class="fa fa-times fa-2x"></i></a>
     <slot></slot>
