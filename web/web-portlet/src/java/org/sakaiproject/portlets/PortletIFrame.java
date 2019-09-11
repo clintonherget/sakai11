@@ -424,6 +424,10 @@ public class PortletIFrame extends GenericPortlet {
     // Determine if we should pop up due to an X-Frame-Options : [SAMEORIGIN]
     public boolean popupXFrame(RenderRequest request, Placement placement, String url) 
     {
+        if (url.matches(HotReloadConfigurationService.getString("nyu.skipxframecheck.regex", "$wontmatch"))) {
+            return false;
+        }
+
         if ( xframeCache < 1 ) return false;
 
         // Only check http:// and https:// urls
