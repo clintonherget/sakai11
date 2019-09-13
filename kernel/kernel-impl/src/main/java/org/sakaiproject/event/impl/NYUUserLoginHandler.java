@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.db.cover.SqlService;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
+import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.ToolConfiguration;
@@ -22,7 +24,6 @@ import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 class NYUUserLoginHandler {
 
@@ -40,7 +41,7 @@ class NYUUserLoginHandler {
             connection = SqlService.borrowConnection();
 
             try {
-                handleAutoTools(sakaiSession);
+                handleAutoTools(sakaiSession, connection);
             } catch (Exception e) {
                 exceptions.add(e);
             }
@@ -119,9 +120,65 @@ class NYUUserLoginHandler {
     }
 
 
-    private void handleAutoTools(Session sakaiSession) throws Exception {
+    // In situations where database connectivity is unreliable,
+    // SiteService.getSite will cherrily return incorrect results (such as sites
+    // with pages and tools missing).  When we write these back to the database
+    // we risk losing data.
+    //
+    // Mitigate by doing our own checks against the database.
+    private Site getWorkspaceWithSanityChecking(String userId, Connection connection) throws IdUnusedException, SQLException {
+        String siteId = "~" + userId;
+        Site workspace = SiteService.getSite(siteId);
+
+        try (PreparedStatement pageCountQuery = connection.prepareStatement("select count(1) from sakai_site_page where site_id = ?")) {
+            try (PreparedStatement toolCountQuery = connection.prepareStatement("select count(1) from sakai_site_tool where site_id = ?")) {
+
+                int pageCount = 0;
+                int toolCount = 0;
+
+                pageCountQuery.setString(1, siteId);
+                toolCountQuery.setString(1, siteId);
+
+                try (ResultSet rs = pageCountQuery.executeQuery()) {
+                    if (rs.next()) {
+                        pageCount = rs.getInt(1);
+                    }
+                }
+
+                try (ResultSet rs = toolCountQuery.executeQuery()) {
+                    if (rs.next()) {
+                        toolCount = rs.getInt(1);
+                    }
+                }
+
+                if (workspace.getPages().size() != pageCount) {
+                    throw new RuntimeException(String.format("Mismatch on page count for user workspace '%s': getSite said %d but we saw %d",
+                                                             userId,
+                                                             workspace.getPages().size(),
+                                                             pageCount));
+                }
+
+                int toolCountFromWorkspace = workspace
+                    .getPages()
+                    .stream()
+                    .collect(Collectors.summingInt(page -> page.getTools().size()));
+
+                if (toolCountFromWorkspace != toolCount) {
+                    throw new RuntimeException(String.format("Mismatch on tool count for user workspace '%s': getSite said %d but we saw %d",
+                                                             userId,
+                                                             toolCountFromWorkspace,
+                                                             toolCount));
+                }
+            }
+        }
+
+
+        return workspace;
+    }
+
+    private void handleAutoTools(Session sakaiSession, Connection connection) throws Exception {
         String userId = sakaiSession.getUserId();
-        Site workspace = SiteService.getSite("~" + userId);
+        Site workspace = getWorkspaceWithSanityChecking(userId, connection);
 
         String toolsToAdd = HotReloadConfigurationService.getString("nyu.auto-tools.add", "");
         String toolsToRemove = HotReloadConfigurationService.getString("nyu.auto-tools.remove", "");
@@ -149,7 +206,7 @@ class NYUUserLoginHandler {
         User user = UserDirectoryService.getUser(userId);
 
         // Creates the workspace if it doesn't already exist
-        Site workspace = SiteService.getSite("~" + userId);
+        Site workspace = getWorkspaceWithSanityChecking(userId, connection);
 
         if (isInstructor(user, connection)) {
             addToolsIfMissing(workspace, instructorTools);
