@@ -263,6 +263,11 @@
         background-color: #F3f3f3;
         color: #333;
     }
+    .commons-comment-help-text small {
+        @media #{$tablet} {
+            display: none;
+        }
+    }
 }
 
 #commons-imagefile-instruction {
