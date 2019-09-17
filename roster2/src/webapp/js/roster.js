@@ -205,6 +205,13 @@
                         else $('#roster_official_picture_button').click();
                         $(this).toggleClass('on');
                     });
+                    $('#switch-button').attr('tabindex', 0).on('keydown', function(e) {
+                      // trigger a click if a clicky kinda key
+                      if (e.keyCode === 13 || e.keyCode === 32) {
+                        $('#switch-button').trigger('click');
+                        return false;
+                      }
+                    });
                 }
 
                 roster.readySearchButton();
@@ -277,6 +284,13 @@
                         if ($('#roster_official_picture_button').is(':checked')) $('#roster_profile_picture_button').click();
                         else $('#roster_official_picture_button').click();
                         $(this).toggleClass('on');
+                    });
+                    $('#switch-button').attr('tabindex', 0).on('keydown', function(e) {
+                      // trigger a click if a clicky kinda key
+                      if (e.keyCode === 13 || e.keyCode === 32) {
+                        $('#switch-button').trigger('click');
+                        return false;
+                      }
                     });
                 }
 
