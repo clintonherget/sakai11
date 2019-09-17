@@ -332,6 +332,9 @@ Vue.component('page-modal', {
         } else if ($(event.relatedTarget).is('.featherlight-content')) {
           // this is cool.
           return false;
+        } else if ($(event.relatedTarget).closest('.ui-datepicker').length > 0) {
+          // cool too
+          return true;
         } else if ($(event.relatedTarget).closest('#pageModal').length == 0) {
           // can only focus above the modal, so loop back to bottom of modal
           $('#pageModal :focusable:last').focus();
