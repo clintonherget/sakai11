@@ -75,12 +75,16 @@
     position: fixed;
     height: 100%;
     background: #FFF;
-    width: 420px;
+    width: 25%;
     top: 0;
     right: 0;
     box-shadow: -1px 1px 5px #999;
-    z-index: 10000;
+    z-index: 15002;
     overflow: auto;
+
+    @media #{$tablet} {
+        width: 100%;
+    }
 
     .close {
         position: absolute;
