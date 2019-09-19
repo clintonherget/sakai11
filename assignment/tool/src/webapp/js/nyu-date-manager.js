@@ -284,13 +284,15 @@ Vue.component('date-manager-form', {
 
 Vue.component('page-modal', {
   template: `
-<div style="display:none; overflow: auto; " aria-hidden="true" id="pageModal">
+<div style="display:none;" aria-hidden="true" id="pageModal">
   <div style="background: #c7e4f4; padding: 10px; border-bottom: 1px solid rgba(165,138,29,0.1);">
     How do you like the new "Manage Assignment Dates" feature? <a href="https://nyu.qualtrics.com/jfe/form/SV_2taVZyT3BVLumod" target="_blank">Send us your feedback!</a>
   </div>
-  <div ref="content" class="page-modal" style="padding: 20px; background: #FFF" tabindex="0">
-    <a href="javascript:void(0)" class="pull-right" @click="hide" aria-label="Hide Popup"><i aria-hidden="true" class="fa fa-times fa-2x"></i></a>
-    <slot></slot>
+  <div style="overflow: auto;" ref="container">
+    <div ref="content" class="page-modal" style="padding: 20px; background: #FFF" tabindex="0">
+      <a href="javascript:void(0)" class="pull-right" @click="hide" aria-label="Hide Popup"><i aria-hidden="true" class="fa fa-times fa-2x"></i></a>
+      <slot></slot>
+    </div>
   </div>
 </div>
 `,
@@ -312,7 +314,7 @@ Vue.component('page-modal', {
       $(self.$refs.content).focus()
     },
     resize: function() {
-      $(this.$el).height($(window).height() - $(this.$el).offset().top + 'px');
+      $(this.$refs.container).height($(window).height() - $(this.$refs.container).offset().top + 'px');
     },
     hide: function() {
       var self = this;
