@@ -185,7 +185,7 @@ public class FileImport {
 
                 applyGroupAccess(resourceEdit, sakaiGroups);
 
-                chs.commitResource(resourceEdit);
+                chs.commitResource(resourceEdit, NotificationService.NOTI_NONE);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
