@@ -108,6 +108,13 @@ import org.springframework.orm.hibernate4.support.HibernateDaoSupport;
 
 import org.sakaiproject.tool.assessment.data.dao.assessment.PublishedAssessmentData;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Map;
+
+
 @Slf4j
 public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implements AssessmentGradingFacadeQueriesAPI {
 
@@ -1107,6 +1114,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
         int retryCount = persistenceHelper.getRetryCount();
         while (retryCount > 0) {
             try {
+                nyuMaybeLogItemGradingData(item);
                 getHibernateTemplate().saveOrUpdate(item);
                 retryCount = 0;
             } catch (Exception e) {
@@ -1482,6 +1490,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
         while (retryCount > 0) {
             try {
                 for (ItemGradingData itemGradingData : c) {
+                    nyuMaybeLogItemGradingData(itemGradingData);
                     getHibernateTemplate().merge(itemGradingData);
                 }
                 retryCount = 0;
@@ -3687,4 +3696,71 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
         };
         return getHibernateTemplate().execute(hcb);
     }
+
+    private void nyuMaybeLogItemGradingData(ItemGradingData itemGradingData) {
+        if (!"true".equals(HotReloadConfigurationService.getString("nyu.samigo.loggger.getanswerscore", "false"))) {
+            return;
+        }
+
+        if (itemGradingData.getPublishedAnswerId() == null) {
+            return;
+        }
+
+        try {
+            // get back what we think is the answer.isCorrect
+
+            org.sakaiproject.db.api.SqlService sqlService = (org.sakaiproject.db.api.SqlService) org.sakaiproject.component.cover.ComponentManager.get("org.sakaiproject.db.api.SqlService"); 
+            Connection db = sqlService.borrowConnection();
+
+            Boolean isCorrectFromDB = null;
+            int partialCredit = 0;
+
+            try {
+                PreparedStatement ps = db.prepareStatement("select iscorrect, partial_credit " +
+                                                           "from SAM_PUBLISHEDANSWER_T " +
+                                                           "where answerid = ?");
+                ps.setLong(1, itemGradingData.getPublishedAnswerId());
+
+                ResultSet rs = ps.executeQuery();
+                try {
+                    if (rs.next()) {
+                        isCorrectFromDB = Boolean.valueOf(rs.getInt("iscorrect") == 1);
+                        partialCredit = rs.getInt("partial_credit");
+                    }
+                } finally {
+                    rs.close();
+                }
+            } finally {
+                sqlService.returnConnection(db);
+            }
+
+            if (isCorrectFromDB == null) {
+                // No answer entry
+            } else {
+                if (!isCorrectFromDB.booleanValue() && partialCredit == 0 && itemGradingData.getAutoScore() > 0) {
+                    logSomethingUseful(itemGradingData);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Exception from AssessmentGradingFacadeQueries nyuMaybeLogItemGradingData: " + e);
+            e.printStackTrace();
+        }
+    }
+
+    private static void logSomethingUseful(ItemGradingData data) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("ItemGradingData.assessmentGradingId: " + data.getAssessmentGradingId() + "\n");
+        sb.append("ItemGradingData.agentId: " + data.getAgentId() + "\n");
+        sb.append("ItemGradingData.publishedItemId: " + data.getPublishedItemId() + "\n");
+        sb.append("ItemGradingData.publishedAnswerId: " + data.getPublishedAnswerId() + "\n");
+        sb.append("ItemGradingData.autoScore: " + data.getAutoScore() + "\n");
+        sb.append("\n");
+
+        sb.append("Backtrace follows:");
+
+        System.err.println("WEIRDNESS HAS OCCURRED!\n" + sb.toString());
+        new Throwable().printStackTrace();
+    }
+
 }
