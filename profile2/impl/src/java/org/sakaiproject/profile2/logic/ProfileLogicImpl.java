@@ -25,13 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 
 import org.sakaiproject.api.common.edu.person.SakaiPerson;
-import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.profile2.conversion.ProfileConverter;
 import org.sakaiproject.profile2.conversion.ProfileTypedListConverter;
 import org.sakaiproject.profile2.dao.ProfileDao;
 import org.sakaiproject.profile2.model.BasicPerson;
 import org.sakaiproject.profile2.model.CompanyProfile;
-import org.sakaiproject.profile2.model.MimeTypeByteArray;
 import org.sakaiproject.profile2.model.Person;
 import org.sakaiproject.profile2.model.SocialNetworkingInfo;
 import org.sakaiproject.profile2.model.TypeInputEntry;
@@ -544,27 +542,8 @@ public class ProfileLogicImpl implements ProfileLogic {
 		return;
 		
 	}
-
-	@Override
-	public String getUserNamePronunciationResourceId(String uuid) {
-		final String slash = Entity.SEPARATOR;
-		final StringBuilder path = new StringBuilder();
-		path.append(slash);
-		path.append("private");
-		path.append(slash);
-		path.append("namePronunciation");
-		path.append(slash);
-		path.append(uuid);
-		path.append(".ogg");
-                return path.toString();
-	}
-
-	@Override
-	public MimeTypeByteArray getUserNamePronunciation(String uuid) {
-                String resourceId = this.getUserNamePronunciationResourceId(uuid);
-		return sakaiProxy.getResource(resourceId);
-	}
-
+	
+	
 	@Setter
 	private SakaiProxy sakaiProxy;
 	
