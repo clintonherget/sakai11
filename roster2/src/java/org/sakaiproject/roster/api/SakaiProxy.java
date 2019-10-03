@@ -285,13 +285,6 @@ public interface SakaiProxy {
     public Boolean getViewUserNamePronunciation();
 
     /**
-     * Returns if the name pronunciation feature is enabled in this site, using the "roster-name-pronunciation" property.
-     *
-     * @return true if is enabled in the site, false otherwise.
-     */
-    public boolean isNamePronunciationEnabledInSite();
-
-    /**
      * Returns if the official photo toggle and feature is enabled in this site, using the "roster_official_photo_view" property.
      *
      * @return true if is enabled in the site, false otherwise.
