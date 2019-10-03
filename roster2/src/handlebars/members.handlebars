@@ -25,19 +25,6 @@
         </div>
     {{/unless}}
 
-    {{#if ../viewUserNamePronunciation}}
-        <div class="roster-table-cell roster-user-name-pronunciation-cell">
-            <div class="roster-mobile-label">{{translate 'facet_user_name_pronunciation'}}</div>
-                <span class="namePronunciation">
-                {{#if pronunciation}}
-                    {{{pronunciation}}}
-                {{else}}
-                    {{{translate 'name_pronunciation_not_provided'}}}
-                {{/if}}
-                </span>
-        </div>
-    {{/if}}
-
     {{#if ../viewUserDisplayId}}
         <div class="roster-table-cell">
         <div class="roster-mobile-label">{{translate 'facet_userId'}}</div>
