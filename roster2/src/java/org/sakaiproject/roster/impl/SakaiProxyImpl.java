@@ -1272,13 +1272,6 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
     /**
      * {@inheritDoc}
      */
-    public boolean isNamePronunciationEnabledInSite() {
-        return isSitePropertyEnabled(NAME_PRONUNCIATION_SITE_PROPERTY);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public boolean isOfficialPhotoEnabledInSite() {
         return isSitePropertyEnabled(OFFICIAL_PHOTO_SITE_PROPERTY);
     }
@@ -1293,6 +1286,7 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
         }
         return false;
     }
+
     public void update(Observable o, Object arg) {
 
         if (arg instanceof Event) {

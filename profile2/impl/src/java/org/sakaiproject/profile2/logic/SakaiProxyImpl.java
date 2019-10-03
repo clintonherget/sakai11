@@ -1095,22 +1095,9 @@ public class SakaiProxyImpl implements SakaiProxy {
 	 */
 	@Override
 	public boolean isNamePronunciationProfileEnabled() {
-		return isNamePronunciationEnabledInAnyUserSite() &&
-				this.serverConfigurationService.getBoolean(
+		return this.serverConfigurationService.getBoolean(
 				"profile2.profile.name.pronunciation.enabled",
 				ProfileConstants.SAKAI_PROP_PROFILE2_PROFILE_PRONUNCIATION_ENABLED);
-	}
-
-	/* Checks if the user belongs to a site with this feature */
-	private boolean isNamePronunciationEnabledInAnyUserSite() {
-		List<Site> sites = this.getUserSites();
-		for(Site site : sites){
-			String siteProperty = site.getProperties().getProperty("roster-name-pronunciation");
-			if("true".equals(siteProperty)){
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**
