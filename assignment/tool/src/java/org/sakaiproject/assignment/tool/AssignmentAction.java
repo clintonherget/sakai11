@@ -8233,12 +8233,15 @@ public class AssignmentAction extends PagedResourceActionII {
                                 header.setSubject(/* subject */rb.getFormattedMessage("assig5", title));
                             }
 
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, HH:mm:ss z (O)").withLocale(Locale.US).withZone(ZoneId.systemDefault());
+                            String nyuOpenTime = formatter.format(openTime);
+
                             if (updatedOpenDate) {
                                 // revised assignment open date
-                                message.setBody(/* body */rb.getFormattedMessage("newope", formattedText.convertPlaintextToFormattedText(title), openTime.toString()));
+                                message.setBody(/* body */rb.getFormattedMessage("newope", formattedText.convertPlaintextToFormattedText(title), nyuOpenTime));
                             } else {
                                 // assignment open date
-                                message.setBody(/* body */rb.getFormattedMessage("opedat", formattedText.convertPlaintextToFormattedText(title), openTime.toString()));
+                                message.setBody(/* body */rb.getFormattedMessage("opedat", formattedText.convertPlaintextToFormattedText(title), nyuOpenTime));
                             }
 
                             // group information
