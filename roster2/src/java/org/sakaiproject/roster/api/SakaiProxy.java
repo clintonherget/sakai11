@@ -285,13 +285,6 @@ public interface SakaiProxy {
     public Boolean getViewUserNamePronunciation();
 
     /**
-     * Returns the profile tool link. Null if user doesn't have profile tool.
-     *
-     * @return the profile tool link. Null if user doesn't have profile tool.
-     */
-    public String getProfileToolLink();
-
-    /**
      * Returns if the name pronunciation feature is enabled in this site, using the "roster-name-pronunciation" property.
      *
      * @return true if is enabled in the site, false otherwise.

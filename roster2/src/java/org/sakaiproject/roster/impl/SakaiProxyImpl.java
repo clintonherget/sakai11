@@ -1272,19 +1272,6 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
     /**
      * {@inheritDoc}
      */
-    public String getProfileToolLink() {
-        try {
-            Site site = siteService.getSite(siteService.getUserSiteId(getCurrentUserId()));
-            return site.getUrl() + "/tool/" + site.getToolForCommonId("sakai.profile2").getId();
-        } catch(Exception e){
-            log.error("Error getting tool for profile on user workspace {}", e.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public boolean isNamePronunciationEnabledInSite() {
         return isSitePropertyEnabled(NAME_PRONUNCIATION_SITE_PROPERTY);
     }
