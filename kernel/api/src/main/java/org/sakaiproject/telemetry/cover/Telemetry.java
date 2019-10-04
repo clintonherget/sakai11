@@ -664,6 +664,7 @@ public class Telemetry
 
                 int rowCount = 0;
                 try (ResultSet rs = ps.executeQuery()) {
+                    rs.setFetchSize(1024);
                     while (rs.next()) {
                         String subkey = rs.getString("subkey");
 
