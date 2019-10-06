@@ -229,7 +229,11 @@ public class TelemetryServlet extends HttpServlet {
                         countsByDay.put(label, 0L);
                     }
 
-                    countsByDay.put(label, (countsByDay.get(label) + reading.getCount()));
+                    Long total = timeSliceTotals.get(reading.getTime());
+
+                    if (total != null) {
+                        countsByDay.put(label, (countsByDay.get(label) + total));
+                    }
                 }
             }
 
