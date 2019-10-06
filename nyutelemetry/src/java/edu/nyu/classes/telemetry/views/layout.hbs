@@ -172,11 +172,28 @@
                                  formatter: function (value, chart) {
                                      var col = chart.dataPointIndex;
 
+                                     var formatNumber = function(n) {
+                                         if (n < 0) {
+                                             return "-" + formatNumber(n * -1);
+                                         } else if (n < 1000) {
+                                             return "" + n;
+                                         } else {
+                                             let s = "" + (n % 1000)
+                                             while (s.length < 3) {
+                                                 s = "0" + s;
+                                             }
+
+                                             return formatNumber(Math.floor(n / 1000)) + "," + s;
+                                         }
+
+                                         return result;
+                                     }
+
                                      if (value == 0) {
                                          return "0";
                                      } else {
                                          var estimatedObservations = Math.round((timeSliceTotals[col] || 0) * (value / 100.0));
-                                         return "" + value + "% (estimated observations: " + estimatedObservations + ")";
+                                         return "" + value + "% (observations: " + formatNumber(estimatedObservations) + ")";
                                      }
                                  },
                              },
