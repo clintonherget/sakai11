@@ -23,7 +23,7 @@
             </a>
         {{/if}}
         {{#if pronunciation}}
-            <span class="namePronunciation">{{{pronunciation}}}</span>
+            <a href="javascript:void(0);" class="namePronunciation" onclick="this.querySelector('img[role=button]').click()">{{{pronunciation}}}</a>
         {{/if}}
         </div>
     {{/unless}}
