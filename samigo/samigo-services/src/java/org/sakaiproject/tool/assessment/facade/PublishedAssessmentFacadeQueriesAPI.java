@@ -113,6 +113,10 @@ public interface PublishedAssessmentFacadeQueriesAPI
 
   public boolean isPublishedAssessmentIdValid(Long publishedAssessmentId);
 
+  public boolean isReleasedToGroups(Long publishedAssessmentId);
+
+  public String getReleasedTo(Long publishedAssessmentId);
+
   public PublishedAssessmentFacade getPublishedAssessment(Long assessmentId);
   
   public PublishedAssessmentFacade getPublishedAssessment(Long assessmentId, boolean withGroupsInfo);

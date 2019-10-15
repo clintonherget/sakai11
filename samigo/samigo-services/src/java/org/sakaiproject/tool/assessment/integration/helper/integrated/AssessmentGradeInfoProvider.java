@@ -170,15 +170,18 @@ public class AssessmentGradeInfoProvider implements ExternalAssignmentProvider, 
             log.debug("Samigo provider isAssignmentVisible: " + id + ", " + userId);
         }
 
-        PublishedAssessmentIfc pub = getPublishedAssessment(id);
-        if (pub == null) {
+        if (id == null) {
+            return false;
+        }
+
+        if (!PersistenceService.getInstance().getPublishedAssessmentFacadeQueries().isPublishedAssessmentIdValid(Long.valueOf(id))) {
             return false;
         }
 
         boolean isAuthorized = false;
         boolean isAuthenticated = false;
 
-        String releaseTo = pub.getAssessmentAccessControl().getReleaseTo();
+        String releaseTo = PersistenceService.getInstance().getPublishedAssessmentFacadeQueries().getReleasedTo(Long.valueOf(id));
         if (releaseTo != null && releaseTo.indexOf("Anonymous Users")> -1){
             isAuthenticated = true;
             isAuthorized = true;
@@ -186,11 +189,11 @@ public class AssessmentGradeInfoProvider implements ExternalAssignmentProvider, 
         else { // check membership
             isAuthenticated = ( userId != null && !("").equals(userId));
             if (isAuthenticated){
-                if (releaseTo.indexOf(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)>-1) {
-                    isAuthorized = checkMembershipForGroupRelease(pub, userId);
+                if (releaseTo != null && releaseTo.indexOf(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)>-1) {
+                    isAuthorized = checkMembershipForGroupRelease(id, userId);
                 }
                 else {
-                    isAuthorized = checkMembership(pub, userId);
+                    isAuthorized = checkMembership(id, userId);
                 }
             }
         }
@@ -346,19 +349,19 @@ public class AssessmentGradeInfoProvider implements ExternalAssignmentProvider, 
         return inverted;
     }
 
-    private boolean checkMembership(PublishedAssessmentIfc pub, String userId){
+    private boolean checkMembership(String publishedAssessmentId, String userId){
         boolean isMember=false;
         // get list of site that this published assessment has been released to
         List l = PersistenceService.getInstance().getAuthzQueriesFacade().
         getAuthorizationByFunctionAndQualifier("VIEW_PUBLISHED_ASSESSMENT",
-                pub.getPublishedAssessmentId().toString());
+                publishedAssessmentId);
         for (int i=0;i<l.size();i++){
             String siteId = ((AuthorizationData)l.get(i)).getAgentIdString();
             try {
                 isMember = (siteService.getSite(siteId).getUserRole(userId) != null);
             } catch (IdUnusedException e) {
                 log.info("Site with ID: " + siteId + " does not exists but is "
-                        + "authorized for assessment id: " + pub.getPublishedAssessmentId());
+                        + "authorized for assessment id: " + publishedAssessmentId);
             }
             if (isMember) {
                 break;
@@ -367,12 +370,12 @@ public class AssessmentGradeInfoProvider implements ExternalAssignmentProvider, 
         return isMember;
     }
 
-    private boolean checkMembershipForGroupRelease(PublishedAssessmentIfc pub, String userId){
+    private boolean checkMembershipForGroupRelease(String publishedAssessmentId, String userId){
         boolean isMember=false;
         // get the site that owns the published assessment
         List l =PersistenceService.getInstance().getAuthzQueriesFacade().
         getAuthorizationByFunctionAndQualifier("OWN_PUBLISHED_ASSESSMENT",
-                pub.getPublishedAssessmentId().toString());
+                publishedAssessmentId);
         if (l == null || l.isEmpty()) {
             return false;
         }
@@ -388,7 +391,7 @@ public class AssessmentGradeInfoProvider implements ExternalAssignmentProvider, 
         // get list of groups that this published assessment has been released to
         l =PersistenceService.getInstance().getAuthzQueriesFacade().
         getAuthorizationByFunctionAndQualifier("TAKE_PUBLISHED_ASSESSMENT",
-                pub.getPublishedAssessmentId().toString());
+                publishedAssessmentId);
         for (int i=0;i<l.size();i++){
             String groupId = ((AuthorizationData)l.get(i)).getAgentIdString();
             isMember = isUserInAuthorizedGroup(groupId, siteGroupsContainingUser);

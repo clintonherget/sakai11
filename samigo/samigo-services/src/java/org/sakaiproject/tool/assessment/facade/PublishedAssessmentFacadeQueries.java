@@ -649,14 +649,43 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport implem
 	 * We just want a quick answer whether Samigo is responsible for an id.
 	 */
 	public boolean isPublishedAssessmentIdValid(Long publishedAssessmentId) {
-		List<PublishedAssessmentData> list = (List<PublishedAssessmentData>) getHibernateTemplate()
-				.findByNamedParam("from PublishedAssessmentData where publishedAssessmentId = :id", "id", publishedAssessmentId);
+		// NYU improve performance by doing a quick count
+		final HibernateCallback<List<Number>> hcb = session -> session.createQuery(
+				"select count(a) from PublishedAssessmentData a where a.publishedAssessmentId = :id")
+				.setLong("id", publishedAssessmentId)
+				.list();
 
-		if (!list.isEmpty()) {
-			PublishedAssessmentData f = list.get(0);
-			return f.getPublishedAssessmentId() > 0;
+		List<Number> list = getHibernateTemplate().execute(hcb);
+
+		return list.get(0).intValue() > 0;
+	}
+
+	public boolean isReleasedToGroups(Long publishedAssessmentId) {
+		// NYU improve performance by doing a quick count
+		final HibernateCallback<List<Number>> hcb = session -> session.createQuery(
+				"select count(c) from PublishedAccessControl c where c.assessment.publishedAssessmentId= :id and c.releaseTo= :releaseTo")
+				.setLong("id", publishedAssessmentId)
+				.setString("releaseTo", AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)
+				.list();
+
+		List<Number> list = getHibernateTemplate().execute(hcb);
+
+		return list.get(0).intValue() > 0;
+	}
+
+	public String getReleasedTo(Long publishedAssessmentId) {
+		final HibernateCallback<List<String>> hcb = session -> session.createQuery(
+				"select c.releaseTo from PublishedAccessControl c where c.assessment.publishedAssessmentId= :id")
+				.setLong("id", publishedAssessmentId)
+				.list();
+
+		List<String> list = getHibernateTemplate().execute(hcb);
+
+		if (list.isEmpty()) {
+			return null;
 		}
-		return false;
+
+		return list.get(0);
 	}
 
 	public PublishedAssessmentFacade getPublishedAssessment(Long assessmentId) {
