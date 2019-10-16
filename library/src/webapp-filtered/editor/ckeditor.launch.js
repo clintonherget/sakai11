@@ -452,7 +452,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
                   var dialogContents = findAncestor(iframe, 'cke_dialog_contents');
                   var message = document.createElement('div');
                   message.classList.add('ckeditor-dialog-info-message');
-                  message.innerHTML = 'NYU Classes now features an improved integration with NYU Stream. <a href="http://www.nyu.edu/servicelink/KB0016650" target="_blank">Click here to learn more</a>.';
+                  message.innerHTML = 'Beginning 10/26, video annotation capabilities will be available for NYU Stream videos in NYU Classes.<br>For more information see the <a href="http://www.nyu.edu/servicelink/KB0017871" target="_blank" style="color:#2775A1;text-decoration:underline;cursor:pointer;">Annoto kbase article</a>.';
 
                   dialogBody.insertBefore(message, dialogContents);
               };
