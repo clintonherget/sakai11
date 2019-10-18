@@ -275,6 +275,9 @@ document.location='../evaluation/gradeStudentResult';
    </h:commandButton>
 </p>
 </h:form>
+<script>
+  document.getElementById('editStudentResults').setAttribute('autocomplete', 'off');
+</script>
 </div>
   <!-- end content -->
       </body>

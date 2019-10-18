@@ -223,6 +223,15 @@ public class IMSBLTIPortlet extends GenericPortlet {
 				session.setAttribute("sakai:maximized-url",iframeUrl);
 				log.debug("Setting sakai:maximized-url={}", iframeUrl);
 
+				if ("nyu.zoom.pro".equals(placement.getToolId())) {
+					text.append("<div style=\"background-color: #c7e4f4;padding: 12px;border-bottom: 1px solid rgba(165,138,29,0.1);\">" +
+						"Enable Zoom recordings on your account via the" +
+						" <a href=\"http://www.nyu.edu/servicelink/form/ff21af5213e1f7009136b6d96144b0b6\" target=\"_blank\">Feature Request Form</a>." +
+						" To learn more about recording limitations, see the" +
+						 " <a href=\"http://www.nyu.edu/servicelink/KB0016557\" target=\"_blank\">Recording in Zoom kbase article</a>." +
+						"</div>");
+				}
+
 				if ( "on".equals(newPage) || forcePopup ) {
 					String windowOpen = "window.open('"+iframeUrl+"','BasicLTI');"; 			
 					if ( popupDone == null ) {

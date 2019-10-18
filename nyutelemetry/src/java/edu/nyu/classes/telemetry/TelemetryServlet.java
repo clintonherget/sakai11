@@ -209,9 +209,11 @@ public class TelemetryServlet extends HttpServlet {
         private String name;
         private long timeStep;
         private TreeMap<String, List<Reading>> bucketsMap = new TreeMap<>();
+        private TreeMap<Long, Long> timeSliceTotals = new TreeMap<>();
 
         public String getName() { return name; }
         public TreeMap<String, List<Reading>> getBucketsMap() { return bucketsMap; }
+        public Collection<Long> getTimeSliceTotals() { return timeSliceTotals.values(); }
 
         public TreeMap<String, Long> getCountsByDay() {
             TreeMap<String, Long> countsByDay = new TreeMap<>();
@@ -227,7 +229,11 @@ public class TelemetryServlet extends HttpServlet {
                         countsByDay.put(label, 0L);
                     }
 
-                    countsByDay.put(label, (countsByDay.get(label) + reading.getCount()));
+                    Long total = timeSliceTotals.get(reading.getTime());
+
+                    if (total != null) {
+                        countsByDay.put(label, (countsByDay.get(label) + total));
+                    }
                 }
             }
 
@@ -276,21 +282,24 @@ public class TelemetryServlet extends HttpServlet {
 
             // Want something like {bucket => [[time1, count1], [time2, count2], ...]}
 
-            List<String> buckets = new ArrayList<>();
+
             Map<String, Long> frequencies = new HashMap<>();
+            Set<String> bucketSet = new HashSet<>();
 
             // Extract all known times and buckets
             for (long time : rawReadings.keySet()) {
                 List<Telemetry.TelemetryReading> telemetryReadings = rawReadings.get(time);
 
                 for (Telemetry.TelemetryReading rawReading : telemetryReadings) {
-                    buckets.add(rawReading.getSubKey());
+                    bucketSet.add(rawReading.getSubKey());
 
                     String key = time + "__" + rawReading.getSubKey();
                     frequencies.put(key, rawReading.getValue());
                 }
             }
 
+            List<String> buckets = buckets = new ArrayList<>(bucketSet.size());
+            buckets.addAll(bucketSet);
             Collections.sort(buckets);
 
             // Determine our list of timestamps.  We'll take the min & max
@@ -319,16 +328,44 @@ public class TelemetryServlet extends HttpServlet {
             this.timeStep = step;
 
             // Build up our final structure
+
+            // Total observations for each time period
+            for (long time : times) {
+                long total = 0;
+
+                for (String bucket : buckets) {
+                    String key = time + "__" + bucket;
+                    Long observationCount = frequencies.get(key);
+
+                    if (observationCount != null) {
+                        total += frequencies.get(key);
+                    }
+                }
+
+                timeSliceTotals.put(time, total);
+            }
+
             for (String bucket : buckets) {
                 String prettyBucket = reformatBucket(bucket);
 
                 bucketsMap.put(prettyBucket, new ArrayList<>());
 
+                // Each time slice will have some number of observations in each possible bucket (possibly zero).
+                // We want to normalize each time slice into percentages rather
+                // than absolute counts because that's really what we care
+                // about: "30% of observations were in this bucket"
+
                 for (long time : times) {
                     String key = time + "__" + bucket;
 
                     if (frequencies.containsKey(key)) {
-                        bucketsMap.get(prettyBucket).add(new Reading(time, frequencies.get(key)));
+                        Long totalReadingsForTime = timeSliceTotals.get(time);
+
+                        if (totalReadingsForTime == null || totalReadingsForTime == 0) {
+                            bucketsMap.get(prettyBucket).add(new Reading(time, 0));
+                        } else {
+                            bucketsMap.get(prettyBucket).add(new Reading(time, (long)(((float)frequencies.get(key) / totalReadingsForTime) * 100)));
+                        }
                     } else {
                         bucketsMap.get(prettyBucket).add(new Reading(time, 0));
                     }

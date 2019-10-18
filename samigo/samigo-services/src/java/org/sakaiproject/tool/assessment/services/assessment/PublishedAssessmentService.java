@@ -647,11 +647,14 @@ public class PublishedAssessmentService extends AssessmentService{
 		   return false;
 	   }
 	   // PublishedAssessmentService publishedAssessmentService = new PublishedAssessmentService();
-	   PublishedAssessmentIfc pub = getPublishedAssessment(publishedAssessmentId);
-	   if (pub == null) {
-		   return false;
-	   }
-	   return pub.getAssessmentAccessControl().getReleaseTo().equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS);
+//	   PublishedAssessmentIfc pub = getPublishedAssessment(publishedAssessmentId);
+//	   if (pub == null) {
+//		   return false;
+//	   }
+//	   return pub.getAssessmentAccessControl().getReleaseTo().equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS);
+        
+        // NYU improve performance by doing a quick count instead of the above (pulls back the entire assessment)
+        return PersistenceService.getInstance().getPublishedAssessmentFacadeQueries().isReleasedToGroups(Long.valueOf(publishedAssessmentId));
    }
 
    public Integer getPublishedAssessmentStatus(Long publishedAssessmentId) {

@@ -125,81 +125,102 @@
 
             <div id="{{this.name}}"></div>
             <script>
-             var chart = new ApexCharts(
-                 document.querySelector("#{{this.name}}"),
-                 {
-                     chart: {
-                         width: 1280,
-                         height: 200,
-                         type: 'heatmap',
-                         animations: {
-                             enabled: false,
-                             dynamicAnimation: {
+             (function () {
+                 var timeSliceTotals = [
+                     {{#each this.timeSliceTotals}}
+                       {{this}},
+                     {{/each}}
+                 ];
+
+                 var chart = new ApexCharts(
+                     document.querySelector("#{{this.name}}"),
+                     {
+                         chart: {
+                             width: 1280,
+                             height: 200,
+                             type: 'heatmap',
+                             animations: {
                                  enabled: false,
+                                 dynamicAnimation: {
+                                     enabled: false,
+                                 }
                              }
-                         }
-                     },
-                     stroke: {
-                         width: 1,
-                         colors: ['#a8d7fb'],
-                     },
-
-                     dataLabels: {
-                         enabled: false
-                     },
-                     xaxis: {
-                         type: 'category',
-                         labels: {
-                             show: false,
-                             formatter: function (value, timestamp, index) {
-                                 return moment(new Date(value)).tz('America/New_York').format('ddd, YYYY-MM-DD HH:mm');
-                             },
                          },
-                         axisTicks: {
-                             show: false,
+                         stroke: {
+                             width: 1,
+                             colors: ['#a8d7fb'],
                          },
-                     },
 
-                     tooltip: {
-                         y: {
-                             formatter: function (value, chart) {
-                                 var col = chart.dataPointIndex;
-                                 var total = 0;
-
-                                 for (var seriesIdx = 0; seriesIdx < chart.series.length; seriesIdx++) {
-                                     total += chart.series[seriesIdx][col];
-                                 }
-
-                                 if (total == 0 || value == 0) {
-                                     return "0";
-                                 } else {
-                                     return "" + value + " (" + ((value / total) * 100).toFixed(2) + "%)";
-                                 }
-                             },
+                         dataLabels: {
+                             enabled: false
                          },
-                     },
-
-                     colors: ["#008FFB"],
-                     series: [
-                         {{#each this.bucketsMap}}
-                         {
-                             name: '{{@key}}',
-                             data: [
-                                 {{#each this}}
-                                 {
-                                     x: {{this.time}},
-                                     y: {{this.count}},
+                         xaxis: {
+                             type: 'category',
+                             labels: {
+                                 show: false,
+                                 formatter: function (value, timestamp, index) {
+                                     return moment(new Date(value)).tz('America/New_York').format('ddd, YYYY-MM-DD HH:mm');
                                  },
-                                 {{/each}}
-                             ],
+                             },
+                             axisTicks: {
+                                 show: false,
+                             },
                          },
-                         {{/each}}
-                     ],
-                 });
+
+                         tooltip: {
+                             y: {
+                                 formatter: function (value, chart) {
+                                     var col = chart.dataPointIndex;
+
+                                     var formatNumber = function(n) {
+                                         if (n < 0) {
+                                             return "-" + formatNumber(n * -1);
+                                         } else if (n < 1000) {
+                                             return "" + n;
+                                         } else {
+                                             let s = "" + (n % 1000)
+                                             while (s.length < 3) {
+                                                 s = "0" + s;
+                                             }
+
+                                             return formatNumber(Math.floor(n / 1000)) + "," + s;
+                                         }
+
+                                         return result;
+                                     }
+
+                                     if (value == 0) {
+                                         return "0";
+                                     } else {
+                                         var estimatedObservations = Math.round((timeSliceTotals[col] || 0) * (value / 100.0));
+                                         return "" + value + "% (observations: " + formatNumber(estimatedObservations) + ")";
+                                     }
+                                 },
+                             },
+                         },
+
+                         colors: ["#008FFB"],
+                         series: [
+                             {{#each this.bucketsMap}}
+                             {
+                                 name: '{{@key}}',
+                                 data: [
+                                     {{#each this}}
+                                     {
+                                         x: {{this.time}},
+                                         y: {{this.count}},
+                                     },
+                                     {{/each}}
+                                 ],
+                             },
+                             {{/each}}
+                         ],
+                     });
 
 
-             chart.render();
+                 chart.render();
 
+             }());
             </script>
 
             {{#if this.showCountsByDay}}
