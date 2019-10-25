@@ -630,11 +630,23 @@ public class HistogramListener
 					  String key = questionScores.getKeywords();
 					  if (key != null && !"".equals(key)) {
 						  String [] keys = key.split(",");
+
+						  Double pctCorrect = 0.0d;
+						  try {
+							  if (questionScores.getPercentCorrect() != null && !"N/A".equalsIgnoreCase(questionScores.getPercentCorrect())) {
+								  pctCorrect = Double.parseDouble(questionScores.getPercentCorrect());
+							  }
+						  }
+						  catch (NumberFormatException nfe) {
+							  log.error("NFE when looking at percentage correct by keyword", nfe);
+						  }
+
 						  for (int i=0; i < keys.length; i++) {
 							  if (keywordsCorrect.get(keys[i]) != null) {
 								  int divisor = keywordsCounter.get(keys[i]) + 1;
+
 								  Double newAvg = keywordsCorrect.get(keys[i]) + (
-								  (Double.parseDouble(questionScores.getPercentCorrect()) - keywordsCorrect.get(keys[i])
+								  (pctCorrect - keywordsCorrect.get(keys[i])
 								  ) / divisor);
                               
 								  newAvg = new BigDecimal(newAvg).setScale(2, RoundingMode.HALF_UP).doubleValue();
@@ -642,7 +654,7 @@ public class HistogramListener
 								  keywordsCounter.put(keys[i], divisor);
 								  keywordsCorrect.put(keys[i], newAvg);
 							  } else {
-								  Double newAvg = Double.parseDouble(questionScores.getPercentCorrect());
+								  Double newAvg = pctCorrect;
 								  newAvg = new BigDecimal(newAvg).setScale(2, RoundingMode.HALF_UP).doubleValue();
                               
 								  keywordsCounter.put(keys[i], 1);
