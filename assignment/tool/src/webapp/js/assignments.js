@@ -659,6 +659,7 @@ ASN.toggleAddOptions = function(checked){
         section.style.display="none";
         ASN.resizeFrame('shrink');
         $("#site").prop("disabled", false);
+        $('#groupSubmissionHelpMsg').hide();
         //When Peer Assement options is selected
         if(checked == "peerreview"){
             section.style.display="block";
@@ -667,6 +668,7 @@ ASN.toggleAddOptions = function(checked){
         }else if (checked=="GROUP"){
             $("#site").prop("disabled", true);
             $("#groups").prop("checked", true).trigger("click");
+            $('#groupSubmissionHelpMsg').show();
         }
     }
     

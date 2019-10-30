@@ -580,6 +580,9 @@
 									<label for="id-$group.Id">
 										$validator.escapeHtml($group.Title)
 									</label>
+									#if($groupDisabled)
+										<div><small class="text-muted">Submission for group received</small></div>
+									#end
 								</td>
 								<td headers="description">
 									#set($description = "")
@@ -710,6 +713,9 @@
 						#end
 						/>
 						$tlang.getString("group.issubmit")
+						<div id="groupSubmissionHelpMsg" class="text-muted" style="display: none;">
+							<small>Note: please select the appropriate group(s) for this assignment in the "Access" section above.</small>
+						</div>
 					</label>
 				</div>
 			#end
