@@ -575,6 +575,9 @@
 										#end
 									#end
 									<input type="checkbox" name="selectedGroups" id="id-$group.Id" title="$group.Id" value="$group.Id" #if($selected) checked="checked"#end #if($groupDisabled) disabled #else onclick="ASN.showOrHideSelectGroupsMessage();" #end />
+									#if($groupDisabled && $selected)
+										<input type="hidden" name="selectedGroups" value="$group.Id" />
+									#end
 								</td>
 								<td headers="name">
 									<label for="id-$group.Id">
