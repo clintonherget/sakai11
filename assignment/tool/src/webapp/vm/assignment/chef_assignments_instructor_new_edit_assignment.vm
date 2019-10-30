@@ -567,13 +567,14 @@
 							<tr>
 								<td headers="selected">
 									#set($selected=false)
+									#set($groupDisabled = $groupsWithUserSubmission.contains($group))
 									#foreach($aGroupRef in $assignmentGroups)
 										#set($aGroup = $!site.getGroup($!aGroupRef))
 										#if ($!group.Id == $!aGroup.Id)
 											#set($selected = true)
 										#end
 									#end
-									<input type="checkbox" name="selectedGroups" id="id-$group.Id" title="$group.Id" value="$group.Id" #if($selected) checked="checked"#end onclick="ASN.showOrHideSelectGroupsMessage();" />
+									<input type="checkbox" name="selectedGroups" id="id-$group.Id" title="$group.Id" value="$group.Id" #if($selected) checked="checked"#end #if($groupDisabled) disabled #else onclick="ASN.showOrHideSelectGroupsMessage();" #end />
 								</td>
 								<td headers="name">
 									<label for="id-$group.Id">
