@@ -202,23 +202,7 @@ public class LessonsAccess {
 
 
     public Set<Path> getPagePaths (long pageId) {
-	boolean threadRenamed = false;
-
-	// NYU debugging: loop for threads getting stuck on certain pages.
-	String thisThreadName = Thread.currentThread().getName();
-	if (thisThreadName.startsWith("http-nio")) {
-	    threadRenamed = true;
-	    Thread.currentThread().setName(thisThreadName + "::getPagePaths::pageId=" + pageId);
-	}
-
-	try {
-	    return getPagePaths(pageId, new HashSet<Long>(), true);
-	} finally {
-	    if (threadRenamed) {
-		// Remove our addition
-		Thread.currentThread().setName(thisThreadName);
-	    }
-	}
+	return getPagePaths(pageId, new HashSet<Long>(), true);
     }
 
     public Set<Path> getPagePaths (long pageId, Set<Long>seen) {
