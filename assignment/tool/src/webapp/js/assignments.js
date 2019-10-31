@@ -659,6 +659,7 @@ ASN.toggleAddOptions = function(checked){
         section.style.display="none";
         ASN.resizeFrame('shrink');
         $("#site").prop("disabled", false);
+        $('#groupSubmissionHelpMsg').hide();
         //When Peer Assement options is selected
         if(checked == "peerreview"){
             section.style.display="block";
@@ -667,6 +668,7 @@ ASN.toggleAddOptions = function(checked){
         }else if (checked=="GROUP"){
             $("#site").prop("disabled", true);
             $("#groups").prop("checked", true).trigger("click");
+            $('#groupSubmissionHelpMsg').show();
         }
     }
     
@@ -718,6 +720,11 @@ ASN.toggleSelectAll = function(caller, elementName)
         //SAK-19147 don't toggle last "Save all submissions in one folder"
         for(var i = 0; i < elements.length; i++)
         {
+            // NYU Skip disabled
+            if (elements[i].disabled) {
+              continue;
+            }
+
             if( elements[i].id !== "withoutFolders" )
             {
                 elements[i].checked = newValue;

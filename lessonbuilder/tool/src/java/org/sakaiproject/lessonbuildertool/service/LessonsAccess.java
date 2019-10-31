@@ -24,8 +24,10 @@ package org.sakaiproject.lessonbuildertool.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +49,8 @@ import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.user.api.UserDirectoryService;
+
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 
 // This class is used to check whether a page or item should be
 // accessible for the user. It checks all conditions. SimplePageBean
@@ -202,15 +206,11 @@ public class LessonsAccess {
 
 
     public Set<Path> getPagePaths (long pageId) {
-	return getPagePaths(pageId, new HashSet<Long>(), true);
-    }
-
-    public Set<Path> getPagePaths (long pageId, Set<Long>seen) {
-	return getPagePaths(pageId, seen, true);
+	return getPagePaths(pageId, true);
     }
 
     public Set<Path> getPagePaths(long pageId, boolean usePrerequisites) {
-	return getPagePaths(pageId, new HashSet<Long>(), usePrerequisites);
+	return getPagePaths(pageId, new HashSet<Long>(), usePrerequisites, new HashMap<Long, Set<Path>>());
     }
 
     // usePrerequisites is normally used. However for GradebookInfo, we just
@@ -219,7 +219,11 @@ public class LessonsAccess {
     //   Cache only if usePrerequisites = false. We can't cache both or the cache
     // can have more than one value for a given page, and it's really the case
     // without we care about because of the gradebook
-    Set<Path> getPagePaths(long pageId, Set<Long>seen, boolean usePrerequisites) {
+    Set<Path> getPagePaths(long pageId, Set<Long>seen, boolean usePrerequisites, Map<Long, Set<Path>> memoizedResults) {
+	if ("true".equals(HotReloadConfigurationService.getString("nyu-lessons-memoization", "true")) && memoizedResults.containsKey(pageId)) {
+	    return memoizedResults.get(pageId);
+	}
+
 	// if pageid is 0 this is a top level page. No further constraints
 	Set<Path> ret = new HashSet<Path>();
 	if (pageId == 0) {
@@ -297,7 +301,7 @@ public class LessonsAccess {
 		// TODO: check for duplicates
 		ret.add(path);
 	    } else {
-		Set<Path> paths = getPagePaths(item.getPageId(), seen);
+		Set<Path> paths = getPagePaths(item.getPageId(), seen, usePrerequisites, memoizedResults);
 		for (Path path: paths) {
 		    // the values will end up cached. That means we can't
 		    // modify the values in place, but have to copy them first
@@ -318,6 +322,10 @@ public class LessonsAccess {
 	}
 
 	seen.remove(pageId);
+
+	if ("true".equals(HotReloadConfigurationService.getString("nyu-lessons-memoization", "true"))) {
+	    memoizedResults.put(pageId, ret);
+	}
 
 	// only cache final results, not intermediate computations
 	// in some situations with loops the intermediate calculations can be wrong
