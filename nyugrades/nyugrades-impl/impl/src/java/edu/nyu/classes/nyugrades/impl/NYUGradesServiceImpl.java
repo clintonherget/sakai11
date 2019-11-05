@@ -170,7 +170,7 @@ public class NYUGradesServiceImpl implements NYUGradesService
 
         GradeSet result = resolveNetIds((Map<String, String>) grades);
 
-        db.writeAuditLog(result);
+        db.writeAuditLog(result, sectionEid);
 
         return result;
     }
