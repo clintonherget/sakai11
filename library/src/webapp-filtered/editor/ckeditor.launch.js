@@ -452,7 +452,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
                   var dialogContents = findAncestor(iframe, 'cke_dialog_contents');
                   var message = document.createElement('div');
                   message.classList.add('ckeditor-dialog-info-message');
-                  message.innerHTML = 'Beginning 10/26, video annotation capabilities will be available for NYU Stream videos in NYU Classes.<br>For more information see the <a href="http://www.nyu.edu/servicelink/KB0017871" target="_blank" style="color:#2775A1;text-decoration:underline;cursor:pointer;">Annoto kbase article</a>.';
+                  message.innerHTML = '<span style="font-size: 11px;">Beginning 10/26, video annotation capabilities will be available for NYU Stream videos in NYU Classes. For more information see the <a href="http://www.nyu.edu/servicelink/KB0017871" target="_blank" style="color:#2775A1;text-decoration:underline;cursor:pointer;font-size: 11px;">Annoto kbase article</a>.</span>';
 
                   dialogBody.insertBefore(message, dialogContents);
               };
