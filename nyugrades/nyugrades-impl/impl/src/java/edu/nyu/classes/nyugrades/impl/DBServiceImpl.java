@@ -51,9 +51,9 @@ public class DBServiceImpl implements DBService
         return sqlService.getVendor().equals("oracle");
     }
 
-    private static final String AUDIT_INSERT = "insert into nyu_t_grades_audit (system_timestamp, netid, emplid, gradeletter) values (?, ?, ?, ?)";
+    private static final String AUDIT_INSERT = "insert into nyu_t_grades_audit (system_timestamp, netid, emplid, gradeletter, section_eid) values (?, ?, ?, ?, ?)";
 
-    public void writeAuditLog(GradeSet grades) throws AuditLogException
+    public void writeAuditLog(GradeSet grades, String sectionEid) throws AuditLogException
     {
         long now = System.currentTimeMillis();
 
@@ -74,6 +74,7 @@ public class DBServiceImpl implements DBService
                     ps.setString(2, grade.netId);
                     ps.setString(3, grade.emplId);
                     ps.setString(4, grade.gradeletter);
+                    ps.setString(5, sectionEid);
 
                     int insertedCount = ps.executeUpdate();
 
