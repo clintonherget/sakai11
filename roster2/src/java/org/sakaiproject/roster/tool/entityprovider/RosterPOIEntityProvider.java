@@ -208,6 +208,7 @@ public class RosterPOIEntityProvider extends AbstractEntityProvider implements
 				final String filename = createFilename(site, groupId, viewType, enrollmentSetId, enrollmentStatus);
 				response.addHeader("Content-Disposition", "attachment; filename=" + filename);
 				response.addHeader("Content-Encoding", "base64");
+				response.addHeader("Cache-Control", "no-cache");
 				response.addHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
 				final Workbook workbook = getExportData(userId, site, parameters);
@@ -468,6 +469,12 @@ public class RosterPOIEntityProvider extends AbstractEntityProvider implements
 				row.add(member.getSortName());
 			}
 
+			if (member.getPronunciation() != null && member.getPronunciation().pronouns != null) {
+			    row.add(member.getPronunciation().pronouns);
+			} else {
+			    row.add("");
+			}
+
 			if (this.sakaiProxy.getViewUserDisplayId()) {
 				row.add(member.getDisplayId());
 			}
@@ -521,6 +528,12 @@ public class RosterPOIEntityProvider extends AbstractEntityProvider implements
 				row.add(member.getDisplayName());
 			} else {
 				row.add(member.getSortName());
+			}
+
+			if (member.getPronunciation() != null && member.getPronunciation().pronouns != null) {
+			    row.add(member.getPronunciation().pronouns);
+			} else {
+			    row.add("");
 			}
 
 			if (this.sakaiProxy.getViewUserDisplayId()) {
@@ -592,6 +605,8 @@ public class RosterPOIEntityProvider extends AbstractEntityProvider implements
 
 		final List<String> header = new ArrayList<>();
 		header.add(rl.getString("facet_name"));
+
+		header.add(rl.getString("facet_pronouns"));
 
 		if (this.sakaiProxy.getViewUserDisplayId()) {
 			header.add(rl.getString("facet_userId"));
