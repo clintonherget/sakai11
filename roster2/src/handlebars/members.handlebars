@@ -22,11 +22,17 @@
         {{#if ../../viewProfile}}
             </a>
         {{/if}}
-        {{#if pronunciation}}
-            <a href="javascript:void(0);" class="namePronunciation" onclick="this.querySelector('img[role=button]').click()" title="Listen to pronunciation of name">{{{pronunciation}}}</a>
+        {{#if pronunciation.embedCode}}
+            <a href="javascript:void(0);" class="namePronunciation" onclick="this.querySelector('img[role=button]').click()" title="Listen to pronunciation of name">{{{pronunciation.embedCode}}}</a>
         {{/if}}
         </div>
     {{/unless}}
+
+        <div class="roster-table-cell roster-pronoun-cell">
+            {{#if pronunciation.pronouns}}
+            {{pronunciation.pronouns}}
+            {{/if}}
+        </div>
 
     {{#if ../viewUserDisplayId}}
         <div class="roster-table-cell">

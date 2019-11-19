@@ -76,6 +76,7 @@ import org.sakaiproject.memory.api.MemoryService;
 import org.sakaiproject.memory.api.SimpleConfiguration;
 import org.sakaiproject.profile2.logic.ProfileConnectionsLogic;
 import org.sakaiproject.profile2.util.ProfileConstants;
+import org.sakaiproject.roster.api.PronounceInfo;
 import org.sakaiproject.roster.api.RosterEnrollment;
 import org.sakaiproject.roster.api.RosterFunctions;
 import org.sakaiproject.roster.api.RosterGroup;
@@ -466,8 +467,8 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
     /**
      * @return A mapping of user eid and url of audio name pronunciation
      */
-    private Map<String, String> getPronunciationMap(Map<String, User> userMap) {
-        Map<String, String> pronunceMap = new HashMap<>();
+    private Map<String, PronounceInfo> getPronunciationMap(Map<String, User> userMap) {
+        Map<String, PronounceInfo> pronunceMap = new HashMap<>();
 
         if ("namecoach".equalsIgnoreCase(serverConfigurationService.getString("roster.pronunciation.provider", ""))) {
             Set<String> emails = new HashSet<>();
@@ -479,7 +480,7 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
 
             try (CloseableHttpClient client = HttpClients.createDefault()) {
                 URIBuilder builder = new URIBuilder(serverConfigurationService.getString("namecoach.url", "https://name-coach.com/api/private/v4/participants"));
-                builder.setParameter("email_list", String.join(",", emails)).setParameter("per_page", "999").setParameter("include", "embeddables");
+                builder.setParameter("email_list", String.join(",", emails)).setParameter("per_page", "999").setParameter("include", "embeddables,custom_attributes");
 
                 HttpGet httpGet = new HttpGet(builder.build());
                 httpGet.setHeader("Authorization", serverConfigurationService.getString("namecoach.auth_token", ""));
@@ -503,10 +504,16 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
                         JsonNode pNode = iterator.next();
                         JsonNode emailNode = pNode.get("email");
                         JsonNode embedNode = pNode.get("embed_image");
+
+                        String pronouns = null;
+                        if (pNode.has("custom_objects") && pNode.get("custom_objects").hasNonNull("v2_preferred_gender_pronouns")) {
+                            pronouns = pNode.get("custom_objects").get("v2_preferred_gender_pronouns").asText();
+                        }
+
                         String emailText = emailNode.asText();
                         String embedCode = embedNode.asText();
                         if (emailNode != null && embedNode != null && !emailText.equals("null") && !embedCode.equals("null")) {
-                            pronunceMap.put(emailText, embedCode);
+                            pronunceMap.put(emailText, new PronounceInfo(embedCode, pronouns));
                         }
                     }
                 }
@@ -694,7 +701,7 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
 		return membership;
 	}
 	
-	private RosterMember getRosterMember(Map<String, User> userMap, Collection<Group> groups, Member member, Site site, Map<String, String> pronunceMap)
+	private RosterMember getRosterMember(Map<String, User> userMap, Collection<Group> groups, Member member, Site site, Map<String, PronounceInfo> pronunceMap)
         throws UserNotDefinedException {
 
 		String userId = member.getUserId();
@@ -713,8 +720,8 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
 		rosterMember.setSortName(user.getSortName());
 
 		// See if there is a pronunciation available for the user
-		String pronunceEmbed = pronunceMap.containsKey(user.getEmail()) ? pronunceMap.get(user.getEmail()) : null;
-		rosterMember.setPronunciation(pronunceEmbed);
+		PronounceInfo pronunceInfo = pronunceMap.containsKey(user.getEmail()) ? pronunceMap.get(user.getEmail()) : null;
+		rosterMember.setPronunciation(pronunceInfo);
 
 		Map<String, String> userPropertiesMap = new HashMap<>();
 		ResourceProperties props = user.getProperties();
@@ -822,7 +829,7 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
             Map<String, User> userMap = getUserMap(membership);
 
             // Audio URL for how to pronunce each name
-            Map<String, String> pronunceMap = getPronunciationMap(userMap);
+            Map<String, PronounceInfo> pronunceMap = getPronunciationMap(userMap);
 
             siteMembers = new ArrayList<>();
 

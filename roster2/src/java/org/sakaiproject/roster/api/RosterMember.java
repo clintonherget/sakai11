@@ -73,7 +73,7 @@ public class RosterMember {
 	@Getter @Setter
 	private String credits;
 	@Getter @Setter
-	private String pronunciation;
+	private PronounceInfo pronunciation;
 	@Getter
 	private Map<String, String> groups = new HashMap<String, String>();
 	@Getter @Setter
