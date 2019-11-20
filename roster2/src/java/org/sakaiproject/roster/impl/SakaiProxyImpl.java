@@ -502,8 +502,6 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
                     Iterator<JsonNode> iterator  = participantsNode.iterator();
                     while (iterator.hasNext()) {
                         JsonNode pNode = iterator.next();
-                        JsonNode emailNode = pNode.get("email");
-                        JsonNode embedNode = pNode.get("embed_image");
 
                         String pronouns = null;
                         if (pNode.has("custom_objects") && pNode.get("custom_objects").hasNonNull("v2_preferred_gender_pronouns")) {
@@ -511,13 +509,12 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
                         }
 
                         String embedCode = null;
-                        if (embedNode != null && !"null".equals(emailNode.asText())) {
-                            embedCode = embedNode.asText();
+                        if (pNode.hasNonNull("embed_image")) {
+                            embedCode = pNode.get("embed_image").asText();
                         }
 
-                        String emailText = emailNode.asText();
-                        if (emailNode != null && !emailText.equals("null")) {
-                            pronunceMap.put(emailText, new PronounceInfo(embedCode, pronouns));
+                        if (pNode.hasNonNull("email")) {
+                            pronunceMap.put(pNode.get("email").asText(), new PronounceInfo(embedCode, pronouns));
                         }
                     }
                 }
