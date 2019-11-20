@@ -510,9 +510,13 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
                             pronouns = pNode.get("custom_objects").get("v2_preferred_gender_pronouns").asText();
                         }
 
+                        String embedCode = null;
+                        if (embedNode != null && !"null".equals(emailNode.asText())) {
+                            embedCode = embedNode.asText();
+                        }
+
                         String emailText = emailNode.asText();
-                        String embedCode = embedNode.asText();
-                        if (emailNode != null && embedNode != null && !emailText.equals("null") && !embedCode.equals("null")) {
+                        if (emailNode != null && !emailText.equals("null")) {
                             pronunceMap.put(emailText, new PronounceInfo(embedCode, pronouns));
                         }
                     }
