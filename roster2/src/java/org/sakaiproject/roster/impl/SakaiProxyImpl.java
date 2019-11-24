@@ -62,6 +62,7 @@ import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.component.api.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 import org.sakaiproject.coursemanagement.api.Enrollment;
 import org.sakaiproject.coursemanagement.api.EnrollmentSet;
@@ -504,8 +505,9 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
                         JsonNode pNode = iterator.next();
 
                         String pronouns = null;
-                        if (pNode.has("custom_objects") && pNode.get("custom_objects").hasNonNull("v2_preferred_gender_pronouns")) {
-                            pronouns = pNode.get("custom_objects").get("v2_preferred_gender_pronouns").asText();
+                        String pronounsPropName = HotReloadConfigurationService.getString("namecoach.custom_objects_property.pronouns", "pronouns");
+                        if (pNode.has("custom_objects") && pNode.get("custom_objects").hasNonNull(pronounsPropName)) {
+                            pronouns = pNode.get("custom_objects").get(pronounsPropName).asText();
                         }
 
                         String embedCode = null;
