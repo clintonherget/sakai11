@@ -1754,8 +1754,9 @@ public class AssessmentFacadeQueries extends HibernateDaoSupport implements Asse
 					.indexOf(AuthoringConstantStrings.ANONYMOUS) > -1);
 			if (anonymousAllowed) {
 				// generate an alias to the pub assessment
+			    // FIXME
 				String alias = AgentFacade.getAgentString()
-						+ (new Date()).getTime();
+						+ (new Date()).getTime() + "_" + java.util.UUID.randomUUID().toString();
 				AssessmentMetaData meta = new AssessmentMetaData(newAssessment,
 						"ALIAS", alias);
 				newMetaDataSet.add(meta);

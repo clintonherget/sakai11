@@ -196,7 +196,7 @@ class Surrogates < Sinatra::Base
       substring = substring.gsub(/[^a-zA-Z :]/, "_").upcase
 
       stmnt = conn.prepare_statement("select stem_name, cle_crseid, descr from nyu_t_course_catalog" +
-                                     " where stem_name LIKE '#{session}%'" +
+                                     " where strm in (select strm from nyu_t_acad_session where code_4char = ?)" +
                                      "  AND acad_group = ? " +
                                      (department ? "  AND acad_org = ? " : "") +
                                      " AND (UPPER(stem_name) LIKE '%#{substring}%'" +
@@ -205,8 +205,9 @@ class Surrogates < Sinatra::Base
 
 
       with_open(stmnt) do |stmnt|
-        stmnt.setString(1, school)
-        stmnt.setString(2, department) if department
+        stmnt.setString(1, session)
+        stmnt.setString(2, school)
+        stmnt.setString(3, department) if department
 
         with_open(stmnt.execute_query) do |rs|
           courses = []
