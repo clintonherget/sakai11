@@ -1034,24 +1034,30 @@ public class HierarchyServiceImpl implements HierarchyService {
             }
             throw new RuntimeException("Metadata didn't save, metaData was removed: "+metaData);
         } else if (!metaData.getId().equals(pNode.getId())) {
+            System.err.println(String.format("Two nodes saved with different IDs: metadata=%d; persistent=%d",
+                                             metaData.getId(), pNode.getId()));
             // the indexes are off... let's try to get them back in sync
             int i = 0;
             if (pNode.getId() > metaData.getId()) {
                 while (i < 100 && metaData.getId() != null && pNode.getId() != metaData.getId()) {
+                    System.err.println("Stepping metadata attempt: " + i);
                     // need to keep saving metaData until it's sequence has caught up
                     dao.delete(metaData);
                     // set ID back to null to make it save with a new incremented ID
                     metaData.setId(null);
                     dao.save(metaData);
+                    System.err.println("Metadata ID is now: " + metaData.getId());
                     i++;
                 }
             } else {
                 while (i < 100 && pNode.getId() != null && pNode.getId() != metaData.getId()) {
+                    System.err.println("Stepping persistent attempt: " + i);
                     // need to keep saving node until it's sequence has caught up
                     dao.delete(pNode);
                     // set ID back to null to make it save with a new incremented ID
                     pNode.setId(null);
                     dao.save(pNode);
+                    System.err.println("Persistent ID is now: " + pNode.getId());
                     i++;
                 }
             }
