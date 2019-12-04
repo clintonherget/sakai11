@@ -505,7 +505,7 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
                         JsonNode pNode = iterator.next();
 
                         String pronouns = null;
-                        String pronounsPropName = HotReloadConfigurationService.getString("namecoach.custom_objects_property.pronouns", "pronouns");
+                        String pronounsPropName = HotReloadConfigurationService.getString("namecoach.custom_objects_property.pronouns", "pronoun");
                         String pronounsOptOutPropName = HotReloadConfigurationService.getString("namecoach.custom_objects_property.opt_out", "opt_out");
                         String pronounsOptOutYesValue = HotReloadConfigurationService.getString("namecoach.custom_objects_property.opt_out.yes_value", "Yes: Use my pronouns in the classroom");
                         if (pNode.has("custom_objects") && pNode.get("custom_objects").hasNonNull(pronounsPropName)) {
