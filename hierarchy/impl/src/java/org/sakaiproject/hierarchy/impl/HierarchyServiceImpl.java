@@ -1039,7 +1039,7 @@ public class HierarchyServiceImpl implements HierarchyService {
             // the indexes are off... let's try to get them back in sync
             int i = 0;
             if (pNode.getId() > metaData.getId()) {
-                while (i < 100 && metaData.getId() != null && pNode.getId() != metaData.getId()) {
+                while (i < 100 && metaData.getId() != null && !pNode.getId().equals(metaData.getId())) {
                     System.err.println("Stepping metadata attempt: " + i);
                     // need to keep saving metaData until it's sequence has caught up
                     dao.delete(metaData);
@@ -1050,7 +1050,7 @@ public class HierarchyServiceImpl implements HierarchyService {
                     i++;
                 }
             } else {
-                while (i < 100 && pNode.getId() != null && pNode.getId() != metaData.getId()) {
+                while (i < 100 && pNode.getId() != null && !pNode.getId().equals(metaData.getId())) {
                     System.err.println("Stepping persistent attempt: " + i);
                     // need to keep saving node until it's sequence has caught up
                     dao.delete(pNode);
