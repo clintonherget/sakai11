@@ -472,16 +472,17 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
         Map<String, PronounceInfo> pronunceMap = new HashMap<>();
 
         if ("namecoach".equalsIgnoreCase(serverConfigurationService.getString("roster.pronunciation.provider", ""))) {
-            Set<String> emails = new HashSet<>();
+            Map<String, String> eidToEmail = new HashMap<>();
+
             for (User u : userMap.values()) {
-                emails.add(u.getEmail());
+		eidToEmail.put(u.getEid(), u.getEmail());
             }
 
-            if (emails.isEmpty()) return pronunceMap;
+            if (eidToEmail.isEmpty()) return pronunceMap;
 
             try (CloseableHttpClient client = HttpClients.createDefault()) {
                 URIBuilder builder = new URIBuilder(serverConfigurationService.getString("namecoach.url", "https://name-coach.com/api/private/v4/participants"));
-                builder.setParameter("email_list", String.join(",", emails)).setParameter("per_page", "999").setParameter("include", "embeddables,custom_attributes");
+                builder.setParameter("institution_id_list", String.join(",", eidToEmail.keySet())).setParameter("per_page", "999").setParameter("include", "embeddables,custom_attributes");
 
                 HttpGet httpGet = new HttpGet(builder.build());
                 httpGet.setHeader("Authorization", serverConfigurationService.getString("namecoach.auth_token", ""));
@@ -519,8 +520,9 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
                             embedCode = pNode.get("embed_image").asText();
                         }
 
-                        if (pNode.hasNonNull("email")) {
-                            pronunceMap.put(pNode.get("email").asText(), new PronounceInfo(embedCode, pronouns));
+                        if (pNode.hasNonNull("institution_id")) {
+			    String email = eidToEmail.get(pNode.get("institution_id").asText());
+                            pronunceMap.put(email, new PronounceInfo(embedCode, pronouns));
                         }
                     }
                 }
