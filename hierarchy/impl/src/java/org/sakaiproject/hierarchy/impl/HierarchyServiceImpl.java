@@ -1061,7 +1061,7 @@ public class HierarchyServiceImpl implements HierarchyService {
                     i++;
                 }
             }
-            if (pNode.getId() == null || metaData.getId() == null || pNode.getId() != metaData.getId()) {
+            if (pNode.getId() == null || metaData.getId() == null || !pNode.getId().equals(metaData.getId())) {
                 // ok we tried, it didn't work, so throw the exception
                 throw new RuntimeException("Node ID: " + pNode.getId() + " doesn't match Metadata ID: " + metaData.getId());
             }
