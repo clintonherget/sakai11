@@ -62,6 +62,8 @@ import edu.nyu.classes.saml.api.SamlService;
 import edu.nyu.classes.saml.api.SamlAuthResponse;
 import edu.nyu.classes.saml.api.SamlCertificateService;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
 
 public class SamlServiceImpl implements SamlService
 {
@@ -317,6 +319,26 @@ public class SamlServiceImpl implements SamlService
   }
 
 
+  private void dumpRequestMaybe(HttpServletRequest req) {
+    if ("true".equals(HotReloadConfigurationService.getString("nyu.shibboleth.dump-failed-requests", "true"))) {
+      StringBuilder sb = new StringBuilder();
+
+      sb.append("FAILED REQUEST FOLLOWS:\n\n");
+
+      sb.append("  Remote address: " + req.getRemoteAddr() + "\n");
+
+      Map<String, String[]> params = req.getParameterMap();
+
+      for (String k : params.keySet()) {
+        for (String v : params.get(k)) {
+          sb.append(String.format("  param[%s]=%s\n", k, v));
+        }
+      }
+
+      LOG.info(sb.toString());
+    }
+  }
+
   public SamlAuthResponse handleSamlAuthentication(HttpServletRequest req)
   {
     try {
@@ -326,6 +348,7 @@ public class SamlServiceImpl implements SamlService
       LOG.info("Response from SAML authentication was: {}", response);
 
       if (response == null || qualifiedNetID == null) {
+        dumpRequestMaybe(req);
         return null;
       }
 
@@ -359,6 +382,7 @@ public class SamlServiceImpl implements SamlService
       LOG.error("Error occured in openSAML config initialization", e1);
     }
 
+    dumpRequestMaybe(req);
     return null;
   }
 }
