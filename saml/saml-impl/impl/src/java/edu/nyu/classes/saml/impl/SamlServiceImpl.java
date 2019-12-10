@@ -85,23 +85,11 @@ public class SamlServiceImpl implements SamlService
 
   private SAMLSignatureProfileValidator profileValidator;
 
-
-  private String signatureLocation =
-    ServerConfigurationService.getString("edu.nyu.classes.saml.signatureLocation", "message");
-
-  private boolean disableSignatureCheck =
-    ServerConfigurationService.getBoolean("edu.nyu.classes.saml.disableSignatureCheck", false);
-
   private int skewAdjustmentSeconds =
     ServerConfigurationService.getInt("edu.nyu.classes.saml.clockSkewAdjustmentSeconds", 180);
 
 
   private SamlCertificateService certificateService;
-
-  static final String SIGNATURE_ASSERTION = "assertion";
-  static final String SIGNATURE_MESSAGE = "message";
-
-
 
 
   public void init()
@@ -118,9 +106,7 @@ public class SamlServiceImpl implements SamlService
     decoder = new HTTPPostDecoder(parserPool);
     profileValidator = new SAMLSignatureProfileValidator();
 
-    if (!disableSignatureCheck) {
-      certificateService = (SamlCertificateService)ComponentManager.get("edu.nyu.classes.saml.api.SamlCertificateService");
-    }
+    certificateService = (SamlCertificateService)ComponentManager.get("edu.nyu.classes.saml.api.SamlCertificateService");
   }
 
 
@@ -159,10 +145,12 @@ public class SamlServiceImpl implements SamlService
 
     ensureKnownEntityId(entityId);
 
-    if (!disableSignatureCheck) {
-      if (SIGNATURE_MESSAGE.equals(signatureLocation) && message.isSigned()) {
+    // Either the message is signed, or we require ALL individual assertions to be signed.
+    boolean signatureAccepted = false;
+
+    if (message.isSigned()) {
         validateSignature(message, entityId);
-      }
+        signatureAccepted = true;
     }
 
     Element samlElement = message.getDOM();
@@ -176,30 +164,35 @@ public class SamlServiceImpl implements SamlService
 
     authnInfo.put("relayState", context.getRelayState());
 
-    if (assertions != null && assertions.size() > 0) {
-      Assertion assertion = assertions.get(0);
+    if (assertions == null && assertions.size() == 0) {
+        throw new ValidationException("Expected at least one assertion");
+    }
 
-      if (!disableSignatureCheck) {
-        if (SIGNATURE_ASSERTION.equals(signatureLocation) && assertion.isSigned()) {
-          validateSignature(assertion, entityId);
-        }
-      }
+    Assertion assertion = assertions.get(0);
 
-      Subject subject = assertion.getSubject();
-      Conditions conditions = assertion.getConditions();
-      String url = request.getRequestURL().toString();
-      Date date = new Date();
+    if (assertion.isSigned()) {
+        validateSignature(assertion, entityId);
+    }
 
-      // validate the date range of the subject confirmation
-      boolean validConfirmation = validConfirmation(subject, url, date);
+    if (!signatureAccepted && !assertion.isSigned()) {
+        throw new ValidationException("Either message or assertion must be signed");
+    }
 
-      // validate the date range of the conditions
-      boolean validConditions = validConditions(conditions, url, date);
+    Subject subject = assertion.getSubject();
+    Conditions conditions = assertion.getConditions();
+    String url = request.getRequestURL().toString();
+    Date date = new Date();
 
-      // assertion has the proper date range and we're the intended audience
-      LOG.info(String.format("Assertion validation: confirmation: %s, conditions: %s",
-                             validConfirmation, validConditions));
-      if (validConfirmation && validConditions) {
+    // validate the date range of the subject confirmation
+    boolean validConfirmation = validConfirmation(subject, url, date);
+
+    // validate the date range of the conditions
+    boolean validConditions = validConditions(conditions, url, date);
+
+    // assertion has the proper date range and we're the intended audience
+    LOG.info(String.format("Assertion validation: confirmation: %s, conditions: %s",
+                           validConfirmation, validConditions));
+    if (validConfirmation && validConditions) {
         NameID nameId = subject.getNameID();
         String netId = nameId.getValue();
         String principal = netId;
@@ -207,20 +200,19 @@ public class SamlServiceImpl implements SamlService
         authnInfo.put("credentials", principal);
 
         for (AttributeStatement attrStmt : assertion.getAttributeStatements()) {
-          for (Attribute attr : attrStmt.getAttributes()) {
-            List<Object> vals = new ArrayList<Object>();
-            List<XMLObject> values = attr.getAttributeValues();
-            for (XMLObject xml : values) {
-              vals.add(xml.getDOM().getTextContent());
+            for (Attribute attr : attrStmt.getAttributes()) {
+                List<Object> vals = new ArrayList<Object>();
+                List<XMLObject> values = attr.getAttributeValues();
+                for (XMLObject xml : values) {
+                    vals.add(xml.getDOM().getTextContent());
+                }
+                if (vals.size() == 1) {
+                    authnInfo.put(attr.getName(), vals.get(0).toString());
+                } else if (vals.size() > 1) {
+                    authnInfo.put(attr.getName(), vals.toString());
+                }
             }
-            if (vals.size() == 1) {
-              authnInfo.put(attr.getName(), vals.get(0).toString());
-            } else if (vals.size() > 1) {
-              authnInfo.put(attr.getName(), vals.toString());
-            }
-          }
         }
-      }
     }
     return authnInfo;
   }
