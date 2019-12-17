@@ -113,3 +113,25 @@ $(function() {
     $("<div>" + MARK_FOR_REVIEW_POPUP_WORDING + "</div>").dialog();
   });
 });
+
+// CLASSES-3784 only allow file upload when file selected
+$(function() {
+    $('#takeAssessmentForm').find(':input[type=file][name*=deliverFileUpload]').each(function() {
+        var $fileInput = $(this);
+
+        function toggleSubmitEnabled() {
+            var $submit = $fileInput.siblings(':input[type=submit][value=Upload]');
+            if ($fileInput.val()) {
+                $submit.prop('disabled', false);
+            } else {
+                $submit.prop('disabled', true);
+            }
+        }
+
+        $fileInput.on('change', function() {
+            toggleSubmitEnabled();
+        });
+
+        toggleSubmitEnabled();
+    });
+});
