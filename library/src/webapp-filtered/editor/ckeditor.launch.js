@@ -195,7 +195,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
 
 
             ['Cut','Copy','Paste','PasteText','PasteFromWord','-','RemoveFormat'],
-            [imageType,'AudioRecorder','Audio','magicembed',kalturaPluginToUse,'Youtube'].concat(mathRelatedPlugins, ['-','NYUPreview']),
+            [imageType,'AudioRecorder','magicembed',kalturaPluginToUse,'Youtube'].concat(mathRelatedPlugins, ['-','NYUPreview']),
             extraToolbarButtons,
             ['Maximize'],
 
@@ -301,7 +301,6 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         CKEDITOR.plugins.addExternal('balloonpanel',webJars+'balloonpanel/${ckeditor.balloonpanel.version}/', 'plugin.js');
         CKEDITOR.plugins.addExternal('a11ychecker',webJars+'a11ychecker/${ckeditor.a11ychecker.version}/', 'plugin.js');
 
-        CKEDITOR.plugins.addExternal('audio',basePath+'audio/', 'plugin.js'); 
         CKEDITOR.plugins.addExternal('kaltura', basePath + 'kaltura/', 'plugin.js');
         CKEDITOR.plugins.addExternal('kalturaflash',basePath+'kalturaflash/', 'plugin.js');
         CKEDITOR.plugins.addExternal('magicembed',basePath+'magicembed/', 'plugin.js');
@@ -343,7 +342,7 @@ sakai.editor.editors.ckeditor.launch = function(targetId, config, w, h) {
         CKEDITOR.dtd.$removeEmpty.span = false;
         CKEDITOR.dtd.$removeEmpty['i'] = false;
 
-        ckconfig.extraPlugins+=",audio,kalturaflash,magicembed,youtube";
+        ckconfig.extraPlugins+=",kalturaflash,magicembed,youtube";
         ckconfig.extraPlugins+=",ckeditor_wiris";
         ckconfig.extraPlugins+=",autolink";
         ckconfig.extraPlugins+=",nyupreview";
