@@ -39,7 +39,7 @@ function GetFormContent(formId, buttonName) {
         var type = typeof(elt.type)=='string' ? elt.type.toLowerCase() : '';
         var value = elt.value;
         var encoded = encodeURIComponent(name)+"="+encodeURIComponent(value);
-	if (type == "submit" && !elt.disabled) {
+	if (name && type == "submit" && !elt.disabled) {
 	    // save name of buttons we are disabling, and disable
 	    disabledButtons.push(name);
 	    elt.disabled = true;
