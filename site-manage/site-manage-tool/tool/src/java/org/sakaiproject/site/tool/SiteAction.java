@@ -7258,16 +7258,33 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 			// for course sites
 			String siteType = site.getType();
 			if (SiteTypeUtil.isCourseSite(siteType)) {
-				AcademicSession term = null;
-				if (state.getAttribute(STATE_TERM_SELECTED) != null) {
-					term = (AcademicSession) state
+				// NYU: setDefaults should have already set our
+				// term, so don't pull it from the state unless
+				// it's absent for some reason.
+				if (rp.getProperty(Site.PROP_SITE_TERM_EID) == null) {
+					log.info("Site creation WEIRDNESS: Was not expecting term to be null here");
+
+					AcademicSession term = null;
+					if (state.getAttribute(STATE_TERM_SELECTED) != null) {
+						term = (AcademicSession) state
 							.getAttribute(STATE_TERM_SELECTED);
-					rp.addProperty(Site.PROP_SITE_TERM, term.getTitle());
-					rp.addProperty(Site.PROP_SITE_TERM_EID, term.getEid());
+						rp.addProperty(Site.PROP_SITE_TERM, term.getTitle());
+						rp.addProperty(Site.PROP_SITE_TERM_EID, term.getEid());
+					}
+
+					// update the site and related realm based on the rosters chosen or requested
+					updateCourseSiteSections(state, site.getId(), rp, term);
+				} else {
+					// NYU: Pull the session EID from the
+					// property that was set by setDefaults
+					// and use that term.  Don't leave the
+					// door open for the user state to be
+					// messed up and give inconsistent
+					// terms.
+					AcademicSession term = cms.getAcademicSession(rp.getProperty(Site.PROP_SITE_TERM_EID));
+					updateCourseSiteSections(state, site.getId(), rp, term);
 				}
 
-				// update the site and related realm based on the rosters chosen or requested
-				updateCourseSiteSections(state, site.getId(), rp, term);
 			}
 			else
 			{
@@ -16244,6 +16261,13 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		String templateSiteId = null;
 
 		AcademicSession term = (AcademicSession) state.getAttribute(STATE_TERM_SELECTED);
+
+                if (term != null) {
+                    // NYU: Set these here instead of at the point of site creation
+                    // to avoid the chance of them getting lost.
+                    siteInfo.addProperty(Site.PROP_SITE_TERM, term.getTitle());
+                    siteInfo.addProperty(Site.PROP_SITE_TERM_EID, term.getEid());
+                }
 
 		// CLASSES-2410 EPOLY sites will use a template based on their location
 		final String epolyCode = "EPOLY";
