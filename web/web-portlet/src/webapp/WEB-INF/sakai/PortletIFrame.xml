@@ -32,6 +32,13 @@
 	  <configuration name="sakai.properties.url.key" value="nyu.expos-digital-anthology.url" />
 	</tool>
 
+	<tool id="nyu.learning.analytics"
+	      title="NYU Learning Analytics"
+	      description="NYU Learning Analytics">
+	  <configuration name="popup" value="false" />
+	  <configuration name="sakai.properties.url.key" value="nyu.learning.analytics.url" />
+	</tool>
+
 
 	<tool
 			id="sakai.iframe"
