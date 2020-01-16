@@ -22,32 +22,17 @@
         {{#if ../../viewProfile}}
             </a>
         {{/if}}
+        {{#if pronunciation.embedCode}}
+            <a href="javascript:void(0);" class="namePronunciation" onclick="this.querySelector('img[role=button]').click()" title="Listen to pronunciation of name">{{{pronunciation.embedCode}}}</a>
+        {{/if}}
         </div>
     {{/unless}}
 
-    {{#if ../viewUserNamePronunciation}}
-        <div class="roster-table-cell roster-user-name-pronunciation-cell">
-            <div class="roster-mobile-label">{{translate 'facet_user_name_pronunciation'}}</div>
-                <span class="namePronunciation">
-                {{#if pronunciation}}
-                    {{{pronunciation}}}
-                    {{#ifCond ../currentUserId userId}}
-                        <a href="{{../profileNamePronunciationLink}}">{{translate 'name_pronunciation_profile_edit_link'}}</a>
-                    {{/ifCond}}
-                {{else}}
-                    {{#ifCond ../currentUserId userId}}
-                        {{#if ../profileNamePronunciationLink}}
-                            <a href="{{../profileNamePronunciationLink}}">{{translate 'name_pronunciation_profile_link'}}</a>
-                        {{else}}
-                            {{{translate 'name_pronunciation_not_provided'}}}
-                        {{/if}}
-                    {{else}}
-                        {{{translate 'name_pronunciation_not_provided'}}}
-                    {{/ifCond}}
-                {{/if}}
-                </span>
+        <div class="roster-table-cell roster-pronoun-cell">
+            {{#if pronunciation.pronouns}}
+            {{pronunciation.pronouns}}
+            {{/if}}
         </div>
-    {{/if}}
 
     {{#if ../viewUserDisplayId}}
         <div class="roster-table-cell">

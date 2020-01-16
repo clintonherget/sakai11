@@ -63,7 +63,6 @@ public interface SakaiProxy {
 	public final static Boolean DEFAULT_VIEW_CONNECTIONS = true;
 	public final static Boolean DEFAULT_VIEW_USER_DISPLAY_ID = true;
 	public final static Boolean DEFAULT_VIEW_USER_PROPERTIES = true;
-	public final static Boolean DEFAULT_VIEW_USER_NAME_PRONUNCIATION = false;
 	public final static Integer DEFAULT_ROSTER_STATE = 0;
 	
 	public final static String NAME_PRONUNCIATION_SITE_PROPERTY = "roster-name-pronunciation";
@@ -276,27 +275,6 @@ public interface SakaiProxy {
     public Map<String, SitePresenceTotal> getPresenceTotalsForSite(String siteId);
 
     public boolean getShowVisits();
-
-    /**
-     * Returns the value of the <code>roster.display.user.name.pronunciation</code> Sakai property.
-     *
-     * @return the value of the <code>roster.display.user.name.pronunciation</code> Sakai property.
-     */
-    public Boolean getViewUserNamePronunciation();
-
-    /**
-     * Returns the profile tool link. Null if user doesn't have profile tool.
-     *
-     * @return the profile tool link. Null if user doesn't have profile tool.
-     */
-    public String getProfileToolLink();
-
-    /**
-     * Returns if the name pronunciation feature is enabled in this site, using the "roster-name-pronunciation" property.
-     *
-     * @return true if is enabled in the site, false otherwise.
-     */
-    public boolean isNamePronunciationEnabledInSite();
 
     /**
      * Returns if the official photo toggle and feature is enabled in this site, using the "roster_official_photo_view" property.

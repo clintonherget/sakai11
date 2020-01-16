@@ -34,7 +34,9 @@
 
 package org.sakaiproject.roster.impl;
 
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -43,10 +45,14 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.MapUtils;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.time.StopWatch;
 
 import org.sakaiproject.api.privacy.PrivacyManager;
 import org.sakaiproject.authz.api.AuthzGroup;
@@ -55,15 +61,13 @@ import org.sakaiproject.authz.api.GroupProvider;
 import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.authz.api.SecurityService;
-import org.sakaiproject.api.common.edu.person.SakaiPerson;
-import org.sakaiproject.api.common.edu.person.SakaiPersonManager;
 import org.sakaiproject.component.api.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 import org.sakaiproject.coursemanagement.api.Enrollment;
 import org.sakaiproject.coursemanagement.api.EnrollmentSet;
 import org.sakaiproject.coursemanagement.api.Section;
 import org.sakaiproject.coursemanagement.api.exception.IdNotFoundException;
-import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.event.api.Event;
@@ -71,9 +75,9 @@ import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.memory.api.Cache;
 import org.sakaiproject.memory.api.MemoryService;
 import org.sakaiproject.memory.api.SimpleConfiguration;
-import org.sakaiproject.profile2.logic.ProfileLogic;
 import org.sakaiproject.profile2.logic.ProfileConnectionsLogic;
 import org.sakaiproject.profile2.util.ProfileConstants;
+import org.sakaiproject.roster.api.PronounceInfo;
 import org.sakaiproject.roster.api.RosterEnrollment;
 import org.sakaiproject.roster.api.RosterFunctions;
 import org.sakaiproject.roster.api.RosterGroup;
@@ -93,6 +97,9 @@ import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.util.ResourceLoader;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * <code>SakaiProxy</code> acts as a proxy between Roster and Sakai components.
  * 
@@ -109,9 +116,7 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
 	private GroupProvider groupProvider;
 	private PrivacyManager privacyManager;
 	private MemoryService memoryService;
-	private ProfileLogic profileLogic;
 	private ProfileConnectionsLogic connectionsLogic;
-	private SakaiPersonManager sakaiPersonManager;
 	private SecurityService securityService;
 	private ServerConfigurationService serverConfigurationService;
 	private SessionManager sessionManager;
@@ -459,7 +464,81 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
 
         return userMap;
     }
-		
+
+    /**
+     * @return A mapping of user eid and url of audio name pronunciation
+     */
+    private Map<String, PronounceInfo> getPronunciationMap(Map<String, User> userMap) {
+        Map<String, PronounceInfo> pronunceMap = new HashMap<>();
+
+        if ("namecoach".equalsIgnoreCase(serverConfigurationService.getString("roster.pronunciation.provider", ""))) {
+            Map<String, String> eidToEmail = new HashMap<>();
+
+            for (User u : userMap.values()) {
+		eidToEmail.put(u.getEid(), u.getEmail());
+            }
+
+            if (eidToEmail.isEmpty()) return pronunceMap;
+
+            try (CloseableHttpClient client = HttpClients.createDefault()) {
+                URIBuilder builder = new URIBuilder(serverConfigurationService.getString("namecoach.url", "https://name-coach.com/api/private/v4/participants"));
+                builder.setParameter("institution_id_list", String.join(",", eidToEmail.keySet())).setParameter("per_page", "999").setParameter("include", "embeddables,custom_attributes");
+
+                HttpGet httpGet = new HttpGet(builder.build());
+                httpGet.setHeader("Authorization", serverConfigurationService.getString("namecoach.auth_token", ""));
+                httpGet.setHeader("Accept", "application/json");
+                httpGet.setHeader("Content-Type", "application/x-www-form-urlencoded");
+                log.debug("namecoach http get: " + httpGet.toString());
+
+                ResponseHandler<String> handler = new BasicResponseHandler();
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                CloseableHttpResponse response = client.execute(httpGet);
+                int statusCode = response.getStatusLine().getStatusCode();
+
+                if (statusCode == 200) {
+                    String body = handler.handleResponse(response);
+                    JsonNode rootNode = objectMapper.readTree(body);
+                    log.debug("JSON returned: {}", rootNode.toString());
+                    JsonNode participantsNode = rootNode.path("participants");
+                    Iterator<JsonNode> iterator  = participantsNode.iterator();
+                    while (iterator.hasNext()) {
+                        JsonNode pNode = iterator.next();
+
+                        String pronouns = null;
+                        String pronounsPropName = HotReloadConfigurationService.getString("namecoach.custom_objects_property.pronouns", "pronoun");
+                        String pronounsOptOutPropName = HotReloadConfigurationService.getString("namecoach.custom_objects_property.opt_out", "opt_out");
+                        String pronounsOptOutYesValue = HotReloadConfigurationService.getString("namecoach.custom_objects_property.opt_out.yes_value", "Yes: Use my pronouns in the classroom");
+                        if (pNode.has("custom_objects") && pNode.get("custom_objects").hasNonNull(pronounsPropName)) {
+                            if (pNode.get("custom_objects").hasNonNull(pronounsOptOutPropName) && pronounsOptOutYesValue.equals(pNode.get("custom_objects").get(pronounsOptOutPropName).asText())) {
+                                pronouns = pNode.get("custom_objects").get(pronounsPropName).asText();
+                            }
+                        }
+
+                        String embedCode = null;
+                        if (pNode.hasNonNull("embed_image")) {
+                            embedCode = pNode.get("embed_image").asText();
+                        }
+
+                        if (pNode.hasNonNull("institution_id")) {
+			    String email = eidToEmail.get(pNode.get("institution_id").asText());
+                            pronunceMap.put(email, new PronounceInfo(embedCode, pronouns));
+                        }
+                    }
+                }
+            }
+            catch (UnsupportedEncodingException e) {
+                log.error("Could not encode for GET", e);
+            }
+            catch (IOException e) {
+                log.error("IO error during GET and read", e);
+            } catch (URISyntaxException e) {
+                log.error("URI Syntax Error", e);
+            }
+        }
+        return pronunceMap;
+    }
+
     /**
      * @return A mapping of RosterMember onto eid
      */
@@ -476,17 +555,10 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
 		}
 
 		Map<String, User> userMap = getUserMap(membership);
-
-		// Audio URL for how to pronunce each name
-		Map<String, String> pronunceMap = new HashMap<>();
-		if (this.getViewUserNamePronunciation()) {
-			pronunceMap = getPronunciationMap(userMap);
-		}
-
 		Collection<Group> groups = site.getGroups();
 		for (Member member : membership) {
 			try {
-				RosterMember rosterMember = getRosterMember(userMap, groups, member, site, pronunceMap);
+				RosterMember rosterMember = getRosterMember(userMap, groups, member, site, null);
 				rosterMembers.put(rosterMember.getEid(), rosterMember);
 			} catch (UserNotDefinedException e) {
 				log.warn("user not found: " + e.getId());
@@ -638,7 +710,7 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
 		return membership;
 	}
 	
-	private RosterMember getRosterMember(Map<String, User> userMap, Collection<Group> groups, Member member, Site site, Map<String, String> pronunceMap)
+	private RosterMember getRosterMember(Map<String, User> userMap, Collection<Group> groups, Member member, Site site, Map<String, PronounceInfo> pronunceMap)
         throws UserNotDefinedException {
 
 		String userId = member.getUserId();
@@ -652,18 +724,13 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
 		rosterMember.setEid(user.getEid());
 		rosterMember.setDisplayId(member.getUserDisplayId());
 		rosterMember.setRole(member.getRole().getId());
-
 		rosterMember.setEmail(user.getEmail());
 		rosterMember.setDisplayName(user.getDisplayName());
 		rosterMember.setSortName(user.getSortName());
 
 		// See if there is a pronunciation available for the user
-		String pronunciation = pronunceMap.get(user.getId());
-		//Try by email instead of Id
-		if(StringUtils.isEmpty(pronunciation)) {
-			pronunciation = pronunceMap.get(user.getEmail());
-		}
-		rosterMember.setPronunciation(pronunciation);
+		PronounceInfo pronunceInfo = pronunceMap.containsKey(user.getEmail()) ? pronunceMap.get(user.getEmail()) : null;
+		rosterMember.setPronunciation(pronunceInfo);
 
 		Map<String, String> userPropertiesMap = new HashMap<>();
 		ResourceProperties props = user.getProperties();
@@ -771,10 +838,7 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
             Map<String, User> userMap = getUserMap(membership);
 
             // Audio URL for how to pronunce each name
-            Map<String, String> pronunceMap = new HashMap<>();
-            if (this.getViewUserNamePronunciation()) {
-                pronunceMap = getPronunciationMap(userMap);
-            }
+            Map<String, PronounceInfo> pronunceMap = getPronunciationMap(userMap);
 
             siteMembers = new ArrayList<>();
 
@@ -1217,81 +1281,6 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
     }
 
     /**
-     * @return A mapping of user eid and url of audio name pronunciation
-     */
-    private Map<String, String> getPronunciationMap(Map<String, User> userMap) {
-        Map<String, String> pronunceMap = new HashMap<>();
-
-        for (User user : userMap.values()) {
-            final String userId = user.getId();
-            final String slash = Entity.SEPARATOR;
-            final StringBuilder path = new StringBuilder();
-            SakaiPerson sakaiPerson = sakaiPersonManager.getSakaiPerson(user.getId(), this.sakaiPersonManager.getUserMutableType());
-            String phoneticPronunciation = StringUtils.EMPTY;
-            if (sakaiPerson != null && StringUtils.isNotEmpty(sakaiPerson.getPhoneticPronunciation())) {
-                //Append the phonetic pronunciation if it's not empty.
-                phoneticPronunciation = sakaiPerson.getPhoneticPronunciation();
-                path.append("<span>");
-                path.append(phoneticPronunciation);
-                path.append("</span>");
-            }
-            if (profileLogic.getUserNamePronunciation(user.getId()) != null) {
-                path.append(String.format("<span data-user-id='%s' class='nameAudioPlayer' title='%s'>", userId, phoneticPronunciation));
-                path.append("<span class='fa fa-volume-up fa-lg' aria-hidden='true'></span>");
-                path.append("</span>");
-                //Append the user recording if exists.
-                path.append(" <audio ");
-                path.append(String.format("id='audio-%s' ", user.getId()));
-                path.append("class='hidden audioPlayer' ");
-                path.append("controls ");
-                path.append("controlsList='nodownload' ");
-                path.append("src='");
-                path.append(slash);
-                path.append("direct");
-                path.append(slash);
-                path.append("profile");
-                path.append(slash);
-                path.append(user.getId());
-                path.append(slash);
-                path.append("pronunciation");
-                path.append("?v=");
-                path.append(RandomStringUtils.random(8, true, true));
-                path.append("'/>");
-            }
-            pronunceMap.put(user.getId(), path.toString());
-        }
-
-        return pronunceMap;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Boolean getViewUserNamePronunciation() {
-        return serverConfigurationService.getBoolean("roster.display.user.name.pronunciation", DEFAULT_VIEW_USER_NAME_PRONUNCIATION);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getProfileToolLink() {
-        try {
-            Site site = siteService.getSite(siteService.getUserSiteId(getCurrentUserId()));
-            return site.getUrl() + "/tool/" + site.getToolForCommonId("sakai.profile2").getId();
-        } catch(Exception e){
-            log.error("Error getting tool for profile on user workspace {}", e.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isNamePronunciationEnabledInSite() {
-        return isSitePropertyEnabled(NAME_PRONUNCIATION_SITE_PROPERTY);
-    }
-
-    /**
      * {@inheritDoc}
      */
     public boolean isOfficialPhotoEnabledInSite() {
@@ -1308,63 +1297,42 @@ public class SakaiProxyImpl implements SakaiProxy, Observer {
         }
         return false;
     }
+
     public void update(Observable o, Object arg) {
 
         if (arg instanceof Event) {
             Event event = (Event) arg;
             String eventName = event.getEvent();
-
-            //CLASSES-3695 When a user changes the name pronunciation, the changes need to be reflected in roster
-            if(ProfileConstants.EVENT_PROFILE_NAME_PRONUN_UPDATE.equals(eventName)){
-				StopWatch watch = new StopWatch();
-				watch.start();
-				String userId = StringUtils.remove(event.getResource(), "/profile/");
-				log.info("The user {} has updated the name pronunciation in the profile, clearing the caches of the sites that the user belongs to.", userId);
-				List<Site> userSites = siteService.getUserSites();
-				if(userSites != null && !userSites.isEmpty()){
-					for(Site site : userSites){
-						log.info("Attempting to cleaning up the roster cache of the site {}", site.getId());
-						this.removeSiteRosterCache(site.getId());
-					}
-				}
-				watch.stop();
-				log.info("The caches of the sites have been cleared, {} sites, total time spent {} ms", userSites.size(), TimeUnit.MILLISECONDS.toSeconds(watch.getTime()));
-				return;
-            }
-
             if (SiteService.SECURE_UPDATE_SITE_MEMBERSHIP.equals(eventName)
                     || SiteService.SECURE_UPDATE_GROUP_MEMBERSHIP.equals(eventName)) {
                 log.debug("Site membership or groups updated. Clearing caches ...");
                 String siteId = event.getContext();
-                this.removeSiteRosterCache(siteId);
-            }
-        }
-    }
 
-    private void removeSiteRosterCache(String siteId){
-        if (siteId == null) {
-            log.debug("siteId was null, skipping");
-            return;
-        }
+                if (siteId == null) {
+                    log.debug("siteId was null, skipping");
+                    return;
+                }
 
-        Cache enrollmentsCache = getCache(ENROLLMENTS_CACHE);
-        enrollmentsCache.remove(siteId);
+                Cache enrollmentsCache = getCache(ENROLLMENTS_CACHE);
+                enrollmentsCache.remove(siteId);
 
-        Cache searchIndexCache = memoryService.getCache(SEARCH_INDEX_CACHE);
-        searchIndexCache.remove(siteId);
+                Cache searchIndexCache = memoryService.getCache(SEARCH_INDEX_CACHE);
+                searchIndexCache.remove(siteId);
 
-        Cache membershipsCache = getCache(MEMBERSHIPS_CACHE);
+                Cache membershipsCache = getCache(MEMBERSHIPS_CACHE);
 
-        synchronized(this) {
-            membershipsCache.remove(siteId);
-            Site site = getSite(siteId);
-            if (site != null) {
-                Set<Role> roles = site.getRoles();
-                for (Group group : site.getGroups()) {
-                    String gId = group.getId();
-                    membershipsCache.remove(siteId + "#" + gId);
-                    for (Role role : roles) {
-                        membershipsCache.remove(siteId + "#" + gId + "#" + role.getId());
+                synchronized(this) {
+                    membershipsCache.remove(siteId);
+                    Site site = getSite(siteId);
+                    if (site != null) {
+                        Set<Role> roles = site.getRoles();
+                        for (Group group : site.getGroups()) {
+                            String gId = group.getId();
+                            membershipsCache.remove(siteId + "#" + gId);
+                            for (Role role : roles) {
+                                membershipsCache.remove(siteId + "#" + gId + "#" + role.getId());
+                            }
+                        }
                     }
                 }
             }
