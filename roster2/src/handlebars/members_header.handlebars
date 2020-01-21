@@ -7,7 +7,12 @@
             {{#unless hideNames}}
             <div class="roster-table-cell">{{translate 'facet_name'}}</div>
             {{/unless}}
-            <div class="roster-table-cell">{{translate 'facet_pronouns'}}</div>
+            <div class="roster-table-cell">
+              {{translate 'facet_pronouns'}}
+              <span id="pronounsHelpTooltip" title="Pronouns and name pronunciation can be provided by students in their profiles in Albert. This information displays to instructors, school administrators, and advisors in Albert and, unless students opt out, also displays in the NYU Classes Roster tool and in NYU Connect." tabindex="0">
+                <i aria-hidden="true" class="fa fa-question-circle"></i>
+              </span>
+            </div>
             {{#if viewUserDisplayId}}
             <div class="roster-table-cell">{{translate 'facet_userId'}}</div>
             {{/if}}
