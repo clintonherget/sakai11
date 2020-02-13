@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -38,8 +39,11 @@ import javax.activation.MimetypesFileTypeMap;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
+import org.apache.commons.lang.StringUtils;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
@@ -59,6 +63,7 @@ import org.sakaiproject.tool.api.ToolSession;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.util.Resource;
 import org.sakaiproject.util.ResourceLoader;
+import org.sakaiproject.util.Validator;
 
 @SuppressWarnings({ "deprecation", "restriction" })
 @Slf4j
@@ -518,6 +523,13 @@ public class ZipContentUtil {
 	 */
 	private void storeContentResource(String rootId, ContentResource resource, ZipOutputStream out) throws Exception {		
 		String filename = resource.getId().substring(rootId.length(),resource.getId().length());
+		String fileExtension = FilenameUtils.getExtension(filename);
+		if (!fileExtension.isEmpty()) {
+			fileExtension = "." + fileExtension;
+		}
+
+		Boolean useDisplayString = "true".equals(HotReloadConfigurationService.getString("nyu.resources.compress_to_zip.use_display_name", "false"));
+
 		//Inorder to have username as the folder name rather than having eids
 		if(ContentHostingService.isInDropbox(rootId) && ServerConfigurationService.getBoolean("dropbox.zip.haveDisplayname", true)) {
 			try {
@@ -535,10 +547,51 @@ public class ZipContentUtil {
 				log.warn("Unexpected error occurred when trying to create Zip archive:" + extractName(rootId), e.getCause());
 				return;
 			}
+		} else if (useDisplayString) {
+			if (resource instanceof ContentResourceEdit) {
+				ResourcePropertiesEdit props = ((ContentResourceEdit)resource).getPropertiesEdit();
+				String displayName = props.getProperty(ResourcePropertiesEdit.PROP_DISPLAY_NAME);
+				if (StringUtils.isNotBlank(displayName)) {
+					String cleanFilename = Validator.escapeZipEntry(Validator.cleanFilename(displayName));
+					if (filename.contains("/")) {
+						filename = filename.substring(0, filename.lastIndexOf("/")) + "/" + cleanFilename;
+					} else {
+						filename = cleanFilename;
+					}
+					if (!filename.endsWith(fileExtension)) {
+						filename += fileExtension;
+					}
+				}
+			}
 		}
-		ZipEntry zipEntry = new ZipEntry(filename);
-		zipEntry.setSize(resource.getContentLength());
-		out.putNextEntry(zipEntry);
+		String filenameSuffix = "";
+		int counter = 1;
+		while(true) {
+			try {
+				String zipFilename = filename;
+
+				if (useDisplayString) {
+					if (filename.lastIndexOf(".") >= 0) {
+						zipFilename = String.format("%s%s%s", filename.substring(0, filename.lastIndexOf(".")), filenameSuffix, fileExtension);
+					} else {
+						zipFilename = String.format("%s%s", filename, filenameSuffix);
+					}
+				}
+
+				ZipEntry zipEntry = new ZipEntry(zipFilename);
+				zipEntry.setSize(resource.getContentLength());
+				out.putNextEntry(zipEntry);
+
+				break;
+			} catch (ZipException e) {
+				if (useDisplayString && e.getMessage().contains("duplicate entry")) {
+					counter += 1;
+					filenameSuffix = String.format(" (%d)", counter);
+				} else {
+					throw e;
+				}
+			}
+		}
 		InputStream contentStream = null;
 		try {
 			contentStream = resource.streamContent();
