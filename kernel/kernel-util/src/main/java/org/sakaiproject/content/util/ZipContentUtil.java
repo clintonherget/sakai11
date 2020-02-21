@@ -26,10 +26,12 @@ import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -52,6 +54,7 @@ import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.Reference;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.event.api.NotificationService;
 import org.sakaiproject.exception.IdUnusedException;
@@ -508,6 +511,13 @@ public class ZipContentUtil {
 	 */
 	private void storeEmptyFolder(String rootId, ContentCollection resource, ZipOutputStream out) throws Exception {		
 		String folderName = resource.getId().substring(rootId.length(),resource.getId().length());
+
+		Boolean useDisplayString = "true".equals(HotReloadConfigurationService.getString("nyu.resources.compress_to_zip.use_display_name", "false"));
+
+		if (useDisplayString) {
+			folderName = rewritePathFromDisplayNames(resource, rootId) + "/";
+		}
+
 		ZipEntry zipEntry = new ZipEntry(folderName);
 		out.putNextEntry(zipEntry);
 		out.closeEntry();
@@ -547,22 +557,8 @@ public class ZipContentUtil {
 				log.warn("Unexpected error occurred when trying to create Zip archive:" + extractName(rootId), e.getCause());
 				return;
 			}
-		} else if (useDisplayString) {
-			if (resource instanceof ContentResourceEdit) {
-				ResourcePropertiesEdit props = ((ContentResourceEdit)resource).getPropertiesEdit();
-				String displayName = props.getProperty(ResourcePropertiesEdit.PROP_DISPLAY_NAME);
-				if (StringUtils.isNotBlank(displayName)) {
-					String cleanFilename = Validator.escapeZipEntry(Validator.cleanFilename(displayName));
-					if (filename.contains("/")) {
-						filename = filename.substring(0, filename.lastIndexOf("/")) + "/" + cleanFilename;
-					} else {
-						filename = cleanFilename;
-					}
-					if (!filename.endsWith(fileExtension)) {
-						filename += fileExtension;
-					}
-				}
-			}
+		} else if (useDisplayString){
+			filename = rewriteFilenameFromDisplayNames(resource, filename, rootId);
 		}
 		String filenameSuffix = "";
 		int counter = 1;
@@ -602,7 +598,46 @@ public class ZipContentUtil {
 			}
 		}
 	}
-	
+
+	private String rewriteFilenameFromDisplayNames(ContentResource resource, String originalFilename, String rootId) {
+		if (resource instanceof ContentResourceEdit) {
+			String path = rewritePathFromDisplayNames(resource.getContainingCollection(), rootId);
+
+			ResourcePropertiesEdit props = ((ContentResourceEdit)resource).getPropertiesEdit();
+			String displayName = props.getProperty(ResourcePropertiesEdit.PROP_DISPLAY_NAME);
+
+			if (StringUtils.isNotBlank(displayName)) {
+				String cleanFilename = Validator.escapeZipEntry(Validator.cleanFilename(displayName));
+				return path + "/" + cleanFilename;
+			} else {
+				return path + "/" + originalFilename.replaceAll("^.*/", "");
+			}
+		} else {
+			return originalFilename;
+		}
+	}
+
+	private String rewritePathFromDisplayNames(ContentCollection parent, String rootId) {
+		List<String> parentDirectoryNames = new ArrayList<>();
+
+		while(!rootId.equals(parent.getId()) && parent != null) {
+			ResourceProperties props = parent.getProperties();
+			String displayName = props.getProperty(ResourcePropertiesEdit.PROP_DISPLAY_NAME);
+
+			if (StringUtils.isNotBlank(displayName)) {
+				parentDirectoryNames.add(Validator.escapeZipEntry(Validator.cleanFilename(displayName)));
+			} else {
+				parentDirectoryNames.add(parent.getId().replaceAll("^.*/", ""));
+			}
+
+			parent = parent.getContainingCollection();
+		}
+
+		Collections.reverse(parentDirectoryNames);
+
+		return parentDirectoryNames.stream().collect(Collectors.joining("/"));
+	}
+
 	private String extractZipCollectionPrefix(ContentResource resource) {
 		String idPrefix = resource.getContainingCollection().getId() + 
 			extractZipCollectionName(resource) +
