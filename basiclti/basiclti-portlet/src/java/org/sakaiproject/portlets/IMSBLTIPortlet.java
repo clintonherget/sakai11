@@ -224,11 +224,18 @@ public class IMSBLTIPortlet extends GenericPortlet {
 				log.debug("Setting sakai:maximized-url={}", iframeUrl);
 
 				if ("nyu.zoom.pro".equals(placement.getToolId())) {
-					text.append("<div style=\"background-color: #c7e4f4;padding: 12px;border-bottom: 1px solid rgba(165,138,29,0.1);\">" +
-						"Enable Zoom recordings on your account via the" +
-						" <a href=\"http://www.nyu.edu/servicelink/form/ff21af5213e1f7009136b6d96144b0b6\" target=\"_blank\">Feature Request Form</a>." +
-						" To learn more about recording limitations, see the" +
-						 " <a href=\"http://www.nyu.edu/servicelink/KB0016557\" target=\"_blank\">Recording in Zoom kbase article</a>." +
+					// text.append("<div style=\"background-color: #c7e4f4;padding: 12px;border-bottom: 1px solid rgba(165,138,29,0.1);\">" +
+					// 	"Enable Zoom recordings on your account via the" +
+					// 	" <a href=\"http://www.nyu.edu/servicelink/form/ff21af5213e1f7009136b6d96144b0b6\" target=\"_blank\">Feature Request Form</a>." +
+					// 	" To learn more about recording limitations, see the" +
+					// 	 " <a href=\"http://www.nyu.edu/servicelink/KB0016557\" target=\"_blank\">Recording in Zoom kbase article</a>." +
+					// 	"</div>");
+
+				    text.append("<div style=\"background-color: #c7e4f4;padding: 12px;border-bottom: 1px solid rgba(165,138,29,0.1);\">" +
+						"Make the most of your Zoom session by following these " +
+						"<a href=\"https://docs.google.com/document/d/1I3n6jS5FeE55a0KxUvGBhBtCd1KgmUyiVm58dwjgttw/view?usp=sharing\" target=\"_blank\">best practices</a> " +
+						"for instructors and students. Learn more about Zoom in " +
+						"<a href=\"https://nyu.edu/servicelink/keyword/nyu+classes+zoom\" target=\"_blank\" NYU ServiceLink</a>." +
 						"</div>");
 				}
 
