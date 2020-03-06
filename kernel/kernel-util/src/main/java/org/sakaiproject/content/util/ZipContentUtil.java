@@ -26,11 +26,14 @@ import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -38,8 +41,11 @@ import javax.activation.MimetypesFileTypeMap;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
+import org.apache.commons.lang.StringUtils;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentCollection;
 import org.sakaiproject.content.api.ContentCollectionEdit;
@@ -48,6 +54,7 @@ import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.Reference;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.event.api.NotificationService;
 import org.sakaiproject.exception.IdUnusedException;
@@ -59,6 +66,7 @@ import org.sakaiproject.tool.api.ToolSession;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.util.Resource;
 import org.sakaiproject.util.ResourceLoader;
+import org.sakaiproject.util.Validator;
 
 @SuppressWarnings({ "deprecation", "restriction" })
 @Slf4j
@@ -503,6 +511,13 @@ public class ZipContentUtil {
 	 */
 	private void storeEmptyFolder(String rootId, ContentCollection resource, ZipOutputStream out) throws Exception {		
 		String folderName = resource.getId().substring(rootId.length(),resource.getId().length());
+
+		Boolean useDisplayString = "true".equals(HotReloadConfigurationService.getString("nyu.resources.compress_to_zip.use_display_name", "false"));
+
+		if (useDisplayString) {
+			folderName = rewritePathFromDisplayNames(resource, rootId) + "/";
+		}
+
 		ZipEntry zipEntry = new ZipEntry(folderName);
 		out.putNextEntry(zipEntry);
 		out.closeEntry();
@@ -518,6 +533,13 @@ public class ZipContentUtil {
 	 */
 	private void storeContentResource(String rootId, ContentResource resource, ZipOutputStream out) throws Exception {		
 		String filename = resource.getId().substring(rootId.length(),resource.getId().length());
+		String fileExtension = FilenameUtils.getExtension(filename);
+		if (!fileExtension.isEmpty()) {
+			fileExtension = "." + fileExtension;
+		}
+
+		Boolean useDisplayString = "true".equals(HotReloadConfigurationService.getString("nyu.resources.compress_to_zip.use_display_name", "false"));
+
 		//Inorder to have username as the folder name rather than having eids
 		if(ContentHostingService.isInDropbox(rootId) && ServerConfigurationService.getBoolean("dropbox.zip.haveDisplayname", true)) {
 			try {
@@ -535,10 +557,37 @@ public class ZipContentUtil {
 				log.warn("Unexpected error occurred when trying to create Zip archive:" + extractName(rootId), e.getCause());
 				return;
 			}
+		} else if (useDisplayString){
+			filename = rewriteFilenameFromDisplayNames(resource, filename, rootId);
 		}
-		ZipEntry zipEntry = new ZipEntry(filename);
-		zipEntry.setSize(resource.getContentLength());
-		out.putNextEntry(zipEntry);
+		String filenameSuffix = "";
+		int counter = 1;
+		while(true) {
+			try {
+				String zipFilename = filename;
+
+				if (useDisplayString) {
+					if (filename.lastIndexOf(".") >= 0) {
+						zipFilename = String.format("%s%s%s", filename.substring(0, filename.lastIndexOf(".")), filenameSuffix, fileExtension);
+					} else {
+						zipFilename = String.format("%s%s", filename, filenameSuffix);
+					}
+				}
+
+				ZipEntry zipEntry = new ZipEntry(zipFilename);
+				zipEntry.setSize(resource.getContentLength());
+				out.putNextEntry(zipEntry);
+
+				break;
+			} catch (ZipException e) {
+				if (useDisplayString && e.getMessage().contains("duplicate entry")) {
+					counter += 1;
+					filenameSuffix = String.format(" (%d)", counter);
+				} else {
+					throw e;
+				}
+			}
+		}
 		InputStream contentStream = null;
 		try {
 			contentStream = resource.streamContent();
@@ -549,7 +598,46 @@ public class ZipContentUtil {
 			}
 		}
 	}
-	
+
+	private String rewriteFilenameFromDisplayNames(ContentResource resource, String originalFilename, String rootId) {
+		if (resource instanceof ContentResourceEdit) {
+			String path = rewritePathFromDisplayNames(resource.getContainingCollection(), rootId);
+
+			ResourcePropertiesEdit props = ((ContentResourceEdit)resource).getPropertiesEdit();
+			String displayName = props.getProperty(ResourcePropertiesEdit.PROP_DISPLAY_NAME);
+
+			if (StringUtils.isNotBlank(displayName)) {
+				String cleanFilename = Validator.escapeZipEntry(Validator.cleanFilename(displayName));
+				return path + "/" + cleanFilename;
+			} else {
+				return path + "/" + originalFilename.replaceAll("^.*/", "");
+			}
+		} else {
+			return originalFilename;
+		}
+	}
+
+	private String rewritePathFromDisplayNames(ContentCollection parent, String rootId) {
+		List<String> parentDirectoryNames = new ArrayList<>();
+
+		while(!rootId.equals(parent.getId()) && parent != null) {
+			ResourceProperties props = parent.getProperties();
+			String displayName = props.getProperty(ResourcePropertiesEdit.PROP_DISPLAY_NAME);
+
+			if (StringUtils.isNotBlank(displayName)) {
+				parentDirectoryNames.add(Validator.escapeZipEntry(Validator.cleanFilename(displayName)));
+			} else {
+				parentDirectoryNames.add(parent.getId().replaceAll("^.*/", ""));
+			}
+
+			parent = parent.getContainingCollection();
+		}
+
+		Collections.reverse(parentDirectoryNames);
+
+		return parentDirectoryNames.stream().collect(Collectors.joining("/"));
+	}
+
 	private String extractZipCollectionPrefix(ContentResource resource) {
 		String idPrefix = resource.getContainingCollection().getId() + 
 			extractZipCollectionName(resource) +

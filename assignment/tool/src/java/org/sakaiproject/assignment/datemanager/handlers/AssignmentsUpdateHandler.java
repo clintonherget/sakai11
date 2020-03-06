@@ -19,8 +19,16 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.sakaiproject.assignment.api.AssignmentService;
 import org.sakaiproject.assignment.api.model.Assignment;
+import org.sakaiproject.calendar.api.Calendar;
+import org.sakaiproject.calendar.api.CalendarEventEdit;
+import org.sakaiproject.calendar.cover.CalendarService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.InUseException;
+import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.site.api.SiteService;
+import org.sakaiproject.time.api.TimeRange;
 import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.user.api.Preferences;
@@ -161,6 +169,8 @@ public class AssignmentsUpdateHandler implements Handler {
                     assignment.setDraft(!update.published);
 
                     assignmentService.updateAssignment(assignment);
+
+                    syncWithCalendar(siteId, assignment);
                 }
 
                 response.getWriter().write("{\"status\": \"OK\"}");
@@ -182,6 +192,26 @@ public class AssignmentsUpdateHandler implements Handler {
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void syncWithCalendar(String siteId, Assignment assignment) {
+        Map<String, String> props = assignment.getProperties();
+        if (props.containsKey(ResourceProperties.PROP_ASSIGNMENT_DUEDATE_CALENDAR_EVENT_ID)) {
+            String eventId = props.get(ResourceProperties.PROP_ASSIGNMENT_DUEDATE_CALENDAR_EVENT_ID);
+            try {
+                Calendar calendar = CalendarService.getCalendar(CalendarService.calendarReference(siteId, SiteService.MAIN_CONTAINER));
+                CalendarEventEdit event = calendar.getEditEvent(eventId, org.sakaiproject.calendar.api.CalendarService.EVENT_MODIFY_CALENDAR_EVENT_TIME);
+                TimeRange newEventDate = org.sakaiproject.time.cover.TimeService.newTimeRange(assignment.getDueDate().toEpochMilli(), 0);
+                event.setRange(newEventDate);
+                calendar.commitEvent(event);
+            } catch (IdUnusedException e) {
+                // oh well, we tried
+            } catch (PermissionException e) {
+                // oh well, we tried
+            } catch (InUseException e) {
+                // oh well, we tried
+            }
         }
     }
 

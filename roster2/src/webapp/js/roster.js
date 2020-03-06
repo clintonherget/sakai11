@@ -377,6 +377,8 @@
                     }, 'roster-members-content');
             }
 
+            $('#roster-members-header #pronounsHelpTooltip').tooltip();
+
             $(window).off('scroll.roster');
         }
 
