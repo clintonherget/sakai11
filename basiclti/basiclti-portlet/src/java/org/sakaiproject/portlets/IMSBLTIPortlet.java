@@ -235,7 +235,7 @@ public class IMSBLTIPortlet extends GenericPortlet {
 						"Make the most of your Zoom session by following these " +
 						"<a href=\"https://docs.google.com/document/d/1I3n6jS5FeE55a0KxUvGBhBtCd1KgmUyiVm58dwjgttw/view?usp=sharing\" target=\"_blank\">best practices</a> " +
 						"for instructors and students. Learn more about Zoom in " +
-						"<a href=\"https://nyu.edu/servicelink/keyword/nyu+classes+zoom\" target=\"_blank\" NYU ServiceLink</a>." +
+						"<a href=\"https://nyu.edu/servicelink/keyword/nyu+classes+zoom\" target=\"_blank\"> NYU ServiceLink</a>." +
 						"</div>");
 				}
 
