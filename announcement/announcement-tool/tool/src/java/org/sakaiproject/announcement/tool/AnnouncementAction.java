@@ -26,14 +26,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Stack;
-import java.util.TreeSet;
 import java.util.Vector;
 
 import lombok.extern.slf4j.Slf4j;
@@ -727,23 +726,8 @@ public class AnnouncementAction extends PagedResourceActionII
 		 */
 		public int compareTo(Object arg0)
 		{
-			if (equals(arg0)) {
-				return 0;
-			}
-			int result = announcementMesssage.compareTo(arg0);
-			if (result == 0) {
-				return getId().compareTo(((AnnouncementWrapper) arg0).getId());
-			} else {
-				return result;
-			}
+			return announcementMesssage.compareTo(arg0);
 		}
-
-		public boolean equals(Object arg0)
-		{
-			if (!(arg0 instanceof AnnouncementWrapper)) return false;
-			return getId().equals(((AnnouncementWrapper) arg0).getId());
-		}
-
 
 		/**
 		 * Returns true if the message is editable.
@@ -1646,10 +1630,6 @@ public class AnnouncementAction extends PagedResourceActionII
 				false,
 		        ToolManager.getCurrentPlacement().getContext());
 
-        AnnouncementActionState.DisplayOptions displayOptions = state.getDisplayOptions();
-        int announcementLimit = displayOptions.getNumberOfAnnouncements();
-        TreeSet<AnnouncementWrapper> topAnnouncements = new TreeSet<>();
-
 		Iterator channelsIt = mergedAnnouncementList.iterator();
 
 		while (channelsIt.hasNext())
@@ -1664,7 +1644,6 @@ public class AnnouncementAction extends PagedResourceActionII
 
 			AnnouncementChannel curChannel = null;
 			SecurityAdvisor advisor = getChannelAdvisor(curEntry.getReference());
-
 			try
 			{
 				m_securityService.pushAdvisor(advisor);
@@ -1673,36 +1652,8 @@ public class AnnouncementAction extends PagedResourceActionII
 				{
 					if (AnnouncementService.allowGetChannel(curChannel.getReference()))
 					{
-						int count = curChannel.getCount(filter);
-						List<AnnouncementWrapper> channelMessages = new ArrayList<>();
-						int offset = 0;
-						int step = 10;
-
-						while (channelMessages.size() < announcementLimit && offset < count) {
-							List<AnnouncementWrapper> sublist = AnnouncementWrapper.wrapList(curChannel.getMessages(filter, ascending, new PagingPosition(offset, offset + step - 1)), curChannel, defaultChannel, state.getDisplayOptions());
-							sublist = getViewableMessages(sublist, ToolManager.getCurrentPlacement().getContext());
-
-							channelMessages.addAll(sublist);
-							offset = offset + step;
-						}
-
-						for (AnnouncementWrapper channelMessage : channelMessages) {
-							if (topAnnouncements.size() < announcementLimit) {
-								topAnnouncements.add(channelMessage);
-							} else {
-								if (ascending) {
-									if (channelMessage.compareTo(topAnnouncements.last()) < 0) {
-										topAnnouncements.pollLast();
-										topAnnouncements.add(channelMessage);
-									}
-								} else {
-									if (channelMessage.compareTo(topAnnouncements.first()) > 0) {
-										topAnnouncements.pollFirst();
-										topAnnouncements.add(channelMessage);
-									}
-								}
-							}
-						}
+						messageList.addAll(AnnouncementWrapper.wrapList(curChannel.getMessages(filter, ascending), curChannel,
+									defaultChannel, state.getDisplayOptions()));
 					}
 				}
 			}
@@ -1719,9 +1670,6 @@ public class AnnouncementAction extends PagedResourceActionII
 
 		}
 
-		messageList.clear();
-		messageList.addAll(topAnnouncements);
-
 		// Do an overall sort. We couldn't do this earlier since each merged channel
 		Collections.sort(messageList);
 
@@ -1730,11 +1678,13 @@ public class AnnouncementAction extends PagedResourceActionII
 		{
 			Collections.reverse(messageList);
 		}
-
+		
 		// Apply any necessary list truncation.
-		// NYU we now do this above as part of the merge into the treeset
-		//		messageList = getViewableMessages(messageList, ToolManager.getCurrentPlacement().getContext());
-
+		messageList = getViewableMessages(messageList, ToolManager.getCurrentPlacement().getContext());
+		
+		
+		
+		
 		return messageList;
 	}
 
