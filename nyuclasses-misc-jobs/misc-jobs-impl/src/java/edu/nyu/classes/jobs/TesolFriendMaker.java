@@ -187,6 +187,8 @@ public class TesolFriendMaker {
                 pairings.add(p);
             }
 
+            rs.close();
+
             for (Pairing p : pairings) {
                 LOG.info("Deleting obsolete connection: {}", p.getKey());
 
@@ -285,6 +287,7 @@ public class TesolFriendMaker {
                     }
                 }
 
+                rs.close();
                 ps.close();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -318,6 +321,7 @@ public class TesolFriendMaker {
                     excludedKeys.add(rs.getString("connection_key"));
                 }
 
+                rs.close();
                 ps.close();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
