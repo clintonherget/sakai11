@@ -1652,8 +1652,15 @@ public class AnnouncementAction extends PagedResourceActionII
 				{
 					if (AnnouncementService.allowGetChannel(curChannel.getReference()))
 					{
-						messageList.addAll(AnnouncementWrapper.wrapList(curChannel.getMessages(filter, ascending), curChannel,
-									defaultChannel, state.getDisplayOptions()));
+						List<AnnouncementMessage> channelMessages = null;
+						if (isOnWorkspaceTab() && SYNOPTIC_ANNOUNCEMENT_TOOL.equals(ToolManager.getCurrentTool().getId())) {
+							PagingPosition paging = new PagingPosition(0, 200); // Limit to 200 messages per channel
+							channelMessages = curChannel.getMessages(filter, false, paging);
+						} else {
+							channelMessages = curChannel.getMessages(filter, ascending);
+						}
+						messageList.addAll(AnnouncementWrapper.wrapList(channelMessages, curChannel,
+								defaultChannel, state.getDisplayOptions()));
 					}
 				}
 			}
