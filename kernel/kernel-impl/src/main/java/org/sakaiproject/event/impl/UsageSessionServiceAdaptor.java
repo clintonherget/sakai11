@@ -839,6 +839,8 @@ public abstract class UsageSessionServiceAdaptor implements UsageSessionService
 				hostName = hostName.substring(0, 255);
 			}
 
+			org.sakaiproject.telemetry.cover.Telemetry.addToCount("create_session_hourly", null, 1);
+
 			org.sakaiproject.telemetry.cover.Telemetry.TelemetryTimer timer = org.sakaiproject.telemetry.cover.Telemetry.startTimer("create_session");
 
 			// process the insert
