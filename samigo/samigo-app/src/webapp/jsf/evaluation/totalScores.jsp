@@ -88,12 +88,12 @@ $(document).ready(function(){
         $(self).click(function(event){
             event.preventDefault();
             event.stopImmediatePropagation();
-            var $modal = $('<div id="dialog-confirm-delete-submission" title="Delete submission?">'+
+            var $modal = $('<div id="dialog-confirm-delete-submission" title="Delete Submission?">'+
                            '<p>This submission will be permanently deleted and cannot be recovered. Are you sure?</p>'+
                            '<hr>'+
                            '<p>'+
                            ' <button class="button btn-primary cancel pull-right">Cancel</button>'+
-                           ' <button class="button delete-submission pull-left">Delete submission</button>'+
+                           ' <button class="button delete-submission pull-left">Delete Submission</button>'+
                            '</p>'+
                            '</div>')
             $(document.body).append($modal);
