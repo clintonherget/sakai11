@@ -81,17 +81,42 @@ function disableIt()
 }
 
 $(document).ready(function(){
-  $("a.sam-scoretable-deleteattempt").each(function(){
-    this.existingOnclick = this.onclick;
-    this.onclick = null;
-    $(this).click(function(){
-    	if ( confirm("<h:outputText value="#{commonMessages.confirm_delete_attempt}" escape="false"/>") ) {
-        this.existingOnclick();
-      } else {
-        return false;
-      }
+    $("a.sam-scoretable-deleteattempt").each(function() {
+        var self = this;
+        self.existingOnclick = self.onclick;
+        self.onclick = null;
+        $(self).click(function(event){
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            var $modal = $('<div id="dialog-confirm-delete-submission" title="Delete submission?">'+
+                           '<p>This submission will be permanently deleted and cannot be recovered. Are you sure?</p>'+
+                           '<hr>'+
+                           '<p>'+
+                           ' <button class="button cancel pull-right">Cancel</button>'+
+                           ' <button class="button btn-primary delete-submission pull-left">Delete submission</button>'+
+                           '</p>'+
+                           '</div>')
+            $(document.body).append($modal);
+            $( "#dialog-confirm-delete-submission" ).dialog({
+                resizable: false,
+                height: "auto",
+                width: 400,
+                modal: true,
+                open: function() {
+                    $modal.find('.delete-submission').on('click', function() {
+                        $(this).prop('disabled', true);
+                        self.existingOnclick();
+                    });
+                    $modal.find('.button.cancel').on('click', function() {
+                        $modal.dialog( "close" );
+                    });
+                },
+                close: function() {
+                    $modal.remove();
+                }
+            });
+        });
     });
-  });
 });
 </script>
 </head>
