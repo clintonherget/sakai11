@@ -239,7 +239,7 @@ public class IMSBLTIPortlet extends GenericPortlet {
 						"<a href=\"https://nyu.edu/servicelink/keyword/nyu+classes+zoom\" target=\"_blank\"> NYU ServiceLink</a>.");
 
 					if (SecurityService.unlock(SessionManager.getCurrentSessionUserId(), "site.upd")) {
-						text.append("<div><strong>Instructors</strong>: Note that alternative hosts <u>must</u> have a zoom account before they can be added to a session.</div>");
+						text.append("<div><strong>Instructors</strong>: Note that alternative hosts <u>must</u> have a Zoom account before they can be added to a meeting.</div>");
 					}
 
 					text.append("</div>");
