@@ -231,4 +231,16 @@
 		<category name="project" />
 	</tool>
 
+	<tool
+	id="nyu.academic.integrity"
+	title="Academic Integrity"
+	description="Academic Integrity">
+		<configuration name="popup" value="false" />
+		<configuration name="sakai.properties.url.key" value="nyu.academic.integrity.url" />
+		<configuration name="height" value="700px" />
+		<category name="course" />
+		<category name="project" />
+	</tool>
+
+
 </registration>
