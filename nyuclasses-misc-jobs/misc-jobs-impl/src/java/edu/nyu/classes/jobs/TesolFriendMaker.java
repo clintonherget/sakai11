@@ -187,6 +187,8 @@ public class TesolFriendMaker {
                 pairings.add(p);
             }
 
+            rs.close();
+
             for (Pairing p : pairings) {
                 LOG.info("Deleting obsolete connection: {}", p.getKey());
 
@@ -198,9 +200,13 @@ public class TesolFriendMaker {
                 delete_friend.setString(4, p.user1);
                 delete_friend.executeUpdate();
 
+                delete_friend.close();
+
                 PreparedStatement delete_tesol = connection.prepareStatement("delete from TESOL_CONNECTION where connection_key = ?");
                 delete_tesol.setString(1, p.getKey());
                 delete_tesol.executeUpdate();
+
+                delete_tesol.close();
             }
         }
 
@@ -280,6 +286,9 @@ public class TesolFriendMaker {
                         result.add(p);
                     }
                 }
+
+                rs.close();
+                ps.close();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -311,6 +320,9 @@ public class TesolFriendMaker {
                 while (rs.next()) {
                     excludedKeys.add(rs.getString("connection_key"));
                 }
+
+                rs.close();
+                ps.close();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

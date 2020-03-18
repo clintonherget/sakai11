@@ -19,6 +19,7 @@
 
 package org.sakaiproject.portlets;
 
+import org.sakaiproject.authz.cover.SecurityService;
 import org.tsugi.basiclti.BasicLTIUtil;
 
 import java.lang.Integer;
@@ -231,12 +232,17 @@ public class IMSBLTIPortlet extends GenericPortlet {
 					// 	 " <a href=\"http://www.nyu.edu/servicelink/KB0016557\" target=\"_blank\">Recording in Zoom kbase article</a>." +
 					// 	"</div>");
 
-				    text.append("<div style=\"background-color: #c7e4f4;padding: 12px;border-bottom: 1px solid rgba(165,138,29,0.1);\">" +
+				    text.append("<div style=\"background-color: #c7e4f4;padding: 6px 10px;border-bottom: 1px solid rgba(165,138,29,0.1);\">" +
 						"Make the most of your Zoom session by following these " +
 						"<a href=\"https://docs.google.com/document/d/1I3n6jS5FeE55a0KxUvGBhBtCd1KgmUyiVm58dwjgttw/view?usp=sharing\" target=\"_blank\">best practices</a> " +
 						"for instructors and students. Learn more about Zoom in " +
-						"<a href=\"https://nyu.edu/servicelink/keyword/nyu+classes+zoom\" target=\"_blank\"> NYU ServiceLink</a>." +
-						"</div>");
+						"<a href=\"https://nyu.edu/servicelink/keyword/nyu+classes+zoom\" target=\"_blank\"> NYU ServiceLink</a>.");
+
+					if (SecurityService.unlock(SessionManager.getCurrentSessionUserId(), "site.upd")) {
+						text.append("<div><strong>Instructors</strong>: Note that alternative hosts <u>must</u> have a Zoom account before they can be added to a meeting.</div>");
+					}
+
+					text.append("</div>");
 				}
 
 				if ( "on".equals(newPage) || forcePopup ) {

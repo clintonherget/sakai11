@@ -109,7 +109,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @Slf4j
 public class ChatManagerImpl extends HibernateDaoSupport implements ChatManager, Receiver {
 
-    private int messagesMax = 100;
+    @Getter private int messagesMax = 100;
 
     @Getter @Setter private ChatChannel defaultChannelSettings;
 
@@ -201,6 +201,8 @@ public class ChatManagerImpl extends HibernateDaoSupport implements ChatManager,
             		.maximumSize(1000)
                     .expireAfterWrite(600, TimeUnit.SECONDS)
                     .build();
+
+            messagesMax = serverConfigurationService.getInt("chat.max.messages", 100);
 
             try {
                 String channelId = serverConfigurationService.getString("chat.cluster.channel", "");
@@ -1079,14 +1081,6 @@ public class ChatManagerImpl extends HibernateDaoSupport implements ChatManager,
         return CHAT;
     }
 
-    public void setMessagesMax(int messagesMax) {
-        this.messagesMax = messagesMax;
-    }
-
-    public int getMessagesMax() {
-        return messagesMax;
-    }
-    
     //********************************************************************
     /**
      * {@inheritDoc}
@@ -1384,6 +1378,10 @@ public class ChatManagerImpl extends HibernateDaoSupport implements ChatManager,
 
         // Check to see how active the user has been
         TransferableChatMessage userHeartbeat = heartbeatMap.getIfPresent(channelId).getIfPresent(sessionId);
+        if (userHeartbeat == null || userHeartbeat.getTimestamp() < 1L) {
+            return false;
+        }
+
         long timeDiff = ((new Date()).getTime()) - userHeartbeat.getTimestamp();
         log.debug("Heartbeat diff for {} is {}; interval={}", sessionId, timeDiff, pollInterval*2);
         // Safari seems to back off on setTimeout calls when in background for 60 seconds
