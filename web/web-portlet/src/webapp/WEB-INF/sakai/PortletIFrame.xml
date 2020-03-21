@@ -242,5 +242,28 @@
 		<category name="project" />
 	</tool>
 
+	<tool
+	id="nyu.google.meet"
+	title="Google Meet"
+	description="Google Meet">
+		<configuration name="popup" value="false" />
+		<configuration name="sakai.properties.url.key" value="nyu.google.meet.url" />
+		<configuration name="height" value="700px" />
+		<category name="course" />
+		<category name="project" />
+	</tool>
+
+	<tool
+	    id="nyu.testing.options"
+	    title="Testing Options"
+	    description="Provides information on &lt;a href=&quot;https://www.nyu.edu/faculty/teaching-and-learning-resources/remote-instruction-support/remote-assessment-methods-and-practices.html&quot;&gt;assessment options&lt;/a&gt; for your course.">
+	  <configuration name="popup" value="false" />
+	  <configuration name="sakai.properties.url.key" value="nyu.testing.options.url" />
+	  <configuration name="height" value="700px" />
+	  <category name="course" />
+	  <category name="project" />
+	  <configuration name="functions.require" value="site.upd" />
+	</tool>
+
 
 </registration>

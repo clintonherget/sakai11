@@ -181,4 +181,15 @@
   .icon-sakai--nyu-academic-integrity {
     @extend .fa-info-circle;
   }
+
+  .icon-sakai--nyu-google-meet {
+    font-family: 'nyu-classes-icons' !important;
+    &:before {
+      content: '\e03C' !important;
+    }
+  }
+
+  .icon-sakai--nyu-testing-options {
+    @extend .fa-info-circle;
+  }
 }
