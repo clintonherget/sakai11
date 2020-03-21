@@ -256,7 +256,7 @@
 	<tool
 	    id="nyu.testing.options"
 	    title="Testing Options"
-	    description="Provides information on &lt;a href=&quot;https://www.nyu.edu/faculty/teaching-and-learning-resources/remote-instruction-support/remote-assessment-methods-and-practices.html&quot;&gt;assessment options&lt;/a&gt; for your course.">
+	    description="Provides information on &lt;a target=&quot;_blank&quot; href=&quot;https://www.nyu.edu/faculty/teaching-and-learning-resources/remote-instruction-support/remote-assessment-methods-and-practices.html&quot;&gt;assessment options&lt;/a&gt; for your course.">
 	  <configuration name="popup" value="false" />
 	  <configuration name="sakai.properties.url.key" value="nyu.testing.options.url" />
 	  <configuration name="height" value="700px" />
