@@ -20,6 +20,7 @@
 package org.sakaiproject.portlets;
 
 import org.sakaiproject.authz.cover.SecurityService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.tsugi.basiclti.BasicLTIUtil;
 
 import java.lang.Integer;
@@ -28,6 +29,8 @@ import java.io.PrintWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.Properties;
 import java.util.Map;
@@ -224,24 +227,23 @@ public class IMSBLTIPortlet extends GenericPortlet {
 				session.setAttribute("sakai:maximized-url",iframeUrl);
 				log.debug("Setting sakai:maximized-url={}", iframeUrl);
 
-				if ("nyu.zoom.pro".equals(placement.getToolId())) {
-					// text.append("<div style=\"background-color: #c7e4f4;padding: 12px;border-bottom: 1px solid rgba(165,138,29,0.1);\">" +
-					// 	"Enable Zoom recordings on your account via the" +
-					// 	" <a href=\"http://www.nyu.edu/servicelink/form/ff21af5213e1f7009136b6d96144b0b6\" target=\"_blank\">Feature Request Form</a>." +
-					// 	" To learn more about recording limitations, see the" +
-					// 	 " <a href=\"http://www.nyu.edu/servicelink/KB0016557\" target=\"_blank\">Recording in Zoom kbase article</a>." +
-					// 	"</div>");
+				String pathToAllUsersMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.allusers", placement.getToolId()), null);
+				String pathToInstructorMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.instructors", placement.getToolId()), null);
 
-				    text.append("<div style=\"background-color: #c7e4f4;padding: 6px 10px;border-bottom: 1px solid rgba(165,138,29,0.1);\">" +
-						"Make the most of your Zoom session by following these " +
-						"<a href=\"https://docs.google.com/document/d/1I3n6jS5FeE55a0KxUvGBhBtCd1KgmUyiVm58dwjgttw/view?usp=sharing\" target=\"_blank\">best practices</a> " +
-						"for instructors and students. Learn more about Zoom in " +
-						"<a href=\"https://nyu.edu/servicelink/keyword/nyu+classes+zoom\" target=\"_blank\"> NYU ServiceLink</a>.");
-
+				if (pathToAllUsersMessage != null || pathToInstructorMessage != null) {
+					text.append("<div style=\"background-color: #c7e4f4;padding: 6px 10px;border-bottom: 1px solid rgba(165,138,29,0.1);\">");
+					if (pathToAllUsersMessage != null) {
+						for (String line : Files.readAllLines(Paths.get(pathToAllUsersMessage))) {
+							text.append(line);
+						}
+					};
 					if (SecurityService.unlock(SessionManager.getCurrentSessionUserId(), "site.upd")) {
-						text.append("<div><strong>Instructors</strong>: Note that alternative hosts <u>must</u> have a Zoom account before they can be added to a meeting.</div>");
+						if (pathToInstructorMessage != null) {
+							for (String line : Files.readAllLines(Paths.get(pathToInstructorMessage))) {
+								text.append(line);
+							}
+						}
 					}
-
 					text.append("</div>");
 				}
 
