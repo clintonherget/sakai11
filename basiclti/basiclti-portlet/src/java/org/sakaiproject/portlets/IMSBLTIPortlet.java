@@ -227,24 +227,18 @@ public class IMSBLTIPortlet extends GenericPortlet {
 				session.setAttribute("sakai:maximized-url",iframeUrl);
 				log.debug("Setting sakai:maximized-url={}", iframeUrl);
 
-				String pathToAllUsersMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.allusers", placement.getToolId()), null);
+				String pathToAllStudentMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.students", placement.getToolId()), null);
 				String pathToInstructorMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.instructors", placement.getToolId()), null);
-
-				if (pathToAllUsersMessage != null || pathToInstructorMessage != null) {
-					text.append("<div style=\"background-color: #c7e4f4;padding: 6px 10px;border-bottom: 1px solid rgba(165,138,29,0.1);\">");
-					if (pathToAllUsersMessage != null) {
-						for (String line : Files.readAllLines(Paths.get(pathToAllUsersMessage))) {
+				if (pathToAllStudentMessage != null || pathToInstructorMessage != null) {
+					if (SecurityService.unlock(SessionManager.getCurrentSessionUserId(), "site.upd") && pathToInstructorMessage != null) {
+						for (String line : Files.readAllLines(Paths.get(pathToInstructorMessage))) {
 							text.append(line);
 						}
-					};
-					if (SecurityService.unlock(SessionManager.getCurrentSessionUserId(), "site.upd")) {
-						if (pathToInstructorMessage != null) {
-							for (String line : Files.readAllLines(Paths.get(pathToInstructorMessage))) {
-								text.append(line);
-							}
+					} else if (pathToAllStudentMessage != null) {
+						for (String line : Files.readAllLines(Paths.get(pathToAllStudentMessage))) {
+							text.append(line);
 						}
 					}
-					text.append("</div>");
 				}
 
 				if ( "on".equals(newPage) || forcePopup ) {
