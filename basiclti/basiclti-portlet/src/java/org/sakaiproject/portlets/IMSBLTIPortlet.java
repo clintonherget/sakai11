@@ -227,15 +227,17 @@ public class IMSBLTIPortlet extends GenericPortlet {
 				session.setAttribute("sakai:maximized-url",iframeUrl);
 				log.debug("Setting sakai:maximized-url={}", iframeUrl);
 
-				String pathToAllStudentMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.students", placement.getToolId()), null);
+				String pathToStudentMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.students", placement.getToolId()), null);
 				String pathToInstructorMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.instructors", placement.getToolId()), null);
-				if (pathToAllStudentMessage != null || pathToInstructorMessage != null) {
-					if (SecurityService.unlock(SessionManager.getCurrentSessionUserId(), "site.upd") && pathToInstructorMessage != null) {
-						for (String line : Files.readAllLines(Paths.get(pathToInstructorMessage))) {
-							text.append(line);
+				if (pathToStudentMessage != null || pathToInstructorMessage != null) {
+					if (SecurityService.unlock(SessionManager.getCurrentSessionUserId(), "site.upd")) {
+						if (pathToInstructorMessage != null) {
+							for (String line : Files.readAllLines(Paths.get(pathToInstructorMessage))) {
+								text.append(line);
+							}
 						}
-					} else if (pathToAllStudentMessage != null) {
-						for (String line : Files.readAllLines(Paths.get(pathToAllStudentMessage))) {
+					} else if (pathToStudentMessage != null) {
+						for (String line : Files.readAllLines(Paths.get(pathToStudentMessage))) {
 							text.append(line);
 						}
 					}
