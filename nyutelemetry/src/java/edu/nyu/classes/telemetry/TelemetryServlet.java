@@ -221,6 +221,8 @@ public class TelemetryServlet extends HttpServlet {
             SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
             sdf.setCalendar(Calendar.getInstance(TimeZone.getTimeZone("America/New_York")));
 
+            Set<String> countedTimes = new HashSet<>();
+
             for (List<Reading> readings : bucketsMap.values()) {
                 for (Reading reading : readings) {
                     String label = sdf.format(reading.getTime());
@@ -229,10 +231,15 @@ public class TelemetryServlet extends HttpServlet {
                         countsByDay.put(label, 0L);
                     }
 
-                    Long total = timeSliceTotals.get(reading.getTime());
+                    String key = label + "::" + reading.getTime();
 
-                    if (total != null) {
-                        countsByDay.put(label, (countsByDay.get(label) + total));
+                    if (!countedTimes.contains(key)) {
+                        countedTimes.add(key);
+                        Long total = timeSliceTotals.get(reading.getTime());
+
+                        if (total != null) {
+                            countsByDay.put(label, countsByDay.get(label) + total);
+                        }
                     }
                 }
             }
