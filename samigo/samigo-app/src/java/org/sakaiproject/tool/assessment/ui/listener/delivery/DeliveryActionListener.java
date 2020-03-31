@@ -1589,7 +1589,21 @@ public class DeliveryActionListener
           // CALCULATED_QUESTION
           if (item.getTypeId().equals(TypeIfc.CALCULATED_QUESTION))
           {
-                key = commaDelimtedCalcQuestionAnswers(item, delivery, itemBean);
+                  if ("true".equals(org.sakaiproject.component.cover.HotReloadConfigurationService.getString("nyu.calculated-question-optimization", "true"))) {
+                      // NYU: don't recalculate this N * M times when the key doesn't change between iterations
+                      if (key.isEmpty()) {
+                          key = commaDelimtedCalcQuestionAnswers(item, delivery, itemBean);
+                      }
+                  } else {
+                      String oldKey = key;
+                      key = commaDelimtedCalcQuestionAnswers(item, delivery, itemBean);
+
+                      if ("true".equals(org.sakaiproject.component.cover.HotReloadConfigurationService.getString("nyu.calculated-question-optimization.debugging", "true"))) {
+                          if (!"".equals(oldKey) && !oldKey.equals(key)) {
+                              System.err.println(String.format("NYU DEBUG: Key was %s but is now %s", oldKey, key));
+                          }
+                      }
+                  }
           }
           //myanswers will get the answer even for matrix and multiple choices survey
           myanswers.add(answer);
