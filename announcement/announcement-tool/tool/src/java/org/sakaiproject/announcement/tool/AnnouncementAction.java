@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -1559,7 +1560,14 @@ public class AnnouncementAction extends PagedResourceActionII
 									siteDD = SiteService.getSite(contextt);
 								}
 								if ( siteDD!=null && siteDD.isPublished()) {
-									channelIdStrArray.add(channeIDD);
+									if ("true".equals(HotReloadConfigurationService.getString("nyu.announcements.synoptic-optimization", "true"))) {
+										// NYU only show announcements for sites touched in the last year
+										if (siteDD.getModifiedDate().getTime() > (System.currentTimeMillis() - (365 * 24 * 60 * 60 * 1000L))) {
+											channelIdStrArray.add(channeIDD);
+										}
+									} else {
+										channelIdStrArray.add(channeIDD);
+									}
 								}
 							} catch(Exception e) {
 								log.warn(e.getMessage());
