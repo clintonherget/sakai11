@@ -1890,6 +1890,8 @@ public class ProjectLogicImpl implements ProjectLogic {
 							}
 						}
 					}
+				}
+
 				//find the node for the site
 				Map<String, Set<String>> userNodesAndPerms = dao.getNodesAndPermsForUser(userId, subSetNodeIds.toArray(new String[subSetNodeIds.size()]));
 				Map<String, String> memberRoles = new HashMap<String, String>();
