@@ -1021,7 +1021,20 @@ public class AnnouncementAction extends PagedResourceActionII
 		boolean menu_delete = true;
 		boolean menu_revise = true;
 		boolean menu_reorder = true;
-		
+
+		if ("true".equals(HotReloadConfigurationService.getString("nyu.announcements.synoptic-redirect", "true"))) {
+			if (SYNOPTIC_ANNOUNCEMENT_TOOL.equals(ToolManager.getCurrentTool().getId())) {
+				if (isOnWorkspaceTab()) {
+					try {
+						ToolConfiguration announcements = site.getToolForCommonId("sakai.announcements");
+						sstate.setAttribute("announcementToolURL", String.format("/portal/site/%s/tool/%s", site.getId(), announcements.getId()));
+					} catch (Exception e) {
+					}
+					return "announcement/chef_nyu_synoptic_override";
+				}
+			}
+		}
+
 		// check the state status to decide which vm to render
 		String statusName = state.getStatus();
 		if (statusName != null)
