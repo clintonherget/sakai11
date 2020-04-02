@@ -1754,6 +1754,11 @@ public class ProjectLogicImpl implements ProjectLogic {
 		nodeCache.clear();
 	}
 	
+	private static class SparseHierarchyNode {
+		public String id;
+		public Set<String> parentNodeIds;
+	}
+
 	public String[] getCurrentUsersAccessToSite(String siteRef){
 		String currentUserId = sakaiProxy.getCurrentUserId();
 		if(currentUserId == null || "".equals(currentUserId)){
@@ -1861,19 +1866,30 @@ public class ProjectLogicImpl implements ProjectLogic {
 				for(List<String> nodeIdsList : siteRefToNodeMap.values()){
 					nodeIds.addAll(nodeIdsList);
 				}
-				Map<String, HierarchyNode> siteNodes = hierarchyService.getNodesByIds(nodeIds.toArray(new String[nodeIds.size()]));
-				//create a set of parent ID's and lookup the user's permissions for this sub-set:
+
+				Map<String, SparseHierarchyNode> siteNodes = new HashMap<>();
+				List<String> nodeIdsList = new ArrayList(nodeIds);
+
 				Set<String> subSetNodeIds = new HashSet<String>();
-				if(siteNodes != null){
-					for(HierarchyNode node : siteNodes.values()){
-						subSetNodeIds.add(node.id);
-						if(node.parentNodeIds != null){
-							for(String pId : node.parentNodeIds){
-								subSetNodeIds.add(pId);
+				for (int i = 0; i < nodeIdsList.size(); i += 100) {
+					String[] subset = nodeIdsList.subList(i, Math.min(i + 100, nodeIdsList.size())).toArray(new String[0]);
+					Map<String, HierarchyNode> siteNodesSubset = hierarchyService.getNodesByIds(subset);
+					//create a set of parent ID's and lookup the user's permissions for this sub-set:
+					if(siteNodesSubset != null){
+						for(HierarchyNode node : siteNodesSubset.values()){
+							SparseHierarchyNode sparseNode = new SparseHierarchyNode();
+							sparseNode.id = node.id;
+							sparseNode.parentNodeIds = node.parentNodeIds;
+							siteNodes.put(node.id, sparseNode);
+
+							subSetNodeIds.add(node.id);
+							if(node.parentNodeIds != null){
+								for(String pId : node.parentNodeIds){
+									subSetNodeIds.add(pId);
+								}
 							}
 						}
 					}
-				}
 				//find the node for the site
 				Map<String, Set<String>> userNodesAndPerms = dao.getNodesAndPermsForUser(userId, subSetNodeIds.toArray(new String[subSetNodeIds.size()]));
 				Map<String, String> memberRoles = new HashMap<String, String>();
