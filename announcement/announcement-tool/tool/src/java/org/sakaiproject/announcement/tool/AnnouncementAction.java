@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -1020,7 +1021,20 @@ public class AnnouncementAction extends PagedResourceActionII
 		boolean menu_delete = true;
 		boolean menu_revise = true;
 		boolean menu_reorder = true;
-		
+
+		if ("true".equals(HotReloadConfigurationService.getString("nyu.announcements.synoptic-redirect", "true"))) {
+			if (SYNOPTIC_ANNOUNCEMENT_TOOL.equals(ToolManager.getCurrentTool().getId())) {
+				if (isOnWorkspaceTab()) {
+					try {
+						ToolConfiguration announcements = site.getToolForCommonId("sakai.announcements");
+						sstate.setAttribute("announcementToolURL", String.format("/portal/site/%s/tool/%s", site.getId(), announcements.getId()));
+					} catch (Exception e) {
+					}
+					return "announcement/chef_nyu_synoptic_override";
+				}
+			}
+		}
+
 		// check the state status to decide which vm to render
 		String statusName = state.getStatus();
 		if (statusName != null)
@@ -1559,7 +1573,14 @@ public class AnnouncementAction extends PagedResourceActionII
 									siteDD = SiteService.getSite(contextt);
 								}
 								if ( siteDD!=null && siteDD.isPublished()) {
-									channelIdStrArray.add(channeIDD);
+									if ("true".equals(HotReloadConfigurationService.getString("nyu.announcements.synoptic-optimization", "true"))) {
+										// NYU only show announcements for sites touched in the last year
+										if (siteDD.getModifiedDate().getTime() > (System.currentTimeMillis() - (365 * 24 * 60 * 60 * 1000L))) {
+											channelIdStrArray.add(channeIDD);
+										}
+									} else {
+										channelIdStrArray.add(channeIDD);
+									}
 								}
 							} catch(Exception e) {
 								log.warn(e.getMessage());
