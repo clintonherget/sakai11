@@ -32,12 +32,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import java.io.*;
+import java.util.zip.*;
+import java.nio.file.*;
 
 
 public class SamlCertificateServiceImpl implements SamlCertificateService
 {
+  private final static String SIGNATURE_NAMESPACE_URI = "http://www.w3.org/2000/09/xmldsig#";
+  private final static String SAML_METADATA_NAMESPACE_URI = "urn:oasis:names:tc:SAML:2.0:metadata";
+
   private static final Logger LOG = LoggerFactory.getLogger(SamlCertificateServiceImpl.class);
   private AtomicReference<Map<String, List<X509Certificate>>> certificateStore;
   private AtomicBoolean running = new AtomicBoolean(false);
@@ -63,6 +71,21 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
 
     try {
       atomicUpdateCertificates();
+
+      ZipOutputStream backup = new ZipOutputStream(new FileOutputStream(new File(new File(incommonXMLFile).getParentFile(),
+                                                                                 String.format("incommon_backup_%s.zip",
+                                                                                               ServerConfigurationService.getServerId()))));
+
+      for (String file : new String[] { incommonXMLFile, incommonCertificateFile, additionalCertificatesFile }) {
+        if (file != null) {
+          ZipEntry entry = new ZipEntry(new File(file).getName());
+          backup.putNextEntry(entry);
+          byte[] bytes = Files.readAllBytes(Paths.get(file));
+          backup.write(bytes, 0, bytes.length);
+        }
+      }
+
+      backup.close();
     } catch (IOException e) {
       LOG.error("Couldn't load the certificate list:");
       e.printStackTrace();
@@ -145,12 +168,13 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
     XPath xpath = XPathFactory.newInstance().newXPath();
 
     // Parse all entityIDs and their certificates.
-    NodeList entityDescriptors = (NodeList)xpath.evaluate("//*[local-name() = 'EntityDescriptor']",
-                                                          metadata,
-                                                          XPathConstants.NODESET);
+    List<Element> entityDescriptors = findMatchingElements("EntityDescriptor", SAML_METADATA_NAMESPACE_URI, metadata.getDocumentElement());
 
-    for (int i = 0; i < entityDescriptors.getLength(); i++) {
-      Element descriptor = (Element)entityDescriptors.item(i);
+    // xpath.evaluate("//*[local-name() = 'EntityDescriptor']",
+    //                                                           metadata,
+    //                                                           XPathConstants.NODESET);
+
+    for (Element descriptor : entityDescriptors) {
       String entityId = descriptor.getAttribute("entityID");
 
       if (entityId == null) {
@@ -159,13 +183,14 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
 
       List<X509Certificate> certs = new ArrayList<X509Certificate>();
 
-      NodeList certificateElements = (NodeList)xpath.evaluate(".//*[name() = 'ds:X509Certificate']",
-                                                              descriptor,
-                                                              XPathConstants.NODESET);
+      List<Element> certificateElements = findMatchingElements("X509Certificate", SIGNATURE_NAMESPACE_URI, descriptor);
 
-      for (int j = 0; j < certificateElements.getLength(); j++) {
-        XMLX509Certificate cert = new XMLX509Certificate((Element)certificateElements.item(j),
-                                                         metadata.getNamespaceURI());
+      // NodeList certificateElements = (NodeList)xpath.evaluate(".//*[name() = 'ds:X509Certificate']",
+      //                                                         descriptor,
+      //                                                         XPathConstants.NODESET);
+
+      for (Element elt : certificateElements) {
+        XMLX509Certificate cert = new XMLX509Certificate(elt, metadata.getNamespaceURI());
         certs.add(cert.getX509Certificate());
       }
 
@@ -215,10 +240,13 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
       XPath xpath = XPathFactory.newInstance().newXPath();
 
       // Verify the master signature
-      XMLSignature sig = new XMLSignature((Element)xpath.evaluate("//*[name() = 'ds:Signature']",
-                                                         metadata,
-                                                         XPathConstants.NODE),
+      XMLSignature sig = new XMLSignature(findMatchingElement("Signature", SIGNATURE_NAMESPACE_URI, metadata.getDocumentElement()),
                                           "");
+      // XMLSignature sig = new XMLSignature((Element)xpath.evaluate("//*[name() = 'ds:Signature']",
+      //                                                    metadata,
+      //                                                    XPathConstants.NODE),
+      //                                     "");
+
 
       if (!sig.checkSignatureValue(masterCertificate)) {
         throw new XMLSignatureException("Master signature verification failed!");
@@ -279,4 +307,55 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
   {
     return certificateStore.get().get(entityId);
   }
+
+  private Element findMatchingElement(String nodeName, String expectedNamespaceURI, Element elt) {
+    try {
+      XPath xpath = XPathFactory.newInstance().newXPath();
+
+      NodeList nodes = (NodeList)xpath.evaluate(String.format(".//*[local-name() = '%s']", nodeName),
+                                                elt,
+                                                XPathConstants.NODESET);
+
+      for (int i = 0; i < nodes.getLength(); i++) {
+        Node matched = nodes.item(i);
+
+        if (expectedNamespaceURI.equals(matched.getNamespaceURI())) {
+          return (Element)matched;
+        }
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    throw new RuntimeException(String.format("Couldn't find a node '%s' in namespace '%s' for element '%s'",
+                                             nodeName,
+                                             expectedNamespaceURI,
+                                             elt));
+  }
+
+  private List<Element> findMatchingElements(String nodeName, String expectedNamespaceURI, Element elt) {
+    try {
+      XPath xpath = XPathFactory.newInstance().newXPath();
+
+      List<Element> result = new ArrayList<>();
+
+      NodeList nodes = (NodeList)xpath.evaluate(String.format(".//*[local-name() = '%s']", nodeName),
+                                                elt,
+                                                XPathConstants.NODESET);
+
+      for (int i = 0; i < nodes.getLength(); i++) {
+        Node matched = nodes.item(i);
+
+        if (expectedNamespaceURI.equals(matched.getNamespaceURI())) {
+          result.add((Element)matched);
+        }
+      }
+
+      return result;
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
 }
