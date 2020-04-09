@@ -63,6 +63,10 @@ import org.sakaiproject.delegatedaccess.model.SelectOption;
 import org.sakaiproject.delegatedaccess.util.DelegatedAccessConstants;
 import org.sakaiproject.site.api.Site;
 
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+
+
 /**
  * Creates the landing page for a user to show them all their access and links to go to the sites
  * 
@@ -449,4 +453,10 @@ public class UserPage  extends BaseTreePage{
 			hierarchySearchMap.put(nodeId, arg0);
 		}
 	}
+
+    public void renderHead(IHeaderResponse response) {
+	super.renderHead(response);
+	response.render(JavaScriptHeaderItem.forUrl("/delegatedaccess-tool/javascript/formcheck.js"));
+    }
+
 }
