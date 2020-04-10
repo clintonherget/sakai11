@@ -165,14 +165,8 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
   private void loadCertificates(Document metadata, Map<String, List<X509Certificate>> result)
     throws XPathExpressionException, XMLSecurityException
   {
-    XPath xpath = XPathFactory.newInstance().newXPath();
-
     // Parse all entityIDs and their certificates.
     List<Element> entityDescriptors = findMatchingElements("EntityDescriptor", SAML_METADATA_NAMESPACE_URI, metadata.getDocumentElement());
-
-    // xpath.evaluate("//*[local-name() = 'EntityDescriptor']",
-    //                                                           metadata,
-    //                                                           XPathConstants.NODESET);
 
     for (Element descriptor : entityDescriptors) {
       String entityId = descriptor.getAttribute("entityID");
@@ -184,10 +178,6 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
       List<X509Certificate> certs = new ArrayList<X509Certificate>();
 
       List<Element> certificateElements = findMatchingElements("X509Certificate", SIGNATURE_NAMESPACE_URI, descriptor);
-
-      // NodeList certificateElements = (NodeList)xpath.evaluate(".//*[name() = 'ds:X509Certificate']",
-      //                                                         descriptor,
-      //                                                         XPathConstants.NODESET);
 
       for (Element elt : certificateElements) {
         XMLX509Certificate cert = new XMLX509Certificate(elt, metadata.getNamespaceURI());
@@ -236,8 +226,6 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
 
       // Initialise Apache XML security
       Init.init();
-
-      XPath xpath = XPathFactory.newInstance().newXPath();
 
       // Verify the master signature
       XMLSignature sig = new XMLSignature(findMatchingElement("Signature", SIGNATURE_NAMESPACE_URI, metadata.getDocumentElement()),
@@ -309,28 +297,16 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
   }
 
   private Element findMatchingElement(String nodeName, String expectedNamespaceURI, Element elt) {
-    try {
-      XPath xpath = XPathFactory.newInstance().newXPath();
+      List<Element> result = findMatchingElements(nodeName, expectedNamespaceURI, elt);
 
-      NodeList nodes = (NodeList)xpath.evaluate(String.format(".//*[local-name() = '%s']", nodeName),
-                                                elt,
-                                                XPathConstants.NODESET);
-
-      for (int i = 0; i < nodes.getLength(); i++) {
-        Node matched = nodes.item(i);
-
-        if (expectedNamespaceURI.equals(matched.getNamespaceURI())) {
-          return (Element)matched;
-        }
+      if (result.isEmpty()) {
+          throw new RuntimeException(String.format("Couldn't find a node '%s' in namespace '%s' for element '%s'",
+                                                   nodeName,
+                                                   expectedNamespaceURI,
+                                                   elt));
+      } else {
+          return result.get(0);
       }
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-
-    throw new RuntimeException(String.format("Couldn't find a node '%s' in namespace '%s' for element '%s'",
-                                             nodeName,
-                                             expectedNamespaceURI,
-                                             elt));
   }
 
   private List<Element> findMatchingElements(String nodeName, String expectedNamespaceURI, Element elt) {
@@ -339,7 +315,7 @@ public class SamlCertificateServiceImpl implements SamlCertificateService
 
       List<Element> result = new ArrayList<>();
 
-      NodeList nodes = (NodeList)xpath.evaluate(String.format(".//*[local-name() = '%s']", nodeName),
+      NodeList nodes = (NodeList)xpath.evaluate(String.format("self::node()[local-name() = '%s']|.//*[local-name() = '%s']", nodeName, nodeName),
                                                 elt,
                                                 XPathConstants.NODESET);
 
