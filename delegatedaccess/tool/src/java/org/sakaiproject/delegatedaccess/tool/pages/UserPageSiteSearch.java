@@ -70,6 +70,9 @@ import org.sakaiproject.delegatedaccess.util.DelegatedAccessConstants;
 import org.sakaiproject.delegatedaccess.util.SiteSearchResultComparator;
 import org.sakaiproject.user.api.User;
 
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+
 /**
  * 
  * This page sorts and searches a user's access sites
@@ -1223,4 +1226,10 @@ public class UserPageSiteSearch extends BasePage {
 			hierarchySearchMap.put(nodeId, arg0);
 		}
 	}
+
+    public void renderHead(IHeaderResponse response) {
+	super.renderHead(response);
+	response.render(JavaScriptHeaderItem.forUrl("/delegatedaccess-tool/javascript/formcheck.js"));
+    }
+
 }
