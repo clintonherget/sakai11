@@ -695,6 +695,13 @@ public class ProjectLogicImpl implements ProjectLogic {
 				&& advancedOptions.get(DelegatedAccessConstants.ADVANCED_SEARCH_INSTRUCTOR) != null
 				&& !"".equals(advancedOptions.get(DelegatedAccessConstants.ADVANCED_SEARCH_INSTRUCTOR).toString().trim())) {
 			List<User> searchUsers = sakaiProxy.searchUsers(advancedOptions.get(DelegatedAccessConstants.ADVANCED_SEARCH_INSTRUCTOR).toString());
+
+			if (searchUsers.isEmpty()) {
+			    // User not found.  Get outta here.
+			    return Collections.EMPTY_LIST;
+			}
+
+
 			//since we added a site by searching for ID, we need to make sure that at least 1 user is a member,
 			//otherwise, remove it from the results:
 			boolean foundSearchByIdMember = searchByIdSite == null ? true : false;
