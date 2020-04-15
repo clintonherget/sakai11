@@ -177,7 +177,7 @@
       left join topic.messagesSet msg
         with msg.draft = false and msg.deleted = false,
       org.sakaiproject.component.app.messageforums.dao.hibernate.UnreadStatusImpl readMsg
-    where topic.id in (:topicIds) and (msg.id = readMsg.messageId and readMsg.userId = :userId)
+    where topic.id in (:topicIds) and (msg.id = readMsg.messageId and readMsg.userId = :userId) and (readMsg.topicId = msg.topic.id)
     group by topic.id
   ]]></query>
   
