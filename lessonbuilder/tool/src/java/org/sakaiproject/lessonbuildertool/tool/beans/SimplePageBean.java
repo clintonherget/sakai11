@@ -5220,13 +5220,28 @@ public class SimplePageBean {
 		return false;
 	}
 		
-    private boolean arePageItemsComplete(long pageId) {
+    private boolean arePageItemsComplete(long pageId, int recursionDepth) {
+	int maxRecursionLimit = 500;
+
+	try {
+		maxRecursionLimit = Integer.valueOf(org.sakaiproject.component.cover.HotReloadConfigurationService.getString("nyu.lessons.max-recursion-limit", "500"));
+	} catch (Exception e) {
+		log.error("Failure reading nyu.lessons.max-recursion-limit: " + e);
+	}
+
+	if (maxRecursionLimit <= 0) {
+		maxRecursionLimit = 500;
+	}
+
+	if (recursionDepth > maxRecursionLimit) {
+		throw new RuntimeException(String.format("Max recursion limit exceeded for arePageItemsComplete for pageId %s (%s)", pageId, getCurrentUserId()));
+	}
 
 	int sequence = 1;
 	SimplePageItem i = simplePageToolDao.findNextItemOnPage(pageId, sequence);
 
 	while (i != null) {
-	    if (i.isRequired() && !isItemComplete(i) && isItemVisible(i)) 
+		if (i.isRequired() && !isItemComplete(i, recursionDepth + 1) && isItemVisible(i)) 
 		return false; 
 
 	    sequence++; 
@@ -5240,6 +5255,10 @@ public class SimplePageBean {
     // this is called in a loop to see whether items are available. Since computing it can require
     // database transactions, we cache the results
 	public boolean isItemComplete(SimplePageItem item) {
+		return isItemComplete(item, 0);
+	}
+
+	private boolean isItemComplete(SimplePageItem item, int recursionDepth) {
 		if (!item.isRequired()) {
 			// We don't care if it has been completed if it isn't required.
 			return true;
@@ -5266,7 +5285,7 @@ public class SimplePageBean {
 				completeCache.put(itemId, true);
 				return true;
 			} else {
-			        boolean apic = arePageItemsComplete(Long.parseLong(item.getSakaiId())); 
+			        boolean apic = arePageItemsComplete(Long.parseLong(item.getSakaiId()), recursionDepth + 1);
 				completeCache.put(itemId, apic);
 				return apic;
 			}

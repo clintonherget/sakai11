@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -281,7 +282,17 @@ public class DelegatedAccessDaoImpl extends JdbcDaoSupport implements DelegatedA
 			if(titleSearch == null){
 				titleSearch = "";
 			}
+
+			titleSearch = titleSearch.replace("%", "");
+
+			boolean queryOK = false;
+
+			if (titleSearch.length() > 3) {
+			    queryOK = true;
+			}
+
 			titleSearch ="%" + titleSearch + "%";
+
 			Object[] params = new Object[]{titleSearch};
 			String query = "";
 			final boolean noInstructors = instructorIds == null || instructorIds.length == 0;
@@ -289,6 +300,8 @@ public class DelegatedAccessDaoImpl extends JdbcDaoSupport implements DelegatedA
 			if(noInstructors){
 				query = getStatement("select.siteSearch");
 			}else{
+				queryOK = true;
+
 				if(DelegatedAccessConstants.ADVANCED_SEARCH_INSTRUCTOR_TYPE_MEMBER.equals(insturctorType)){
 					query = getStatement("select.siteSearchMembers");
 				}else{
@@ -309,6 +322,8 @@ public class DelegatedAccessDaoImpl extends JdbcDaoSupport implements DelegatedA
 			}
 			//add the site properties restrictions in the where clause
 			if(propsMap != null && propsMap.size() > 0){
+				queryOK = true;
+
 				params = new Object[1 + (propsMap.size() * 2)];
 				params[0] = titleSearch;
 				int i = 1;
@@ -324,6 +339,12 @@ public class DelegatedAccessDaoImpl extends JdbcDaoSupport implements DelegatedA
 				query += " " + getStatement("select.siteSearchPublishedOnly");
 			}
 			
+			if (!queryOK) {
+				// You didn't give us specific enough criteria.  No results for you.
+				log.error("delegatedaccess query discarded because it would match too many hits.");
+				return Collections.EMPTY_LIST;
+			}
+
 			return (List<Object[]>) getJdbcTemplate().query(query, params, new RowMapper() {
 				
 				 public Object mapRow(ResultSet resultSet, int i) throws SQLException {

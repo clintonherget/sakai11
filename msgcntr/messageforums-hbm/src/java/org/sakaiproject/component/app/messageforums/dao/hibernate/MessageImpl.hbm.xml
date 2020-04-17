@@ -172,7 +172,7 @@
   ]]></query>
   
   <query name="findReadMessageCountsForMainPage"><![CDATA[
-    select topic.id, count(readMsg)
+    select topic.id, count(distinct msg.id)
     from org.sakaiproject.component.app.messageforums.dao.hibernate.TopicImpl as topic
       left join topic.messagesSet msg
         with msg.draft = false and msg.deleted = false,
