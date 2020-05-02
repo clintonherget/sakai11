@@ -456,8 +456,12 @@ public class StarfishExport implements InterruptableJob {
 						Date archiveDate = new java.text.SimpleDateFormat("yyyy-MM").parse(dateString);
 
 						if ((new Date().getTime() - archiveDate.getTime()) > (365L * 24 * 60 * 60 * 1000)) {
-							// Expire this archive folder
-							org.sakaiproject.content.cover.ContentHostingService.removeCollection(collection.getId());
+							try {
+								// Expire this archive folder
+								org.sakaiproject.content.cover.ContentHostingService.removeCollection(collection.getId());
+							} catch (org.sakaiproject.exception.IdUnusedException e) {
+								log.warn("(Possibly spurious?) Error while expiring old archive", e);
+							}
 						}
 					}
 				}
