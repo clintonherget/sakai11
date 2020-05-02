@@ -464,9 +464,9 @@ public class StarfishExport implements InterruptableJob {
 			}
 
 
-			String now = new java.text.SimpleDateFormat("YYYY-MM-dd").format(new Date());
+			String now = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date());
 
-			String thisMonth = new java.text.SimpleDateFormat("YYYY-MM").format(new Date());
+			String thisMonth = new java.text.SimpleDateFormat("yyyy-MM").format(new Date());
 			String currentArchiveDir = archiveDir + thisMonth + "/";
 			makeFolder(thisMonth, currentArchiveDir);
 
