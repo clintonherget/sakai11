@@ -458,6 +458,7 @@ public class StarfishExport implements InterruptableJob {
 						if ((new Date().getTime() - archiveDate.getTime()) > (365L * 24 * 60 * 60 * 1000)) {
 							try {
 								// Expire this archive folder
+								log.info("Expiring old archive: " + collection.getId());
 								org.sakaiproject.content.cover.ContentHostingService.removeCollection(collection.getId());
 							} catch (org.sakaiproject.exception.IdUnusedException e) {
 								log.warn("(Possibly spurious?) Error while expiring old archive", e);
