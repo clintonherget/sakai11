@@ -1705,8 +1705,8 @@ cannot be altered by by the instructor.  -->
 
 	<tool
 			id="nyu.tophat"
-			title="TopHat"
-			description="TopHat">
+			title="Top Hat"
+			description="Top Hat">
 		<configuration name="sakai:portlet-pre-render" value="true" />
 		<category name="course" />
 		<category name="project" />
@@ -1717,8 +1717,8 @@ cannot be altered by by the instructor.  -->
 		<configuration name="imsti.xml" />
 		<configuration name="imsti.secret" />
 		<configuration name="imsti.key" />
-		<configuration name="imsti.pagetitle" value="TopHat"/>
-		<configuration name="imsti.tooltitle" value="TopHat"/>
+		<configuration name="imsti.pagetitle" value="Top Hat"/>
+		<configuration name="imsti.tooltitle" value="Top Hat"/>
 		<configuration name="imsti.newpage" value="on" />
 		<configuration name="imsti.maximize" value="on" />
 		<configuration name="imsti.frameheight" value="1024" />
