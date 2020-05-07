@@ -53,6 +53,8 @@ import com.unboundid.ldap.sdk.migrate.ldapjdk.LDAPException;
 import com.unboundid.util.ssl.SSLUtil;
 import com.unboundid.util.ssl.TrustAllTrustManager;
 
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
+
 /**
  * <p>
  * An implementation of a Sakai UserDirectoryProvider that authenticates/retrieves 
@@ -1535,6 +1537,10 @@ public class UnboundidDirectoryProvider implements UserDirectoryProvider, LdapCo
 
 
 	private void nyuLogLDAPUsage() {
+		if (!"true".equals(HotReloadConfigurationService.getString("nyu.log-ldap-usage", "false"))) {
+			return;
+		}
+
 		StringBuilder sb = new StringBuilder();
 		int count = 0;
 		for (StackTraceElement elt : Thread.currentThread().getStackTrace()) {
