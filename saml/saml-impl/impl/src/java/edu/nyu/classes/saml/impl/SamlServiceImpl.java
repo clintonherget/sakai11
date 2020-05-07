@@ -192,8 +192,8 @@ public class SamlServiceImpl implements SamlService
     boolean validConditions = validConditions(conditions, url, date);
 
     // assertion has the proper date range and we're the intended audience
-    LOG.info(String.format("Assertion validation: confirmation: %s, conditions: %s",
-                           validConfirmation, validConditions));
+    LOG.debug(String.format("Assertion validation: confirmation: %s, conditions: %s",
+                            validConfirmation, validConditions));
     if (validConfirmation && validConditions) {
         NameID nameId = subject.getNameID();
         String netId = nameId.getValue();
@@ -245,8 +245,8 @@ public class SamlServiceImpl implements SamlService
           success = true;
           break;
         } catch (ValidationException e) {
-          LOG.info("Couldn't validate against certificate: {}",
-                   certificate.getSubjectDN());
+            LOG.debug("Couldn't validate against certificate: {}",
+                      certificate.getSubjectDN());
 
           // Try the next one...
         }
@@ -288,7 +288,7 @@ public class SamlServiceImpl implements SamlService
         for (AudienceRestriction restriction : restrictions) {
           List<Audience> audiences = restriction.getAudiences();
           for (Audience audience : audiences) {
-            LOG.info("Compare {} to {}", url, audience.getAudienceURI());
+            LOG.debug("Compare {} to {}", url, audience.getAudienceURI());
             if (uriComparator.compare(url, audience.getAudienceURI())) {
               validConditions = true;
               break;
@@ -345,7 +345,7 @@ public class SamlServiceImpl implements SamlService
       final Map<String,String> response = processSAMLRequest(req);
       final String qualifiedNetID = response.get(EDU_PRINCIPAL_NAME);
 
-      LOG.info("Response from SAML authentication was: {}", response);
+      LOG.debug("Response from SAML authentication was: {}", response);
 
       if (response == null || qualifiedNetID == null) {
         dumpRequestMaybe(req);
