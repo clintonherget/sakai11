@@ -86,7 +86,11 @@ public class BlogViewProducer implements ViewComponentProducer, ViewParamsReport
         List<BlogWowBlog> blogs = new ArrayList<BlogWowBlog>();
         if(params.blogid == null){
         	//this is a "group" view, so display all available blogs:
-        	blogs = blogLogic.getAllVisibleBlogs(params.locationId, null, true, 0, 0);
+		if ("true".equals(org.sakaiproject.component.cover.HotReloadConfigurationService.getString("nyu.blogwow.allow-list-all-blogs", "false"))) {
+			blogs = blogLogic.getAllVisibleBlogs(params.locationId, null, true, 0, 0);
+		} else {
+			blogs = new ArrayList<>();
+		}
         }else{
         	blogs.add(blogLogic.getBlogById(params.blogid));
         }
