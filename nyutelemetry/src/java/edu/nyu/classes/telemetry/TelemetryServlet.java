@@ -147,7 +147,7 @@ public class TelemetryServlet extends HttpServlet {
         public TreeMap<String, Long> getCountsByDay() {
             TreeMap<String, Long> countsByDay = new TreeMap<>();
 
-            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             sdf.setCalendar(Calendar.getInstance(TimeZone.getTimeZone("America/New_York")));
 
             for (Reading reading : readings) {
@@ -218,7 +218,7 @@ public class TelemetryServlet extends HttpServlet {
         public TreeMap<String, Long> getCountsByDay() {
             TreeMap<String, Long> countsByDay = new TreeMap<>();
 
-            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             sdf.setCalendar(Calendar.getInstance(TimeZone.getTimeZone("America/New_York")));
 
             Set<String> countedTimes = new HashSet<>();
