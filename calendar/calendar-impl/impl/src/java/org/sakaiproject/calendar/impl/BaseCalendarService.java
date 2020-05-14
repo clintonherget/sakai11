@@ -5223,15 +5223,16 @@ public abstract class BaseCalendarService implements CalendarService, DoubleStor
 			CalendarEvent event = (CalendarEvent) itEvent.next();
 
 			DateTime icalStartDate = new DateTime(event.getRange().firstTime().getTime());
-			
+
+			TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
+			icalStartDate.setTimeZone(registry.getTimeZone(m_timeService.getLocalTimeZone().getID()));
+
 			long seconds = event.getRange().duration() / 1000;
 			String timeString = "PT" + String.valueOf(seconds) + "S";
 			net.fortuna.ical4j.model.Dur duration = new net.fortuna.ical4j.model.Dur( timeString );
 			
 			VEvent icalEvent = new VEvent(icalStartDate, duration, event.getDisplayName() );
 			
-			net.fortuna.ical4j.model.parameter.TzId tzId = new net.fortuna.ical4j.model.parameter.TzId( m_timeService.getLocalTimeZone().getID() );
-			icalEvent.getProperty(Property.DTSTART).getParameters().add(tzId);
 			icalEvent.getProperty(Property.DTSTART).getParameters().add(Value.DATE_TIME);
 			icalEvent.getProperties().add(new Uid(event.getId()));
 			// build the description, adding links to attachments if necessary
