@@ -1428,6 +1428,9 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
             }
         } catch (IdUnusedException | PermissionException e) {
             log.warn("Could not determine the status for assignment: {}, {}", assignmentId, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unknown exception trying to calculate the status for assignment: {}, {}", assignmentId, e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -3888,11 +3891,17 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
 
     @Override
     public String getUsersLocalDateTimeString(Instant date) {
-        ZoneId zone = userTimeService.getLocalTimeZone().toZoneId();
-        DateTimeFormatter df = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-                                                .withZone(zone)
-                                                .withLocale(resourceLoader.getLocale());
-        return df.format(date);
+        try {
+            ZoneId zone = userTimeService.getLocalTimeZone().toZoneId();
+            DateTimeFormatter df = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
+                    .withZone(zone)
+                    .withLocale(resourceLoader.getLocale());
+            return df.format(date);
+        } catch (Exception e) {
+            log.error("Unknown exception trying to calculate local date time for: {}, {}", date, e.getMessage());
+            e.printStackTrace();
+            return "";
+        }
     }
 
     private String removeReferencePrefix(String referenceId) {
