@@ -184,7 +184,7 @@ public class SettingsGradingSchemaPanel extends BasePanel implements IFormModelU
 					return -1;
 				}
 
-				return label1.compareTo(label2);
+				return label1.toLowerCase().compareTo(label2.toLowerCase());
 			}
 		});
 

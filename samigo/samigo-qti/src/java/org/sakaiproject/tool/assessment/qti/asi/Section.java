@@ -151,7 +151,35 @@ public void setTitle(String title)
     setFieldentry("SECTION_RUBRIC", section.getSectionMetaDataByLabel(SectionMetaDataIfc.RUBRICS));
     setFieldentry("ATTACHMENT", getAttachment(section));
     setFieldentry("QUESTIONS_ORDERING", section.getSectionMetaDataByLabel(SectionDataIfc.QUESTIONS_ORDERING));
-    
+
+    if (String.valueOf(SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL).equals(section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE))) {
+        // This is actually a pool of questions with a subset drawn from them.
+
+        for (Object n : this.selectNodes(this.basePath + "/selection_ordering/selection/selection_number")) {
+            ((Element) n).setTextContent(String.valueOf(section.getSectionMetaDataByLabel(SectionDataIfc.NUM_QUESTIONS_DRAWN)));
+        }
+
+        for (Object n : this.selectNodes(this.basePath + "/selection_ordering/selection/sourcebank_ref")) {
+            ((Element) n).setTextContent(String.format("%s::%s",
+                                                       String.valueOf(section.getSectionMetaDataByLabel(SectionDataIfc.POOLID_FOR_RANDOM_DRAW)),
+                                                       String.valueOf(section.getSectionMetaDataByLabel(SectionDataIfc.POOLNAME_FOR_RANDOM_DRAW))));
+        }
+
+        for (Object n : this.selectNodes(this.basePath + "/selection_ordering/selection")) {
+            Element selection = (Element) n;
+
+            Element extension = selection.getOwnerDocument().createElement("selection_extension");
+            if ("1".equals(section.getSectionMetaDataByLabel(SectionDataIfc.RANDOMIZATION_TYPE))) {
+                extension.setAttribute("randomization_type", "RANDOM_PER_SUBMISSION");
+            } else {
+                extension.setAttribute("randomization_type", "RANDOM_PER_STUDENT");
+            }
+
+            selection.appendChild(extension);
+        }
+    }
+
+
     // items
     addItems(section.getItemArray());
   }
