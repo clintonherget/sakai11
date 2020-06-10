@@ -206,6 +206,9 @@ $(document).ready(function(){
     
   <h:outputText value="</span></li></ul>" escape="false"/>
 
+  <div class="bs-callout-warn"><b>Note:</b> to avoid issues, it is <u><b>highly recommended</b></u> that you avoid grading students or assessment submissions simultaneously in multiple tabs / windows.</div>
+
+
 <div class="tier1">
   <h:messages styleClass="messageSamigo" rendered="#{! empty facesContext.maximumSeverity}" layout="table"/>
   <!-- only shows Max Score Possible if this assessment does not contain random dawn parts -->
