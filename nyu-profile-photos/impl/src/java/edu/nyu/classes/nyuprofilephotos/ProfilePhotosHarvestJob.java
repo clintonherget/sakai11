@@ -5,9 +5,11 @@ import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 
+@DisallowConcurrentExecution
 public class ProfilePhotosHarvestJob implements Job
 {
     private static final Log LOG = LogFactory.getLog(ProfilePhotosHarvestJob.class);

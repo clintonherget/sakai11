@@ -176,6 +176,12 @@ class ProfilePhotosClient {
             boolean success = false;
 
             for (int failureCount = 0; failureCount < MAX_FAILURES; failureCount++) {
+                if (failureCount > 0) {
+                    try {
+                        Thread.sleep(RETRY_INTERVAL_MS);
+                    } catch (InterruptedException e) {}
+                }
+
                 URI url = new URIBuilder(this.profileURL)
                     .addParameter("netid", workSet.stream().collect(Collectors.joining(",")))
                     .build();
@@ -215,14 +221,16 @@ class ProfilePhotosClient {
                     switch (response.getStatusLine().getStatusCode()) {
                     case 403:
                         // Try getting another token and retry
+                        LOG.info("fetchPhotosForNetIds: caught 403 response: will retry authenticating.");
+                        LOG.info("fetchPhotosForNetIds: 403 Response from API: " + response.getStatusLine());
+
                         authenticate();
-                        try {
-                            Thread.sleep(RETRY_INTERVAL_MS);
-                        } catch (InterruptedException e) {}
+                        break;
                     case 404:
                         // OK.  We're all done with this set
                         return;
                     default:
+                        LOG.error("fetchPhotosForNetIds: Unexpected response from API: " + response.getStatusLine());
                         break;
                     }
                 }
@@ -245,6 +253,12 @@ class ProfilePhotosClient {
                 boolean success = false;
 
                 for (int failureCount = 0; !success && failureCount < MAX_FAILURES; failureCount++) {
+                    if (failureCount > 0) {
+                        try {
+                            Thread.sleep(RETRY_INTERVAL_MS);
+                        } catch (InterruptedException e) {}
+                    }
+
                     URI url = new URIBuilder(this.profileURL)
                         .addParameter("photoeffectivedate", date.format(DateTimeFormatter.ISO_LOCAL_DATE))
                         .addParameter("offset", String.valueOf(offset))
@@ -267,15 +281,17 @@ class ProfilePhotosClient {
                         switch (response.getStatusLine().getStatusCode()) {
                         case 403:
                             // Try getting another token and retry
+                            LOG.info("incrementalHarvest: caught 403 response: will retry authenticating.");
+                            LOG.info("incrementalHarvest: 403 Response from API: " + response.getStatusLine());
+
                             authenticate();
-                            try {
-                                Thread.sleep(RETRY_INTERVAL_MS);
-                            } catch (InterruptedException e) {}
+                            break;
                         case 404:
                             // OK...
                             success = true;
                             break;
                         default:
+                            LOG.error("incrementalHarvest: Unexpected response from API: " + response.getStatusLine());
                             break;
                         }
                     }

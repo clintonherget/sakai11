@@ -29,8 +29,12 @@ class HarvestState {
     }
 
     public void storeLastRunDate(Date date) throws Exception {
-        try (PrintWriter out = new PrintWriter(this.stateFile)) {
+        String tmpPath = this.stateFile + ".tmp";
+
+        try (PrintWriter out = new PrintWriter(tmpPath)) {
             out.println(String.valueOf(date.getTime()));
         }
+
+        new File(tmpPath).renameTo(new File(this.stateFile));
     }
 }
