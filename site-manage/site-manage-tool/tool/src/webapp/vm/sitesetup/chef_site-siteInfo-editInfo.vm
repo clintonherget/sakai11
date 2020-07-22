@@ -198,6 +198,11 @@
 					#if ( $!allowTermEdit && $existingSite )
 						<select name="edit-term" class="indnt2" id="locales" >
 							<option value="" #if ($selectedTerm == "")selected="true" #end></option>
+
+              #if($oldSelectedTerm)
+                <option value="$oldSelectedTerm.getEid()" selected="true">$oldSelectedTerm.getTitle()</option>
+              #end
+
 							<option value="Sandboxes" #if ($selectedTerm == "Sandboxes")selected="true" #end>Sandboxes</option>
 
 							#foreach($term in $termList)
