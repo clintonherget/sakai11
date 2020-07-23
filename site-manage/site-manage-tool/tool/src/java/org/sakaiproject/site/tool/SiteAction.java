@@ -2618,7 +2618,21 @@ public class SiteAction extends PagedResourceActionII {
 			context.put("siteTitleEditable", Boolean.valueOf(siteTitleEditable(state, siteType)));
 			context.put("titleMaxLength", state.getAttribute(STATE_SITE_TITLE_MAX));
 
-                        setTermListForContext(context, state, true, false);
+			List<AcademicSession> availableTerms = setTermListForContext(context, state, true, false);
+
+			// CLASSES-3854 re-add old term if admin user and term is excluded from terms available
+			if (StringUtils.trimToNull(siteInfo.term) != null) {
+				final String selectedTerm = siteInfo.term;
+				if (availableTerms.stream().noneMatch((t) -> t.getTitle().equals(selectedTerm))) {
+					if (SecurityService.isSuperUser() || allowNYUTermEdit()) {
+						for (AcademicSession as : cms.getAcademicSessions()) {
+							if (as.getTitle().equals(selectedTerm)) {
+								context.put("oldSelectedTerm", as);
+							}
+						}
+					}
+				}
+			}
 
                         context.put("allowTermEdit", allowNYUTermEdit());
 
