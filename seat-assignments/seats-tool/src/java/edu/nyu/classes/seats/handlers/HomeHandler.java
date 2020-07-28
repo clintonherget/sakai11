@@ -36,13 +36,45 @@ import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 
+
+import org.sakaiproject.site.api.Group;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.authz.api.Member;
+
 public class HomeHandler implements Handler {
 
     protected String redirectTo = null;
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
-        context.put("subpage", "instructor_home");
+        try {
+            Site site = SiteService.getSite((String)context.get("siteId"));
+
+            List<Group> sections = new ArrayList<>();
+
+            for (Group group : site.getGroups()) {
+                if (group.getProviderGroupId() != null) {
+                    sections.add(group);
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            for (Group group : sections) {
+                sb.append("Title: " + group.getTitle() + "\n");
+                sb.append("Description: " + group.getDescription() + "\n");
+
+                for (Member m : group.getMembers()) {
+                    sb.append(String.format("Member: %s (%s)", m.getUserEid(), m.getRole().getId()) + "\n");
+                }
+            }
+
+            context.put("subpage", "instructor_home");
+            context.put("content", sb.toString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

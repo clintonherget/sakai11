@@ -7,14 +7,14 @@
   <name>seats-tool</name>
   <groupId>edu.nyu.classes.seats</groupId>
   <artifactId>seats-tool</artifactId>
-  <version>11.2</version>
+  <version>12.5</version>
 
   <packaging>war</packaging>
 
   <parent>
     <artifactId>seats-base</artifactId>
     <groupId>edu.nyu.classes.seats</groupId>
-    <version>11.2</version>
+    <version>12.5</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
