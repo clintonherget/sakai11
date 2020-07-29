@@ -4127,7 +4127,18 @@ public class DeliveryBean
 	  }
 	  public String getMathJaxHeader(){
 		  StringBuilder headMJ = new StringBuilder();
-		  headMJ.append("<script type=\"text/x-mathjax-config\">\nMathJax.Hub.Config({\ntex2jax: { inlineMath: [['$$','$$'],['\\\\(','\\\\)']] }, TeX: { equationNumbers: { autoNumber: 'AMS' } }\n});\n</script>\n");
+        headMJ.append("<script type=\"text/x-mathjax-config\">\n"+
+                "MathJax.Hub.Config({\n" +
+                "    tex2jax: {\n" +
+                "        inlineMath:  [['$','$'], ['\\\\(','\\\\)']],\n" +
+                "        displayMath: [['$$','$$'], ['\\\\[','\\\\]']]\n" +
+                "    },\n"+
+                "    asciimath2jax: {\n" +
+                "        delimiters: [['`','`']]\n" +
+                "    }\n" +
+                "});\n" +
+                "</script>\n");
+//		  headMJ.append("<script type=\"text/x-mathjax-config\">\nMathJax.Hub.Config({\ntex2jax: { inlineMath: [['$$','$$'],['\\\\(','\\\\)']] }, TeX: { equationNumbers: { autoNumber: 'AMS' } }\n});\n</script>\n");
 		  headMJ.append("<script src=\"").append(MATHJAX_SRC_PATH).append("\"  language=\"JavaScript\" type=\"text/javascript\"></script>\n");
 		  return headMJ.toString();
 	  }
