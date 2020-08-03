@@ -31,6 +31,7 @@ import org.sakaiproject.user.cover.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.nyu.classes.seats.storage.*;
 import edu.nyu.classes.seats.handlers.*;
 
 public class ToolServlet extends HttpServlet {
@@ -38,6 +39,11 @@ public class ToolServlet extends HttpServlet {
     private static final Logger LOG = LoggerFactory.getLogger(ToolServlet.class);
 
     public void init(ServletConfig config) throws ServletException {
+        // FIXME: should be false in production?
+        if (ServerConfigurationService.getBoolean("auto.ddl", false) || ServerConfigurationService.getBoolean("auto.ddl.seats", true)) {
+            new SeatsStorage().runDBMigrations();
+        }
+
         super.init(config);
     }
 
