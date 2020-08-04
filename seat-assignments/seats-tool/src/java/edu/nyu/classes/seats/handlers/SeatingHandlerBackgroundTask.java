@@ -99,15 +99,7 @@ public class SeatingHandlerBackgroundTask {
         return db.run("select id from seat_group_section where site_id = ?")
             .param(siteId)
             .executeQuery()
-            .stream()
-            .map((row) -> {
-                    try {
-                        return SeatsStorage.getSeatSection(db, row.getString("id"));
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-            .collect(Collectors.toList());
+            .map(row -> SeatsStorage.getSeatSection(db, row.getString("id")));
     }
 
     private void processSite(String siteId) {

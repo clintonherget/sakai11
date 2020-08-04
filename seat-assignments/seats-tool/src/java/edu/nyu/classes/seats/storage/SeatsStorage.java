@@ -135,46 +135,43 @@ public class SeatsStorage {
     public static SeatSection getSeatSection(DBConnection db, String sectionId) throws SQLException {
         SeatSection section = new SeatSection(sectionId);
 
-        try (DBResults rows = db.run("select sg.*, sec.id as section_id" +
-                                     " from seat_group sg" +
-                                     " inner join seat_group_section sec on sg.section_id = sec.id " +
-                                     " where sec.id = ?")
-             .param(sectionId)
-             .executeQuery()) {
-            for (ResultSet row : rows) {
-                section.addGroup(row.getString("id"), row.getString("name"), row.getString("description"));
-            }
-        }
+        db.run("select sg.*, sec.id as section_id" +
+               " from seat_group sg" +
+               " inner join seat_group_section sec on sg.section_id = sec.id " +
+               " where sec.id = ?")
+            .param(sectionId)
+            .executeQuery()
+            .each(row -> {
+                    section.addGroup(row.getString("id"), row.getString("name"), row.getString("description"));
+                });
 
         if (section.groupIds().isEmpty()) {
             return section;
         }
 
-        try (DBResults rows = db.run("select sm.group_id, sm.id as meeting_id" +
-                " from seat_meeting sm" +
-                " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
-                .stringParams(section.groupIds())
-                .executeQuery()) {
-            for (ResultSet row : rows) {
-                section.fetchGroup(row.getString("group_id"))
+        db.run("select sm.group_id, sm.id as meeting_id" +
+               " from seat_meeting sm" +
+               " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
+            .stringParams(section.groupIds())
+            .executeQuery()
+            .each(row -> {
+                    section.fetchGroup(row.getString("group_id"))
                         .get()
                         .getOrCreateMeeting(row.getString("meeting_id"));
-            }
-        }
+                });
 
-        try (DBResults rows = db.run("select sm.group_id, sm.id as meeting_id, assign.id as assign_id, assign.netid, assign.seat" +
-                                     " from seat_meeting sm" +
-                                     " inner join seat_meeting_assignment assign on assign.meeting_id = sm.id" +
-                                     " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
-             .stringParams(section.groupIds())
-             .executeQuery()) {
-            for (ResultSet row : rows) {
-                section.fetchGroup(row.getString("group_id"))
-                    .get()
-                    .getOrCreateMeeting(row.getString("meeting_id"))
-                    .addSeatAssignment(row.getString("assign_id"), row.getString("netid"), row.getString("seat"));
-            }
-        }
+        db.run("select sm.group_id, sm.id as meeting_id, assign.id as assign_id, assign.netid, assign.seat" +
+               " from seat_meeting sm" +
+               " inner join seat_meeting_assignment assign on assign.meeting_id = sm.id" +
+               " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
+            .stringParams(section.groupIds())
+            .executeQuery()
+            .each(row -> {
+                    section.fetchGroup(row.getString("group_id"))
+                        .get()
+                        .getOrCreateMeeting(row.getString("meeting_id"))
+                        .addSeatAssignment(row.getString("assign_id"), row.getString("netid"), row.getString("seat"));
+                });
 
         return section;
     }
