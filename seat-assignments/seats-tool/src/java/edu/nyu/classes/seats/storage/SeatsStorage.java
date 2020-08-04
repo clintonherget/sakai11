@@ -19,6 +19,7 @@ import org.json.simple.JSONObject;
 public class SeatsStorage {
     public enum SelectionType {
         RANDOM,
+        WEIGHTED,
     }
 
     public enum AuditEvents {
@@ -174,7 +175,7 @@ public class SeatsStorage {
         return section;
     }
 
-    private static String createGroup(DBConnection db, SeatSection section, String groupTitle, List<String> members) throws SQLException {
+    private static String createGroup(DBConnection db, SeatSection section, String groupTitle, List<Member> members) throws SQLException {
         String groupId = db.uuid();
 
         AuditEntry entry = new AuditEntry(AuditEvents.GROUP_CREATED,
@@ -200,10 +201,10 @@ public class SeatsStorage {
 
         entry = new AuditEntry(AuditEvents.MEETING_CREATED,
                 json("meeting", meetingId,
-                "location", location,
-                "group_name", groupTitle,
-                        "group_id", groupId,
-                        "section_id", section.id),
+                     "location", location,
+                     "group_name", groupTitle,
+                     "group_id", groupId,
+                     "section_id", section.id),
                 new String[] {
                         // FIXME: index useful stuff
                 }
@@ -217,9 +218,10 @@ public class SeatsStorage {
                 .param(location)
                 .executeUpdate();
 
-        for (String netid : members) {
+        for (Member member : members) {
             entry = new AuditEntry(AuditEvents.MEMBER_ADDED,
-                    json("netid", netid,
+                    json("netid", member.netid,
+                            "modality", member.modality.toString(),
                             "group_name", groupTitle,
                             "group_id", groupId,
                             "section_id", section.id),
@@ -231,7 +233,7 @@ public class SeatsStorage {
             insertAuditEntry(db, entry);
 
             db.run("insert into seat_group_members (netid, group_id) values (?, ?)")
-                    .param(netid)
+                    .param(member.netid)
                     .param(groupId)
                     .executeUpdate();
         }
@@ -239,44 +241,73 @@ public class SeatsStorage {
         return groupId;
     }
 
-    public static List<String> getMembersForSection(DBConnection db, SeatSection section) throws SQLException {
+    public static List<Member> getMembersForSection(DBConnection db, SeatSection section) throws SQLException {
         List<String> rosterIds = db.run("select sakai_roster_id from seat_group_section_rosters where section_id = ?")
                                     .param(section.id)
                                     .executeQuery()
                                     .getStringColumn("sakai_roster_id");
 
-        Set<String> result = new HashSet<>(); 
+        Set<Member> result = new HashSet<>();
 
         CourseManagementService cms = (CourseManagementService) ComponentManager.get("org.sakaiproject.coursemanagement.api.CourseManagementService");
         for (String rosterId : rosterIds) {
             for (Membership membership : cms.getSectionMemberships(rosterId)) {
-                result.add(membership.getUserId());
+                result.add(new Member(membership.getUserId()));
             }
         }
 
         return new ArrayList<>(result);
     }
 
-    private static List<List<String>> splitMembersForGroup(List<String> members, int groupCount, SelectionType selection) {
-        // FIXME implement weighted selection
-        // group by modality
-        // shuffle groups
-        // generate groups
-        Collections.shuffle(members);
-        
-        List<Integer> groupSizes = new ArrayList<>();
-        for (int i=0; i<groupCount; i++) {
-            if (i < members.size() % groupCount) {
-                groupSizes.add((members.size() / groupCount) + 1);
-            } else {
-                groupSizes.add(members.size() / groupCount);
-            }
-        }
+    private static List<List<Member>> splitMembersForGroup(List<Member> members, int groupCount, SelectionType selection) {
+        List<List<Member>> result = new ArrayList<>();
 
-        List<List<String>> result = new ArrayList<>();
-        for (int groupSize : groupSizes) {
-            result.add(members.subList(0, groupSize));
-            members = members.subList(groupSize, members.size());
+        Collections.shuffle(members);
+
+        if (SelectionType.WEIGHTED.equals(selection)) {
+            Collections.sort(members, new Comparator<Member>() {
+                @Override
+                public int compare(Member m1, Member m2) {
+                    if (Member.Modality.ONLINE.equals(m1.modality)) {
+                        return -1;
+                    } else if (Member.Modality.ONLINE.equals(m2.modality)) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+            });
+
+            List<Integer> groupSizes = new ArrayList<>();
+            for (int i=0; i<groupCount; i++) {
+                if (i < members.size() % groupCount) {
+                    groupSizes.add((members.size() / groupCount) + 1);
+                } else {
+                    groupSizes.add(members.size() / groupCount);
+                }
+            }
+
+            for (int groupSize : groupSizes) {
+                result.add(members.subList(0, groupSize));
+                members = members.subList(groupSize, members.size());
+            }
+        } else {
+            // random
+            for (int i=0; i<groupCount; i++) {
+                result.add(new ArrayList<>());
+            }
+
+            Map<Member.Modality, List<Member>> groupedMembers = members.stream().collect(Collectors.groupingBy((m) -> m.modality));
+
+            ArrayDeque<List<Member>> memberGroups = new ArrayDeque<>(groupedMembers.values());
+            int currentGroup = 0;
+            while(!memberGroups.isEmpty()) {
+                List<Member> groupToProcess = memberGroups.removeFirst();
+                for (Member member : groupToProcess) {
+                    result.get(currentGroup).add(member);
+                    currentGroup = (currentGroup + 1) % groupCount;
+                }
+            }
         }
 
         return result;
@@ -288,57 +319,20 @@ public class SeatsStorage {
                 for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
                     clearSeat(db, seatAssignment);
                 }
-    
+
                 deleteMeeting(db, meeting);
             }
-    
+
             deleteGroup(db, group);
         }
-    
-        List<String> sectionMembers = getMembersForSection(db, section);
-    
-        List<List<String>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
-    
+
+        List<Member> sectionMembers = getMembersForSection(db, section);
+
+        List<List<Member>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
+
         for (int i=0; i<groupCount; i++) {
             createGroup(db, section, String.format("Group %d", i + 1), membersPerGroup.get(i));
         }
-    
-        // Create groups
-        //  - Create a meeting
-        //  - get members for all rosters
-        //  - insert seat_group_members for each member
-    
-        // List<String> groupsToDelete = db.run(
-        //        "SELECT sg.id as group_id " +
-        //        " from seat_group_selection sel " +
-        //        " INNER JOIN seat_group sg ON sel.group_id = sg.id " +
-        //        " AND sg.site_id = ? AND sel.sakai_roster_id = ?")
-        //     .param(siteId)
-        //     .param(section.getProviderGroupId())
-        //     .executeQuery()
-        //     .getStringColumn("group_id");
-    
-    
-        // try (DBResults results = db.run(
-        //                                 "SELECT sg.id as group_id " +
-        //                                 " from seat_group_selection sel " +
-        //                                 " INNER JOIN seat_group sg ON sel.group_id = sg.id " +
-        //                                 " AND sg.site_id = ? AND sel.sakai_roster_id = ?")
-        //      .param(siteId)
-        //      .param(section.getProviderGroupId())
-        //      .executeQuery()) {
-        //     for (ResultSet result : results) {
-        //         groupsToDelete.add(result.getString("group_id"));
-        //     }
-        // }
-        // 
-        // try (DBResults results = db.run(
-        //                                 "SELECT group_id, netid " +
-        //                                 " from seat_group_members members " +
-        //                                 " where group_id in (" + DB.placeholders(groupsToDelete) + ")")
-        //      .stringParams(groupsToDelete)
-        //      .executeQuery()) {
-        // }
     }
 
 }
