@@ -146,6 +146,10 @@ public class SeatsStorage {
             }
         }
 
+        if (section.groupIds().isEmpty()) {
+            return section;
+        }
+
         try (DBResults rows = db.run("select sm.group_id, sm.id as meeting_id" +
                 " from seat_meeting sm" +
                 " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
