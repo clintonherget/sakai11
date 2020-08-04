@@ -38,11 +38,17 @@ public class SeatsStorage {
         private AuditEvents event;
         private String json;
         private String[] args;
+        private long timestamp;
 
         public AuditEntry(AuditEvents event, String json, String[] args) {
             this.event = event;
             this.json = json;
             this.args = args;
+            this.timestamp = System.currentTimeMillis();
+        }
+
+        public String toString() {
+            return String.format("%d %s: %s", timestamp, event, json);
         }
     }
 
@@ -78,9 +84,13 @@ public class SeatsStorage {
             .executeUpdate();
     }
 
-    public static void insertAuditEntry(DBConnection db, AuditEntry entry) {
-        System.err.println(entry);
-        System.err.println(entry.json);
+    public static void insertAuditEntry(DBConnection db, AuditEntry entry) throws SQLException {
+        db.run("insert into seat_audit (id, timestamp_ms, event_code, json) values (?, ?, ?, ?)")
+            .param(db.uuid())
+            .param(entry.timestamp)
+            .param(entry.event.toString())
+            .param(entry.json)
+            .executeUpdate();
     }
 
     public static void deleteMeeting(DBConnection db, Meeting meeting) throws SQLException {
@@ -103,7 +113,7 @@ public class SeatsStorage {
     }
 
     public static void deleteGroup(DBConnection db, SeatGroup group) throws SQLException {
-        AuditEntry entry = new AuditEntry(AuditEvents.MEETING_DELETED,
+        AuditEntry entry = new AuditEntry(AuditEvents.GROUP_DELETED,
                                           json("group_name", group.name,
                                                "group_id", group.id,
                                                "section_id", group.section.id),
@@ -116,48 +126,52 @@ public class SeatsStorage {
         db.run("delete from seat_group_members where group_id = ?")
             .param(group.id)
             .executeUpdate();
-        db.run("delete from seat_group_section where group_id = ?")
-            .param(group.id)
-            .executeUpdate();
-        db.run("delete from seat_group where group_id = ?")
+        db.run("delete from seat_group where id = ?")
             .param(group.id)
             .executeUpdate();
     }
 
-    public static SeatSection getSeatSection(DBConnection db, String siteId, String sectionId) {
-        try {
-            SeatSection section = new SeatSection(sectionId);
+    public static SeatSection getSeatSection(DBConnection db, String sectionId) throws SQLException {
+        SeatSection section = new SeatSection(sectionId);
 
-            try (DBResults rows = db.run("select sg.*, sec.id as section_id" +
-                                         " from seat_group sg" +
-                                         " inner join seat_group_section sec on sg.section_id = sec.id " +
-                                         " where sec.sakai_roster_id = ? AND sg.site_id = ?")
-                 .param(sectionId)
-                 .param(siteId)
-                 .executeQuery()) {
-                for (ResultSet row : rows) {
-                    section.addGroup(row.getString("id"), row.getString("name"), row.getString("description"));
-                }
+        try (DBResults rows = db.run("select sg.*, sec.id as section_id" +
+                                     " from seat_group sg" +
+                                     " inner join seat_group_section sec on sg.section_id = sec.id " +
+                                     " where sec.id = ?")
+             .param(sectionId)
+             .executeQuery()) {
+            for (ResultSet row : rows) {
+                section.addGroup(row.getString("id"), row.getString("name"), row.getString("description"));
             }
-
-            try (DBResults rows = db.run("select sm.group_id, sm.id as meeting_id, assign.id as assign_id, assign.netid, assign.seat" +
-                                         " from seat_meeting sm" +
-                                         " inner join seat_meeting_assignment assign on assign.meeting_id = sm.id" +
-                                         " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
-                 .stringParams(section.groupIds())
-                 .executeQuery()) {
-                for (ResultSet row : rows) {
-                    section.fetchGroup(row.getString("group_id"))
-                        .get()
-                        .getOrCreateMeeting(row.getString("meeting_id"))
-                        .addSeatAssignment(row.getString("assign_id"), row.getString("netid"), row.getString("seat"));
-                }
-            }
-
-            return section;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
+
+        try (DBResults rows = db.run("select sm.group_id, sm.id as meeting_id" +
+                " from seat_meeting sm" +
+                " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
+                .stringParams(section.groupIds())
+                .executeQuery()) {
+            for (ResultSet row : rows) {
+                section.fetchGroup(row.getString("group_id"))
+                        .get()
+                        .getOrCreateMeeting(row.getString("meeting_id"));
+            }
+        }
+
+        try (DBResults rows = db.run("select sm.group_id, sm.id as meeting_id, assign.id as assign_id, assign.netid, assign.seat" +
+                                     " from seat_meeting sm" +
+                                     " inner join seat_meeting_assignment assign on assign.meeting_id = sm.id" +
+                                     " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
+             .stringParams(section.groupIds())
+             .executeQuery()) {
+            for (ResultSet row : rows) {
+                section.fetchGroup(row.getString("group_id"))
+                    .get()
+                    .getOrCreateMeeting(row.getString("meeting_id"))
+                    .addSeatAssignment(row.getString("assign_id"), row.getString("netid"), row.getString("seat"));
+            }
+        }
+
+        return section;
     }
 
     private static String createGroup(DBConnection db, SeatSection section, String groupTitle, List<String> members) throws SQLException {

@@ -102,7 +102,7 @@ public class SeatingHandlerBackgroundTask {
             .stream()
             .map((row) -> {
                     try {
-                        return new SeatSection(row.getString("id"));
+                        return SeatsStorage.getSeatSection(db, row.getString("id"));
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
