@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -123,11 +124,24 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
         return this.map(r -> r.getString(column));
     }
 
-    public int getCount() throws SQLException {
+    public Optional<Integer> oneInt() throws SQLException {
         if (this.hasNext()) {
-            return this.resultSet.getInt(0);
+            return Optional.of(this.resultSet.getInt(0));
         } else {
-            return 0;
+            return Optional.of(null);
         }
     }
+
+    public Optional<String> oneString() throws SQLException {
+        if (this.hasNext()) {
+            return Optional.of(this.resultSet.getString(0));
+        } else {
+            return Optional.of(null);
+        }
+    }
+
+    public int getCount() throws SQLException {
+        return this.oneInt().get();
+    }
+
 }
