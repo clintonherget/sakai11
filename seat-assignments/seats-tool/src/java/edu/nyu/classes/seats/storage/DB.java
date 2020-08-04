@@ -28,8 +28,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.sakaiproject.db.cover.SqlService;
-import java.util.Collection;
-import java.util.stream.Collectors;
 
 /**
  * Logic for borrowing and returning DB connections.
@@ -76,9 +74,5 @@ public class DB {
         } catch (SQLException e) {
             throw new RuntimeException("Failure in database action: " + actionDescription, e);
         }
-    }
-
-    public static String placeholders(Collection<?> coll) {
-        return coll.stream().map(_p -> "?").collect(Collectors.joining(","));
     }
 }

@@ -151,7 +151,7 @@ public class SeatsStorage {
 
         db.run("select sm.group_id, sm.id as meeting_id" +
                " from seat_meeting sm" +
-               " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
+               " where sm.group_id in (" + db.placeholders(section.groupIds()) + ")")
             .stringParams(section.groupIds())
             .executeQuery()
             .each(row -> {
@@ -163,7 +163,7 @@ public class SeatsStorage {
         db.run("select sm.group_id, sm.id as meeting_id, assign.id as assign_id, assign.netid, assign.seat" +
                " from seat_meeting sm" +
                " inner join seat_meeting_assignment assign on assign.meeting_id = sm.id" +
-               " where sm.group_id in (" + DB.placeholders(section.groupIds()) + ")")
+               " where sm.group_id in (" + db.placeholders(section.groupIds()) + ")")
             .stringParams(section.groupIds())
             .executeQuery()
             .each(row -> {

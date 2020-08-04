@@ -28,6 +28,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * A database connection with commit/rollback tracking.
@@ -83,4 +85,9 @@ public class DBConnection {
     public String uuid() {
         return UUID.randomUUID().toString();
     }
+
+    public String placeholders(Collection<?> coll) {
+        return coll.stream().map(_p -> "?").collect(Collectors.joining(","));
+    }
+
 }
