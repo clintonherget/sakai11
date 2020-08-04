@@ -15,8 +15,8 @@ import java.sql.SQLException;
 
 abstract public class BaseMigration {
 
-    final static String MIGRATION_TABLE = "conversations_schema_info";
-    final static String MIGRATION_PKG = "org.sakaiproject.conversations.tool.storage.migrations";
+    final static String MIGRATION_TABLE = "seat_schema_info";
+    final static String MIGRATION_PKG = "edu.nyu.classes.seats.storage.migrations";
 
     public static void runMigrations() {
         try {

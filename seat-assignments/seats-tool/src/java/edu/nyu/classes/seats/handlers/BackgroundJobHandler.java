@@ -42,40 +42,20 @@ import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.authz.api.Member;
 
-public class HomeHandler implements Handler {
-
-    protected String redirectTo = null;
+public class BackgroundJobHandler implements Handler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
+
         try {
-            Site site = SiteService.getSite((String)context.get("siteId"));
+            new SeatingHandlerBackgroundTask().run();
 
-            List<Group> sections = new ArrayList<>();
-
-            // FIXME: combining sections...
-            for (Group group : site.getGroups()) {
-                if (group.getProviderGroupId() != null) {
-                    sections.add(group);
-                }
-            }
-
-            StringBuilder sb = new StringBuilder();
-
-            for (Group group : sections) {
-                sb.append("Title: " + group.getTitle() + "\n");
-                sb.append("Description: " + group.getDescription() + "\n");
-
-                for (Member m : group.getMembers()) {
-                    sb.append(String.format("Member: %s (%s)", m.getUserEid(), m.getRole().getId()) + "\n");
-                }
-            }
-
-            context.put("subpage", "instructor_home");
-            context.put("content", sb.toString());
+            response.setContentType("text/plain");
+            response.getWriter().write("OK");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
     }
 
     @Override
@@ -85,6 +65,10 @@ public class HomeHandler implements Handler {
 
     public Errors getErrors() {
         return null;
+    }
+
+    public boolean hasTemplate() {
+        return false;
     }
 
     public boolean hasRedirect() {

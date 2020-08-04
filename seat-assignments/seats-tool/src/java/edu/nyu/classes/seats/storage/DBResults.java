@@ -28,7 +28,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Provide an iterator over a ResultSet.
@@ -75,5 +81,31 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
     @Override
     public Iterator<ResultSet> iterator() {
         return this;
+    }
+
+    public Stream<ResultSet> stream() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this, Spliterator.ORDERED),
+                                    false);
+    }
+
+    public List<String> getStringColumn(String column) {
+        return this
+            .stream()
+            .map(r -> {
+                    try {
+                        return r.getString("group_id");
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+            .collect(Collectors.toList());
+    }
+
+    public int getCount() throws SQLException {
+        if (this.hasNext()) {
+            return this.resultSet.getInt(0);
+        } else {
+            return 0;
+        }
     }
 }

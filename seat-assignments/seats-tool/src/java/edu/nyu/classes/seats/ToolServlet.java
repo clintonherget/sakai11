@@ -41,6 +41,9 @@ public class ToolServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         // FIXME: should be false in production?
         if (ServerConfigurationService.getBoolean("auto.ddl", false) || ServerConfigurationService.getBoolean("auto.ddl.seats", true)) {
+            // "TOOT TOOT"
+            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[ToolServlet.java:46 ViciousFrog]: " + "\n    'TOOT TOOT' => " + ("TOOT TOOT") + "\n");
+
             new SeatsStorage().runDBMigrations();
         }
 
@@ -100,6 +103,10 @@ public class ToolServlet extends HttpServlet {
 
         if (path == null) {
             path = "";
+        }
+
+        if (path.startsWith("/background-task")) {
+            return new BackgroundJobHandler();
         }
 
         // FIXME
