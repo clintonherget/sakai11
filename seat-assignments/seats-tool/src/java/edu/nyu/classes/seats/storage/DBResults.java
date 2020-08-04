@@ -93,7 +93,7 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
             .stream()
             .map(r -> {
                     try {
-                        return r.getString("group_id");
+                        return r.getString(column);
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }

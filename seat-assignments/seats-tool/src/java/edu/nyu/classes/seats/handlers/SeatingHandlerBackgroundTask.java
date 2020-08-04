@@ -1,5 +1,6 @@
 package edu.nyu.classes.seats.handlers;
 
+import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Group;
 
 import java.sql.*;
@@ -21,7 +22,7 @@ public class SeatingHandlerBackgroundTask {
         // roster added - site realm update
         // person added to roster - ???
         // new section cross-listed/combined in SIS - ???
-        return Arrays.asList(new String[] { "fdb7a928-f38a-4154-ae46-43b44ad7b5dd" });
+        return Arrays.asList(new String[] { "fdb7a928-f38a-4154-ae46-43b44ad7b5dd", "e682f774-e900-4e00-b555-c9974e06c556" });
     }
 
 
@@ -114,30 +115,32 @@ public class SeatingHandlerBackgroundTask {
             Site site = SiteService.getSite(siteId);
 
             DB.transaction
-                ("Bootstrap groups for a site and section",
-                 (DBConnection db) -> {
-                    // Sync the rosters
-                    for (Group section : site.getGroups()) {
-                        if (section.getProviderGroupId() == null) {
-                            continue;
-                        }
+                    ("Bootstrap groups for a site and section",
+                            (DBConnection db) -> {
+                                // Sync the rosters
+                                for (Group section : site.getGroups()) {
+                                    if (section.getProviderGroupId() == null) {
+                                        continue;
+                                    }
 
-                        String rosterId = section.getProviderGroupId();
-                        String sponsorRosterId = getSponsorSectionId(rosterId);
+                                    String rosterId = section.getProviderGroupId();
+                                    String sponsorRosterId = getSponsorSectionId(rosterId);
 
-                        if (rosterId.equals(sponsorRosterId)) {
-                            ensureRosterEntry(db, site.getId(), sponsorRosterId, null);
-                        } else {
-                            ensureRosterEntry(db, site.getId(), sponsorRosterId, rosterId);
-                        }
-                    }
+                                    if (rosterId.equals(sponsorRosterId)) {
+                                        ensureRosterEntry(db, site.getId(), sponsorRosterId, null);
+                                    } else {
+                                        ensureRosterEntry(db, site.getId(), sponsorRosterId, rosterId);
+                                    }
+                                }
 
-                    for (SeatSection section : siteSeatSections(db, siteId)) {
-                        SeatsStorage.bootstrapGroupsForSection(section, 1, SeatsStorage.SelectionType.RANDOM);
-                    }
+                                for (SeatSection section : siteSeatSections(db, siteId)) {
+                                    SeatsStorage.bootstrapGroupsForSection(section, 1, SeatsStorage.SelectionType.RANDOM);
+                                }
 
-                    return null;
-                });
+                                return null;
+                            });
+        } catch (IdUnusedException e) {
+            System.err.println("SeatJob: site not found: " + siteId);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

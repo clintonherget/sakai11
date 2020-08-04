@@ -27,6 +27,7 @@ package edu.nyu.classes.seats.storage;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.UUID;
 
 /**
  * A database connection with commit/rollback tracking.
@@ -77,5 +78,9 @@ public class DBConnection {
 
     public DBPreparedStatement run(String sql) throws SQLException {
         return new DBPreparedStatement(connection.prepareStatement(sql), this);
+    }
+
+    public String uuid() {
+        return UUID.randomUUID().toString();
     }
 }
