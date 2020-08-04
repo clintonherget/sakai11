@@ -46,60 +46,6 @@ public class SeatingHandlerBackgroundTask {
         System.err.println("Hi!");
     }
 
-
-    private static String getSponsorSectionId(String rosterId) {
-        // FIXME: resolve the sponsor course roster if this isn't it.
-        return rosterId;
-    }
-
-
-    private void ensureRosterEntry(DBConnection db, String siteId, String primaryRosterId, Optional<String> secondaryRosterId) throws SQLException {
-        Optional<String> sectionId = db.run("select id from seat_group_section where primary_roster_id = ? AND site_id = ?")
-            .param(primaryRosterId)
-            .param(siteId)
-            .executeQuery()
-            .oneString();
-
-        if (!sectionId.isPresent()) {
-            sectionId = Optional.of(UUID.randomUUID().toString());
-
-            db.run("insert into seat_group_section (id, primary_roster_id, site_id) values (?, ?, ?)")
-                .param(sectionId.get())
-                .param(primaryRosterId)
-                .param(siteId)
-                .executeUpdate();
-
-            db.run("insert into seat_group_section_rosters (section_id, sakai_roster_id, role) values (?, ?, ?)")
-                .param(sectionId.get())
-                .param(primaryRosterId)
-                .param("primary")
-                .executeUpdate();
-        }
-
-        if (secondaryRosterId.isPresent()) {
-            int count = db.run("select count(1) from seat_group_section_rosters where section_id = ? AND sakai_roster_id = ?")
-                .param(sectionId.get())
-                .param(secondaryRosterId.get())
-                .executeQuery()
-                .getCount();
-
-            if (count == 0) {
-                db.run("insert into seat_group_section_rosters (section_id, sakai_roster_id, role) values (?, ?, ?)")
-                    .param(sectionId.get())
-                    .param(secondaryRosterId.get())
-                    .param("secondary")
-                    .executeUpdate();
-            }
-        }
-    }
-
-    private List<SeatSection> siteSeatSections(DBConnection db, String siteId) throws SQLException {
-        return db.run("select id from seat_group_section where site_id = ?")
-            .param(siteId)
-            .executeQuery()
-            .map(row -> SeatsStorage.getSeatSection(db, row.getString("id")));
-    }
-
     private void processSite(String siteId) {
         try {
             Site site = SiteService.getSite(siteId);
@@ -114,16 +60,16 @@ public class SeatingHandlerBackgroundTask {
                                     }
 
                                     String rosterId = section.getProviderGroupId();
-                                    String sponsorRosterId = getSponsorSectionId(rosterId);
+                                    String sponsorRosterId = SeatsStorage.getSponsorSectionId(rosterId);
 
                                     if (rosterId.equals(sponsorRosterId)) {
-                                        ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(null));
+                                        SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(null));
                                     } else {
-                                        ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(rosterId));
+                                        SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(rosterId));
                                     }
                                 }
 
-                                for (SeatSection section : siteSeatSections(db, siteId)) {
+                                for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
                                     SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
                                 }
 
