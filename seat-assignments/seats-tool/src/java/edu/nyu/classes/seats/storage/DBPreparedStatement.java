@@ -27,6 +27,7 @@ package edu.nyu.classes.seats.storage;
 import java.io.Reader;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collection;
 
 /**
  * Wrap a PreparedStatement, providing nicer parameter handling and transaction commit/rollback checks.
@@ -99,6 +100,14 @@ public class DBPreparedStatement {
             cleanup();
             throw e;
         }
+    }
+
+    public DBPreparedStatement stringParams(Collection<String> strings) throws SQLException {
+        for (String s : strings) {
+            this.param(s);
+        }
+
+        return this;
     }
 
     public int executeUpdate() throws SQLException {
