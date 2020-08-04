@@ -27,6 +27,7 @@ package edu.nyu.classes.seats.storage;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -35,6 +36,7 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import java.util.function.Function;
 
 /**
  * Provide an iterator over a ResultSet.
@@ -88,17 +90,37 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
                                     false);
     }
 
-    public List<String> getStringColumn(String column) {
-        return this
-            .stream()
-            .map(r -> {
-                    try {
-                        return r.getString(column);
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-            .collect(Collectors.toList());
+    @FunctionalInterface
+    public interface SQLMapper<T> {
+        public T apply(ResultSet r) throws SQLException;
+    }
+
+    public <T> List<T> map(SQLMapper<T> fn) throws SQLException {
+        List<T> result = new ArrayList<>();
+
+        while (this.hasNext()) {
+            result.add(fn.apply(this.next()));
+        }
+
+        this.close();
+        return result;
+    }
+
+    @FunctionalInterface
+    public interface SQLAction<T> {
+        public void apply(ResultSet r) throws SQLException;
+    }
+
+    public void each(SQLAction fn) throws SQLException {
+        while (this.hasNext()) {
+            fn.apply(this.next());
+        }
+
+        this.close();
+    }
+
+    public List<String> getStringColumn(String column) throws SQLException {
+        return this.map(r -> r.getString(column));
     }
 
     public int getCount() throws SQLException {
