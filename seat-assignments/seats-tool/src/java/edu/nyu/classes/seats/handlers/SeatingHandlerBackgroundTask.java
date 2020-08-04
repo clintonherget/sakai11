@@ -53,42 +53,40 @@ public class SeatingHandlerBackgroundTask {
     }
 
 
-    private void ensureRosterEntry(DBConnection db, String siteId, String primaryRosterId, String secondaryRosterId) throws SQLException {
-        List<String> existingId = db.run("select id from seat_group_section where primary_roster_id = ? AND site_id = ?")
+    private void ensureRosterEntry(DBConnection db, String siteId, String primaryRosterId, Optional<String> secondaryRosterId) throws SQLException {
+        Optional<String> sectionId = db.run("select id from seat_group_section where primary_roster_id = ? AND site_id = ?")
             .param(primaryRosterId)
             .param(siteId)
             .executeQuery()
-            .getStringColumn("id");
+            .oneString();
 
-        String sectionId = existingId.size() > 0 ? existingId.get(0) : null;
-
-        if (sectionId == null) {
-            sectionId = UUID.randomUUID().toString();
+        if (!sectionId.isPresent()) {
+            sectionId = Optional.of(UUID.randomUUID().toString());
 
             db.run("insert into seat_group_section (id, primary_roster_id, site_id) values (?, ?, ?)")
-                .param(sectionId)
+                .param(sectionId.get())
                 .param(primaryRosterId)
                 .param(siteId)
                 .executeUpdate();
 
             db.run("insert into seat_group_section_rosters (section_id, sakai_roster_id, role) values (?, ?, ?)")
-                .param(sectionId)
+                .param(sectionId.get())
                 .param(primaryRosterId)
                 .param("primary")
                 .executeUpdate();
         }
 
-        if (secondaryRosterId != null) {
+        if (secondaryRosterId.isPresent()) {
             int count = db.run("select count(1) from seat_group_section_rosters where section_id = ? AND sakai_roster_id = ?")
-                .param(sectionId)
-                .param(secondaryRosterId)
+                .param(sectionId.get())
+                .param(secondaryRosterId.get())
                 .executeQuery()
                 .getCount();
 
             if (count == 0) {
                 db.run("insert into seat_group_section_rosters (section_id, sakai_roster_id, role) values (?, ?, ?)")
-                    .param(sectionId)
-                    .param(secondaryRosterId)
+                    .param(sectionId.get())
+                    .param(secondaryRosterId.get())
                     .param("secondary")
                     .executeUpdate();
             }
@@ -119,9 +117,9 @@ public class SeatingHandlerBackgroundTask {
                                     String sponsorRosterId = getSponsorSectionId(rosterId);
 
                                     if (rosterId.equals(sponsorRosterId)) {
-                                        ensureRosterEntry(db, site.getId(), sponsorRosterId, null);
+                                        ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(null));
                                     } else {
-                                        ensureRosterEntry(db, site.getId(), sponsorRosterId, rosterId);
+                                        ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(rosterId));
                                     }
                                 }
 
