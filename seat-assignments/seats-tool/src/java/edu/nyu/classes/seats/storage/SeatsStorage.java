@@ -3,18 +3,13 @@ package edu.nyu.classes.seats.storage;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.*;
+
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.coursemanagement.api.Membership;
 import org.sakaiproject.site.api.Group;
+import org.sakaiproject.coursemanagement.api.CourseManagementService;
 
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.migrations.BaseMigration;
@@ -30,6 +25,9 @@ public class SeatsStorage {
         SEAT_CLEARED,
         MEETING_DELETED,
         GROUP_DELETED,
+        GROUP_CREATED,
+        MEETING_CREATED,
+        MEMBER_ADDED,
     }
 
     public void runDBMigrations() {
@@ -162,6 +160,114 @@ public class SeatsStorage {
         }
     }
 
+    private static String createGroup(DBConnection db, SeatSection section, String groupTitle, List<String> members) throws SQLException {
+        String groupId = db.uuid();
+
+        AuditEntry entry = new AuditEntry(AuditEvents.GROUP_CREATED,
+                json("group_name", groupTitle,
+                        "group_id", groupId,
+                        "section_id", section.id),
+                new String[] {
+                        // FIXME: index useful stuff
+                }
+        );
+
+        insertAuditEntry(db, entry);
+
+        db.run("insert into seat_group (id, name, section_id) values (?, ?, ?)")
+            .param(groupId)
+            .param(groupTitle)
+            .param(section.id)
+            .executeUpdate();
+
+        String meetingId = db.uuid();
+        // FIXME pull location from somewhere
+        String location = "FIXME";
+
+        entry = new AuditEntry(AuditEvents.MEETING_CREATED,
+                json("meeting", meetingId,
+                "location", location,
+                "group_name", groupTitle,
+                        "group_id", groupId,
+                        "section_id", section.id),
+                new String[] {
+                        // FIXME: index useful stuff
+                }
+        );
+
+        insertAuditEntry(db, entry);
+
+        db.run("insert into seat_meeting (id, group_id, location) values (?, ?, ?)")
+                .param(meetingId)
+                .param(groupId)
+                .param(location)
+                .executeUpdate();
+
+        for (String netid : members) {
+            entry = new AuditEntry(AuditEvents.MEMBER_ADDED,
+                    json("netid", netid,
+                            "group_name", groupTitle,
+                            "group_id", groupId,
+                            "section_id", section.id),
+                    new String[] {
+                            // FIXME: index useful stuff
+                    }
+            );
+
+            insertAuditEntry(db, entry);
+
+            db.run("insert into seat_group_members (netid, group_id) values (?, ?)")
+                    .param(netid)
+                    .param(groupId)
+                    .executeUpdate();
+        }
+
+        return groupId;
+    }
+
+    public static List<String> getMembersForSection(DBConnection db, SeatSection section) throws SQLException {
+        List<String> rosterIds = db.run("select sakai_roster_id from seat_group_section_rosters where section_id = ?")
+                                    .param(section.id)
+                                    .executeQuery()
+                                    .getStringColumn("sakai_roster_id");
+
+        Set<String> result = new HashSet<>(); 
+
+        CourseManagementService cms = (CourseManagementService) ComponentManager.get("org.sakaiproject.coursemanagement.api.CourseManagementService");
+        for (String rosterId : rosterIds) {
+            for (Membership membership : cms.getSectionMemberships(rosterId)) {
+                result.add(membership.getUserId());
+            }
+        }
+
+        return new ArrayList<>(result);
+    }
+
+    private static List<List<String>> splitMembersForGroup(List<String> members, int groupCount, SelectionType selection) {
+        // FIXME implement weighted selection
+        // group by modality
+        // shuffle groups
+        // generate groups
+        Collections.shuffle(members);
+        
+        List<Integer> groupSizes = new ArrayList<>();
+        for (int i=0; i<groupCount; i++) {
+            if (i < members.size() % groupCount) {
+                groupSizes.add((members.size() / groupCount) + 1);
+            } else {
+                groupSizes.add(members.size() / groupCount);
+            }
+        }
+
+        List<List<String>> result = new ArrayList<>();
+        for (int groupSize : groupSizes) {
+            result.add(members.subList(0, groupSize));
+            members = members.subList(groupSize, members.size());
+        }
+
+        return result;
+    }
+
     public static void bootstrapGroupsForSection(SeatSection section, int groupCount, SelectionType selection) {
         DB.transaction
             ("Bootstrap groups for a site and section",
@@ -177,6 +283,19 @@ public class SeatsStorage {
 
                     deleteGroup(db, group);
                 }
+
+                List<String> sectionMembers = getMembersForSection(db, section);
+
+                List<List<String>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
+
+                for (int i=0; i<groupCount; i++) {
+                    createGroup(db, section, String.format("Group %d", i + 1), membersPerGroup.get(i));
+                }
+
+                // Create groups
+                //  - Create a meeting
+                //  - get members for all rosters
+                //  - insert seat_group_members for each member
 
                 // List<String> groupsToDelete = db.run(
                 //        "SELECT sg.id as group_id " +
