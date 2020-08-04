@@ -5,12 +5,18 @@
         <link rel="stylesheet" type="text/css" href="{{{skinRepo}}}/tool_base.css" />
         <link rel="stylesheet" type="text/css" href="/seats-tool/css/base.css" />
 
+        <script src="/seats-tool/js/vue.min.js"></script>
+        <script src="/library/webjars/jquery/1.12.4/jquery.min.js"></script>
+        <script src="/library/webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
         {{{randomSakaiHeadStuff}}}
     </head>
     <body>
-
         <div class="portletBody seats-body">
             {{{subpage this "body"}}}
         </div>
+
+        <script>
+         new Vue({ el: '.vue-enabled' });
+        </script>
     </body>
 </html>
