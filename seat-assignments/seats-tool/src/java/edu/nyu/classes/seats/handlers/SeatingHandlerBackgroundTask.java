@@ -134,8 +134,10 @@ public class SeatingHandlerBackgroundTask {
                                 }
 
                                 for (SeatSection section : siteSeatSections(db, siteId)) {
-                                    SeatsStorage.bootstrapGroupsForSection(section, 1, SeatsStorage.SelectionType.RANDOM);
+                                    SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
                                 }
+
+                                db.commit();
 
                                 return null;
                             });

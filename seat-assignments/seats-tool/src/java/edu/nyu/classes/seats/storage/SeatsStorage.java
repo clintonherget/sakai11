@@ -268,69 +268,63 @@ public class SeatsStorage {
         return result;
     }
 
-    public static void bootstrapGroupsForSection(SeatSection section, int groupCount, SelectionType selection) {
-        DB.transaction
-            ("Bootstrap groups for a site and section",
-             (DBConnection db) -> {
-                for (SeatGroup group : section.listGroups()) {
-                    for (Meeting meeting : group.listMeetings()) {
-                        for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
-                            clearSeat(db, seatAssignment);
-                        }
-
-                        deleteMeeting(db, meeting);
-                    }
-
-                    deleteGroup(db, group);
+    public static void bootstrapGroupsForSection(DBConnection db, SeatSection section, int groupCount, SelectionType selection) throws SQLException {
+        for (SeatGroup group : section.listGroups()) {
+            for (Meeting meeting : group.listMeetings()) {
+                for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
+                    clearSeat(db, seatAssignment);
                 }
-
-                List<String> sectionMembers = getMembersForSection(db, section);
-
-                List<List<String>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
-
-                for (int i=0; i<groupCount; i++) {
-                    createGroup(db, section, String.format("Group %d", i + 1), membersPerGroup.get(i));
-                }
-
-                // Create groups
-                //  - Create a meeting
-                //  - get members for all rosters
-                //  - insert seat_group_members for each member
-
-                // List<String> groupsToDelete = db.run(
-                //        "SELECT sg.id as group_id " +
-                //        " from seat_group_selection sel " +
-                //        " INNER JOIN seat_group sg ON sel.group_id = sg.id " +
-                //        " AND sg.site_id = ? AND sel.sakai_roster_id = ?")
-                //     .param(siteId)
-                //     .param(section.getProviderGroupId())
-                //     .executeQuery()
-                //     .getStringColumn("group_id");
-
-
-                // try (DBResults results = db.run(
-                //                                 "SELECT sg.id as group_id " +
-                //                                 " from seat_group_selection sel " +
-                //                                 " INNER JOIN seat_group sg ON sel.group_id = sg.id " +
-                //                                 " AND sg.site_id = ? AND sel.sakai_roster_id = ?")
-                //      .param(siteId)
-                //      .param(section.getProviderGroupId())
-                //      .executeQuery()) {
-                //     for (ResultSet result : results) {
-                //         groupsToDelete.add(result.getString("group_id"));
-                //     }
-                // }
-                // 
-                // try (DBResults results = db.run(
-                //                                 "SELECT group_id, netid " +
-                //                                 " from seat_group_members members " +
-                //                                 " where group_id in (" + DB.placeholders(groupsToDelete) + ")")
-                //      .stringParams(groupsToDelete)
-                //      .executeQuery()) {
-                // }
-
-                return null;
-            });
+    
+                deleteMeeting(db, meeting);
+            }
+    
+            deleteGroup(db, group);
+        }
+    
+        List<String> sectionMembers = getMembersForSection(db, section);
+    
+        List<List<String>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
+    
+        for (int i=0; i<groupCount; i++) {
+            createGroup(db, section, String.format("Group %d", i + 1), membersPerGroup.get(i));
+        }
+    
+        // Create groups
+        //  - Create a meeting
+        //  - get members for all rosters
+        //  - insert seat_group_members for each member
+    
+        // List<String> groupsToDelete = db.run(
+        //        "SELECT sg.id as group_id " +
+        //        " from seat_group_selection sel " +
+        //        " INNER JOIN seat_group sg ON sel.group_id = sg.id " +
+        //        " AND sg.site_id = ? AND sel.sakai_roster_id = ?")
+        //     .param(siteId)
+        //     .param(section.getProviderGroupId())
+        //     .executeQuery()
+        //     .getStringColumn("group_id");
+    
+    
+        // try (DBResults results = db.run(
+        //                                 "SELECT sg.id as group_id " +
+        //                                 " from seat_group_selection sel " +
+        //                                 " INNER JOIN seat_group sg ON sel.group_id = sg.id " +
+        //                                 " AND sg.site_id = ? AND sel.sakai_roster_id = ?")
+        //      .param(siteId)
+        //      .param(section.getProviderGroupId())
+        //      .executeQuery()) {
+        //     for (ResultSet result : results) {
+        //         groupsToDelete.add(result.getString("group_id"));
+        //     }
+        // }
+        // 
+        // try (DBResults results = db.run(
+        //                                 "SELECT group_id, netid " +
+        //                                 " from seat_group_members members " +
+        //                                 " where group_id in (" + DB.placeholders(groupsToDelete) + ")")
+        //      .stringParams(groupsToDelete)
+        //      .executeQuery()) {
+        // }
     }
 
 }
