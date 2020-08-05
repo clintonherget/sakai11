@@ -17,6 +17,8 @@ import edu.nyu.classes.seats.storage.migrations.BaseMigration;
 import org.json.simple.JSONObject;
 
 public class SeatsStorage {
+    public static int EDIT_WINDOW_MS = 5 * 60 * 1000;
+
     public enum SelectionType {
         RANDOM,
         WEIGHTED,
@@ -81,13 +83,17 @@ public class SeatsStorage {
                                           }
                                           );
 
-        insertAuditEntry(db, entry);
-        db.run("delete from seat_meeting_assignment where id = ?")
-            .param(seat.id)
+        int rowsUpdated = db.run("delete from seat_meeting_assignment where netid = ? and meeting_id = ?")
+            .param(seat.netid)
+            .param(seat.meeting.id)
             .executeUpdate();
+
+        if (rowsUpdated > 0) {
+            insertAuditEntry(db, entry);
+        }
     }
 
-    public static void setSeat(DBConnection db, SeatAssignment seat) throws SQLException {
+    public static void setSeat(DBConnection db, SeatAssignment seat, boolean shouldSetEditWindow) throws SQLException {
         db.run("select id" +
                 " from seat_meeting_assignment" +
                 " where meeting_id = ? and netid = ?")
@@ -115,17 +121,20 @@ public class SeatsStorage {
         );
 
         insertAuditEntry(db, entry);
+
+        long editWindow = shouldSetEditWindow ? System.currentTimeMillis() + EDIT_WINDOW_MS : 0;
+
         if (seat.id == null) {
             db.run("insert into seat_meeting_assignment (id, meeting_id, editable_until, netid, seat) values (?, ?, ?, ?, ?)")
                     .param(db.uuid())
                     .param(seat.meeting.id)
-                    .param(System.currentTimeMillis() + 5 * 60 * 1000)
+                    .param(editWindow)
                     .param(seat.netid)
                     .param(seat.seat)
                     .executeUpdate();
         } else {
             db.run("update seat_meeting_assignment set editable_until = ?, seat = ? where id = ?")
-                    .param(System.currentTimeMillis() + 5 * 60 * 1000)
+                    .param(editWindow)
                     .param(seat.seat)
                     .param(seat.id)
                     .executeUpdate();

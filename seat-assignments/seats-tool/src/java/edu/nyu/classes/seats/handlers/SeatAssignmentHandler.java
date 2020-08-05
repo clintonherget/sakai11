@@ -91,7 +91,8 @@ public class SeatAssignmentHandler implements Handler {
             if (seat == null) {
                 SeatsStorage.clearSeat(db, seatAssignment);
             } else {
-                SeatsStorage.setSeat(db, seatAssignment);
+                // FIXME set shouldSetEditWindow based on user perms
+                SeatsStorage.setSeat(db, seatAssignment, false);
             }
 
             try {
