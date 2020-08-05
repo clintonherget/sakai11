@@ -2,7 +2,9 @@ package edu.nyu.classes.seats.models;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class SeatGroup {
     public String id;
@@ -10,10 +12,15 @@ public class SeatGroup {
     public String description;
     public SeatSection section;
 
+    public Set<String> members = new HashSet<>();
     public Map<String, Meeting> meetings = new HashMap<>();
 
     public Collection<Meeting> listMeetings() {
         return meetings.values();
+    }
+
+    public void addMember(String netid) {
+        this.members.add(netid);
     }
 
     public Meeting getOrCreateMeeting(String meetingId) {

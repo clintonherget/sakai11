@@ -62,7 +62,6 @@ public class ToolServlet extends HttpServlet {
 
         try {
             Map<String, Object> context = new HashMap<String, Object>();
-
             context.put("baseURL", toolBaseURL);
             context.put("layout", true);
             context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
@@ -73,18 +72,33 @@ public class ToolServlet extends HttpServlet {
             }
 
             Handler handler = handlerForRequest(request);
-
-            handler.handle(request, response, context);
-
             response.setHeader("Content-Type", handler.getContentType());
 
+            DB.transaction("Handle seats API request",
+                           (DBConnection db) -> {
+                               context.put("db", db);
+                               handler.handle(request, response, context);
+                               db.commit();
+                               return null;
+                           });
+
             if (handler.hasRedirect()) {
+
+                // "REDIRECT"
+                System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[ToolServlet.java:94 BriefClam]: " + "\n    'REDIRECT' => " + ("REDIRECT") + "\n");
+
+
                 if (handler.getRedirect().startsWith("http")) {
                     response.sendRedirect(handler.getRedirect());
                 } else {
                     response.sendRedirect(toolBaseURL + handler.getRedirect());
                 }
             } else if (handler.hasTemplate()) {
+
+                // "TEMPLATE"
+                System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[ToolServlet.java:105 ImprobableHerring]: " + "\n    'TEMPLATE' => " + ("TEMPLATE") + "\n");
+
+
                 if (Boolean.TRUE.equals(context.get("layout"))) {
                     Template template = handlebars.compile("edu/nyu/classes/seats/views/layout");
                     response.getWriter().write(template.apply(context));
@@ -95,6 +109,9 @@ public class ToolServlet extends HttpServlet {
             }
         } catch (IOException e) {
             LOG.warn("Write failed", e);
+        } catch (Exception e) {
+            // FIXME: generic error handler
+            e.printStackTrace();
         }
     }
 
@@ -103,6 +120,14 @@ public class ToolServlet extends HttpServlet {
 
         if (path == null) {
             path = "";
+        }
+
+        if (path.startsWith("/sections")) {
+            return new SectionsHandler();
+        }
+
+        if (path.startsWith("/section")) {
+            return new SectionHandler();
         }
 
         if (path.startsWith("/background-task")) {

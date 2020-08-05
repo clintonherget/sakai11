@@ -149,6 +149,18 @@ public class SeatsStorage {
             return section;
         }
 
+        db.run("select sg.*, mem.netid" +
+               " from seat_group sg" +
+               " inner join seat_group_members mem on sg.id = mem.group_id " +
+               " where sg.id in (" + db.placeholders(section.groupIds()) + ")")
+            .stringParams(section.groupIds())
+            .executeQuery()
+            .each(row -> {
+                    section.fetchGroup(row.getString("id"))
+                        .get()
+                        .addMember(row.getString("netid"));
+                });
+
         db.run("select sm.group_id, sm.id as meeting_id" +
                " from seat_meeting sm" +
                " where sm.group_id in (" + db.placeholders(section.groupIds()) + ")")
