@@ -9,10 +9,12 @@ public class Member {
 
     public String netid;
     public Modality modality;
+    public boolean official;
 
-    public Member(String netid) {
+    public Member(String netid, boolean official) {
         this.netid = netid;
         this.modality = Modality.values()[(int)Math.floor(Math.random() * 3)];
+        this.official = official;
     }
 
     public int hashCode() {

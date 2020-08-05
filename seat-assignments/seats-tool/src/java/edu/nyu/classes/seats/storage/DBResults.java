@@ -126,17 +126,17 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
 
     public Optional<Integer> oneInt() throws SQLException {
         if (this.hasNext()) {
-            return Optional.of(this.resultSet.getInt(0));
+            return Optional.of(this.resultSet.getInt(1));
         } else {
-            return Optional.of(null);
+            return Optional.empty();
         }
     }
 
     public Optional<String> oneString() throws SQLException {
         if (this.hasNext()) {
-            return Optional.of(this.resultSet.getString(0));
+            return Optional.of(this.resultSet.getString(1));
         } else {
-            return Optional.of(null);
+            return Optional.empty();
         }
     }
 

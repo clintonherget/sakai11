@@ -205,7 +205,7 @@ public class SeatsStorage {
             return section;
         }
 
-        db.run("select sg.*, mem.netid" +
+        db.run("select sg.*, mem.netid, mem.official" +
                " from seat_group sg" +
                " inner join seat_group_members mem on sg.id = mem.group_id " +
                " where sg.id in (" + db.placeholders(section.groupIds()) + ")")
@@ -214,7 +214,8 @@ public class SeatsStorage {
             .each(row -> {
                     section.fetchGroup(row.getString("id"))
                         .get()
-                        .addMember(row.getString("netid"));
+                        .addMember(row.getString("netid"),
+                                   row.getInt("official") == 1);
                 });
 
         db.run("select sm.group_id, sm.id as meeting_id" +
@@ -301,9 +302,10 @@ public class SeatsStorage {
 
             insertAuditEntry(db, entry);
 
-            db.run("insert into seat_group_members (netid, group_id) values (?, ?)")
+            db.run("insert into seat_group_members (netid, group_id, official) values (?, ?, ?)")
                     .param(member.netid)
                     .param(groupId)
+                    .param(member.official ? 1 : 0)
                     .executeUpdate();
         }
 
@@ -321,7 +323,7 @@ public class SeatsStorage {
         CourseManagementService cms = (CourseManagementService) ComponentManager.get("org.sakaiproject.coursemanagement.api.CourseManagementService");
         for (String rosterId : rosterIds) {
             for (Membership membership : cms.getSectionMemberships(rosterId)) {
-                result.add(new Member(membership.getUserId()));
+                result.add(new Member(membership.getUserId(), true));
             }
         }
 

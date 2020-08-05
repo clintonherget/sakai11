@@ -40,7 +40,6 @@ import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
-import org.sakaiproject.authz.api.Member;
 
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.*;
@@ -98,11 +97,12 @@ public class SectionHandler implements Handler {
 
                         Map<String, JSONObject> seatAssignmentSet = new HashMap<>();
 
-                        for (String netid : group.members) {
+                        for (Member member : group.listMembers()) {
                             JSONObject assignmentJSON = new JSONObject();
-                            assignmentJSON.put("netid", netid);
+                            assignmentJSON.put("netid", member.netid);
+                            assignmentJSON.put("official", member.official);
                             assignmentJSON.put("seat", null);
-                            seatAssignmentSet.put(netid, assignmentJSON);
+                            seatAssignmentSet.put(member.netid, assignmentJSON);
                         }
 
                         for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
