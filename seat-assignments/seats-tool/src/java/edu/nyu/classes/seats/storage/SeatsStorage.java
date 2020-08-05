@@ -93,7 +93,7 @@ public class SeatsStorage {
         }
     }
 
-    public static void setSeat(DBConnection db, SeatAssignment seat, boolean shouldSetEditWindow) throws SQLException {
+    public static boolean setSeat(DBConnection db, SeatAssignment seat, String lastSeat, boolean shouldSetEditWindow) throws SQLException {
         db.run("select id" +
                 " from seat_meeting_assignment" +
                 " where meeting_id = ? and netid = ?")
@@ -104,10 +104,49 @@ public class SeatsStorage {
                     seat.id = row.getString("id");
                 });
 
-        AuditEvents eventType = (seat.id == null) ? AuditEvents.SEAT_ASSIGNED : AuditEvents.SEAT_REASSIGNED;
+        long editWindow = shouldSetEditWindow ? System.currentTimeMillis() + EDIT_WINDOW_MS : 0;
 
+        if (seat.id == null) {
+            try {
+                db.run("insert into seat_meeting_assignment (id, meeting_id, editable_until, netid, seat) values (?, ?, ?, ?, ?)")
+                        .param(db.uuid())
+                        .param(seat.meeting.id)
+                        .param(editWindow)
+                        .param(seat.netid)
+                        .param(seat.seat)
+                        .executeUpdate();
+            } catch (SQLException e) {
+                if (e.getSQLState().startsWith("23")) {
+                    return false;
+                } else {
+                    throw e;
+                }
+            }
+        } else {
+            try {
+                int updated = db.run("update seat_meeting_assignment set editable_until = ?, seat = ? where id = ? and seat = ?")
+                        .param(editWindow)
+                        .param(seat.seat)
+                        .param(seat.id)
+                        .param(lastSeat)
+                        .executeUpdate();
+
+                if (updated == 0) {
+                    return false;
+                }
+            } catch (SQLException e) {
+                if (e.getSQLState().startsWith("23")) {
+                    return false;
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        AuditEvents eventType = (seat.id == null) ? AuditEvents.SEAT_ASSIGNED : AuditEvents.SEAT_REASSIGNED;
         AuditEntry entry = new AuditEntry(eventType,
                 json("seat", seat.seat,
+                        "lastSeat", lastSeat,
                         "meeting", seat.meeting.id,
                         "meeting_name", seat.meeting.name,
                         "meeting_location", seat.meeting.location_code,
@@ -119,42 +158,9 @@ public class SeatsStorage {
                         // FIXME: index useful stuff
                 }
         );
-
         insertAuditEntry(db, entry);
 
-        long editWindow = shouldSetEditWindow ? System.currentTimeMillis() + EDIT_WINDOW_MS : 0;
-
-        if (seat.id == null) {
-            db.run("insert into seat_meeting_assignment (id, meeting_id, editable_until, netid, seat) values (?, ?, ?, ?, ?)")
-                    .param(db.uuid())
-                    .param(seat.meeting.id)
-                    .param(editWindow)
-                    .param(seat.netid)
-                    .param(seat.seat)
-                    .executeUpdate();
-        } else {
-            db.run("update seat_meeting_assignment set editable_until = ?, seat = ? where id = ?")
-                    .param(editWindow)
-                    .param(seat.seat)
-                    .param(seat.id)
-                    .executeUpdate();
-        }
-    }
-
-    public static String getSeat(DBConnection db, String meetingId, String netid) throws SQLException {
-        List<String> results = new ArrayList<>();
-
-        db.run("select seat" +
-                " from seat_meeting_assignment" +
-                " where meeting_id = ? and netid = ?")
-                .param(meetingId)
-                .param(netid)
-                .executeQuery()
-                .each(row -> {
-                    results.add(row.getString("seat"));
-                });
-
-        return results.isEmpty() ? null : results.get(0); 
+        return true;
     }
 
     public static void insertAuditEntry(DBConnection db, AuditEntry entry) throws SQLException {

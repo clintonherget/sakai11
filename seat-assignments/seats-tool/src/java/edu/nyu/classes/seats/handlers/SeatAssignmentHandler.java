@@ -96,20 +96,18 @@ public class SeatAssignmentHandler implements Handler {
             Meeting meeting = seatSection.fetchGroup(groupId).get().getOrCreateMeeting(meetingId);
 
             String seat = p.getString("seat", null);
-            String expectedSeat = p.getString("seatOld", null);
-            String currentSeat = SeatsStorage.getSeat(db, meetingId, netid);
-
-            if ((expectedSeat == null && currentSeat != null) || (expectedSeat != null && currentSeat == null) ||
-                (expectedSeat != null && currentSeat != null && !currentSeat.equals(expectedSeat))) {
-                throw new RuntimeException(String.format("Concurrency error - expected %s got %s", expectedSeat, currentSeat));
-            }
+            String currentSeat = p.getString("currentSeat", null);
 
             SeatAssignment seatAssignment = new SeatAssignment(null, netid, seat, meeting);
 
             if (seat == null) {
                 SeatsStorage.clearSeat(db, seatAssignment);
             } else {
-                SeatsStorage.setSeat(db, seatAssignment, !isInstructor);
+                boolean succeeded = SeatsStorage.setSeat(db, seatAssignment, currentSeat, !isInstructor);
+                if (!succeeded) {
+                    // FIXME concurrency, uniqueness constraint error etc
+                    result.put("error", true);
+                }
             }
 
             try {

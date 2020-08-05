@@ -60,3 +60,8 @@
 .seats-body .seat-assignment-listing td {
     padding: 12px;
 }
+
+.seats-body .seat-assignment-listing input.has-error {
+  border: 1px solid darkred;
+  background-color: #FEE;
+}
