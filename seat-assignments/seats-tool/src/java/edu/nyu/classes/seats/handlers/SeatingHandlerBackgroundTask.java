@@ -12,6 +12,10 @@ import org.sakaiproject.site.cover.SiteService;
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.*;
 
+import edu.nyu.classes.seats.api.SeatsService;
+
+import org.sakaiproject.component.cover.ComponentManager;
+
 // TODO: make this a background thread/quartz job
 public class SeatingHandlerBackgroundTask {
 
@@ -27,6 +31,22 @@ public class SeatingHandlerBackgroundTask {
 
 
     public void run() {
+        SeatsService service = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+
+        // DB.transaction
+        //     ("@DEBUG TESTING",
+        //      (DBConnection db) -> {
+        //         java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(64);
+        //
+        //         for (String siteId : db.run("select site_id from sakai_site").executeQuery().getStringColumn("site_id")) {
+        //             pool.execute(() -> { service.markSitesForSync(siteId); });
+        //         }
+        //
+        //         pool.shutdown();
+        //
+        //         return null;
+        //     });
+
         List<String> siteIds = findSitesToProcess();
 
         // Get the sections (possibly combined) - getMembers()

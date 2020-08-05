@@ -19,6 +19,8 @@
   </parent>
 
   <modules>
+    <module>seats-api</module>
+    <module>seats-service</module>
     <module>seats-tool</module>
   </modules>
 
