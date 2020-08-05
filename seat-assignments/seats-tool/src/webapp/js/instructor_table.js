@@ -1,3 +1,46 @@
+Vue.component('modal', {
+  template: `
+<div class="modal" tabindex="-1" role="dialog" ref="modal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" style="float: left">
+          <slot name="header"></slot>
+        </div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <slot name="body"></slot>
+      </div>
+      <div class="modal-footer">
+        <slot name="footer"></slot>
+      </div>
+    </div>
+  </div>
+</div>
+  `,
+  props: [],
+  methods: {
+    open: function() {
+      $(this.$refs.modal).modal('show');
+    },
+    close: function() {
+      $(this.$refs.modal).modal('close');
+    }
+  },
+  mounted: function() {
+    var self = this;
+
+    $(document).ready(function() {
+      $(self.$refs.modal).modal({
+        show: false,
+      });
+    });
+  }
+});
+
 Vue.component('seat-assignment-widget', {
   template: `
     <span>
@@ -44,11 +87,35 @@ Vue.component('seat-assignment-widget', {
   },
 });
 
+Vue.component('split-action', {
+  template: `
+<div>
+  <button @click="openModal()">Split</button>
+  <modal ref="splitModal">
+    <template v-slot:header>Test</template>
+    <template v-slot:body>FIXME</template>
+    <template v-slot:footer>
+      <button @click="doit()">Perform Split</button>
+    </template>
+  </modal>
+</div>
+`,
+  methods: {
+    openModal: function() {
+      this.$refs.splitModal.open();
+    },
+    doit: function() {
+      alert("weeee");
+    }
+  }
+});
+
 Vue.component('section-table', {
   template: `
     <div>
       <template v-if="section">
           <h1>{{section.id}}</h1>
+          <split-action :section="section"></split-action>
           <template v-for="group in sortBy(section.groups, 'name')">
             <h2>{{group.name}} ({{group.id}})</h2>
             <template v-for="meeting in sortBy(group.meetings, 'name')">
