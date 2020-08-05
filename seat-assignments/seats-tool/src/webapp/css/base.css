@@ -1,4 +1,62 @@
-.seats-body p {
- font-weight: bold;
- color: green;
+.seats-body .profile-pic  {
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid #336DBE;
+    display: inline-block;
+    background: #FFF;
+    box-shadow: 0 0 0 2px #FFF;
+    vertical-align: middle;
+}
+
+.seats-body .seat-assignment-listing {
+    border-collapse: separate;
+}
+
+.seats-body .seat-assignment-listing tbody tr td {
+    border-top: 1px solid #CCC;
+}
+
+.seats-body .seat-assignment-listing tbody tr:nth-child(2n) td {
+    background-color: #FAFAFA;
+}
+
+.seats-body .seat-assignment-listing tbody tr:first-child td {
+    border-top: 1px solid #CCC;
+}
+
+.seats-body .seat-assignment-listing tbody tr td:first-child {
+    border-left: 1px solid #CCC;
+}
+
+.seats-body .seat-assignment-listing tbody tr td:last-child {
+    border-right: 1px solid #CCC;
+}
+
+.seats-body .seat-assignment-listing tbody tr:last-child td {
+    border-bottom: 1px solid #CCC;
+}
+
+.seats-body .seat-assignment-listing tbody tr:first-child td:first-child {
+    border-top-left-radius: 20px;
+}
+
+.seats-body .seat-assignment-listing tbody tr:first-child td:last-child {
+    border-top-right-radius: 20px;
+}
+
+.seats-body .seat-assignment-listing tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 20px;
+}
+
+.seats-body .seat-assignment-listing tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 20px;
+}
+
+.seats-body .seat-assignment-listing th {
+    padding: 6px 12px;
+}
+.seats-body .seat-assignment-listing td {
+    padding: 12px;
 }

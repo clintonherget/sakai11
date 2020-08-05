@@ -164,9 +164,10 @@ Vue.component('section-table', {
             <h2>{{group.name}} ({{group.id}})</h2>
             <template v-for="meeting in sortBy(group.meetings, 'name')">
               <h3>{{meeting.name}} ({{meeting.id}})</h3>
-              <table>
+              <table class="seat-assignment-listing">
                 <thead>
                   <tr>
+                    <th><span class="sr-only">Profile Picture</span></th>
                     <th>NetID</th>
                     <th>Modality</th>
                     <th>Seat</th>
@@ -174,6 +175,11 @@ Vue.component('section-table', {
                 </thead>
                 <tbody>
                   <tr v-for="assignment in meeting.seatAssignments">
+                    <td>
+                      <div class="profile-pic">
+                        <img :src="'/direct/profile/' + assignment.netid + '/image'"/>
+                      </div>
+                    </td>
                     <td>{{assignment.netid}}</td>
                     <td>
                       <template v-if="assignment.official">In Roster</template>
