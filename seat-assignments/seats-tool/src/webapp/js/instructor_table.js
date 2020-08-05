@@ -44,47 +44,76 @@ Vue.component('modal', {
 Vue.component('seat-assignment-widget', {
   template: `
     <span>
-      <input type="text" :value="currentSeatAssignment" ref="input"/>
+      <input type="text" v-model="seatValue" ref="input" :class="inputCSSClasses" />
       <button @click="save()">Save</button>
     </span>
   `,
   data: function() {
     return {
+      hasError: false,
+      seatValue: '', 
     };
   },
   props: ['assignment', 'meeting', 'group', 'section'],
   computed: {
+      inputCSSClasses: function() {
+        if (this.hasError) {
+          return "has-error";
+        } else {
+          return ""
+        }
+      },
       baseurl: function() {
           return this.$parent.baseurl;
       },
       currentSeatAssignment: function() {
+          // FIXME only clone once edit mode enabled
+          // return clone of current seat value
           if (this.assignment.seat == null) {
               return '';
           } else {
-              return this.assignment.seat;
+              return '' + this.assignment.seat;
           }
       }
   },
   methods: {
+    markHasError: function() {
+      this.hasError = true;
+    },
+    clearHasError: function() {
+      this.hasError = false;
+    },
     save: function() {
-       $.ajax({
-         url: this.baseurl + "/seat-assignment",
-         type: 'post',
-         data: {
-           sectionId: this.section.id,
-           groupId: this.group.id,
-           meetingId: this.meeting.id,
-           netid: this.assignment.netid,
-           seat: this.$refs.input.value,
-           seatOld: this.assignment.seat,
-         },
-         success: function() {
-           location.reload();
-         }
-       })
+      var self = this;
+      self.clearHasError();
+
+      $.ajax({
+        url: this.baseurl + "/seat-assignment",
+        type: 'post',
+        dataType: 'json',
+        data: {
+          sectionId: self.section.id,
+          groupId: self.group.id,
+          meetingId: self.meeting.id,
+          netid: self.assignment.netid,
+          seat: self.seatValue,
+          currentSeat: this.assignment.seat, // FIXME we want to grab this value at the point the instructor goes to edit it
+        },
+        success: function(json) {
+          if (json.error) {
+            self.markHasError();
+            self.$nextTick(function() {
+              self.$refs.input.select();
+            });
+          } else {
+            location.reload();
+          }
+        }
+      })
     }
   },
   mounted: function() {
+    this.seatValue = this.currentSeatAssignment;
   },
 });
 
@@ -95,37 +124,37 @@ Vue.component('split-action', {
   <modal ref="splitModal">
     <template v-slot:header>Split Section into Groups</template>
     <template v-slot:body>
-			<div>
-				<label for="numberofgroups">Number of Groups</label>
-				<select id="numberofgroups" v-model="numberOfGroups">
-					<option>1</option>
-					<option>2</option>
-					<option>3</option>
-					<option>4</option>
-				</select>
-			</div>
-			<div>
-				<label for="selectionType">Selection Type</label>
-				<select id="selectionType" v-model="selectionType">
-					<option>RANDOM</option>
-					<option>WEIGHTED</option>
-				</select>
-			</div>
-		</template>
+      <div>
+        <label for="numberofgroups">Number of Groups</label>
+        <select id="numberofgroups" v-model="numberOfGroups">
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
+        </select>
+      </div>
+      <div>
+        <label for="selectionType">Selection Type</label>
+        <select id="selectionType" v-model="selectionType">
+          <option>RANDOM</option>
+          <option>WEIGHTED</option>
+        </select>
+      </div>
+    </template>
     <template v-slot:footer>
       <button @click="performSplit()" class="pull-left primary">Perform Split</button>
-			<button @click="closeModal()">Cancel</button>
+      <button @click="closeModal()">Cancel</button>
     </template>
   </modal>
 </div>
 `,
-	props: ['section'],
-	data: function() {
-		return {
-			numberOfGroups: 1,
-			selectionType: 'RANDOM',
-		}
-	},
+  props: ['section'],
+  data: function() {
+    return {
+      numberOfGroups: 1,
+      selectionType: 'RANDOM',
+    }
+  },
   computed: {
       baseurl: function() {
           return this.$parent.baseurl;
@@ -140,16 +169,16 @@ Vue.component('split-action', {
     },
     performSplit: function() {
       $.ajax({
-      	url: this.baseurl + "/split-section",
-				type: 'post',
-				data: {
-					sectionId: this.section.id,
-					numberOfGroups: this.numberOfGroups,
-					selectionType: this.selectionType,
-				},
-				success: function() {
-					location.reload();
-				}
+        url: this.baseurl + "/split-section",
+        type: 'post',
+        data: {
+          sectionId: this.section.id,
+          numberOfGroups: this.numberOfGroups,
+          selectionType: this.selectionType,
+        },
+        success: function() {
+          location.reload();
+        }
       })
     }
   }

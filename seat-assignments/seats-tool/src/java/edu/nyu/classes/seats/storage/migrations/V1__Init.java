@@ -48,6 +48,8 @@ public class V1__Init extends BaseMigration {
         "    editable_until number not null,                                                                 " +
         "    netid varchar2(255),                                                                            " +
         "    seat varchar2(32),                                                                              " +
+        "    constraint uniq_seat_assignment_netid unique (meeting_id, netid),                               " +
+        "    constraint uniq_seat_assignment_seat unique (meeting_id, seat),                                 " +
         "    constraint fk_seat_meeting_id foreign key (meeting_id) references seat_meeting (id)             " +
         ");                                                                                                  " +
 
