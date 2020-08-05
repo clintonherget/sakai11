@@ -134,6 +134,10 @@ public class ToolServlet extends HttpServlet {
             return new BackgroundJobHandler();
         }
 
+        if (path.startsWith("/seat-assignment")) {
+            return new SeatAssignmentHandler();
+        }
+
         // FIXME
         return new HomeHandler();
     }

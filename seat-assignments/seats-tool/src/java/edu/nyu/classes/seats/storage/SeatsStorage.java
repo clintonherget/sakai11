@@ -24,6 +24,8 @@ public class SeatsStorage {
 
     public enum AuditEvents {
         SEAT_CLEARED,
+        SEAT_ASSIGNED,
+        SEAT_REASSIGNED,
         MEETING_DELETED,
         GROUP_DELETED,
         GROUP_CREATED,
@@ -83,6 +85,51 @@ public class SeatsStorage {
         db.run("delete from seat_meeting_assignment where id = ?")
             .param(seat.id)
             .executeUpdate();
+    }
+
+    public static void setSeat(DBConnection db, SeatAssignment seat) throws SQLException {
+        db.run("select id" +
+                " from seat_meeting_assignment" +
+                " where meeting_id = ? and netid = ?")
+                .param(seat.meeting.id)
+                .param(seat.netid)
+                .executeQuery()
+                .each(row -> {
+                    seat.id = row.getString("id");
+                });
+
+        AuditEvents eventType = (seat.id == null) ? AuditEvents.SEAT_ASSIGNED : AuditEvents.SEAT_REASSIGNED;
+
+        AuditEntry entry = new AuditEntry(eventType,
+                json("seat", seat.seat,
+                        "meeting", seat.meeting.id,
+                        "meeting_name", seat.meeting.name,
+                        "meeting_location", seat.meeting.location_code,
+                        "group_name", seat.meeting.group.name,
+                        "group_id", seat.meeting.group.id,
+                        "section_id", seat.meeting.group.section.id,
+                        "user", seat.netid),
+                new String[] {
+                        // FIXME: index useful stuff
+                }
+        );
+
+        insertAuditEntry(db, entry);
+        if (seat.id == null) {
+            db.run("insert into seat_meeting_assignment (id, meeting_id, editable_until, netid, seat) values (?, ?, ?, ?, ?)")
+                    .param(db.uuid())
+                    .param(seat.meeting.id)
+                    .param(System.currentTimeMillis() + 5 * 60 * 1000)
+                    .param(seat.netid)
+                    .param(seat.seat)
+                    .executeUpdate();
+        } else {
+            db.run("update seat_meeting_assignment set editable_until = ?, seat = ? where id = ?")
+                    .param(System.currentTimeMillis() + 5 * 60 * 1000)
+                    .param(seat.seat)
+                    .param(seat.id)
+                    .executeUpdate();
+        }
     }
 
     public static void insertAuditEntry(DBConnection db, AuditEntry entry) throws SQLException {

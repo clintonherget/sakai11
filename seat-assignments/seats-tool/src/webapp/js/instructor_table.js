@@ -1,8 +1,79 @@
+Vue.component('seat-assignment-widget', {
+  template: `
+    <span>
+      <input type="text" :value="currentSeatAssignment" ref="input"/>
+      <button @click="save()">Save</button>
+    </span>
+  `,
+  data: function() {
+    return {
+    };
+  },
+  props: ['assignment', 'meeting', 'group', 'section'],
+  computed: {
+      baseurl: function() {
+          return this.$parent.baseurl;
+      },
+      currentSeatAssignment: function() {
+          if (this.assignment.seat == null) {
+              return '';
+          } else {
+              return this.assignment.seat;
+          }
+      }
+  },
+  methods: {
+    save: function() {
+       $.ajax({
+         url: this.baseurl + "/seat-assignment",
+         type: 'post',
+         data: {
+           sectionId: this.section.id,
+           groupId: this.group.id,
+           meetingId: this.meeting.id,
+           netid: this.assignment.netid,
+           seat: this.$refs.input.value,
+         },
+         success: function() {
+           location.reload();
+         }
+       })
+    }
+  },
+  mounted: function() {
+  },
+});
+
 Vue.component('section-table', {
   template: `
+    <div>
       <template v-if="section">
-          <p>hey {{JSON.stringify(section)}}</p>
+          <h1>{{section.id}}</h1>
+          <template v-for="group in sortBy(section.groups, 'name')">
+            <h2>{{group.name}} ({{group.id}})</h2>
+            <template v-for="meeting in sortBy(group.meetings, 'name')">
+              <h3>{{meeting.name}} ({{meeting.id}})</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>NetID</th>
+                    <th>Seat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="assignment in meeting.seatAssignments">
+                    <td>{{assignment.netid}}</td>
+                    <td>
+                      <seat-assignment-widget :assignment="assignment" :meeting="meeting" :group="group" :section="section">
+                      </seat-assignment-widget>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+          </template>
       </template>
+    </div>
   `,
   data: function() {
     return {
@@ -16,6 +87,18 @@ Vue.component('section-table', {
       },
   },
   methods: {
+      sortBy: function(arrayOfObjects, attribute) {
+          return arrayOfObjects;
+          // return arrayOfObjects.sort(function(a, b) {
+          //     if (a[attribute] < b[attribute]) {
+          //         return 1;
+          //     } else if (a[attribute] > b[attribute]) {
+          //         return -1;
+          //     } else {
+          //         return 0;
+          //     }
+          // });
+      },
       fetchData: function() {
           var self = this;
 

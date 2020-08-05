@@ -69,12 +69,18 @@ public class SectionHandler implements Handler {
                 SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId);
 
                 JSONObject sectionJSON = new JSONObject();
+                sectionJSON.put("id", seatSection.id);
+
                 JSONArray sectionGroups = new JSONArray();
                 sectionJSON.put("groups", sectionGroups);
 
                 for (SeatGroup group : seatSection.listGroups()) {
                     JSONObject groupJSON = new JSONObject();
                     sectionGroups.add(groupJSON);
+
+                    groupJSON.put("id", group.id);
+                    groupJSON.put("name", group.name);
+                    groupJSON.put("description", group.description);
 
                     JSONArray meetingsJSON = new JSONArray();
                     groupJSON.put("meetings", meetingsJSON);
