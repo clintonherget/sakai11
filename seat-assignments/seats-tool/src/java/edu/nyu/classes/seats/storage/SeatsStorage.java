@@ -141,6 +141,22 @@ public class SeatsStorage {
         }
     }
 
+    public static String getSeat(DBConnection db, String meetingId, String netid) throws SQLException {
+        List<String> results = new ArrayList<>();
+
+        db.run("select seat" +
+                " from seat_meeting_assignment" +
+                " where meeting_id = ? and netid = ?")
+                .param(meetingId)
+                .param(netid)
+                .executeQuery()
+                .each(row -> {
+                    results.add(row.getString("seat"));
+                });
+
+        return results.isEmpty() ? null : results.get(0); 
+    }
+
     public static void insertAuditEntry(DBConnection db, AuditEntry entry) throws SQLException {
         db.run("insert into seat_audit (id, timestamp_ms, event_code, json) values (?, ?, ?, ?)")
             .param(db.uuid())
