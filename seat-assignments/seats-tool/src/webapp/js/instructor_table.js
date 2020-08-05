@@ -76,6 +76,7 @@ Vue.component('seat-assignment-widget', {
            meetingId: this.meeting.id,
            netid: this.assignment.netid,
            seat: this.$refs.input.value,
+           seatOld: this.assignment.seat,
          },
          success: function() {
            location.reload();
@@ -154,45 +155,77 @@ Vue.component('split-action', {
   }
 });
 
+Vue.component('group-meeting', {
+  template: `
+<div>
+  <h3>{{meeting.name}} ({{meeting.id}})</h3>
+  <table class="seat-assignment-listing">
+    <thead>
+      <tr>
+        <th><span class="sr-only">Profile Picture</span></th>
+        <th>NetID</th>
+        <th>Modality</th>
+        <th>Seat</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="assignment in sortedSeatAssignments">
+        <td>
+          <div class="profile-pic">
+            <img :src="'/direct/profile/' + assignment.netid + '/image'"/>
+          </div>
+        </td>
+        <td>{{assignment.netid}}</td>
+        <td>
+          <template v-if="assignment.official">In Roster</template>
+          <template v-else>Unofficial</template>
+        </td>
+        <td>
+          <seat-assignment-widget :assignment="assignment" :meeting="meeting" :group="group" :section="section">
+          </seat-assignment-widget>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`,
+  props: ['section', 'group', 'meeting'],
+  computed: {
+    baseurl: function() {
+        return this.$parent.baseurl;
+    },
+    sortedSeatAssignments: function() {
+      return this.meeting.seatAssignments.sort(function(a, b) {
+        return a.netid < b.netid;
+      })
+    },
+  },
+});
+
+Vue.component('section-group', {
+  template: `
+<div>
+  <h2>{{group.name}} ({{group.id}})</h2>
+  <template v-for="meeting in group.meetings">
+    <group-meeting :group="group" :section="section" :meeting="meeting"></group-meeting>
+  </template>
+</div>`,
+  props: ['section', 'group'],
+  computed: {
+    baseurl: function() {
+        return this.$parent.baseurl;
+    },
+  },
+});
+
 Vue.component('section-table', {
   template: `
     <div>
       <template v-if="section">
           <h1>{{section.id}}</h1>
           <split-action :section="section"></split-action>
-          <template v-for="group in sortBy(section.groups, 'name')">
-            <h2>{{group.name}} ({{group.id}})</h2>
-            <template v-for="meeting in sortBy(group.meetings, 'name')">
-              <h3>{{meeting.name}} ({{meeting.id}})</h3>
-              <table class="seat-assignment-listing">
-                <thead>
-                  <tr>
-                    <th><span class="sr-only">Profile Picture</span></th>
-                    <th>NetID</th>
-                    <th>Modality</th>
-                    <th>Seat</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="assignment in meeting.seatAssignments">
-                    <td>
-                      <div class="profile-pic">
-                        <img :src="'/direct/profile/' + assignment.netid + '/image'"/>
-                      </div>
-                    </td>
-                    <td>{{assignment.netid}}</td>
-                    <td>
-                      <template v-if="assignment.official">In Roster</template>
-                      <template v-else>Unofficial</template>
-                    </td>
-                    <td>
-                      <seat-assignment-widget :assignment="assignment" :meeting="meeting" :group="group" :section="section">
-                      </seat-assignment-widget>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </template>
+          <template v-for="group in sortedGroups">
+            <section-group :group="group" :section="section"></section-group>
           </template>
       </template>
     </div>
@@ -208,20 +241,17 @@ Vue.component('section-table', {
       baseurl: function() {
           return this.$parent.baseurl;
       },
+      sortedGroups: function() {
+        if (this.section == null) {
+          return [];
+        } else {
+          return this.section.groups.sort(function(a, b) {
+            return a.name < b.name;
+          })
+        }
+      },
   },
   methods: {
-      sortBy: function(arrayOfObjects, attribute) {
-          return arrayOfObjects;
-          // return arrayOfObjects.sort(function(a, b) {
-          //     if (a[attribute] < b[attribute]) {
-          //         return 1;
-          //     } else if (a[attribute] > b[attribute]) {
-          //         return -1;
-          //     } else {
-          //         return 0;
-          //     }
-          // });
-      },
       fetchData: function() {
           var self = this;
 

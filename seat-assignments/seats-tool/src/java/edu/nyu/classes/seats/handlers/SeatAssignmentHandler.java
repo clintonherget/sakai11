@@ -10,8 +10,11 @@ import java.util.Comparator;
 import java.text.DateFormat;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.tool.cover.SessionManager;
+import org.sakaiproject.user.api.User;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.time.cover.TimeService;
 import org.sakaiproject.time.api.Time;
@@ -57,9 +60,13 @@ public class SeatAssignmentHandler implements Handler {
         try {
             JSONObject result = new JSONObject();
 
+            String siteId = (String)context.get("siteId");
             DBConnection db = (DBConnection)context.get("db");
 
             RequestParams p = new RequestParams(request);
+
+            User currentUser = UserDirectoryService.getCurrentUser();
+            boolean isInstructor = SecurityService.unlock("site.upd", "/site/" + siteId);
 
             String sectionId = p.getString("sectionId", null);
             if (sectionId == null) {
@@ -81,18 +88,28 @@ public class SeatAssignmentHandler implements Handler {
                 throw new RuntimeException("Need argument: netid");
             }
 
+            if (!isInstructor && !netid.equals(currentUser.getEid())) {
+                throw new RuntimeException("Insufficient privileges");
+            }
+
             SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId);
             Meeting meeting = seatSection.fetchGroup(groupId).get().getOrCreateMeeting(meetingId);
 
             String seat = p.getString("seat", null);
+            String expectedSeat = p.getString("seatOld", null);
+            String currentSeat = SeatsStorage.getSeat(db, meetingId, netid);
+
+            if ((expectedSeat == null && currentSeat != null) || (expectedSeat != null && currentSeat == null) ||
+                (expectedSeat != null && currentSeat != null && !currentSeat.equals(expectedSeat))) {
+                throw new RuntimeException(String.format("Concurrency error - expected %s got %s", expectedSeat, currentSeat));
+            }
 
             SeatAssignment seatAssignment = new SeatAssignment(null, netid, seat, meeting);
 
             if (seat == null) {
                 SeatsStorage.clearSeat(db, seatAssignment);
             } else {
-                // FIXME set shouldSetEditWindow based on user perms
-                SeatsStorage.setSeat(db, seatAssignment, false);
+                SeatsStorage.setSeat(db, seatAssignment, !isInstructor);
             }
 
             try {
