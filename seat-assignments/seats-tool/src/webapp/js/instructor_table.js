@@ -27,7 +27,7 @@ Vue.component('modal', {
       $(this.$refs.modal).modal('show');
     },
     close: function() {
-      $(this.$refs.modal).modal('close');
+      $(this.$refs.modal).modal('hide');
     }
   },
   mounted: function() {
@@ -92,20 +92,64 @@ Vue.component('split-action', {
 <div>
   <button @click="openModal()">Split</button>
   <modal ref="splitModal">
-    <template v-slot:header>Test</template>
-    <template v-slot:body>FIXME</template>
+    <template v-slot:header>Split Section into Groups</template>
+    <template v-slot:body>
+			<div>
+				<label for="numberofgroups">Number of Groups</label>
+				<select id="numberofgroups" v-model="numberOfGroups">
+					<option>1</option>
+					<option>2</option>
+					<option>3</option>
+					<option>4</option>
+				</select>
+			</div>
+			<div>
+				<label for="selectionType">Selection Type</label>
+				<select id="selectionType" v-model="selectionType">
+					<option>RANDOM</option>
+					<option>WEIGHTED</option>
+				</select>
+			</div>
+		</template>
     <template v-slot:footer>
-      <button @click="doit()">Perform Split</button>
+      <button @click="performSplit()" class="pull-left primary">Perform Split</button>
+			<button @click="closeModal()">Cancel</button>
     </template>
   </modal>
 </div>
 `,
+	props: ['section'],
+	data: function() {
+		return {
+			numberOfGroups: 1,
+			selectionType: 'RANDOM',
+		}
+	},
+  computed: {
+      baseurl: function() {
+          return this.$parent.baseurl;
+      },
+  },
   methods: {
     openModal: function() {
       this.$refs.splitModal.open();
     },
-    doit: function() {
-      alert("weeee");
+    closeModal: function() {
+      this.$refs.splitModal.close();
+    },
+    performSplit: function() {
+      $.ajax({
+      	url: this.baseurl + "/split-section",
+				type: 'post',
+				data: {
+					sectionId: this.section.id,
+					numberOfGroups: this.numberOfGroups,
+					selectionType: this.selectionType,
+				},
+				success: function() {
+					location.reload();
+				}
+      })
     }
   }
 });
@@ -147,6 +191,7 @@ Vue.component('section-table', {
       </template>
     </div>
   `,
+
   data: function() {
     return {
         section: null,

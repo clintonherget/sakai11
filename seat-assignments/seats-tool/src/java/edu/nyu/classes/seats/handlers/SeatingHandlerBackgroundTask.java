@@ -22,7 +22,7 @@ public class SeatingHandlerBackgroundTask {
         // roster added - site realm update
         // person added to roster - ???
         // new section cross-listed/combined in SIS - ???
-        return Arrays.asList(new String[] { "fdb7a928-f38a-4154-ae46-43b44ad7b5dd", "e682f774-e900-4e00-b555-c9974e06c556" });
+        return Arrays.asList(new String[] { "fdb7a928-f38a-4154-ae46-43b44ad7b5dd", "e682f774-e900-4e00-b555-c9974e06c556", "fe0b92a0-34ec-4bc7-be24-1518f9ad9a81" });
     }
 
 

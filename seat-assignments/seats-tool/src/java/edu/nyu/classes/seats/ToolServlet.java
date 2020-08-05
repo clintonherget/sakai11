@@ -138,6 +138,10 @@ public class ToolServlet extends HttpServlet {
             return new SeatAssignmentHandler();
         }
 
+        if (path.startsWith("/split-section")) {
+            return new SplitSectionHandler();
+        }
+
         // FIXME
         return new HomeHandler();
     }
