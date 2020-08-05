@@ -53,6 +53,12 @@ public class V1__Init extends BaseMigration {
         "    constraint fk_seat_meeting_id foreign key (meeting_id) references seat_meeting (id)             " +
         ");                                                                                                  " +
 
+        "create table seat_sync_queue (                                                                      " +
+        "    site_id varchar2(255) primary key,                                                              " +
+        "    last_sync_requested_time number default 0,                                                      " +
+        "    last_sync_time number default 0                                                                " +
+        ");                                                                                                  " +
+
         "create table seat_audit (                                                                           " +
         "    id varchar2(255) primary key,                                                                   " +
         "    timestamp_ms number not null,                                                                   " +
