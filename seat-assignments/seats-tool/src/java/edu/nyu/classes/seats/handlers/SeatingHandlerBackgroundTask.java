@@ -63,7 +63,7 @@ public class SeatingHandlerBackgroundTask {
                                     String sponsorRosterId = SeatsStorage.getSponsorSectionId(rosterId);
 
                                     if (rosterId.equals(sponsorRosterId)) {
-                                        SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(null));
+                                        SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.empty());
                                     } else {
                                         SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(rosterId));
                                     }

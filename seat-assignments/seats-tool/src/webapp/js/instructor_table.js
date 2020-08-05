@@ -57,12 +57,17 @@ Vue.component('section-table', {
                 <thead>
                   <tr>
                     <th>NetID</th>
+                    <th>Modality</th>
                     <th>Seat</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="assignment in meeting.seatAssignments">
                     <td>{{assignment.netid}}</td>
+                    <td>
+                      <template v-if="assignment.official">In Roster</template>
+                      <template v-else>Unofficial</template>
+                    </td>
                     <td>
                       <seat-assignment-widget :assignment="assignment" :meeting="meeting" :group="group" :section="section">
                       </seat-assignment-widget>
