@@ -122,6 +122,7 @@
                 <module>sakai-wicket-for-scorm</module>
                 <module>scormcloud-service</module>
                 <module>search</module>
+                <module>seat-assignments</module>
                 <module>sections</module>
                 <module>shortenedurl</module>
                 <module>signup</module>
