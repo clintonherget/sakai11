@@ -344,6 +344,11 @@ Vue.component('section-table', {
     };
   },
   props: ['sectionId'],
+  watch: {
+    sectionId: function() {
+      this.fetchData();
+    },
+  },
   computed: {
       baseurl: function() {
           return this.$parent.baseurl;
