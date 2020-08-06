@@ -236,7 +236,11 @@ public class SeatingHandlerBackgroundTask extends Thread {
                         }
 
                         for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
-                            SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
+                            if (section.provisioned) {
+                                SeatsStorage.syncGroupsToSection(db, section);
+                            } else {
+                                SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
+                            }
                         }
 
                         db.commit();

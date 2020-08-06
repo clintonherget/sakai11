@@ -333,7 +333,8 @@ Vue.component('section-table', {
     <div>
       <template v-if="section">
           <h1>{{section.id}}</h1>
-          <split-action :section="section" v-on:splat="resetPolling()"></split-action>
+          <split-action v-show="!section.split" :section="section" v-on:splat="resetPolling()">
+          </split-action>
           <template v-for="group in sortedGroups">
             <section-group :group="group" :section="section"></section-group>
           </template>
