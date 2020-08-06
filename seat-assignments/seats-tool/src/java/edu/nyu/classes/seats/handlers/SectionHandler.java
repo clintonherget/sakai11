@@ -92,7 +92,7 @@ public class SectionHandler implements Handler {
 
                         meetingJSON.put("id", meeting.id);
                         meetingJSON.put("name", meeting.name);
-                        meetingJSON.put("location", meeting.location_code);
+                        meetingJSON.put("location", meeting.locationCode);
 
                         JSONArray seatAssignments = new JSONArray();
                         meetingJSON.put("seatAssignments", seatAssignments);
