@@ -209,7 +209,7 @@ public class SeatsStorage {
             .executeUpdate();
     }
 
-    public static SeatSection getSeatSection(DBConnection db, String sectionId, String siteId) throws SQLException {
+    public static Optional<SeatSection> getSeatSection(DBConnection db, String sectionId, String siteId) throws SQLException {
         List<SeatSection> sections = db.run("select * from seat_group_section where id = ?")
                 .param(sectionId)
                 .executeQuery()
@@ -218,8 +218,7 @@ public class SeatsStorage {
                 });
 
         if (sections.isEmpty()) {
-            // FIXME 404?
-            throw new RuntimeException("Section does not exist");
+            return Optional.empty();
         }
 
         SeatSection section = sections.get(0);
@@ -235,7 +234,7 @@ public class SeatsStorage {
                 });
 
         if (section.groupIds().isEmpty()) {
-            return section;
+            return Optional.of(section);
         }
 
         db.run("select sg.*, mem.netid, mem.official" +
@@ -275,7 +274,7 @@ public class SeatsStorage {
                         .addSeatAssignment(row.getString("assign_id"), row.getString("netid"), row.getString("seat"));
                 });
 
-        return section;
+        return Optional.of(section);
     }
 
     private static String createGroup(DBConnection db, SeatSection section, String groupTitle, List<Member> members) throws SQLException {
@@ -488,6 +487,6 @@ public class SeatsStorage {
         return db.run("select * from seat_group_section where site_id = ?")
             .param(siteId)
             .executeQuery()
-            .map(row -> SeatsStorage.getSeatSection(db, row.getString("id"), siteId));
+            .map(row -> SeatsStorage.getSeatSection(db, row.getString("id"), siteId).get());
     }
 }

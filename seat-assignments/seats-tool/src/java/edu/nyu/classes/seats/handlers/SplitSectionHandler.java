@@ -50,7 +50,7 @@ public class SplitSectionHandler implements Handler {
             String siteId = (String)context.get("siteId");
             Locks.lockSiteForUpdate(siteId);
             try {
-                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
+                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
                 SeatsStorage.bootstrapGroupsForSection(db, seatSection, numberOfGroups, selectionType);
                 SeatsStorage.markSectionAsSplit(db, seatSection);
             } finally {

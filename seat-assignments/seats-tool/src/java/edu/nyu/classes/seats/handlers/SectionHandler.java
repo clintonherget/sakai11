@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.Comparator;
 import java.text.DateFormat;
@@ -65,17 +66,22 @@ public class SectionHandler implements Handler {
                     throw new RuntimeException("Need argument: sectionId");
                 }
 
-                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
+                Optional<SeatSection> seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
+
+                if (!seatSection.isPresent()) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                }
+
 
                 JSONObject sectionJSON = new JSONObject();
-                sectionJSON.put("id", seatSection.id);
-                sectionJSON.put("provisioned", seatSection.provisioned);
-                sectionJSON.put("split", seatSection.hasSplit);
+                sectionJSON.put("id", seatSection.get().id);
+                sectionJSON.put("provisioned", seatSection.get().provisioned);
+                sectionJSON.put("split", seatSection.get().hasSplit);
 
                 JSONArray sectionGroups = new JSONArray();
                 sectionJSON.put("groups", sectionGroups);
 
-                for (SeatGroup group : seatSection.listGroups()) {
+                for (SeatGroup group : seatSection.get().listGroups()) {
                     JSONObject groupJSON = new JSONObject();
                     sectionGroups.add(groupJSON);
 
