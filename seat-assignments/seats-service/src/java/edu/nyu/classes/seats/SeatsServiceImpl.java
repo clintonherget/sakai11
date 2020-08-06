@@ -33,7 +33,7 @@ public class SeatsServiceImpl implements SeatsService {
     // FIXME: use a sequence instead?
     private void insertRequests(Connection db, String[] siteIds) throws SQLException {
         long now = System.currentTimeMillis();
-        boolean synced[] = new boolean[siteIds.length];
+        boolean[] synced = new boolean[siteIds.length];
 
         try (PreparedStatement ps = db.prepareStatement("update seat_sync_queue set last_sync_requested_time = ? where site_id = ?")) {
             for (int i = 0; i < siteIds.length; i++) {
