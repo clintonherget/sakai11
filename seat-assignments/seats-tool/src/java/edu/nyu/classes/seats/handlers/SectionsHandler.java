@@ -44,6 +44,7 @@ import org.sakaiproject.authz.api.Member;
 
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.*;
+import edu.nyu.classes.seats.storage.db.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

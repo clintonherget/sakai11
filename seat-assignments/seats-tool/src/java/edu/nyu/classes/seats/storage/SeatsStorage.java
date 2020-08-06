@@ -10,6 +10,7 @@ import org.sakaiproject.site.api.Group;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 
 import edu.nyu.classes.seats.models.*;
+import edu.nyu.classes.seats.storage.db.*;
 import edu.nyu.classes.seats.storage.migrations.BaseMigration;
 import edu.nyu.classes.seats.storage.Audit.AuditEvents;
 

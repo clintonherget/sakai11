@@ -1,4 +1,4 @@
-package edu.nyu.classes.seats.handlers;
+package edu.nyu.classes.seats;
 
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Group;
@@ -13,6 +13,7 @@ import org.sakaiproject.site.cover.SiteService;
 
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.*;
+import edu.nyu.classes.seats.storage.db.*;
 
 import edu.nyu.classes.seats.api.SeatsService;
 

@@ -1,5 +1,7 @@
 package edu.nyu.classes.seats.storage;
 
+import edu.nyu.classes.seats.storage.db.*;
+
 import java.sql.SQLException;
 
 public class Locks {

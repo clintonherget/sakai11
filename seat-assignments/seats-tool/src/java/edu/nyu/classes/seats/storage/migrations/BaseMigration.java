@@ -1,6 +1,6 @@
 package edu.nyu.classes.seats.storage.migrations;
 
-import edu.nyu.classes.seats.storage.*;
+import edu.nyu.classes.seats.storage.db.*;
 
 import java.io.File;
 import java.net.URL;

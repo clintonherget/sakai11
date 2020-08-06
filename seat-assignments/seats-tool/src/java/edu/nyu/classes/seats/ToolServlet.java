@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.nyu.classes.seats.storage.*;
+import edu.nyu.classes.seats.storage.db.*;
 import edu.nyu.classes.seats.handlers.*;
 
 public class ToolServlet extends HttpServlet {
@@ -136,10 +137,6 @@ public class ToolServlet extends HttpServlet {
 
         if (path.startsWith("/section")) {
             return new SectionHandler();
-        }
-
-        if (path.startsWith("/background-task")) {
-            return new BackgroundJobHandler();
         }
 
         if (path.startsWith("/seat-assignment")) {
