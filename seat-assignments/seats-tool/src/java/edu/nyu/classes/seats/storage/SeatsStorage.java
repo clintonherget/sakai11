@@ -68,9 +68,46 @@ public class SeatsStorage {
         return obj.toString();
     }
 
-    public static void syncGroupsToSection(DBConnection db, SeatSection section) {
-        // FIXME do something good
+    public static void syncGroupsToSection(DBConnection db, SeatSection section) throws SQLException {
+        List<Member> sectionMembers = getMembersForSection(db, section);
+        Set<String> seatGroupMembers = new HashSet<>();
+        Map<String, Integer> groupCounts = new HashMap<>();
+
+        for (SeatGroup group : section.listGroups()) {
+            groupCounts.put(group.id, group.listMeetings().size());
+            seatGroupMembers.addAll(group.listMembers().stream().map(m -> m.netid).collect(Collectors.toList()));
+        }
+
+        for (Member member : sectionMembers) {
+            if (seatGroupMembers.contains(member.netid)) {
+                continue;
+            }
+
+            String groupId = groupCounts.keySet().stream().min((o1, o2) -> groupCounts.get(o1) - groupCounts.get(o2)).get();
+            addMemberToGroup(db, member, groupId, section.id);
+            groupCounts.put(groupId, groupCounts.get(groupId) + 1);
+        }
     }; 
+
+    public static void addMemberToGroup(DBConnection db, Member member, String groupId, String sectionId) throws SQLException {
+        db.run("insert into seat_group_members (netid, group_id, official) values (?, ?, ?)")
+                .param(member.netid)
+                .param(groupId)
+                .param(member.official ? 1 : 0)
+                .executeUpdate();
+
+        AuditEntry entry = new AuditEntry(AuditEvents.MEMBER_ADDED,
+                json("netid", member.netid,
+                        "modality", member.modality.toString(),
+                        "group_id", groupId,
+                        "section_id", sectionId),
+                new String[] {
+                        // FIXME: index useful stuff
+                }
+        );
+
+        insertAuditEntry(db, entry);
+    }
 
     public static void clearSeat(DBConnection db, SeatAssignment seat) throws SQLException {
         AuditEntry entry = new AuditEntry(AuditEvents.SEAT_CLEARED,
@@ -327,24 +364,7 @@ public class SeatsStorage {
                 .executeUpdate();
 
         for (Member member : members) {
-            entry = new AuditEntry(AuditEvents.MEMBER_ADDED,
-                    json("netid", member.netid,
-                            "modality", member.modality.toString(),
-                            "group_name", groupTitle,
-                            "group_id", groupId,
-                            "section_id", section.id),
-                    new String[] {
-                            // FIXME: index useful stuff
-                    }
-            );
-
-            insertAuditEntry(db, entry);
-
-            db.run("insert into seat_group_members (netid, group_id, official) values (?, ?, ?)")
-                    .param(member.netid)
-                    .param(groupId)
-                    .param(member.official ? 1 : 0)
-                    .executeUpdate();
+            addMemberToGroup(db, member, groupId, section.id);
         }
 
         return groupId;
