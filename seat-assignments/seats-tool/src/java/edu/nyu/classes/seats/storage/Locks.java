@@ -22,7 +22,7 @@ public class Locks {
                                           .param(now)
                                           .executeUpdate();
                                   } catch (SQLException e) {
-                                      if (e.getSQLState().startsWith("23")) {
+                                      if (db.isConstraintViolation(e)) {
                                           db.rollback();
 
                                           return false;

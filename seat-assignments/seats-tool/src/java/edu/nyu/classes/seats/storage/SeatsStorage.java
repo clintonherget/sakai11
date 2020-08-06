@@ -125,7 +125,7 @@ public class SeatsStorage {
                         .param(seat.seat)
                         .executeUpdate();
             } catch (SQLException e) {
-                if (e.getSQLState().startsWith("23")) {
+                if (db.isConstraintViolation(e)) {
                     return false;
                 } else {
                     throw e;
@@ -144,7 +144,7 @@ public class SeatsStorage {
                     return false;
                 }
             } catch (SQLException e) {
-                if (e.getSQLState().startsWith("23")) {
+                if (db.isConstraintViolation(e)) {
                     return false;
                 } else {
                     throw e;
