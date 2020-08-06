@@ -44,24 +44,42 @@ Vue.component('modal', {
 Vue.component('seat-assignment-widget', {
   template: `
     <span>
-      <input type="text" v-model="seatValue" ref="input" :class="inputCSSClasses" :readonly="!editing" v-on:keyup.enter="editOrSave()" />
+      <label :for="inputId" class="sr-only">
+        Seat assignment for {{assignment.netid}}
+      </label>
+      <input
+        :id="inputId"
+        type="text"
+        v-model="inputValue"
+        ref="input"
+        :class="inputCSSClasses"
+        :readonly="!editing"
+        v-on:keydown.enter="editOrSave()"
+        v-on:keydown.esc="cancel()"
+      />
       <template v-if="editing">
         <button @click="save()">Save</button>
+        <button @click="cancel()">Cancel</button>
       </template>
       <template v-else>
         <button @click="edit()">Edit</button>
+        <button v-show="seatValue !== null" @click="clear()">Clear</button>
       </template>
     </span>
   `,
   data: function() {
     return {
       hasError: false,
-      seatValue: '',
+      seatValue: null,
       editing: false,
+      inputValue: '',
     };
   },
   props: ['assignment', 'meeting', 'group', 'section'],
   computed: {
+      inputId: function() {
+          return [this.meeting.id, this.assignment.netid].join('__');
+      },
       inputCSSClasses: function() {
         if (this.hasError) {
           return "has-error";
@@ -72,29 +90,57 @@ Vue.component('seat-assignment-widget', {
       baseurl: function() {
           return this.$parent.baseurl;
       },
-      currentSeatAssignment: function() {
-          // FIXME only clone once edit mode enabled
-          // return clone of current seat value
-          if (this.assignment.seat == null) {
+      cleanSeatValue: function() {
+        if (this.assignment.seat == null) {
               return '';
           } else {
               return '' + this.assignment.seat;
           }
       }
   },
+  watch: {
+    assignment: function(a, b) {
+      if (!this.editing) {
+        this.resetSeatValue();
+        if (a.seat !== b.seat) {
+          // FIXME notify user of change
+        }
+      }
+    }
+  },
   methods: {
+    resetSeatValue: function() {
+      this.seatValue = this.assignment.seat;
+      this.inputValue = this.cleanSeatValue;
+    },
+    cancel: function() {
+      this.hasError = false;
+      this.editing = false;
+      this.resetSeatValue();
+      this.focusInput();
+    },
     editOrSave: function() {
       if (this.editing) {
         this.save();
       } else {
-        this.edit();
+        this.edit()
       }
+    },
+    clear: function() {
+      this.inputValue = '';
+      this.save();
     },
     edit: function() {
       this.editing = true;
-      this.focusInput();
+      this.selectInput();
     },
     focusInput: function() {
+      var self = this;
+      self.$nextTick(function() {
+        self.$refs.input.focus();
+      });
+    },
+    selectInput: function() {
       var self = this;
       self.$nextTick(function() {
         self.$refs.input.select();
@@ -110,6 +156,12 @@ Vue.component('seat-assignment-widget', {
       var self = this;
       self.clearHasError();
 
+      if (self.seatValue === (self.inputValue === '' ? null : self.inputValue)) {
+        // noop
+        self.editing = false;
+        return;
+      }
+
       $.ajax({
         url: this.baseurl + "/seat-assignment",
         type: 'post',
@@ -119,23 +171,27 @@ Vue.component('seat-assignment-widget', {
           groupId: self.group.id,
           meetingId: self.meeting.id,
           netid: self.assignment.netid,
-          seat: self.seatValue,
-          currentSeat: this.assignment.seat, // FIXME we want to grab this value at the point the instructor goes to edit it
+          seat: self.inputValue,
+          currentSeat: self.seatValue,
         },
         success: function(json) {
           if (json.error) {
             self.markHasError();
-            self.focusInput();
+            self.selectInput();
+            // FIXME notify user of error
           } else {
-            // FIXME force data reload
-            location.reload();
+            self.editing = false;
+            self.seatValue = self.inputValue === '' ? null : self.inputValue;
+            self.focusInput();
+            // FIXME notify user of save success
           }
         }
       })
     }
   },
   mounted: function() {
-    this.seatValue = this.currentSeatAssignment;
+    this.seatValue = this.assignment.seat;
+    this.inputValue = this.cleanSeatValue;
   },
 });
 
@@ -320,7 +376,11 @@ Vue.component('section-table', {
       },
   },
   mounted: function() {
-      this.fetchData();
+      var self = this;
+      self.fetchData();
+      setInterval(function() {
+          self.fetchData();
+      }, 5000);
   },
 });
 
