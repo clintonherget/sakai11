@@ -15,7 +15,7 @@ public class Audit {
         MEMBER_ADDED,
     }
 
-    public static void insert(DBConnection db, AuditEvents event, String json, String args[]) throws SQLException {
+    public static void insert(DBConnection db, AuditEvents event, String json, String[] args) throws SQLException {
         long timestamp = System.currentTimeMillis();
 
         db.run("insert into seat_audit (id, timestamp_ms, event_code, json) values (?, ?, ?, ?)")
