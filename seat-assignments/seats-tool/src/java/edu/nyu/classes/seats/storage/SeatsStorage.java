@@ -74,7 +74,7 @@ public class SeatsStorage {
         Map<String, Integer> groupCounts = new HashMap<>();
 
         for (SeatGroup group : section.listGroups()) {
-            groupCounts.put(group.id, group.listMeetings().size());
+            groupCounts.put(group.id, group.listMembers().size());
             seatGroupMembers.addAll(group.listMembers().stream().map(m -> m.netid).collect(Collectors.toList()));
         }
 

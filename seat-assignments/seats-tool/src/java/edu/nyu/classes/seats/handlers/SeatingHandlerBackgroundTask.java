@@ -173,7 +173,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
                 ("Mark any site or realm changed in the last 60 seconds for sync",
                         (DBConnection db) -> {
                             List<String> updatedSiteIds = db.run("select site_id from sakai_site where modifiedon >= ?")
-                                .param(new Date(lastCheck - 60 * 1000))
+                                .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
                                 .executeQuery()
                                 .getStringColumn("site_id");
 
@@ -182,9 +182,9 @@ public class SeatingHandlerBackgroundTask extends Thread {
                             List<String> updatedRealmSiteIds = db.run("select ss.site_id from sakai_site ss" +
                                                                       " inner join sakai_realm sr on sr.realm_id = concat('/site/', ss.site_id)" +
                                                                       " where sr.modifiedon >= ?")
-                                    .param(new Date(lastCheck - 60 * 1000))
-                                    .executeQuery()
-                                    .getStringColumn("site_id");
+                                .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
+                                .executeQuery()
+                                .getStringColumn("site_id");
 
                             service.markSitesForSync(updatedRealmSiteIds.toArray(new String[0]));
 
@@ -200,6 +200,9 @@ public class SeatingHandlerBackgroundTask extends Thread {
         List<ToProcess> sites = findSitesToProcess();
 
         for (ToProcess entry : sites) {
+            // "Processing site", entry.siteId
+            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatingHandlerBackgroundTask.java:205 NiftyFowl]: " + "\n    'Processing site' => " + ("Processing site") + "\n    entry.siteId => " + (entry.siteId) + "\n");
+
             if (processSite(entry.siteId)) {
                 markAsProcessed(entry, now);
             }

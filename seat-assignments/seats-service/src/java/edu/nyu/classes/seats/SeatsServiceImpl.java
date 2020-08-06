@@ -74,6 +74,11 @@ public class SeatsServiceImpl implements SeatsService {
     }
 
     public void markSitesForSync(String ...siteIds) {
+        for (String siteId : siteIds) {
+            // "MARKING SITE FOR SYNC", siteId
+            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatsServiceImpl.java:80 DefensiveEagle]: " + "\n    'MARKING SITE FOR SYNC' => " + ("MARKING SITE FOR SYNC") + "\n    siteId => " + (siteId) + "\n");
+        }
+
         Connection db = null;
         try {
             db = SqlService.borrowConnection();
