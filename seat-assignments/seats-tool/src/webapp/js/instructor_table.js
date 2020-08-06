@@ -44,26 +44,41 @@ Vue.component('modal', {
 Vue.component('seat-assignment-widget', {
   template: `
     <span>
-      <label :for="inputId" class="sr-only">
-        Seat assignment for {{assignment.netid}}
-      </label>
-      <input
-        :id="inputId"
-        type="text" 
-        v-model="inputValue"
-        ref="input"
-        :class="inputCSSClasses"
-        :readonly="!editing"
-        v-on:keydown.enter="editOrSave()"
-        v-on:keydown.esc="cancel()"
-      />
-      <template v-if="editing">
-        <button @click="save()">Save</button>
-        <button @click="cancel()">Cancel</button>
+      <template v-if="editing || seatValue">
+        <label :for="inputId" class="sr-only">
+          Seat assignment for {{assignment.netid}}
+        </label>
+        <input
+          :id="inputId"
+          type="text" 
+          v-model="inputValue"
+          ref="input"
+          :class="'form-control ' + inputCSSClasses"
+          :readonly="!editing"
+          v-on:keydown.enter="editOrSave()"
+          v-on:keydown.esc="cancel()"
+        />
+        <template v-if="editing">
+          <button class="btn-primary" @click="save()">
+            <i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Save
+          </button>
+          <button @click="cancel()">
+            <i class="glyphicon glyphicon-ban-circle" aria-hidden="true"></i> Cancel
+          </button>
+        </template>
+        <template v-else>
+          <button @click="edit()">
+            <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
+          </button>
+          <button v-show="seatValue !== null" @click="clear()">
+            <i class="glyphicon glyphicon-remove" aria-hidden="true"></i> Clear
+          </button>
+        </template>
       </template>
       <template v-else>
-        <button @click="edit()">Edit</button>
-        <button v-show="seatValue !== null" @click="clear()">Clear</button>
+        <button @click="edit()">
+          <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> Seat Seat Assignment
+        </button>
       </template>
     </span>
   `,
@@ -272,10 +287,11 @@ Vue.component('group-meeting', {
   <table class="seat-assignment-listing">
     <thead>
       <tr>
-        <th><span class="sr-only">Profile Picture</span></th>
-        <th>NetID</th>
+        <th>Picture</th>
+        <th>Name</th>
+        <th>Seat Assignment</th>
         <th>Modality</th>
-        <th>Seat</th>
+        <th>Section Subgroup</th>
       </tr>
     </thead>
     <tbody>
@@ -285,14 +301,17 @@ Vue.component('group-meeting', {
             <img :src="'/direct/profile/' + assignment.netid + '/image'"/>
           </div>
         </td>
-        <td>{{assignment.netid}}</td>
-        <td>
-          <template v-if="assignment.official">In Roster</template>
-          <template v-else>Unofficial</template>
-        </td>
+        <td>TODO_NAME ({{assignment.netid}})</td>
         <td>
           <seat-assignment-widget :assignment="assignment" :meeting="meeting" :group="group" :section="section">
           </seat-assignment-widget>
+        </td>
+        <td>
+          TODO_MODALITY 
+          <template v-if="!assignment.official">(Unofficial)</template>
+        </td>
+        <td>
+          TODO
         </td>
       </tr>
     </tbody>
