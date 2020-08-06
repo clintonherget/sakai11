@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * Wrap a PreparedStatement, providing nicer parameter handling and transaction commit/rollback checks.
@@ -47,6 +48,16 @@ public class DBPreparedStatement {
     public DBPreparedStatement param(String parameter) throws SQLException {
         try {
             preparedStatement.setString(paramCount(), parameter);
+            return this;
+        } catch (SQLException e) {
+            cleanup();
+            throw e;
+        }
+    }
+
+    public DBPreparedStatement param(Date parameter) throws SQLException {
+        try {
+            preparedStatement.setDate(paramCount(), new java.sql.Date(parameter.getTime()));
             return this;
         } catch (SQLException e) {
             cleanup();

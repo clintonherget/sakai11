@@ -5,6 +5,7 @@ import org.sakaiproject.site.api.Group;
 
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.*;
 import org.sakaiproject.site.api.Site;
@@ -146,7 +147,12 @@ public class SeatingHandlerBackgroundTask extends Thread {
     }
 
     public void run() {
+        long lastCheck = System.currentTimeMillis();
+
         while (this.running.get()) {
+            if ((System.currentTimeMillis() / 1000) % 60 == 0) {
+                lastCheck = runMTimeChecks(lastCheck);
+            }
             runRound();
 
             try {
@@ -156,6 +162,37 @@ public class SeatingHandlerBackgroundTask extends Thread {
             }
         }
 
+    }
+
+    private long runMTimeChecks(long lastCheck) {
+        long now = System.currentTimeMillis();
+
+        SeatsService service = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+
+        DB.transaction
+                ("Mark any site or realm changed in the last 60 seconds for sync",
+                        (DBConnection db) -> {
+                            List<String> updatedSiteIds = db.run("select site_id from sakai_site where modifiedon >= ?")
+                                .param(new Date(lastCheck - 60 * 1000))
+                                .executeQuery()
+                                .getStringColumn("site_id");
+
+                            service.markSitesForSync(updatedSiteIds.toArray(new String[0]));
+
+                            List<String> updatedRealmSiteIds = db.run("select ss.site_id from sakai_site ss" +
+                                                                      " inner join sakai_realm sr on sr.realm_id = concat('/site/', ss.site_id)" +
+                                                                      " where sr.modifiedon >= ?")
+                                    .param(new Date(lastCheck - 60 * 1000))
+                                    .executeQuery()
+                                    .getStringColumn("site_id");
+
+                            service.markSitesForSync(updatedRealmSiteIds.toArray(new String[0]));
+
+                            return null;
+                        }
+                );
+
+        return now;
     }
 
     public void runRound() {
