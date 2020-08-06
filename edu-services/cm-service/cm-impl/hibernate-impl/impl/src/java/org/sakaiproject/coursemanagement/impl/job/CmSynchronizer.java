@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.*;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,6 +67,8 @@ public abstract class CmSynchronizer {
 	protected CourseManagementAdministration cmAdmin;
 	
 	protected abstract InputStream getXmlInputStream();
+
+	protected List<String> nyuUpdatedSectionEids = new ArrayList<>();
 
 	public synchronized void syncAllCmObjects() {
 		long start = System.currentTimeMillis();
@@ -516,8 +519,12 @@ public abstract class CmSynchronizer {
 	}
 
 	protected void updateSectionMembers(Element membersElement, Section section) {
-		Set existingMembers = cmService.getSectionMemberships(section.getEid());
+		Set<Membership> existingMembers = cmService.getSectionMemberships(section.getEid());
                 Set blessedUsers = new HashSet<String>();
+
+		Set<String> existingMemberEidsForNYU = new HashSet<>(existingMembers.stream().map((m) -> m.getUserId()).collect(Collectors.toList()));
+
+		boolean didSomething = false;
 
 		// Keep track of the new members userEids, and add/update them
 		Set newMembers = new HashSet();
@@ -528,6 +535,10 @@ public abstract class CmSynchronizer {
 			String role = memberElement.getAttributeValue("role");
 			String status = memberElement.getAttributeValue("status");
 
+			if (!existingMemberEidsForNYU.contains(userEid)) {
+			    didSomething = true;
+			}
+
                         blessedUsers.add(userEid);
 			newMembers.add(cmAdmin.addOrUpdateSectionMembership(userEid, role, section.getEid(), status));
 		}
@@ -536,9 +547,14 @@ public abstract class CmSynchronizer {
 		for(Iterator iter = existingMembers.iterator(); iter.hasNext();) {
 			Membership member = (Membership)iter.next();
                         if (!blessedUsers.contains(member.getUserId())) {
-                          if(log.isInfoEnabled()) log.info("REMOVING: " + member.getUserId() + " from section: " + section.getEid());
-                          cmAdmin.removeSectionMembership(member.getUserId(), section.getEid());
+			    if (log.isInfoEnabled()) log.info("REMOVING: " + member.getUserId() + " from section: " + section.getEid());
+			    didSomething = true;
+			    cmAdmin.removeSectionMembership(member.getUserId(), section.getEid());
                         }
+		}
+
+		if (didSomething) {
+		    this.nyuUpdatedSectionEids.add(section.getEid());
 		}
 	}
 

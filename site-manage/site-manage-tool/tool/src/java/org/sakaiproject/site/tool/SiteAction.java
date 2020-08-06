@@ -177,6 +177,8 @@ import org.sakaiproject.util.api.LinkMigrationHelper;
 
 import org.sakaiproject.component.cover.HotReloadConfigurationService;
 
+import edu.nyu.classes.seats.api.SeatsService;
+
 /**
  * <p>
  * SiteAction controls the interface for worksite setup.
@@ -7326,6 +7328,10 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				saveSiteSetupQuestionUserAnswers(state, site.getId());
 			}
 			
+                        // Generate the seating tool data structures if applicable
+                        SeatsService seats = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+                        seats.markSitesForSync(site.getId());
+
 			// TODO: hard coding this frame id is fragile, portal dependent, and
 			// needs to be fixed -ggolden
 			// schedulePeerFrameRefresh("sitenav");
@@ -8345,6 +8351,10 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		
 		saveFeatures(params, state, site);
 		
+                // Generate the seating tool data structures if applicable
+                SeatsService seats = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+                seats.markSitesForSync(site.getId());
+
 		if (state.getAttribute(STATE_MESSAGE) == null) {
 			// clean state variables
 			state.removeAttribute(STATE_TOOL_REGISTRATION_SELECTED_LIST);
@@ -10420,6 +10430,14 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 					state.setAttribute(STATE_CM_REQUESTED_SECTIONS, cmRequestedCourseList);
 				}
 
+
+                                // Generate the seating tool data structures if applicable
+				Site site = getStateSite(state);
+                                if (site != null) {
+                                    SeatsService seats = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+                                    seats.markSitesForSync(site.getId());
+                                }
+
 				updateCourseClasses(state, new Vector(), new Vector());
 			}
 			break;
@@ -10431,6 +10449,10 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				
 				// update the course site property and realm based on the selection
 				updateCourseSiteSections(state, site.getId(), pEdit, a);
+
+                                // Generate the seating tool data structures if applicable
+                                SeatsService seats = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+                                seats.markSitesForSync(site.getId());
 
 				try {
 					nyuApplySitePropertiesForNewRoster(state, site.getId(), pEdit, a);

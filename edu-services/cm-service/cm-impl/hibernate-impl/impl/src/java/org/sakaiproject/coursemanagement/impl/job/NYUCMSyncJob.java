@@ -23,6 +23,8 @@ import org.jdom.Document;
 import java.util.Iterator;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import edu.nyu.classes.seats.api.SeatsService;
+import org.sakaiproject.component.cover.ComponentManager;
 
 /**
  * Based on ClassPathCMSyncJob.java:
@@ -88,12 +90,16 @@ public class NYUCMSyncJob extends CmSynchronizer implements Job {
 			if(log.isInfoEnabled()) log.info("NYU sync job: logging out ...");
 			logoutFromSakai();
 
+			// Do something!
+			SeatsService seats = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+			seats.markSectionsForSync(this.nyuUpdatedSectionEids);
+
 			if(log.isInfoEnabled()) log.info("NYU sync job: done!");
 		} finally {
 			running.set(false);
 		}
 	}
-		
+
 	public void setAuthzGroupService(AuthzGroupService authzGroupService) {
 		this.authzGroupService = authzGroupService;
 	}
