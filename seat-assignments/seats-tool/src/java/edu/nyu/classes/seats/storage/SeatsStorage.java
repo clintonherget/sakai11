@@ -58,7 +58,7 @@ public class SeatsStorage {
             addMemberToGroup(db, member, groupId, section.id);
             groupCounts.put(groupId, groupCounts.get(groupId) + 1);
         }
-    }; 
+    }
 
     public static void addMemberToGroup(DBConnection db, Member member, String groupId, String sectionId) throws SQLException {
         db.run("insert into seat_group_members (netid, group_id, official) values (?, ?, ?)")

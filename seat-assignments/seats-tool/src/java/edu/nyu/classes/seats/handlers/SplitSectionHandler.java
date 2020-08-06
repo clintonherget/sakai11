@@ -22,8 +22,6 @@ public class SplitSectionHandler implements Handler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
-            JSONObject result = new JSONObject();
-
             DBConnection db = (DBConnection)context.get("db");
 
             RequestParams p = new RequestParams(request);
@@ -58,7 +56,7 @@ public class SplitSectionHandler implements Handler {
             }
 
             try {
-                response.getWriter().write(result.toString());
+                response.getWriter().write("{}");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
