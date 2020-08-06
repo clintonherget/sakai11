@@ -49,7 +49,7 @@ Vue.component('seat-assignment-widget', {
       </label>
       <input
         :id="inputId"
-        type="text"
+        type="text" 
         v-model="inputValue"
         ref="input"
         :class="inputCSSClasses"
@@ -385,17 +385,44 @@ Vue.component('section-table', {
 });
 
 
+Vue.component('section-selector', {
+  template: `
+<div>
+  <select v-model="selectedSectionId">
+    <option value="">Select a section...</option>
+    <option v-for="section in sections" :value="section.id">
+      {{section.id}}
+    </option>
+  </select>
+</div>
+`,
+  props: ['sections'],
+  data: function() {
+    return {
+      selectedSectionId: '',
+    };
+  },
+  watch: {
+    selectedSectionId: function() {
+      this.$emit('selectSection', this.selectedSectionId == '' ? null : this.selectedSectionId);
+    },
+  },
+  methods: {
+  },
+});
+
+
 Vue.component('instructor-table', {
   template: `
       <div>
-          <ul>
-              <li v-for="s in sections">
-                  {{s.name}} ({{s.id}})
-              </li>
-          </ul>
+          <section-selector
+            ref="sectionSelector"
+            :sections="sections"
+            v-on:selectSection="handleSectionSelect">
+          </section-selector>
           <hr />
-          <template v-for="s in sections">
-              <section-table :sectionId="s.id"></section-table>
+          <template v-if="selectedSectionId">
+              <section-table :sectionId="selectedSectionId"></section-table>
           </template>
       </div>
 
@@ -403,6 +430,7 @@ Vue.component('instructor-table', {
   data: function() {
     return {
         sections: [],
+        selectedSectionId: null,
     };
   },
   props: ['baseurl'],
@@ -418,6 +446,9 @@ Vue.component('instructor-table', {
                   self.sections = json;
               }
           });
+      },
+      handleSectionSelect: function(sectionId) {
+        this.selectedSectionId = sectionId;
       },
   },
   mounted: function() {
