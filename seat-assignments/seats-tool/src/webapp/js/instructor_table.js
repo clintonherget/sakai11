@@ -246,6 +246,8 @@ Vue.component('split-action', {
       this.$refs.splitModal.close();
     },
     performSplit: function() {
+      var self = this;
+
       $.ajax({
         url: this.baseurl + "/split-section",
         type: 'post',
@@ -255,7 +257,8 @@ Vue.component('split-action', {
           selectionType: this.selectionType,
         },
         success: function() {
-          location.reload();
+          self.$emit('splat');
+          self.closeModal();
         }
       })
     }
@@ -303,7 +306,7 @@ Vue.component('group-meeting', {
     },
     sortedSeatAssignments: function() {
       return this.meeting.seatAssignments.sort(function(a, b) {
-        return a.netid < b.netid;
+        return (a.netid < b.netid) ? -1 : 1;
       })
     },
   },
@@ -330,7 +333,7 @@ Vue.component('section-table', {
     <div>
       <template v-if="section">
           <h1>{{section.id}}</h1>
-          <split-action :section="section"></split-action>
+          <split-action :section="section" v-on:splat="resetPolling()"></split-action>
           <template v-for="group in sortedGroups">
             <section-group :group="group" :section="section"></section-group>
           </template>
@@ -364,7 +367,7 @@ Vue.component('section-table', {
           return [];
         } else {
           return this.section.groups.sort(function(a, b) {
-            return a.name < b.name;
+            return (a.name < b.name) ? -1 : 1;
           })
         }
       },
