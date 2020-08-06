@@ -90,4 +90,8 @@ public class DBConnection {
         return coll.stream().map(_p -> "?").collect(Collectors.joining(","));
     }
 
+    public boolean isConstraintViolation(SQLException e) {
+        return e.getSQLState().startsWith("23");
+    }
+
 }
