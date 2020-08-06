@@ -51,6 +51,7 @@ public class SplitSectionHandler implements Handler {
             try {
                 SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
                 SeatsStorage.bootstrapGroupsForSection(db, seatSection, numberOfGroups, selectionType);
+                SeatsStorage.markSectionAsSplit(db, seatSection);
             } finally {
                 SeatsStorage.unlockSiteForUpdate(siteId);
             }

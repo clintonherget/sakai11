@@ -9,6 +9,8 @@ public class V1__Init extends BaseMigration {
         "    id varchar2(255) primary key,                                                                   " +
         "    primary_roster_id varchar2(255),                                                                " +
         "    site_id varchar2(255),                                                                          " +
+        "    provisioned number(1) not null,                                                                 " +
+        "    has_split number(1) not null,                                                                   " +
         "    constraint uniq_section_id_siteid unique (primary_roster_id, site_id)                           " +
         ");                                                                                                  " +
 

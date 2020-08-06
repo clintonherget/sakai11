@@ -68,6 +68,10 @@ public class SeatsStorage {
         return obj.toString();
     }
 
+    public static void syncGroupsToSection(DBConnection db, SeatSection section) {
+        // FIXME do something good
+    }; 
+
     public static void clearSeat(DBConnection db, SeatAssignment seat) throws SQLException {
         AuditEntry entry = new AuditEntry(AuditEvents.SEAT_CLEARED,
                                           json("seat", seat.seat,
@@ -211,7 +215,19 @@ public class SeatsStorage {
     }
 
     public static SeatSection getSeatSection(DBConnection db, String sectionId, String siteId) throws SQLException {
-        SeatSection section = new SeatSection(sectionId, siteId);
+        List<SeatSection> sections = db.run("select * from seat_group_section where id = ?")
+                .param(sectionId)
+                .executeQuery()
+                .map(row -> {
+                    return new SeatSection(sectionId, siteId, row.getInt("provisioned") == 1, row.getInt("has_split") == 1);
+                });
+
+        if (sections.isEmpty()) {
+            // FIXME 404?
+            throw new RuntimeException("Section does not exist");
+        }
+
+        SeatSection section = sections.get(0);
 
         db.run("select sg.*, sec.id as section_id" +
                " from seat_group sg" +
@@ -426,6 +442,22 @@ public class SeatsStorage {
         for (int i=0; i<groupCount; i++) {
             createGroup(db, section, String.format("Group %d", i + 1), membersPerGroup.get(i));
         }
+
+        markSectionAsProvisioned(db, section);
+    }
+
+    public static void markSectionAsProvisioned(DBConnection db, SeatSection section) throws SQLException {
+        db.run("update seat_group_section set provisioned = 1 where id = ?")
+            .param(section.id)
+            .executeUpdate();
+    }
+
+
+
+    public static void markSectionAsSplit(DBConnection db, SeatSection section) throws SQLException {
+        db.run("update seat_group_section set has_split = 1 where id = ?")
+                .param(section.id)
+                .executeUpdate();
     }
 
     public static String getSponsorSectionId(String rosterId) {
@@ -444,10 +476,12 @@ public class SeatsStorage {
         if (!sectionId.isPresent()) {
             sectionId = Optional.of(UUID.randomUUID().toString());
 
-            db.run("insert into seat_group_section (id, primary_roster_id, site_id) values (?, ?, ?)")
+            db.run("insert into seat_group_section (id, primary_roster_id, site_id, provisioned, has_split) values (?, ?, ?, ?, ?)")
                 .param(sectionId.get())
                 .param(primaryRosterId)
                 .param(siteId)
+                .param(0)
+                .param(0)
                 .executeUpdate();
 
             db.run("insert into seat_group_section_rosters (section_id, sakai_roster_id, role) values (?, ?, ?)")
@@ -475,7 +509,7 @@ public class SeatsStorage {
     }
 
     public static List<SeatSection> siteSeatSections(DBConnection db, String siteId) throws SQLException {
-        return db.run("select id from seat_group_section where site_id = ?")
+        return db.run("select * from seat_group_section where site_id = ?")
             .param(siteId)
             .executeQuery()
             .map(row -> SeatsStorage.getSeatSection(db, row.getString("id"), siteId));

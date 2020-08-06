@@ -69,6 +69,8 @@ public class SectionHandler implements Handler {
 
                 JSONObject sectionJSON = new JSONObject();
                 sectionJSON.put("id", seatSection.id);
+                sectionJSON.put("provisioned", seatSection.provisioned);
+                sectionJSON.put("split", seatSection.hasSplit);
 
                 JSONArray sectionGroups = new JSONArray();
                 sectionJSON.put("groups", sectionGroups);
