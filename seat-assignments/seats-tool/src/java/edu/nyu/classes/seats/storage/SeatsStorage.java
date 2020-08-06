@@ -449,7 +449,7 @@ public class SeatsStorage {
             .oneString();
 
         if (!sectionId.isPresent()) {
-            sectionId = Optional.of(UUID.randomUUID().toString());
+            sectionId = Optional.of(db.uuid());
 
             db.run("insert into seat_group_section (id, primary_roster_id, site_id, provisioned, has_split) values (?, ?, ?, ?, ?)")
                 .param(sectionId.get())
