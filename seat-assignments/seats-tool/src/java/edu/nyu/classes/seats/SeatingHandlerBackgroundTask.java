@@ -79,7 +79,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         DB.transaction
             ("Find sites to process",
              (DBConnection db) -> {
-                List<String> entries = new ArrayList(recentProcessed.keySet());
+                List<String> entries = new ArrayList<>(recentProcessed.keySet());
 
                 for (String e : entries) {
                     if (recentProcessed.size() >= 1024) {
@@ -97,7 +97,6 @@ public class SeatingHandlerBackgroundTask extends Thread {
                             Long lastSyncRequestedTime = row.getLong("last_sync_requested_time");
 
                             if (recentProcessed.containsKey(siteId) &&
-                                lastSyncRequestedTime != null &&
                                 recentProcessed.get(siteId).equals(lastSyncRequestedTime)) {
                                 // Already handled this one
                             } else {
@@ -113,7 +112,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
     private void markAsProcessed(ToProcess entry, long timestamp) {
         DB.transaction
-            ("Find sites to process",
+            ("Mark site as processed",
              (DBConnection db) -> {
                 db.run("update seat_sync_queue set last_sync_time = ? where site_id = ?")
                     .param(timestamp)

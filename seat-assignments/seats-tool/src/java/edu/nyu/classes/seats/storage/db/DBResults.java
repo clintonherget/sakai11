@@ -93,7 +93,7 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
 
     @FunctionalInterface
     public interface SQLMapper<T> {
-        public T apply(ResultSet r) throws SQLException;
+        T apply(ResultSet r) throws SQLException;
     }
 
     public <T> List<T> map(SQLMapper<T> fn) throws SQLException {
@@ -109,7 +109,7 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
 
     @FunctionalInterface
     public interface SQLAction<T> {
-        public void apply(ResultSet r) throws SQLException;
+        void apply(ResultSet r) throws SQLException;
     }
 
     public void each(SQLAction fn) throws SQLException {

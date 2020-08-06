@@ -16,32 +16,32 @@ public interface Handler {
      * If a string entry called "subpage" is added to the context, this will be
      * resolved to a handlebars template and rendered.
      */
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context);
+    void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context);
 
     /**
      * True if the handler has returned a redirect.
      */
-    public boolean hasRedirect();
+    boolean hasRedirect();
 
-    public String getRedirect();
+    String getRedirect();
 
     /**
      * Return any validation errors produced by this request.
      */
-    public Errors getErrors();
+    Errors getErrors();
 
     /**
      * Return any flash messages (from the previous request) that should be displayed.
      */
-    public Map<String, List<String>> getFlashMessages();
+    Map<String, List<String>> getFlashMessages();
 
-    public interface Errors {}
+    interface Errors {}
 
-    public default String getContentType() {
+    default String getContentType() {
         return "text/html";
     }
 
-    public default boolean hasTemplate() {
+    default boolean hasTemplate() {
         return true;
     }
 }

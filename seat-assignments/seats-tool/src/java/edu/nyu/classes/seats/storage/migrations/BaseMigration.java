@@ -30,7 +30,7 @@ abstract public class BaseMigration {
                                    db.commit();
                                } catch (SQLException e) {
                                    // Expected to fail unless this is the first run.
-                               };
+                               }
 
                                // Get our last version
                                int version = 0;
@@ -111,7 +111,7 @@ abstract public class BaseMigration {
 
             // Migrations must be strictly increasing
             for (int i = 0; i < migrations.size() - 1; i++) {
-                if (migrations.get(i).getVersion() == migrations.get(i + 1).getVersion()) {
+                if (migrations.get(i).getVersion().equals(migrations.get(i + 1).getVersion())) {
                     throw new RuntimeException("Version number repeated in migrations: " + migrations.get(i).getVersion());
                 }
             }
