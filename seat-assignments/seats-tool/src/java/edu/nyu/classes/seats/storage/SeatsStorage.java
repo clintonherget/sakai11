@@ -1,7 +1,5 @@
 package edu.nyu.classes.seats.storage;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.*;
@@ -13,6 +11,7 @@ import org.sakaiproject.coursemanagement.api.CourseManagementService;
 
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.migrations.BaseMigration;
+import edu.nyu.classes.seats.storage.Audit.AuditEvents;
 
 import org.json.simple.JSONObject;
 
@@ -24,37 +23,8 @@ public class SeatsStorage {
         WEIGHTED,
     }
 
-    public enum AuditEvents {
-        SEAT_CLEARED,
-        SEAT_ASSIGNED,
-        SEAT_REASSIGNED,
-        MEETING_DELETED,
-        GROUP_DELETED,
-        GROUP_CREATED,
-        MEETING_CREATED,
-        MEMBER_ADDED,
-    }
-
     public void runDBMigrations() {
         BaseMigration.runMigrations();
-    }
-
-    private static class AuditEntry {
-        private AuditEvents event;
-        private String json;
-        private String[] args;
-        private long timestamp;
-
-        public AuditEntry(AuditEvents event, String json, String[] args) {
-            this.event = event;
-            this.json = json;
-            this.args = args;
-            this.timestamp = System.currentTimeMillis();
-        }
-
-        public String toString() {
-            return String.format("%d %s: %s", timestamp, event, json);
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -96,41 +66,39 @@ public class SeatsStorage {
                 .param(member.official ? 1 : 0)
                 .executeUpdate();
 
-        AuditEntry entry = new AuditEntry(AuditEvents.MEMBER_ADDED,
-                json("netid", member.netid,
-                        "modality", member.modality.toString(),
-                        "group_id", groupId,
-                        "section_id", sectionId),
-                new String[] {
-                        // FIXME: index useful stuff
-                }
-        );
-
-        insertAuditEntry(db, entry);
+        Audit.insert(db,
+                     AuditEvents.MEMBER_ADDED,
+                     json("netid", member.netid,
+                          "modality", member.modality.toString(),
+                          "group_id", groupId,
+                          "section_id", sectionId),
+                     new String[] {
+                         // FIXME: index useful stuff
+                     }
+                     );
     }
 
     public static void clearSeat(DBConnection db, SeatAssignment seat) throws SQLException {
-        AuditEntry entry = new AuditEntry(AuditEvents.SEAT_CLEARED,
-                                          json("seat", seat.seat,
-                                               "meeting", seat.meeting.id,
-                                               "meeting_name", seat.meeting.name,
-                                               "meeting_location", seat.meeting.locationCode,
-                                               "group_name", seat.meeting.group.name,
-                                               "group_id", seat.meeting.group.id,
-                                               "section_id", seat.meeting.group.section.id,
-                                               "user", seat.netid),
-                                          new String[] {
-                                              // FIXME: index useful stuff
-                                          }
-                                          );
-
         int rowsUpdated = db.run("delete from seat_meeting_assignment where netid = ? and meeting_id = ?")
             .param(seat.netid)
             .param(seat.meeting.id)
             .executeUpdate();
 
         if (rowsUpdated > 0) {
-            insertAuditEntry(db, entry);
+            Audit.insert(db,
+                         AuditEvents.SEAT_CLEARED,
+                         json("seat", seat.seat,
+                              "meeting", seat.meeting.id,
+                              "meeting_name", seat.meeting.name,
+                              "meeting_location", seat.meeting.locationCode,
+                              "group_name", seat.meeting.group.name,
+                              "group_id", seat.meeting.group.id,
+                              "section_id", seat.meeting.group.section.id,
+                              "user", seat.netid),
+                         new String[] {
+                             // FIXME: index useful stuff
+                         }
+                         );
         }
     }
 
@@ -184,65 +152,55 @@ public class SeatsStorage {
             }
         }
 
-        AuditEvents eventType = (seat.id == null) ? AuditEvents.SEAT_ASSIGNED : AuditEvents.SEAT_REASSIGNED;
-        AuditEntry entry = new AuditEntry(eventType,
-                json("seat", seat.seat,
-                        "lastSeat", lastSeat,
-                        "meeting", seat.meeting.id,
-                        "meeting_name", seat.meeting.name,
-                        "meeting_location", seat.meeting.locationCode,
-                        "group_name", seat.meeting.group.name,
-                        "group_id", seat.meeting.group.id,
-                        "section_id", seat.meeting.group.section.id,
-                        "user", seat.netid),
-                new String[] {
-                        // FIXME: index useful stuff
-                }
-        );
-        insertAuditEntry(db, entry);
+        Audit.insert(db,
+                     (seat.id == null) ? AuditEvents.SEAT_ASSIGNED : AuditEvents.SEAT_REASSIGNED,
+                     json("seat", seat.seat,
+                          "lastSeat", lastSeat,
+                          "meeting", seat.meeting.id,
+                          "meeting_name", seat.meeting.name,
+                          "meeting_location", seat.meeting.locationCode,
+                          "group_name", seat.meeting.group.name,
+                          "group_id", seat.meeting.group.id,
+                          "section_id", seat.meeting.group.section.id,
+                          "user", seat.netid),
+                     new String[] {
+                         // FIXME: index useful stuff
+                     }
+                     );
 
         return true;
     }
 
-    public static void insertAuditEntry(DBConnection db, AuditEntry entry) throws SQLException {
-        db.run("insert into seat_audit (id, timestamp_ms, event_code, json) values (?, ?, ?, ?)")
-            .param(db.uuid())
-            .param(entry.timestamp)
-            .param(entry.event.toString())
-            .param(entry.json)
-            .executeUpdate();
-    }
-
     public static void deleteMeeting(DBConnection db, Meeting meeting) throws SQLException {
-        AuditEntry entry = new AuditEntry(AuditEvents.MEETING_DELETED,
-                                          json("meeting", meeting.id,
-                                               "meeting_name", meeting.name,
-                                               "meeting_location", meeting.locationCode,
-                                               "group_name", meeting.group.name,
-                                               "group_id", meeting.group.id,
-                                               "section_id", meeting.group.section.id),
-                                          new String[] {
-                                              // FIXME: index useful stuff
-                                          }
-                                          );
+        Audit.insert(db,
+                     AuditEvents.MEETING_DELETED,
+                     json("meeting", meeting.id,
+                          "meeting_name", meeting.name,
+                          "meeting_location", meeting.locationCode,
+                          "group_name", meeting.group.name,
+                          "group_id", meeting.group.id,
+                          "section_id", meeting.group.section.id),
+                     new String[] {
+                         // FIXME: index useful stuff
+                     }
+                     );
 
-        insertAuditEntry(db, entry);
         db.run("delete from seat_meeting where id = ?")
             .param(meeting.id)
             .executeUpdate();
     }
 
     public static void deleteGroup(DBConnection db, SeatGroup group) throws SQLException {
-        AuditEntry entry = new AuditEntry(AuditEvents.GROUP_DELETED,
-                                          json("group_name", group.name,
-                                               "group_id", group.id,
-                                               "section_id", group.section.id),
-                                          new String[] {
-                                              // FIXME: index useful stuff
-                                          }
-                                          );
+        Audit.insert(db,
+                     AuditEvents.GROUP_DELETED,
+                     json("group_name", group.name,
+                          "group_id", group.id,
+                          "section_id", group.section.id),
+                     new String[] {
+                         // FIXME: index useful stuff
+                     }
+                     );
 
-        insertAuditEntry(db, entry);
         db.run("delete from seat_group_members where group_id = ?")
             .param(group.id)
             .executeUpdate();
@@ -323,16 +281,15 @@ public class SeatsStorage {
     private static String createGroup(DBConnection db, SeatSection section, String groupTitle, List<Member> members) throws SQLException {
         String groupId = db.uuid();
 
-        AuditEntry entry = new AuditEntry(AuditEvents.GROUP_CREATED,
-                json("group_name", groupTitle,
-                        "group_id", groupId,
-                        "section_id", section.id),
-                new String[] {
-                        // FIXME: index useful stuff
-                }
-        );
-
-        insertAuditEntry(db, entry);
+        Audit.insert(db,
+                     AuditEvents.GROUP_CREATED,
+                     json("group_name", groupTitle,
+                          "group_id", groupId,
+                          "section_id", section.id),
+                     new String[] {
+                         // FIXME: index useful stuff
+                     }
+                     );
 
         db.run("insert into seat_group (id, name, section_id) values (?, ?, ?)")
             .param(groupId)
@@ -344,18 +301,17 @@ public class SeatsStorage {
         // FIXME pull location from somewhere
         String location = "FIXME";
 
-        entry = new AuditEntry(AuditEvents.MEETING_CREATED,
-                json("meeting", meetingId,
-                     "location", location,
-                     "group_name", groupTitle,
-                     "group_id", groupId,
-                     "section_id", section.id),
-                new String[] {
-                        // FIXME: index useful stuff
-                }
-        );
-
-        insertAuditEntry(db, entry);
+        Audit.insert(db,
+                     AuditEvents.MEETING_CREATED,
+                     json("meeting", meetingId,
+                          "location", location,
+                          "group_name", groupTitle,
+                          "group_id", groupId,
+                          "section_id", section.id),
+                     new String[] {
+                         // FIXME: index useful stuff
+                     }
+                     );
 
         db.run("insert into seat_meeting (id, group_id, location) values (?, ?, ?)")
                 .param(meetingId)
