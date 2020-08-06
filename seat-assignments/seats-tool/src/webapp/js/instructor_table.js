@@ -44,14 +44,20 @@ Vue.component('modal', {
 Vue.component('seat-assignment-widget', {
   template: `
     <span>
-      <input type="text" v-model="seatValue" ref="input" :class="inputCSSClasses" />
-      <button @click="save()">Save</button>
+      <input type="text" v-model="seatValue" ref="input" :class="inputCSSClasses" :readonly="!editing" v-on:keyup.enter="editOrSave()" />
+      <template v-if="editing">
+        <button @click="save()">Save</button>
+      </template>
+      <template v-else>
+        <button @click="edit()">Edit</button>
+      </template>
     </span>
   `,
   data: function() {
     return {
       hasError: false,
-      seatValue: '', 
+      seatValue: '',
+      editing: false,
     };
   },
   props: ['assignment', 'meeting', 'group', 'section'],
@@ -77,6 +83,23 @@ Vue.component('seat-assignment-widget', {
       }
   },
   methods: {
+    editOrSave: function() {
+      if (this.editing) {
+        this.save();
+      } else {
+        this.edit();
+      }
+    },
+    edit: function() {
+      this.editing = true;
+      this.focusInput();
+    },
+    focusInput: function() {
+      var self = this;
+      self.$nextTick(function() {
+        self.$refs.input.select();
+      });
+    },
     markHasError: function() {
       this.hasError = true;
     },
@@ -102,10 +125,9 @@ Vue.component('seat-assignment-widget', {
         success: function(json) {
           if (json.error) {
             self.markHasError();
-            self.$nextTick(function() {
-              self.$refs.input.select();
-            });
+            self.focusInput();
           } else {
+            // FIXME force data reload
             location.reload();
           }
         }
