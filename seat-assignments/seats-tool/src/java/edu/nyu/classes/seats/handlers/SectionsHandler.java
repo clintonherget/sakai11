@@ -48,6 +48,8 @@ import edu.nyu.classes.seats.storage.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import edu.nyu.classes.seats.api.SeatsService;
+
 public class SectionsHandler implements Handler {
 
     protected String redirectTo = null;
@@ -67,6 +69,12 @@ public class SectionsHandler implements Handler {
                     obj.put("name", "FIXME");
 
                     sections.add(obj);
+                }
+
+                if (sections.isEmpty()) {
+                    // Last ditch effort to populate this site
+                    SeatsService seats = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+                    seats.markSitesForSync(siteId);
                 }
 
                 try {

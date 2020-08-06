@@ -46,8 +46,14 @@ public class SplitSectionHandler implements Handler {
                 throw new RuntimeException("Need argument: selectionType");
             }
 
-            SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId);
-            SeatsStorage.bootstrapGroupsForSection(db, seatSection, numberOfGroups, selectionType);
+            String siteId = (String)context.get("siteId");
+            SeatsStorage.lockSiteForUpdate(siteId);
+            try {
+                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
+                SeatsStorage.bootstrapGroupsForSection(db, seatSection, numberOfGroups, selectionType);
+            } finally {
+                SeatsStorage.unlockSiteForUpdate(siteId);
+            }
 
             try {
                 response.getWriter().write(result.toString());

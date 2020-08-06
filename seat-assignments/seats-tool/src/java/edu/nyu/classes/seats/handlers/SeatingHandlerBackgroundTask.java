@@ -163,49 +163,59 @@ public class SeatingHandlerBackgroundTask extends Thread {
         List<ToProcess> sites = findSitesToProcess();
 
         for (ToProcess entry : sites) {
-            // "PROCESSING", entry.siteId, entry.lastSyncRequestTime
-            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatingHandlerBackgroundTask.java:168 BrilliantPheasant]: " + "\n    'PROCESSING' => " + ("PROCESSING") + "\n    entry.siteId => " + (entry.siteId) + "\n    entry.lastSyncRequestTime => " + (entry.lastSyncRequestTime) + "\n");
-
-            processSite(entry.siteId);
-            markAsProcessed(entry, now);
+            if (processSite(entry.siteId)) {
+                markAsProcessed(entry, now);
+            }
         }
     }
 
-    private void processSite(String siteId) {
+    private boolean processSite(String siteId) {
         try {
-            Site site = SiteService.getSite(siteId);
+            if (!SeatsStorage.trylockSiteForUpdate(siteId)) {
+                // Currently locked.  Skip processing and try again later.
+                return false;
+            }
 
-            DB.transaction
+            try {
+                Site site = SiteService.getSite(siteId);
+
+                DB.transaction
                     ("Bootstrap groups for a site and section",
-                            (DBConnection db) -> {
-                                // Sync the rosters
-                                for (Group section : site.getGroups()) {
-                                    if (section.getProviderGroupId() == null) {
-                                        continue;
-                                    }
+                     (DBConnection db) -> {
+                        // Sync the rosters
+                        for (Group section : site.getGroups()) {
+                            if (section.getProviderGroupId() == null) {
+                                continue;
+                            }
 
-                                    String rosterId = section.getProviderGroupId();
-                                    String sponsorRosterId = SeatsStorage.getSponsorSectionId(rosterId);
+                            String rosterId = section.getProviderGroupId();
+                            String sponsorRosterId = SeatsStorage.getSponsorSectionId(rosterId);
 
-                                    if (rosterId.equals(sponsorRosterId)) {
-                                        SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.empty());
-                                    } else {
-                                        SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(rosterId));
-                                    }
-                                }
+                            if (rosterId.equals(sponsorRosterId)) {
+                                SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.empty());
+                            } else {
+                                SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(rosterId));
+                            }
+                        }
 
-                                for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
-                                    SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
-                                }
+                        for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
+                            SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
+                        }
 
-                                db.commit();
+                        db.commit();
 
-                                return null;
-                            });
-        } catch (IdUnusedException e) {
-            System.err.println("SeatJob: site not found: " + siteId);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+                        return null;
+                    });
+
+                return true;
+            } catch (IdUnusedException e) {
+                System.err.println("SeatJob: site not found: " + siteId);
+                return true;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } finally {
+            SeatsStorage.unlockSiteForUpdate(siteId);
         }
     }
 }

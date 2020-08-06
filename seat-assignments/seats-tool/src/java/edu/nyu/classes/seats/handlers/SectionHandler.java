@@ -65,7 +65,7 @@ public class SectionHandler implements Handler {
                     throw new RuntimeException("Need argument: sectionId");
                 }
 
-                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId);
+                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
 
                 JSONObject sectionJSON = new JSONObject();
                 sectionJSON.put("id", seatSection.id);
