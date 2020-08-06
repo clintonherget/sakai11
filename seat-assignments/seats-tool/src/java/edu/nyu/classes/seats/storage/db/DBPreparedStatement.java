@@ -22,7 +22,7 @@
  *
  **********************************************************************************/
 
-package edu.nyu.classes.seats.storage;
+package edu.nyu.classes.seats.storage.db;
 
 import java.io.Reader;
 import java.sql.PreparedStatement;

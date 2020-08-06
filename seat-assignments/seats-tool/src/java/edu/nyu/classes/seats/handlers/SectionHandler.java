@@ -44,6 +44,7 @@ import org.sakaiproject.site.cover.SiteService;
 
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.*;
+import edu.nyu.classes.seats.storage.db.DBConnection;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

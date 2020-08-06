@@ -1,6 +1,6 @@
 package edu.nyu.classes.seats.storage.migrations;
 
-import edu.nyu.classes.seats.storage.*;
+import edu.nyu.classes.seats.storage.db.*;
 
 public class V1__Init extends BaseMigration {
 
