@@ -341,13 +341,19 @@ Vue.component('section-table', {
   data: function() {
     return {
         section: null,
+        pollInterval: null,
     };
   },
   props: ['sectionId'],
   watch: {
-    sectionId: function() {
-      this.fetchData();
+    sectionId: function(a, b) {
+      if (a != b) {
+        this.resetPolling();
+      }
     },
+  },
+  beforeDestroy: function() {
+    this.cancelPolling();
   },
   computed: {
       baseurl: function() {
@@ -370,7 +376,7 @@ Vue.component('section-table', {
           $.ajax({
               url: self.baseurl + 'section',
               data: {
-                  sectionId: this.sectionId,
+                  sectionId: self.sectionId,
               },
               type: 'get',
               dataType: 'json',
@@ -379,14 +385,28 @@ Vue.component('section-table', {
               }
           });
       },
+      cancelPolling: function() {
+        var self = this;
+        if (self.pollInterval) {
+          clearInterval(self.pollInterval);
+        }
+        
+      },
+      resetPolling: function() {
+        var self = this;
+
+        self.cancelPolling();
+
+        self.fetchData();
+
+        self.pollInterval = setInterval(function() {
+            self.fetchData();
+        }, 5000);
+      }
   },
   mounted: function() {
-      var self = this;
-      self.fetchData();
-      setInterval(function() {
-          self.fetchData();
-      }, 5000);
-  },
+    this.resetPolling();
+  }
 });
 
 
