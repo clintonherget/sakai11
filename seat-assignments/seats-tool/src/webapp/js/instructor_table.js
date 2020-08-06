@@ -440,14 +440,22 @@ Vue.component('section-selector', {
 Vue.component('instructor-table', {
   template: `
       <div>
-          <section-selector
-            ref="sectionSelector"
-            :sections="sections"
-            v-on:selectSection="handleSectionSelect">
-          </section-selector>
-          <hr />
-          <template v-if="selectedSectionId">
-              <section-table :sectionId="selectedSectionId"></section-table>
+          <template v-if="sections.length > 0">
+              <section-selector
+                  ref="sectionSelector"
+                  :sections="sections"
+                  v-on:selectSection="handleSectionSelect">
+              </section-selector>
+              <hr />
+              <template v-if="selectedSectionId">
+                  <section-table :sectionId="selectedSectionId"></section-table>
+              </template>
+              <template v-else>
+                <p>No section selected.</p>
+              </template>
+          </template>
+          <template v-else-if="fetched">
+            <p>This tool is yet to be provisioned. Please try again in a moment.</p>
           </template>
       </div>
 
@@ -456,6 +464,7 @@ Vue.component('instructor-table', {
     return {
         sections: [],
         selectedSectionId: null,
+        fetched: false,
     };
   },
   props: ['baseurl'],
@@ -468,6 +477,7 @@ Vue.component('instructor-table', {
               type: 'get',
               dataType: 'json',
               success: function (json) {
+                  self.fetched = true;
                   self.sections = json;
               }
           });
