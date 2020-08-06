@@ -37,6 +37,7 @@ import edu.nyu.classes.seats.handlers.*;
 public class ToolServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(ToolServlet.class);
+    private SeatingHandlerBackgroundTask backgroundTask = null;
 
     public void init(ServletConfig config) throws ServletException {
         // FIXME: should be false in production?
@@ -47,7 +48,14 @@ public class ToolServlet extends HttpServlet {
             new SeatsStorage().runDBMigrations();
         }
 
+        this.backgroundTask = new SeatingHandlerBackgroundTask().startThread();
+
         super.init(config);
+    }
+
+    public void destroy() {
+        super.destroy();
+        this.backgroundTask.shutdown();
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
