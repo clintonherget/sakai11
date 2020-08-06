@@ -211,7 +211,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
     private boolean processSite(String siteId) {
         try {
-            if (!SeatsStorage.trylockSiteForUpdate(siteId)) {
+            if (!Locks.trylockSiteForUpdate(siteId)) {
                 // Currently locked.  Skip processing and try again later.
                 return false;
             }
@@ -259,7 +259,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
                 throw new RuntimeException(e);
             }
         } finally {
-            SeatsStorage.unlockSiteForUpdate(siteId);
+            Locks.unlockSiteForUpdate(siteId);
         }
     }
 }

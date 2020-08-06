@@ -4,6 +4,7 @@ import edu.nyu.classes.seats.models.Meeting;
 import edu.nyu.classes.seats.models.SeatAssignment;
 import edu.nyu.classes.seats.models.SeatSection;
 import edu.nyu.classes.seats.storage.DBConnection;
+import edu.nyu.classes.seats.storage.Locks;
 import edu.nyu.classes.seats.storage.SeatsStorage;
 import org.json.simple.JSONObject;
 
@@ -47,13 +48,13 @@ public class SplitSectionHandler implements Handler {
             }
 
             String siteId = (String)context.get("siteId");
-            SeatsStorage.lockSiteForUpdate(siteId);
+            Locks.lockSiteForUpdate(siteId);
             try {
                 SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
                 SeatsStorage.bootstrapGroupsForSection(db, seatSection, numberOfGroups, selectionType);
                 SeatsStorage.markSectionAsSplit(db, seatSection);
             } finally {
-                SeatsStorage.unlockSiteForUpdate(siteId);
+                Locks.unlockSiteForUpdate(siteId);
             }
 
             try {
