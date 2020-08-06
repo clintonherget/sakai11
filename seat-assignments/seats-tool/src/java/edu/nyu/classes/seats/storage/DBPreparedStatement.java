@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -55,9 +56,9 @@ public class DBPreparedStatement {
         }
     }
 
-    public DBPreparedStatement param(Date parameter) throws SQLException {
+    public DBPreparedStatement param(Date parameter, Calendar cal) throws SQLException {
         try {
-            preparedStatement.setDate(paramCount(), new java.sql.Date(parameter.getTime()));
+            preparedStatement.setTimestamp(paramCount(), new java.sql.Timestamp(parameter.getTime()), cal);
             return this;
         } catch (SQLException e) {
             cleanup();
