@@ -9,9 +9,11 @@ public class SeatSection {
     private Map<String, SeatGroup> groups = new HashMap<>();
 
     public String id;
+    public String siteId;
 
-    public SeatSection(String id) {
+    public SeatSection(String id, String siteId) {
         this.id = id;
+        this.siteId = siteId;
     }
 
     public Collection<String> groupIds() {

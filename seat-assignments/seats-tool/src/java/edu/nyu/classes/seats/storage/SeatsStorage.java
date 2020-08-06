@@ -210,8 +210,8 @@ public class SeatsStorage {
             .executeUpdate();
     }
 
-    public static SeatSection getSeatSection(DBConnection db, String sectionId) throws SQLException {
-        SeatSection section = new SeatSection(sectionId);
+    public static SeatSection getSeatSection(DBConnection db, String sectionId, String siteId) throws SQLException {
+        SeatSection section = new SeatSection(sectionId, siteId);
 
         db.run("select sg.*, sec.id as section_id" +
                " from seat_group sg" +
@@ -478,7 +478,65 @@ public class SeatsStorage {
         return db.run("select id from seat_group_section where site_id = ?")
             .param(siteId)
             .executeQuery()
-            .map(row -> SeatsStorage.getSeatSection(db, row.getString("id")));
+            .map(row -> SeatsStorage.getSeatSection(db, row.getString("id"), siteId));
+    }
+
+    // If you've held a lock this long, something is wrong and we'll forcibly unlock
+    // you.
+    private static int MAX_LOCK_AGE_MS = 5000;
+
+    public static boolean trylockSiteForUpdate(String siteId) {
+        return DB.transaction("Get a lock for site: " + siteId,
+                              (db) -> {
+                                  long now = System.currentTimeMillis();
+                                  db.run("delete from seat_sync_locks where site_id = ? AND lock_time < ?")
+                                      .param(siteId)
+                                      .param(now - MAX_LOCK_AGE_MS)
+                                      .executeUpdate();
+
+                                  try {
+                                      db.run("insert into seat_sync_locks (site_id, lock_time) values (?, ?)")
+                                          .param(siteId)
+                                          .param(now)
+                                          .executeUpdate();
+                                  } catch (SQLException e) {
+                                      if (e.getSQLState().startsWith("23")) {
+                                          db.rollback();
+
+                                          return false;
+                                      } else {
+                                          throw e;
+                                      }
+                                  }
+
+                                  db.commit();
+                                  return true;
+                              });
+    }
+
+    public static void lockSiteForUpdate(String siteId) {
+        // This should terminate when the lock succeeds...
+        for (int i = 0; i < 10; i++) {
+            if (trylockSiteForUpdate(siteId)) {
+                break;
+            }
+
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static void unlockSiteForUpdate(String siteId) {
+        DB.transaction("Unlock site: " + siteId,
+                       (db) -> {
+                           db.run("delete from seat_sync_locks where site_id = ?").param(siteId).executeUpdate();
+                           db.commit();
+
+                           return null;
+                       });
     }
 
 }

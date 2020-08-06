@@ -92,7 +92,7 @@ public class SeatAssignmentHandler implements Handler {
                 throw new RuntimeException("Insufficient privileges");
             }
 
-            SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId);
+            SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
             Meeting meeting = seatSection.fetchGroup(groupId).get().getOrCreateMeeting(meetingId);
 
             String seat = p.getString("seat", null);
