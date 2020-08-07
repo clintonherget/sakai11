@@ -10,54 +10,55 @@
     vertical-align: middle;
 }
 
-.seats-body .seat-assignment-listing {
+.seats-body .seat-table {
     border-collapse: separate;
+    width: 100%;
 }
 
-.seats-body .seat-assignment-listing tbody tr td {
+.seats-body .seat-table tbody tr td {
     border-top: 1px solid #CCC;
 }
 
-.seats-body .seat-assignment-listing tbody tr:nth-child(2n) td {
+.seats-body .seat-table tbody tr:nth-child(2n) td {
     background-color: #FAFAFA;
 }
 
-.seats-body .seat-assignment-listing tbody tr:first-child td {
+.seats-body .seat-table tbody tr:first-child td {
     border-top: 1px solid #CCC;
 }
 
-.seats-body .seat-assignment-listing tbody tr td:first-child {
+.seats-body .seat-table tbody tr td:first-child {
     border-left: 1px solid #CCC;
 }
 
-.seats-body .seat-assignment-listing tbody tr td:last-child {
+.seats-body .seat-table tbody tr td:last-child {
     border-right: 1px solid #CCC;
 }
 
-.seats-body .seat-assignment-listing tbody tr:last-child td {
+.seats-body .seat-table tbody tr:last-child td {
     border-bottom: 1px solid #CCC;
 }
 
-.seats-body .seat-assignment-listing tbody tr:first-child td:first-child {
-    border-top-left-radius: 20px;
+.seats-body .seat-table tbody tr:first-child td:first-child {
+    border-top-left-radius: 10px;
 }
 
-.seats-body .seat-assignment-listing tbody tr:first-child td:last-child {
-    border-top-right-radius: 20px;
+.seats-body .seat-table tbody tr:first-child td:last-child {
+    border-top-right-radius: 10px;
 }
 
-.seats-body .seat-assignment-listing tbody tr:last-child td:first-child {
-    border-bottom-left-radius: 20px;
+.seats-body .seat-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 10px;
 }
 
-.seats-body .seat-assignment-listing tbody tr:last-child td:last-child {
-    border-bottom-right-radius: 20px;
+.seats-body .seat-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 10px;
 }
 
-.seats-body .seat-assignment-listing th {
+.seats-body .seat-table th {
     padding: 6px 12px;
 }
-.seats-body .seat-assignment-listing td {
+.seats-body .seat-table td {
     padding: 12px;
 }
 
