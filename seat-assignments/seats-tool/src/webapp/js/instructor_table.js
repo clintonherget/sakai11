@@ -84,7 +84,7 @@ Vue.component('seat-assignment-widget', {
         </template>
       </template>
       <template v-else>
-        <button @click="edit()">
+        <button ref="enterSeatButton" @click="edit()">
           <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> Enter Seat Assignment
         </button>
       </template>
@@ -160,7 +160,11 @@ Vue.component('seat-assignment-widget', {
     focusInput: function() {
       var self = this;
       self.$nextTick(function() {
-        self.$refs.input.focus();
+        if (self.seatValue) {
+          self.$refs.input.focus();
+        } else {
+          self.$refs.enterSeatButton.focus();
+        }
       });
     },
     selectInput: function() {
