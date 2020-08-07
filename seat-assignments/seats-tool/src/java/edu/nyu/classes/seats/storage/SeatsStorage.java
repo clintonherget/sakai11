@@ -1,6 +1,7 @@
 package edu.nyu.classes.seats.storage;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.*;
 
@@ -37,6 +38,75 @@ public class SeatsStorage {
         }
 
         return obj.toString();
+    }
+
+    public static String buildSectionName(DBConnection db, SeatSection section) throws SQLException {
+        StringBuilder sb = new StringBuilder();
+
+        db.run("select mtg.* from NYU_MV_COURSE_CATALOG cc" +
+               " inner join ps_class_mtg_pat mtg on cc.crse_id = mtg.crse_id and cc.strm = mtg.strm and cc.crse_offer_nbr = mtg.crse_offer_nbr and cc.session_code = mtg.session_code and cc.class_section = mtg.class_section" +
+               " inner join seat_group_section sgc on cc.stem_name = replace(sgc.primary_roster_id, '_', ':')" +
+               " where sgc.id = ?")
+            .param(section.id)
+            .executeQuery()
+            .each(row -> {
+                if (sb.length() > 0) {
+                    sb.append("; ");
+                }
+
+                sb.append("SEC ");
+                sb.append(row.getString("class_section"));
+                sb.append(" ");
+
+                String facilityId = row.getString("facility_id");
+                if (facilityId != null) {
+                    sb.append(facilityId);
+                    sb.append(" - ");
+                }
+                List<String> daysOfWeek = new ArrayList<>();
+                if ("Y".equals(row.getString("MON"))) {
+                    daysOfWeek.add("M");
+                }
+                if ("Y".equals(row.getString("TUES"))) {
+                    daysOfWeek.add("TU");
+                }
+                if ("Y".equals(row.getString("WED"))) {
+                    daysOfWeek.add("W");
+                }
+                if ("Y".equals(row.getString("THURS"))) {
+                    daysOfWeek.add("TH");
+                }
+                if ("Y".equals(row.getString("FRI"))) {
+                    daysOfWeek.add("F");
+                }
+                if ("Y".equals(row.getString("SAT"))) {
+                    daysOfWeek.add("SA");
+                }
+                if ("Y".equals(row.getString("SUN"))) {
+                    daysOfWeek.add("SU");
+                }
+                sb.append(daysOfWeek.stream().collect(Collectors.joining(" / ")));
+                sb.append(" ");
+                java.sql.Timestamp start = row.getTimestamp("meeting_time_start");
+                java.sql.Timestamp end = row.getTimestamp("meeting_time_end");
+                if (start != null && end != null) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("hh:mmaa");
+                    sb.append(sdf.format(start).replace(":00", ""));
+                    sb.append("-");
+                    sb.append(sdf.format(end).replace(":00", ""));
+                }
+            });
+
+        if (sb.length() == 0) {
+            db.run("select primary_roster_id from seat_group_section where id = ?")
+                .param(section.id)
+                .executeQuery()
+                .each(row -> {
+                    sb.append(row.getString("primary_roster_id").replace("_", ":"));
+                });
+        }
+
+        return sb.toString();
     }
 
     public static void syncGroupsToSection(DBConnection db, SeatSection section) throws SQLException {

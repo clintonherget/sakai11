@@ -351,7 +351,7 @@ Vue.component('section-table', {
   template: `
     <div>
       <template v-if="section">
-          <h1>{{section.id}}</h1>
+          <h1>{{section.name}}</h1>
           <split-action v-show="!section.split" :section="section" v-on:splat="resetPolling()">
           </split-action>
           <template v-for="group in sortedGroups">
@@ -439,7 +439,7 @@ Vue.component('section-selector', {
   <select v-model="selectedSectionId">
     <option value="">Select a section...</option>
     <option v-for="section in sections" :value="section.id">
-      {{section.id}}
+      {{section.name}}
     </option>
   </select>
 </div>

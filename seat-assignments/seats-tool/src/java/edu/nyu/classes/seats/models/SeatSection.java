@@ -10,8 +10,8 @@ public class SeatSection {
 
     public String id;
     public String siteId;
-    public boolean provisioned; 
-    public boolean hasSplit; 
+    public boolean provisioned;
+    public boolean hasSplit;
 
     public SeatSection(String id, String siteId, boolean provisioned, boolean hasSplit) {
         this.id = id;

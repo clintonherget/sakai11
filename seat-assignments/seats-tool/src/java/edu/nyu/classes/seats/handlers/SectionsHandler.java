@@ -67,7 +67,7 @@ public class SectionsHandler implements Handler {
                 for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
                     JSONObject obj = new JSONObject();
                     obj.put("id", section.id);
-                    obj.put("name", "FIXME");
+                    obj.put("name", SeatsStorage.buildSectionName(db, section));
 
                     sections.add(obj);
                 }
