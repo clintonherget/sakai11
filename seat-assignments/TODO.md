@@ -1,32 +1,8 @@
+  * Move student between groups
 
-  * Start on the instructor UI
+      * from group, to group.  Check that they're consistent
 
-  * Backend JSON endpoints
-
-    * Set a seat for a netid/meeting combo
-
-        - student mode and instructor mode
-
-        - student mode starts 5 minute edit window and does perm check
-
-    * Clear a seat (instructor only)
-
-        - student mode and instructor mode
-
-        - student mode does perm check
-
-    * Resplit section
-
-        * when is this possible?  flag on section to indicate when
-        it's allowed?
-
-        * instructors only
-
-    * Move student between groups
-
-        * from group, to group.  Check that they're consistent
-
-        * instructors only
+      * instructors only
 
     * Add a new empty group up to some (configurable) limit
 
@@ -38,21 +14,33 @@
 
     * Add ad-hoc person to group (?)
 
-  * Syncing roster members
-
-    * User added/dropped from roster
-
-    * Roster attached/detached from site
-
-    * Review groupsync job for other cases
-
-    * Removed users cleared from seats/meetings/groups
+  * Removed users cleared from seats/meetings/groups?
 
     * Added users assigned to smallest group & meetings
 
-        * What if incoming roster user netid matches a manual add?  Do
-          we just skip over it?
+      * What if incoming roster user netid matches a manual add?  Do
+        we just skip over it?
 
-    * email when users added to a group due to roster changes (post-split)
+      * TODO: upgrade to official
 
-* Add cache breaker to JS/CSS assets
+  * email when users added to a group due to roster changes (post-split)
+
+  * Add cache breaker to JS/CSS assets
+
+  * make sure everything is covered by audit logging
+
+  * move between groups
+
+  * official photos?
+
+  * student view - set seat + grace period
+
+  * email sending & notifications for late additions to rosters
+
+  * where are modalities coming from?
+
+  * audit all permissions
+
+  * site property overrides for instruction mode
+
+  * don't offer options for non-blended instruction mode?
