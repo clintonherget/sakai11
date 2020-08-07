@@ -84,6 +84,8 @@ public class SectionHandler implements Handler {
                 JSONArray sectionGroups = new JSONArray();
                 sectionJSON.put("groups", sectionGroups);
 
+                Map<String, String> memberNames = SeatsStorage.getMemberNames(db, seatSection.get());
+
                 for (SeatGroup group : seatSection.get().listGroups()) {
                     JSONObject groupJSON = new JSONObject();
                     sectionGroups.add(groupJSON);
@@ -113,6 +115,7 @@ public class SectionHandler implements Handler {
                             assignmentJSON.put("netid", member.netid);
                             assignmentJSON.put("official", member.official);
                             assignmentJSON.put("seat", null);
+                            assignmentJSON.put("displayName", memberNames.getOrDefault(member.netid, member.netid));
                             seatAssignmentSet.put(member.netid, assignmentJSON);
                         }
 
