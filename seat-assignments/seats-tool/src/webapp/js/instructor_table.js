@@ -77,7 +77,7 @@ Vue.component('seat-assignment-widget', {
       </template>
       <template v-else>
         <button @click="edit()">
-          <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> Seat Seat Assignment
+          <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> Set Seat Assignment
         </button>
       </template>
     </span>
