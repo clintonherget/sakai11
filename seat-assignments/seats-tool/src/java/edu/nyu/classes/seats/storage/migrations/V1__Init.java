@@ -33,6 +33,7 @@ public class V1__Init extends BaseMigration {
         "    group_id varchar2(255),                                                                         " +
         "    netid varchar2(255),                                                                            " +
         "    official number(1) not null,                                                                    " +
+        "    role varchar2(255) not null,                                                                    " +
         "    primary key (group_id, netid),                                                                  " +
         "    constraint fk_seat_group_id foreign key (group_id) references seat_group (id)                   " +
         ");                                                                                                  " +

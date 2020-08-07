@@ -71,6 +71,7 @@ public class SectionHandler implements Handler {
 
                 if (!seatSection.isPresent()) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    return;
                 }
 
 

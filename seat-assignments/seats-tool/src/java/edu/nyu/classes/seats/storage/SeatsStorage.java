@@ -156,11 +156,16 @@ public class SeatsStorage {
     }
 
     public static void addMemberToGroup(DBConnection db, Member member, String groupId, String sectionId) throws SQLException {
-        db.run("insert into seat_group_members (netid, group_id, official) values (?, ?, ?)")
-                .param(member.netid)
-                .param(groupId)
-                .param(member.official ? 1 : 0)
-                .executeUpdate();
+        if (member.isInstructor()) {
+            return;
+        }
+
+        db.run("insert into seat_group_members (netid, group_id, official, role) values (?, ?, ?, ?)")
+            .param(member.netid)
+            .param(groupId)
+            .param(member.official ? 1 : 0)
+            .param(member.role.toString())
+            .executeUpdate();
 
         Audit.insert(db,
                      AuditEvents.MEMBER_ADDED,
@@ -333,7 +338,7 @@ public class SeatsStorage {
             return Optional.of(section);
         }
 
-        db.run("select sg.*, mem.netid, mem.official" +
+        db.run("select sg.*, mem.netid, mem.official, mem.role" +
                " from seat_group sg" +
                " inner join seat_group_members mem on sg.id = mem.group_id " +
                " where sg.id in (" + db.placeholders(section.groupIds()) + ")")
@@ -343,7 +348,8 @@ public class SeatsStorage {
                     section.fetchGroup(row.getString("id"))
                         .get()
                         .addMember(row.getString("netid"),
-                                   row.getInt("official") == 1);
+                                   row.getInt("official") == 1,
+                                   Member.Role.valueOf(row.getString("role")));
                 });
 
         db.run("select sm.group_id, sm.id as meeting_id" +
@@ -434,7 +440,7 @@ public class SeatsStorage {
         CourseManagementService cms = (CourseManagementService) ComponentManager.get("org.sakaiproject.coursemanagement.api.CourseManagementService");
         for (String rosterId : rosterIds) {
             for (Membership membership : cms.getSectionMemberships(rosterId)) {
-                result.add(new Member(membership.getUserId(), true));
+                result.add(new Member(membership.getUserId(), true, Member.Role.forCMRole(membership.getRole())));
             }
         }
 
