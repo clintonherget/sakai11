@@ -302,9 +302,26 @@ Vue.component('split-action', {
   }
 });
 
+Vue.component('group-meeting-summary', {
+  template: `
+<div>
+  <small v-show="meeting.seatAssignments.length > 0">
+    <span>{{meeting.seatAssignments.length}} member<template v-if="meeting.seatAssignments.length > 0">s</template></span>
+    <span v-bind:style="{ marginLeft: '10px' }">{{locationSummary}}</span>
+  </small>
+</div>`,
+  props: ['meeting'],
+  computed: {
+    locationSummary: function() {
+      return '(TODO summary)';
+    }
+  }
+});
+
 Vue.component('group-meeting', {
   template: `
 <div>
+  <group-meeting-summary :meeting="meeting"></group-meeting-summary>
   <table class="seat-assignment-listing">
     <thead>
       <tr>
@@ -563,6 +580,9 @@ Vue.component('section-selector', {
     <option value="">Select section / cohorts</option>
     <option v-for="section in sections" :value="section.id">
       {{section.name}}
+      <template v-if="section.groupCount > 1">
+        ({{section.groupCount}} cohorts)
+      </template>
     </option>
   </select>
 </div>
