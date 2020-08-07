@@ -1,28 +1,18 @@
 .seats-body .profile-pic  {
-    height: 55px;
-    width: 55px;
+    height: 40px;
+    width: 40px;
     border-radius: 50%;
     overflow: hidden;
-    border: 1px solid #666;
+    border: 1px solid #336DBE;
     display: inline-block;
     background: #FFF;
+    box-shadow: 0 0 0 2px #FFF;
     vertical-align: middle;
 }
 
 .seats-body .seat-assignment-listing {
     border-collapse: separate;
-    width: 100%;
 }
-
-.seats-body .seat-assignment-listing thead th:first-child {
-  width: 80px;
-}
-
-.seats-body .seat-assignment-listing thead th:nth-child(3) {
-  width: 300px;
-  white-space: nowrap;
-}
-
 
 .seats-body .seat-assignment-listing tbody tr td {
     border-top: 1px solid #CCC;
@@ -72,22 +62,19 @@
 }
 
 .seats-body .seat-assignment-listing input {
-  display: inline-block;
-  width: 80px;
+    border: 1px solid #AAA;
+    padding: 5px;
+    border-radius: 2px;
 }
 
 .seats-body .seat-assignment-listing input.has-error {
-  border: 1px solid darkred;
-  background-color: #FEE;
+    border: 1px solid darkred;
+    background-color: #FEE;
 }
-
 .seats-body .seat-assignment-listing input[readonly] {
-  font-weight: bold;
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
+    border: 1px solid #EEE;
 }
 
-.seats-body .seat-assignment-listing button {
-  margin-right: 2px;
+.seats-body label {
+    font-weight: normal;
 }
