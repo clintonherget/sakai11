@@ -407,11 +407,16 @@ Vue.component('section-group', {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in membersForAdd">
-              <td><input type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
-              <td>{{user.displayName}} ({{user.netid}})</td>
-              <td>{{user.role}}</td>
-            </tr>
+            <template v-if="membersForAdd === null">
+              <tr><td colspan="3">Loading...</td></tr>
+            </template>
+            <template v-else>
+              <tr v-for="user in membersForAdd">
+                <td><input type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
+                <td>{{user.displayName}} ({{user.netid}})</td>
+                <td>{{user.role}}</td>
+              </tr>
+            </template>
           </tbody>
         </table>
      </div>
@@ -435,6 +440,9 @@ Vue.component('section-group', {
     addAdhocMembers: function() {
       var self = this;
 
+      self.selectedMembers = [];
+      self.membersForAdd = null;
+
       this.$refs.membersModal.open(function (modalElt) {
         $.ajax({
           url: self.baseurl + "/available-site-members",
@@ -445,7 +453,7 @@ Vue.component('section-group', {
           },
           dataType: 'json',
           success: function(json) {
-            self.membersForAdd = json;
+            self.membersForAdd = json.sort(function (a, b) { return a.netid.localeCompare(b.netid) });
           }
         })
       });
