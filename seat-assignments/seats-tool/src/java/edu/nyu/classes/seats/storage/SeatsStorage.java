@@ -40,7 +40,7 @@ public class SeatsStorage {
         return obj.toString();
     }
 
-    public static String buildSectionName(DBConnection db, SeatSection section) throws SQLException {
+    public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
         StringBuilder sb = new StringBuilder();
 
         db.run("select mtg.* from NYU_MV_COURSE_CATALOG cc" +
@@ -56,6 +56,11 @@ public class SeatsStorage {
 
                 sb.append("SEC ");
                 sb.append(row.getString("class_section"));
+
+                if (section.shortName == null) {
+                    section.shortName = sb.toString();
+                }
+
                 sb.append(" ");
 
                 String facilityId = row.getString("facility_id");
@@ -106,7 +111,10 @@ public class SeatsStorage {
                 });
         }
 
-        return sb.toString();
+        section.name = sb.toString();
+        if (section.shortName == null) {
+            section.shortName = section.name;
+        }
     }
 
     public static void syncGroupsToSection(DBConnection db, SeatSection section) throws SQLException {
@@ -345,6 +353,8 @@ public class SeatsStorage {
                         .addSeatAssignment(row.getString("assign_id"), row.getString("netid"), row.getString("seat"));
                 });
 
+        buildSectionName(db, section);
+
         return Optional.of(section);
     }
 
@@ -485,8 +495,11 @@ public class SeatsStorage {
 
         List<List<Member>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
 
+        
+
         for (int i=0; i<groupCount; i++) {
-            createGroup(db, section, String.format("Group %d", i + 1), membersPerGroup.get(i));
+            String groupName = String.format("%s%c", section.shortName, 65 + i);
+            createGroup(db, section, groupName, membersPerGroup.get(i));
         }
 
         markSectionAsProvisioned(db, section);

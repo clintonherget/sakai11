@@ -12,6 +12,8 @@ public class SeatSection {
     public String siteId;
     public boolean provisioned;
     public boolean hasSplit;
+    public String name;
+    public String shortName;
 
     public SeatSection(String id, String siteId, boolean provisioned, boolean hasSplit) {
         this.id = id;
