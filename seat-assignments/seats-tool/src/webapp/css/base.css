@@ -1,12 +1,11 @@
 .seats-body .profile-pic  {
-    height: 40px;
-    width: 40px;
+    height: 55px;
+    width: 55px;
     border-radius: 50%;
     overflow: hidden;
-    border: 1px solid #336DBE;
+    border: 1px solid #666;
     display: inline-block;
     background: #FFF;
-    box-shadow: 0 0 0 2px #FFF;
     vertical-align: middle;
 }
 
@@ -16,7 +15,7 @@
 }
 
 .seats-body .seat-assignment-listing thead th:first-child {
-  width: 50px;
+  width: 80px;
 }
 
 .seats-body .seat-assignment-listing thead th:nth-child(3) {
