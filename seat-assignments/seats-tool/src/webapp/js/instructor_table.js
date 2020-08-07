@@ -312,7 +312,14 @@ Vue.component('group-meeting', {
         <th>Name</th>
         <th>Seat Assignment</th>
         <th>Student Location</th>
-        <th>Section Subgroup</th>
+        <th>
+          <template v-if="$parent.isNotOnlyGroup">
+            Section Cohort
+          </template>
+          <template v-else>
+            Section
+          </template>
+        </th>
       </tr>
     </thead>
     <tbody>
