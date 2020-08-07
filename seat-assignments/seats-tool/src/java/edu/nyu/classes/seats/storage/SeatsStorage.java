@@ -506,9 +506,12 @@ public class SeatsStorage {
                 .executeUpdate();
     }
 
-    public static String getSponsorSectionId(String rosterId) {
-        // FIXME: resolve the sponsor course roster if this isn't it.
-        return rosterId;
+    public static String getSponsorSectionId(DBConnection db, String rosterId) throws SQLException {
+        return db.run("select sponsor_course from nyu_t_crosslistings where nonsponsor_course = ?")
+            .param(rosterId)
+            .executeQuery()
+            .oneString()
+            .orElse(rosterId);
     }
 
 
