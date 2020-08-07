@@ -92,22 +92,12 @@ public class ToolServlet extends HttpServlet {
                            });
 
             if (handler.hasRedirect()) {
-
-                // "REDIRECT"
-                System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[ToolServlet.java:94 BriefClam]: " + "\n    'REDIRECT' => " + ("REDIRECT") + "\n");
-
-
                 if (handler.getRedirect().startsWith("http")) {
                     response.sendRedirect(handler.getRedirect());
                 } else {
                     response.sendRedirect(toolBaseURL + handler.getRedirect());
                 }
             } else if (handler.hasTemplate()) {
-
-                // "TEMPLATE"
-                System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[ToolServlet.java:105 ImprobableHerring]: " + "\n    'TEMPLATE' => " + ("TEMPLATE") + "\n");
-
-
                 if (Boolean.TRUE.equals(context.get("layout"))) {
                     Template template = handlebars.compile("edu/nyu/classes/seats/views/layout");
                     response.getWriter().write(template.apply(context));

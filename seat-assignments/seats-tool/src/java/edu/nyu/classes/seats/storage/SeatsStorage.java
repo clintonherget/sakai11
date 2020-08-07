@@ -117,7 +117,7 @@ public class SeatsStorage {
                 java.sql.Timestamp start = row.getTimestamp("meeting_time_start");
                 java.sql.Timestamp end = row.getTimestamp("meeting_time_end");
                 if (start != null && end != null) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("hh:mmaa");
+                    SimpleDateFormat sdf = new SimpleDateFormat("h:mmaa");
                     sb.append(sdf.format(start).replace(":00", ""));
                     sb.append("-");
                     sb.append(sdf.format(end).replace(":00", ""));
