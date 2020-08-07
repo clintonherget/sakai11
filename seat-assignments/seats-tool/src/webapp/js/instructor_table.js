@@ -283,7 +283,6 @@ Vue.component('split-action', {
 Vue.component('group-meeting', {
   template: `
 <div>
-  <h3>{{meeting.name}} ({{meeting.id}})</h3>
   <table class="seat-assignment-listing">
     <thead>
       <tr>
@@ -334,7 +333,10 @@ Vue.component('group-meeting', {
 Vue.component('section-group', {
   template: `
 <div>
-  <h2>{{group.name}} ({{group.id}})</h2>
+  <template v-if="isNotOnlyGroup">
+    <h2>{{group.name}} {{groupLabel}}</h2>
+    <p>{{section.name}}</p>
+  </template>
   <template v-for="meeting in group.meetings">
     <group-meeting :group="group" :section="section" :meeting="meeting"></group-meeting>
   </template>
@@ -344,6 +346,12 @@ Vue.component('section-group', {
     baseurl: function() {
         return this.$parent.baseurl;
     },
+    isNotOnlyGroup: function() {
+      return this.section.groups.length > 1;
+    },
+    groupLabel: function() {
+      return "(" + (this.section.groups.indexOf(this.group) + 1) + " of " + this.section.groups.length +  ")";
+    }
   },
 });
 
@@ -351,7 +359,7 @@ Vue.component('section-table', {
   template: `
     <div>
       <template v-if="section">
-          <h1>{{section.name}}</h1>
+          <h2 v-show="section.groups.length === 1">{{section.name}}</h2>
           <split-action v-show="!section.split" :section="section" v-on:splat="resetPolling()">
           </split-action>
           <template v-for="group in sortedGroups">

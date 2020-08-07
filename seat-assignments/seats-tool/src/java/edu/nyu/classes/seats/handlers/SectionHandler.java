@@ -76,7 +76,8 @@ public class SectionHandler implements Handler {
 
                 JSONObject sectionJSON = new JSONObject();
                 sectionJSON.put("id", seatSection.get().id);
-                sectionJSON.put("name", SeatsStorage.buildSectionName(db, seatSection.get()));
+                sectionJSON.put("name", seatSection.get().name);
+                sectionJSON.put("shortName", seatSection.get().shortName);
                 sectionJSON.put("provisioned", seatSection.get().provisioned);
                 sectionJSON.put("split", seatSection.get().hasSplit);
 
