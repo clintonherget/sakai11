@@ -199,7 +199,10 @@
   }
 
   .icon-sakai--nyu-seat-assignments {
-    @extend .fa-map-marker;
+    font-family: 'nyu-classes-icons' !important;
+    &:before {
+      content: '\f1c9' !important;
+    }
   }
 
 }
