@@ -297,7 +297,29 @@ public class HTMLWorker implements SimpleXMLDocHandler, DocListener {
 						img = Image.getInstance(src);
 					}
 					else {
-						img = Image.getInstance(URLDecoder.decode(src));
+						String access_prefix = "https://newclasses.nyu.edu/access/content";
+						String resourceId = "";
+						try {
+							if (src.startsWith(access_prefix)) {
+								// Attempt to grab the image from the ContentHostingService instead of
+								// round-tripping through our own web server.  Otherwise we hit permission
+								// issues.
+								resourceId = src.substring(access_prefix.length());
+								ContentResource contentResource = ContentHostingService.getResource(resourceId);
+								byte[] imageBytes = contentResource.getContent();
+
+								if (imageBytes != null) {
+									img = Image.getInstance(imageBytes);
+								}
+							}
+						} catch (Exception e) {
+							System.err.println(String.format("Couldn't fetch resource: %s (error: %s).  Falling back to GET.",
+											 resourceId, e));
+						}
+
+						if (img == null) {
+							img = Image.getInstance(URLDecoder.decode(src));
+						}
 					}
 				}
 

@@ -20,6 +20,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -60,6 +61,9 @@ import org.sakaiproject.tool.assessment.ui.listener.util.ContextUtil;
 import org.sakaiproject.util.FormattedText;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.cover.ContentHostingService;
+
 
 import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
@@ -685,12 +689,37 @@ public class PDFAssessmentBean implements Serializable {
 				int h=-1;
 				try {
 					URL url = new URL(ServerConfigurationService.getServerUrl()+imsrc);
-					img_in = ImageIO.read(url);
+
+					String access_prefix = "/access/content";
+					String resourceId = "";
+					try {
+						if (imsrc.startsWith(access_prefix)) {
+							// Attempt to grab the image from the ContentHostingService instead of
+							// round-tripping through our own web server.  Otherwise we hit permission
+							// issues.
+							resourceId = imsrc.substring(access_prefix.length());
+							ContentResource contentResource = ContentHostingService.getResource(resourceId);
+							InputStream imageStream = contentResource.streamContent();
+
+							if (imageStream != null) {
+								img_in = ImageIO.read(imageStream);
+							}
+						}
+					} catch (Exception e) {
+						System.err.println(String.format("Couldn't fetch resource: %s (error: %s).  Falling back to GET.",
+										 resourceId, e));
+					}
+
+
+					if (img_in == null) {
+						img_in = ImageIO.read(url);
+					}
+
 					w = img_in.getWidth(null);
 					h = img_in.getHeight(null);					
 				} catch (IOException e) {
 					log.error(e.getMessage(), e);
-			}
+				}
 				
 				Color c = new Color(27, 148, 224, 80);
 				java.awt.Font font = new java.awt.Font("Serif", java.awt.Font.BOLD, 10);
