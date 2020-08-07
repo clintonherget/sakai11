@@ -56,7 +56,6 @@ public class SectionHandler implements Handler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
             try {
-                // Site site = SiteService.getSite();
                 String siteId = (String)context.get("siteId");
                 DBConnection db = (DBConnection)context.get("db");
 
@@ -68,12 +67,6 @@ public class SectionHandler implements Handler {
                 }
 
                 Optional<SeatSection> seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
-
-                if (!seatSection.isPresent()) {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    return;
-                }
-
 
                 JSONObject sectionJSON = new JSONObject();
                 sectionJSON.put("id", seatSection.get().id);
@@ -166,6 +159,11 @@ public class SectionHandler implements Handler {
 
     public String getRedirect() {
         return "";
+    }
+
+    @Override
+    public boolean isSiteUpdRequired() {
+        return false;
     }
 }
 

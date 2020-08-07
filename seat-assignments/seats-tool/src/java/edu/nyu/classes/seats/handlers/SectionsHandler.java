@@ -118,6 +118,11 @@ public class SectionsHandler implements Handler {
     public String getRedirect() {
         return "";
     }
+
+    @Override
+    public boolean isSiteUpdRequired() {
+        return false;
+    }
 }
 
 

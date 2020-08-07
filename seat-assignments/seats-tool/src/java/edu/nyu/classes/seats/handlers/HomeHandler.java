@@ -13,7 +13,11 @@ public class HomeHandler implements Handler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
-            context.put("subpage", "instructor_home");
+            if ((boolean)context.get("hasSiteUpd")) {
+                context.put("subpage", "instructor_home");
+            } else {
+                context.put("subpage", "student_home");
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -34,6 +38,11 @@ public class HomeHandler implements Handler {
 
     public String getRedirect() {
         return "";
+    }
+
+    @Override
+    public boolean isSiteUpdRequired() {
+        return false;
     }
 }
 

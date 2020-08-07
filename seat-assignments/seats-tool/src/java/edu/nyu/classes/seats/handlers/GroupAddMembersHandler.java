@@ -31,7 +31,6 @@ public class GroupAddMembersHandler implements Handler {
 
     protected String redirectTo = null;
 
-    // FIXME: permission check EVERYTHING
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {

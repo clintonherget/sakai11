@@ -66,21 +66,21 @@
 }
 
 .seats-body .seat-assignment-listing thead th:nth-child(3) {
-  width: 300px;
+  min-width: 300px;
   white-space: nowrap;
 }
 
-.seats-body .seat-assignment-listing input {
+.seats-body .seat-assignment-widget input {
   display: inline-block;
   width: 80px;
 }
 
-.seats-body .seat-assignment-listing input.has-error {
+.seats-body .seat-assignment-widget input.has-error {
     border: 1px solid darkred;
     background-color: #FEE;
 }
 
-.seats-body .seat-assignment-listing input[readonly] {
+.seats-body .seat-assignment-widget input[readonly] {
   font-weight: bold;
   border-color: transparent;
   background: transparent;
@@ -89,4 +89,8 @@
 
 .seats-body label {
     font-weight: normal;
+}
+
+.seats-body .seats-student .seat-assignment-widget {
+    width: 400px;
 }

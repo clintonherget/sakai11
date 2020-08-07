@@ -67,7 +67,7 @@ public class SeatAssignmentHandler implements Handler {
             RequestParams p = new RequestParams(request);
 
             User currentUser = UserDirectoryService.getCurrentUser();
-            boolean isInstructor = SecurityService.unlock("site.upd", "/site/" + siteId);
+            boolean isInstructor = (boolean)context.get("hasSiteUpd");
 
             String sectionId = p.getString("sectionId", null);
             if (sectionId == null) {
@@ -87,10 +87,6 @@ public class SeatAssignmentHandler implements Handler {
             String netid = p.getString("netid", null);
             if (netid == null) {
                 throw new RuntimeException("Need argument: netid");
-            }
-
-            if (!isInstructor && !netid.equals(currentUser.getEid())) {
-                throw new RuntimeException("Insufficient privileges");
             }
 
             SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
@@ -147,6 +143,11 @@ public class SeatAssignmentHandler implements Handler {
 
     public String getRedirect() {
         return "";
+    }
+
+    @Override
+    public boolean isSiteUpdRequired() {
+        return false;
     }
 }
 
