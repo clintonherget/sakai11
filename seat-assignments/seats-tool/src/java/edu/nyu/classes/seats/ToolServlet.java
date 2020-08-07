@@ -9,8 +9,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.servlet.ServletConfig;
@@ -19,15 +17,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.authz.cover.SecurityService;
-import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
-import org.sakaiproject.tool.api.Session;
-import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
-import org.sakaiproject.user.cover.PreferencesService;
-import org.sakaiproject.user.cover.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +73,18 @@ public class ToolServlet extends HttpServlet {
                 context.put("siteId", ToolManager.getCurrentPlacement().getContext());
             }
 
+            context.put("hasSiteUpd", hasSiteUpd((String)context.get("siteId")));
+
             Handler handler = handlerForRequest(request);
+
+            if (handler.isSiteUpdRequired() && !(boolean)context.get("hasSiteUpd")) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            } else if (!hasSiteVisit((String)context.get("siteId"))) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
             response.setHeader("Content-Type", handler.getContentType());
 
             DB.transaction("Handle seats API request",
@@ -143,6 +147,10 @@ public class ToolServlet extends HttpServlet {
 
         if (path.startsWith("/add-group-users")) {
             return new GroupAddMembersHandler();
+        }
+
+        if (path.startsWith("/student-meetings")) {
+            return new StudentMeetingsHandler();
         }
 
         // FIXME
@@ -267,5 +275,13 @@ public class ToolServlet extends HttpServlet {
         });
 
         return handlebars;
+    }
+
+    private boolean hasSiteUpd(String siteId) {
+        return SecurityService.unlock("site.upd", "/site/" + siteId);
+    }
+
+    private boolean hasSiteVisit(String siteId) {
+        return SecurityService.unlock("site.visit", "/site/" + siteId);
     }
 }

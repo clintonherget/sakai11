@@ -22,6 +22,7 @@ public class SplitSectionHandler implements Handler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
         try {
+            String siteId = (String)context.get("siteId");
             DBConnection db = (DBConnection)context.get("db");
 
             RequestParams p = new RequestParams(request);
@@ -45,7 +46,6 @@ public class SplitSectionHandler implements Handler {
                 throw new RuntimeException("Need argument: selectionType");
             }
 
-            String siteId = (String)context.get("siteId");
             Locks.lockSiteForUpdate(siteId);
             try {
                 SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
