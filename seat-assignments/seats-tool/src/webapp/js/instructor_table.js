@@ -23,7 +23,15 @@ Vue.component('modal', {
   `,
   props: [],
   methods: {
-    open: function() {
+    open: function(callback) {
+      var self = this;
+
+      if (callback) {
+        $(this.$refs.modal).on('shown.bs.modal', function () {
+          callback(self.$refs.modal);
+        })
+      }
+
       $(this.$refs.modal).modal('show');
     },
     close: function() {
@@ -340,8 +348,86 @@ Vue.component('section-group', {
   <template v-for="meeting in group.meetings">
     <group-meeting :group="group" :section="section" :meeting="meeting"></group-meeting>
   </template>
+  <button @click="addAdhocMembers()">Add Non-Official Site Member(s)</button>
+  <modal ref="membersModal">
+    <template v-slot:header>Add Non-Official Site Member(s) {{group.name}}</template>
+    <template v-slot:body>
+      <div>
+        <p>Select manually-added, non-official site members in this site to ad to this cohort. For more information on manually adding members to your course <a href="">click here</a>.</p>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Participant</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in membersForAdd">
+              <td><input type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
+              <td>{{user.displayName}} ({{user.netid}})</td>
+              <td>{{user.role}}</td>
+            </tr>
+          </tbody>
+        </table>
+     </div>
+
+    </template>
+    <template v-slot:footer>
+      <button @click="saveUsers()" class="pull-left primary">Add Member(s)</button>
+      <button @click="closeModal()">Cancel</button>
+    </template>
+  </modal>
+
 </div>`,
   props: ['section', 'group'],
+  data: function () {
+    return {
+      selectedMembers: [],
+      membersForAdd: [],
+    }
+  },
+  methods: {
+    addAdhocMembers: function() {
+      var self = this;
+
+      this.$refs.membersModal.open(function (modalElt) {
+        $.ajax({
+          url: self.baseurl + "/available-site-members",
+          type: 'get',
+          data: {
+            sectionId: self.section.id,
+            groupId: self.group.id,
+          },
+          dataType: 'json',
+          success: function(json) {
+            self.membersForAdd = json;
+          }
+        })
+      });
+    },
+    saveUsers: function() {
+      var self = this;
+
+      $.ajax({
+        url: self.baseurl + "/add-group-users",
+        type: 'post',
+        data: {
+          sectionId: self.section.id,
+          groupId: self.group.id,
+          selectedMembers: self.selectedMembers,
+        },
+        success: function() {
+          self.$emit('splat');
+          self.closeModal();
+        }
+      });
+    },
+    closeModal: function() {
+      this.$refs.membersModal.close();
+    },
+  },
   computed: {
     baseurl: function() {
         return this.$parent.baseurl;
@@ -363,7 +449,7 @@ Vue.component('section-table', {
           <split-action v-show="!section.split" :section="section" v-on:splat="resetPolling()">
           </split-action>
           <template v-for="group in sortedGroups">
-            <section-group :group="group" :section="section"></section-group>
+            <section-group :group="group" :section="section" v-on:splat="resetPolling()"></section-group>
           </template>
       </template>
     </div>

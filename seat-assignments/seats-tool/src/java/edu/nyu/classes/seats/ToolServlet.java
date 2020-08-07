@@ -147,6 +147,14 @@ public class ToolServlet extends HttpServlet {
             return new SplitSectionHandler();
         }
 
+        if (path.startsWith("/available-site-members")) {
+            return new MembersForAddHandler();
+        }
+
+        if (path.startsWith("/add-group-users")) {
+            return new GroupAddMembersHandler();
+        }
+
         // FIXME
         return new HomeHandler();
     }
