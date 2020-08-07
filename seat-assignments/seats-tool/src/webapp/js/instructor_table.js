@@ -300,7 +300,7 @@ Vue.component('group-meeting', {
             <img :src="'/direct/profile/' + assignment.netid + '/image'"/>
           </div>
         </td>
-        <td>TODO_NAME ({{assignment.netid}})</td>
+        <td>{{assignment.displayName}} ({{assignment.netid}})</td>
         <td>
           <seat-assignment-widget :assignment="assignment" :meeting="meeting" :group="group" :section="section">
           </seat-assignment-widget>

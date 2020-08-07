@@ -16,6 +16,8 @@ import edu.nyu.classes.seats.storage.migrations.BaseMigration;
 import edu.nyu.classes.seats.storage.Audit.AuditEvents;
 
 import org.json.simple.JSONObject;
+import org.sakaiproject.user.api.User;
+import org.sakaiproject.user.cover.UserDirectoryService;
 
 public class SeatsStorage {
     public static int EDIT_WINDOW_MS = 5 * 60 * 1000;
@@ -38,6 +40,21 @@ public class SeatsStorage {
         }
 
         return obj.toString();
+    }
+
+    public static Map<String, String> getMemberNames(DBConnection db, SeatSection seatSection) throws SQLException {
+        Map<String, String> result = new HashMap<>();
+        Set<String> allEids = new HashSet<>();
+
+        for (SeatGroup group : seatSection.listGroups()) {
+            allEids.addAll(group.listMembers().stream().map(m -> m.netid).collect(Collectors.toList()));
+        }
+
+        for (User user : UserDirectoryService.getUsersByEids(allEids)) {
+            result.put(user.getEid(), user.getDisplayName());
+        }
+
+        return result;
     }
 
     public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
