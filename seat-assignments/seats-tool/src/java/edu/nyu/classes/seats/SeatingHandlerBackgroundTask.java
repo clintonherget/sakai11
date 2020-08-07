@@ -229,7 +229,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
                             }
 
                             String rosterId = section.getProviderGroupId();
-                            String sponsorRosterId = SeatsStorage.getSponsorSectionId(rosterId);
+                            String sponsorRosterId = SeatsStorage.getSponsorSectionId(db, rosterId);
 
                             if (rosterId.equals(sponsorRosterId)) {
                                 SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.empty());
