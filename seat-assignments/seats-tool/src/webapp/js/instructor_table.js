@@ -225,13 +225,16 @@ Vue.component('seat-assignment-widget', {
 Vue.component('split-action', {
   template: `
 <div>
-  <button @click="openModal()">Split</button>
+  <button @click="openModal()">Create Section Cohorts</button>
   <modal ref="splitModal">
-    <template v-slot:header>Split Section into Groups</template>
+    <template v-slot:header>Create Section Cohorts</template>
     <template v-slot:body>
       <div>
-        <label for="numberofgroups">Number of Groups</label>
-        <select id="numberofgroups" v-model="numberOfGroups">
+        <p>Break down your section into cohorts, which can be used to create multiple seating charts for the same room
+           (e.g., if different cohorts will alternate in-class attendance by week).</p>
+        <p>Section membership will be randomly distributed among the cohorts according to the rules defined below.</p>
+        <label for="numberofgroups">Number of cohorts to create:</label>
+        <select id="numberofgroups" v-model="numberOfGroups" class="form-control">
           <option>1</option>
           <option>2</option>
           <option>3</option>
@@ -239,15 +242,22 @@ Vue.component('split-action', {
         </select>
       </div>
       <div>
-        <label for="selectionType">Selection Type</label>
-        <select id="selectionType" v-model="selectionType">
-          <option>RANDOM</option>
-          <option>WEIGHTED</option>
-        </select>
+        <label for="selectionType">Remote student random cohort assignment:</label>
+        <div class="well">
+          <label>
+            <input type="radio" v-model="selectionType" value="RANDOM"/> 
+            Split remote students evenly among the created cohorts
+          </label>
+          <label>
+            <input type="radio" v-model="selectionType" value="WEIGHTED"/> 
+            Group remote students together in one cohort (if possible)
+          </label>
+          <p>Note: In-Person section members will be distributed randomly across the cohorts regardless of the options selected above.</p>
+        </div>
       </div>
     </template>
     <template v-slot:footer>
-      <button @click="performSplit()" class="pull-left primary">Perform Split</button>
+      <button @click="performSplit()" class="pull-left btn-primary">Save</button>
       <button @click="closeModal()">Cancel</button>
     </template>
   </modal>
@@ -301,7 +311,7 @@ Vue.component('group-meeting', {
         <th>Picture</th>
         <th>Name</th>
         <th>Seat Assignment</th>
-        <th>Modality</th>
+        <th>Student Location</th>
         <th>Section Subgroup</th>
       </tr>
     </thead>
@@ -318,11 +328,16 @@ Vue.component('group-meeting', {
           </seat-assignment-widget>
         </td>
         <td>
-          TODO_MODALITY 
+          TODO 
           <template v-if="!assignment.official">(Unofficial)</template>
         </td>
         <td>
-          TODO
+          <template v-if="$parent.isNotOnlyGroup">
+            {{group.name}}
+          </template>
+          <template v-else>
+            {{section.shortName}}
+          </template>
         </td>
       </tr>
     </tbody>
@@ -534,8 +549,11 @@ Vue.component('section-table', {
 Vue.component('section-selector', {
   template: `
 <div>
-  <select v-model="selectedSectionId">
-    <option value="">Select a section...</option>
+  <label for="sectionSelector">
+    Viewing seat assignments for:
+  </label>
+  <select v-model="selectedSectionId" id="sectionSelector">
+    <option value="">Select section / cohorts</option>
     <option v-for="section in sections" :value="section.id">
       {{section.name}}
     </option>
@@ -572,7 +590,10 @@ Vue.component('instructor-table', {
                   <section-table :sectionId="selectedSectionId"></section-table>
               </template>
               <template v-else>
-                <p>No section selected.</p>
+                <center>
+                  <img src="/seats-tool/images/splash.png" alt="Select a section instructional art"/>
+                  <p>Select a section / cohort from the dropdown menu above.</p>
+                </center>
               </template>
           </template>
           <template v-else-if="fetched">
