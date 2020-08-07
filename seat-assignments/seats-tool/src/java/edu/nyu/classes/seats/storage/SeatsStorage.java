@@ -42,15 +42,20 @@ public class SeatsStorage {
         return obj.toString();
     }
 
-    public static Map<String, String> getMemberNames(DBConnection db, SeatSection seatSection) throws SQLException {
-        Map<String, String> result = new HashMap<>();
+    public static Map<String, String> getMemberNames(SeatSection seatSection) {
         Set<String> allEids = new HashSet<>();
 
         for (SeatGroup group : seatSection.listGroups()) {
             allEids.addAll(group.listMembers().stream().map(m -> m.netid).collect(Collectors.toList()));
         }
 
-        for (User user : UserDirectoryService.getUsersByEids(allEids)) {
+        return getMemberNames(allEids);
+    }
+
+    public static Map<String, String> getMemberNames(Collection<String> eids) {
+        Map<String, String> result = new HashMap<>();
+
+        for (User user : UserDirectoryService.getUsersByEids(eids)) {
             result.put(user.getEid(), user.getDisplayName());
         }
 
@@ -156,7 +161,7 @@ public class SeatsStorage {
     }
 
     public static void addMemberToGroup(DBConnection db, Member member, String groupId, String sectionId) throws SQLException {
-        if (member.isInstructor()) {
+        if (member.isInstructor() && member.official) {
             return;
         }
 
@@ -450,6 +455,10 @@ public class SeatsStorage {
     private static List<List<Member>> splitMembersForGroup(List<Member> members, int groupCount, SelectionType selection) {
         List<List<Member>> result = new ArrayList<>();
 
+        members = members.stream()
+            .filter((m) -> !(m.role.equals(Member.Role.INSTRUCTOR) && m.official))
+            .collect(Collectors.toList());
+
         Collections.shuffle(members);
 
         if (SelectionType.WEIGHTED.equals(selection)) {
@@ -517,8 +526,6 @@ public class SeatsStorage {
         List<Member> sectionMembers = getMembersForSection(db, section);
 
         List<List<Member>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
-
-        
 
         for (int i=0; i<groupCount; i++) {
             String groupName = String.format("%s%c", section.shortName, 65 + i);

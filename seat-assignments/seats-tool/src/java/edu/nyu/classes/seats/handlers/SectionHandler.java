@@ -85,7 +85,7 @@ public class SectionHandler implements Handler {
                 JSONArray sectionGroups = new JSONArray();
                 sectionJSON.put("groups", sectionGroups);
 
-                Map<String, String> memberNames = SeatsStorage.getMemberNames(db, seatSection.get());
+                Map<String, String> memberNames = SeatsStorage.getMemberNames(seatSection.get());
 
                 for (SeatGroup group : seatSection.get().listGroups()) {
                     JSONObject groupJSON = new JSONObject();
