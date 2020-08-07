@@ -322,7 +322,7 @@ Vue.component('group-meeting', {
   template: `
 <div>
   <group-meeting-summary :meeting="meeting"></group-meeting-summary>
-  <table class="seat-assignment-listing">
+  <table class="seat-table seat-assignment-listing">
     <thead>
       <tr>
         <th>Picture</th>
@@ -398,7 +398,7 @@ Vue.component('section-group', {
       <div>
         <p>Select manually-added, non-official site members in this site to ad to this cohort. For more information on manually adding members to your course <a href="">click here</a>.</p>
 
-        <table class="table">
+        <table class="seat-table">
           <thead>
             <tr>
               <th></th>
