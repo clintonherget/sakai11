@@ -528,7 +528,7 @@ public class SeatsStorage {
         List<List<Member>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
 
         for (int i=0; i<groupCount; i++) {
-            String groupName = String.format("%s%c", section.shortName, 65 + i);
+            String groupName = String.format("%s-%c", section.shortName, 65 + i);
             createGroup(db, section, groupName, membersPerGroup.get(i));
         }
 
