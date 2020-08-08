@@ -2,6 +2,7 @@ package edu.nyu.classes.seats.storage;
 
 import edu.nyu.classes.seats.storage.db.*;
 
+import java.util.*;
 import java.sql.SQLException;
 
 public class Locks {
@@ -9,7 +10,14 @@ public class Locks {
     // you.
     private static int MAX_LOCK_AGE_MS = 5000;
 
+    private static ThreadLocal<HashSet<String>> locksHeldBySiteId = ThreadLocal.withInitial(() -> new HashSet<>());
+
     public static boolean trylockSiteForUpdate(String siteId) {
+        if (locksHeldBySiteId.get().contains(siteId)) {
+            // Lock already held
+            return true;
+        }
+
         return DB.transaction("Get a lock for site: " + siteId,
                               (db) -> {
                                   long now = System.currentTimeMillis();
@@ -34,6 +42,7 @@ public class Locks {
                                   }
 
                                   db.commit();
+                                  locksHeldBySiteId.get().add(siteId);
                                   return true;
                               });
     }
@@ -59,6 +68,7 @@ public class Locks {
                            db.run("delete from seat_sync_locks where site_id = ?").param(siteId).executeUpdate();
                            db.commit();
 
+                           locksHeldBySiteId.get().remove(siteId);
                            return null;
                        });
     }
