@@ -43,6 +43,13 @@ public class Locks {
 
                                   db.commit();
                                   locksHeldBySiteId.get().add(siteId);
+
+                                  if (locksHeldBySiteId.get().size() > 1) {
+                                      // Did someone forget to release a lock?
+                                      System.err.println("WARNING: Multiple locks held by a single thread.  This shouldn't happen!");
+
+                                  }
+
                                   return true;
                               });
     }
