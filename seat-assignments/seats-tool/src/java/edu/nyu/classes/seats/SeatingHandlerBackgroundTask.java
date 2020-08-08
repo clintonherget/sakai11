@@ -213,6 +213,10 @@ public class SeatingHandlerBackgroundTask extends Thread {
         try {
             if (!Locks.trylockSiteForUpdate(siteId)) {
                 // Currently locked.  Skip processing and try again later.
+                System.err.println(String.format("%s: SeatingHandlerBackgroundTask: Site %s already locked for update.  Skipping...",
+                                                 new Date(),
+                                                 siteId));
+
                 return false;
             }
 
