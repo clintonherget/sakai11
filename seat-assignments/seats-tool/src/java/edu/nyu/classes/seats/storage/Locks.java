@@ -4,8 +4,14 @@ import edu.nyu.classes.seats.storage.db.*;
 
 import java.util.*;
 import java.sql.SQLException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class Locks {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Locks.class);
+
     // If you've held a lock this long, something is wrong and we'll forcibly unlock
     // you.
     private static int MAX_LOCK_AGE_MS = 5000;
@@ -46,7 +52,7 @@ public class Locks {
 
                                   if (locksHeldBySiteId.get().size() > 1) {
                                       // Did someone forget to release a lock?
-                                      System.err.println("WARNING: Multiple locks held by a single thread.  This shouldn't happen!");
+                                      LOG.warn("WARNING: Multiple locks held by a single thread.  This shouldn't happen!");
 
                                   }
 
