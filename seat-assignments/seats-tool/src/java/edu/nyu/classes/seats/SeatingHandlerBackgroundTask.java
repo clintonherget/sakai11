@@ -1,54 +1,25 @@
 package edu.nyu.classes.seats;
 
-import org.sakaiproject.exception.IdUnusedException;
-import org.sakaiproject.site.api.Group;
-
+import edu.nyu.classes.seats.api.SeatsService;
+import edu.nyu.classes.seats.models.*;
+import edu.nyu.classes.seats.storage.*;
+import edu.nyu.classes.seats.storage.db.*;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.*;
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.nyu.classes.seats.models.*;
-import edu.nyu.classes.seats.storage.*;
-import edu.nyu.classes.seats.storage.db.*;
-
-import edu.nyu.classes.seats.api.SeatsService;
-
-import org.sakaiproject.component.cover.ComponentManager;
-
-// SeatsService service = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
-
-// DB.transaction
-//     ("@DEBUG TESTING",
-//      (DBConnection db) -> {
-//         java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(64);
-//
-//         for (String siteId : db.run("select site_id from sakai_site").executeQuery().getStringColumn("site_id")) {
-//             pool.execute(() -> { service.markSitesForSync(siteId); });
-//         }
-//
-//         pool.shutdown();
-//
-//         return null;
-//     });
-// Get the sections (possibly combined) - getMembers()
-//   - group by combined rosters (crosslisted and explicitly combined)
-//   - gives us list of SeatSections
-//   - match each SeatSection to existing groups by any of their contained section ids
-//   - create a new group for any SeatSection that didn't match
-
-// Create groups...
-//   (creates a meeting)
-//   (assigns the initial student set)
-
-
-
-
-// TODO: make this a background thread/quartz job
 public class SeatingHandlerBackgroundTask extends Thread {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SeatingHandlerBackgroundTask.class);
 
     private static long WINDOW_MS = 5000;
     private Map<String, Long> recentProcessed = new LinkedHashMap<>();
@@ -203,11 +174,11 @@ public class SeatingHandlerBackgroundTask extends Thread {
         List<ToProcess> sites = findSitesToProcess(findProcessedSince);
 
         for (ToProcess entry : sites) {
-            // "Processing site", entry.siteId
-            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatingHandlerBackgroundTask.java:205 NiftyFowl]: " + "\n    'Processing site' => " + ("Processing site") + "\n    entry.siteId => " + (entry.siteId) + "\n");
+            long startTime = System.currentTimeMillis();
 
             if (processSite(entry.siteId)) {
                 markAsProcessed(entry, now);
+                LOG.info(String.format("Processed site %s in %d ms", entry.siteId, (System.currentTimeMillis() - startTime)));
             }
         }
 
@@ -218,9 +189,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         try {
             if (!Locks.trylockSiteForUpdate(siteId)) {
                 // Currently locked.  Skip processing and try again later.
-                System.err.println(String.format("%s: SeatingHandlerBackgroundTask: Site %s already locked for update.  Skipping...",
-                                                 new Date(),
-                                                 siteId));
+                LOG.info(String.format("Site %s already locked for update.  Skipping...", siteId));
 
                 return false;
             }
@@ -262,7 +231,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
                 return true;
             } catch (IdUnusedException e) {
-                System.err.println("SeatJob: site not found: " + siteId);
+                LOG.info("SeatJob: site not found: " + siteId);
                 return true;
             } catch (Exception e) {
                 throw new RuntimeException(e);

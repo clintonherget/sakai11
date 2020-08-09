@@ -8,11 +8,10 @@
 package edu.nyu.classes.seats;
 
 import edu.nyu.classes.seats.api.SeatsService;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,15 +21,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.sakaiproject.db.cover.SqlService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class SeatsServiceImpl implements SeatsService {
-    public void init() {
-    }
-    public void destroy() {
-    }
 
-    // FIXME: use a sequence instead?
+    private static final Logger LOG = LoggerFactory.getLogger(SeatsServiceImpl.class);
+
+    public void init() {}
+    public void destroy() {}
+
     private void insertRequests(Connection db, String[] siteIds) throws SQLException {
         long now = System.currentTimeMillis();
         boolean[] synced = new boolean[siteIds.length];
@@ -75,8 +76,7 @@ public class SeatsServiceImpl implements SeatsService {
 
     public void markSitesForSync(String ...siteIds) {
         for (String siteId : siteIds) {
-            // "MARKING SITE FOR SYNC", siteId
-            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatsServiceImpl.java:80 DefensiveEagle]: " + "\n    'MARKING SITE FOR SYNC' => " + ("MARKING SITE FOR SYNC") + "\n    siteId => " + (siteId) + "\n");
+            LOG.info("Marking site for sync: " + siteId);
         }
 
         Connection db = null;
@@ -90,7 +90,8 @@ public class SeatsServiceImpl implements SeatsService {
             db.commit();
             db.setAutoCommit(autoCommit);
         } catch (SQLException e) {
-            System.err.println(String.format("%s Failure during site sync update: %s", new Date(), e));
+            LOG.error(String.format("Failure during site sync update: %s", e));
+            e.printStackTrace();
         } finally {
             if (db != null) {
                 SqlService.returnConnection(db);
@@ -159,7 +160,8 @@ public class SeatsServiceImpl implements SeatsService {
             db.commit();
             db.setAutoCommit(autoCommit);
         } catch (SQLException e) {
-            System.err.println(String.format("%s Failure during site sync update: %s", new Date(), e));
+            LOG.error(String.format("Failure during site sync update: %s", e));
+            e.printStackTrace();
         } finally {
             if (db != null) {
                 SqlService.returnConnection(db);
