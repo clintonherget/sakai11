@@ -14,12 +14,16 @@ public class V1__Init extends BaseMigration {
         "    constraint uniq_section_id_siteid unique (primary_roster_id, site_id)                           " +
         ");                                                                                                  " +
 
+        "create index sgs_roster_stem on seat_group_section (replace(primary_roster_id, '_', ':'));          " +
+
         "create table seat_group_section_rosters (                                                           " +
         "    sakai_roster_id varchar2(255)            ,                                                      " +
         "    role varchar2(255),                                                                             " +
         "    section_id varchar2(255),                                                                       " +
         "    constraint fk_seat_group_section_id foreign key (section_id) references seat_group_section (id) " +
         ");                                                                                                  " +
+
+        "create index sgsr_section_roster on seat_group_section_rosters (section_id, sakai_roster_id);       " +
 
         "create table seat_group (                                                                           " +
         "    id varchar2(255) primary key,                                                                   " +
@@ -28,6 +32,8 @@ public class V1__Init extends BaseMigration {
         "    section_id varchar2(255),                                                                       " +
         "    constraint fk_seat_section_id foreign key (section_id) references seat_group_section (id)       " +
         ");                                                                                                  " +
+
+        "create index sg_section on seat_group (section_id);                                                 " +
 
         "create table seat_group_members (                                                                   " +
         "    group_id varchar2(255),                                                                         " +
@@ -45,6 +51,8 @@ public class V1__Init extends BaseMigration {
         "    constraint fk_seat_meeting_group_id foreign key (group_id) references seat_group (id)           " +
         ");                                                                                                  " +
 
+        "create index sm_group_id on seat_meeting (group_id);                                                " +
+
         "create table seat_meeting_assignment (                                                              " +
         "    id varchar2(255) primary key,                                                                   " +
         "    meeting_id varchar2(255) not null,                                                              " +
@@ -56,11 +64,15 @@ public class V1__Init extends BaseMigration {
         "    constraint fk_seat_meeting_id foreign key (meeting_id) references seat_meeting (id)             " +
         ");                                                                                                  " +
 
+        "create index sma_meeting on seat_meeting_assignment(meeting_id);                                    " +
+
         "create table seat_sync_queue (                                                                      " +
         "    site_id varchar2(255) primary key,                                                              " +
         "    last_sync_requested_time number default 0,                                                      " +
         "    last_sync_time number default 0                                                                 " +
         ");                                                                                                  " +
+
+        "create index ssq_req_time_by_site on seat_sync_queue(last_sync_requested_time, site_id);            " +
 
         "create table seat_sync_locks (                                                                      " +
         "    site_id varchar2(255) primary key,                                                              " +

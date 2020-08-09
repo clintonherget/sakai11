@@ -65,7 +65,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         }
     }
 
-    private List<ToProcess> findSitesToProcess() {
+    private List<ToProcess> findSitesToProcess(final long lastTime) {
         // TODO: Stuff this might look at:
         //
         // site createdon (site created)
@@ -90,7 +90,8 @@ public class SeatingHandlerBackgroundTask extends Thread {
                 db.run("SELECT q.site_id, q.last_sync_requested_time " +
                        " FROM seat_sync_queue q" +
                        " INNER JOIN sakai_site_tool sst ON sst.site_id = q.site_id AND sst.registration = 'nyu.seat-assignments'" +
-                       " WHERE q.last_sync_requested_time > q.last_sync_time")
+                       " WHERE q.last_sync_requested_time > ? AND q.last_sync_requested_time > q.last_sync_time")
+                    .param(lastTime)
                     .executeQuery()
                     .each((row) -> {
                             String siteId = row.getString("site_id");
@@ -147,13 +148,15 @@ public class SeatingHandlerBackgroundTask extends Thread {
     }
 
     public void run() {
-        long lastCheck = System.currentTimeMillis();
+        long lastMtimeCheck = System.currentTimeMillis();
+        long findProcessedSince = 0;
 
         while (this.running.get()) {
             if ((System.currentTimeMillis() / 1000) % 60 == 0) {
-                lastCheck = runMTimeChecks(lastCheck);
+                lastMtimeCheck = runMTimeChecks(lastMtimeCheck);
             }
-            runRound();
+
+            findProcessedSince = runRound(findProcessedSince);
 
             try {
                 Thread.sleep(1000);
@@ -195,9 +198,9 @@ public class SeatingHandlerBackgroundTask extends Thread {
         return now;
     }
 
-    public void runRound() {
+    public long runRound(long findProcessedSince) {
         long now = System.currentTimeMillis() - WINDOW_MS;
-        List<ToProcess> sites = findSitesToProcess();
+        List<ToProcess> sites = findSitesToProcess(findProcessedSince);
 
         for (ToProcess entry : sites) {
             // "Processing site", entry.siteId
@@ -207,6 +210,8 @@ public class SeatingHandlerBackgroundTask extends Thread {
                 markAsProcessed(entry, now);
             }
         }
+
+        return now;
     }
 
     private boolean processSite(String siteId) {
