@@ -15,9 +15,10 @@ public class V1__Init extends BaseMigration {
         ");                                                                                                  " +
 
         "create index sgs_roster_stem on seat_group_section (replace(primary_roster_id, '_', ':'));          " +
+        "create index sgs_site on seat_group_section (site_id);                                              " +
 
         "create table seat_group_section_rosters (                                                           " +
-        "    sakai_roster_id varchar2(255)            ,                                                      " +
+        "    sakai_roster_id varchar2(255),                                                                  " +
         "    role varchar2(255),                                                                             " +
         "    section_id varchar2(255),                                                                       " +
         "    constraint fk_seat_group_section_id foreign key (section_id) references seat_group_section (id) " +
