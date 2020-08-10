@@ -101,11 +101,12 @@
 }
 .seats-body .seats-student .seat-assignment-widget input {
     text-align: center;
+    min-width: 120px;
 }
 .seats-body .seats-student .seat-assignment-widget input[readonly] {
     font-size: 22px;
     vertical-align: middle;
-    width: 400px;
+    max-width: 400px;
 }
 
 .growl {
