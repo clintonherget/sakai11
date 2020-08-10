@@ -18,8 +18,8 @@ public class Meeting {
         this.group = group;
     }
 
-    public void addSeatAssignment(String id, String netid, String seat) {
-        this.seatAssignments.add(new SeatAssignment(id, netid, seat, this));
+    public void addSeatAssignment(String id, String netid, String seat, long editableUntil) {
+        this.seatAssignments.add(new SeatAssignment(id, netid, seat, editableUntil, this));
     }
 
     public List<SeatAssignment> listSeatAssignments() {
