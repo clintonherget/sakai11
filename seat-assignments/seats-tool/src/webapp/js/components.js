@@ -94,6 +94,7 @@ Vue.component('seat-assignment-widget', {
           v-on:keydown.enter="editOrSave()"
           v-on:keydown.esc="cancel()"
           :required="isStudent"
+          v-bind:style="{width: inputWidth}"
         />
         <template v-if="isEditable && editing">
           <button class="btn-primary" @click="save()">
@@ -131,6 +132,13 @@ Vue.component('seat-assignment-widget', {
   },
   props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil'],
   computed: {
+      inputWidth: function() {
+        if (this.isStudent) {
+          return this.inputValue.length + 4 + 'vw';
+        }
+
+        return 'inherit';
+      },
       inputId: function() {
           return [this.meetingId, this.netid].join('__');
       },
