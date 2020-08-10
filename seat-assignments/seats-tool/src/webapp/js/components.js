@@ -1,3 +1,28 @@
+Alerts = {
+  messages: {
+    "EDIT_CLOSED": "The edit period has closed for this seat. Please contact your instructor.",
+    "SEAT_TAKEN": "Someone is already in the seat you have selected. Please check your seat number and contact your instructor if necessary.",
+    "CONCURRENT_UPDATE": "This seat has been updated since you started editing. Please check the new value and retry if needed.",
+    "SAVE_SUCCESS": "Seat successfully updated",
+  }
+}
+
+Alerts.success = function (code) {
+  $.growl.notice({
+    title: "Success!",
+    message: (Alerts.messages[code] || ""),
+    size: "large",
+  });
+};
+
+Alerts.error_for_code = function (error_code) {
+  $.growl.error({
+    message: (Alerts.messages[error_code] || "Unexpected error!  Please retry."),
+    size: "large",
+  });
+};
+
+
 Vue.component('modal', {
   template: `
 <div class="modal" tabindex="-1" role="dialog" ref="modal">
@@ -258,13 +283,14 @@ Vue.component('seat-assignment-widget', {
           if (json.error) {
             self.markHasError();
             self.selectInput();
-            // FIXME notify user of error
+
+            Alerts.error_for_code(json.error_code);
           } else {
             self.editing = false;
             self.seatValueUponEditing = null;
             self.focusInput();
             self.$emit("splat");
-            // FIXME notify user of save success
+            Alerts.success("SAVE_SUCCESS");
           }
         }
       });

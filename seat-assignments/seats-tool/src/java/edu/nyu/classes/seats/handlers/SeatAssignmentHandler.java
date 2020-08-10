@@ -100,14 +100,16 @@ public class SeatAssignmentHandler implements Handler {
             if (isInstructor && seat == null) {
                 SeatsStorage.clearSeat(db, seatAssignment);
             } else if (seat != null) {
-                boolean succeeded = SeatsStorage.setSeat(db, seatAssignment, currentSeat, isInstructor);
-                if (!succeeded) {
+                SeatsStorage.SetSeatResult seatResult = SeatsStorage.setSeat(db, seatAssignment, currentSeat, isInstructor);
+                if (!SeatsStorage.SetSeatResult.OK.equals(seatResult)) {
                     // FIXME concurrency, uniqueness constraint error etc
                     result.put("error", true);
+                    result.put("error_code", seatResult.toString());
                 }
             } else {
                 // FIXME likely student tried to clear seat...
                 result.put("error", true);
+                result.put("error_code", "UNEXPECTED_ERROR");
             }
 
             try {

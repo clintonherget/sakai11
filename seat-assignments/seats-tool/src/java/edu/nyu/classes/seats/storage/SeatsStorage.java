@@ -253,7 +253,14 @@ public class SeatsStorage {
         }
     }
 
-    public static boolean setSeat(DBConnection db, SeatAssignment seat, String lastSeat, boolean isInstructor) throws SQLException {
+    public enum SetSeatResult {
+        OK,
+        EDIT_CLOSED,
+        SEAT_TAKEN,
+        CONCURRENT_UPDATE,
+    }
+
+    public static SetSeatResult setSeat(DBConnection db, SeatAssignment seat, String lastSeat, boolean isInstructor) throws SQLException {
         db.run("select id, editable_until" +
                 " from seat_meeting_assignment" +
                 " where meeting_id = ? and netid = ?")
@@ -271,7 +278,7 @@ public class SeatsStorage {
         if (!isInstructor && seat.editableUntil > 0) {
             // check edit within edit window
             if (System.currentTimeMillis() >= seat.editableUntil) {
-                return false;
+                return SetSeatResult.EDIT_CLOSED;
             } else {
                 // update will go through but retain previous edit window
                 editWindow = seat.editableUntil;
@@ -289,7 +296,7 @@ public class SeatsStorage {
                         .executeUpdate();
             } catch (SQLException e) {
                 if (db.isConstraintViolation(e)) {
-                    return false;
+                    return SetSeatResult.SEAT_TAKEN;
                 } else {
                     throw e;
                 }
@@ -304,11 +311,11 @@ public class SeatsStorage {
                         .executeUpdate();
 
                 if (updated == 0) {
-                    return false;
+                    return SetSeatResult.CONCURRENT_UPDATE;
                 }
             } catch (SQLException e) {
                 if (db.isConstraintViolation(e)) {
-                    return false;
+                    return SetSeatResult.SEAT_TAKEN;
                 } else {
                     throw e;
                 }
@@ -332,7 +339,7 @@ public class SeatsStorage {
                      }
                      );
 
-        return true;
+        return SetSeatResult.OK;
     }
 
     public static void deleteMeeting(DBConnection db, Meeting meeting) throws SQLException {
