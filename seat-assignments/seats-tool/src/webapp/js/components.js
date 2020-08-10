@@ -195,7 +195,6 @@ Vue.component('seat-assignment-widget', {
       if (!this.isEditable) {
           return;
       }
-
       this.inputValue = '';
       this.save();
     },
@@ -262,12 +261,16 @@ Vue.component('seat-assignment-widget', {
             // FIXME notify user of error
           } else {
             self.editing = false;
-            self.seatValue = self.inputValue === '' ? null : self.inputValue;
+            // assume save succeeded and set what we expect the seat to be
+            // the next poll-update will re-sync if required
+            self.seat = self.inputValue === '' ? null : self.inputValue
+            self.seatValue = self.seat;
+
             self.focusInput();
             // FIXME notify user of save success
           }
         }
-      })
+      });
     }
   },
   beforeDestroy: function() {
