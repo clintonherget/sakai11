@@ -74,6 +74,7 @@ public class SectionHandler implements Handler {
                 sectionJSON.put("shortName", seatSection.get().shortName);
                 sectionJSON.put("provisioned", seatSection.get().provisioned);
                 sectionJSON.put("split", seatSection.get().hasSplit);
+                sectionJSON.put("maxGroups", 4);
 
                 JSONArray sectionGroups = new JSONArray();
                 sectionJSON.put("groups", sectionGroups);
@@ -87,6 +88,8 @@ public class SectionHandler implements Handler {
                     groupJSON.put("id", group.id);
                     groupJSON.put("name", group.name);
                     groupJSON.put("description", group.description);
+
+                    groupJSON.put("isGroupEmpty", group.listMembers().isEmpty());
 
                     JSONArray meetingsJSON = new JSONArray();
                     groupJSON.put("meetings", meetingsJSON);

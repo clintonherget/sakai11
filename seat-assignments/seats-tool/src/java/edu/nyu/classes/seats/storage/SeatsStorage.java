@@ -409,7 +409,7 @@ public class SeatsStorage {
         return Optional.of(section);
     }
 
-    private static String createGroup(DBConnection db, SeatSection section, String groupTitle, List<Member> members) throws SQLException {
+    public static String createGroup(DBConnection db, SeatSection section, String groupTitle, List<Member> members) throws SQLException {
         String groupId = db.uuid();
 
         Audit.insert(db,

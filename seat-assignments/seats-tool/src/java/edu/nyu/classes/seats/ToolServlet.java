@@ -157,6 +157,14 @@ public class ToolServlet extends HttpServlet {
             return new GroupDescriptionHandler();
         }
 
+        if (path.startsWith("/add-group")) {
+            return new AddGroupHandler();
+        }
+
+        if (path.startsWith("/delete-group")) {
+            return new DeleteGroupHandler();
+        }
+
         // FIXME
         return new HomeHandler();
     }

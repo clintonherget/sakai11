@@ -488,6 +488,9 @@ Vue.component('section-group', {
       <button @click="closeDescriptionModal()">Cancel</button>
     </template>
   </modal>
+  <template v-if="group.isGroupEmpty">
+    <button @click="deleteGroup">Delete Group</button>
+  </template>
   <template v-for="meeting in group.meetings">
     <group-meeting :group="group" :section="section" :meeting="meeting"></group-meeting>
   </template>
@@ -536,6 +539,20 @@ Vue.component('section-group', {
     }
   },
   methods: {
+    deleteGroup: function() {
+      var self = this;
+      $.ajax({
+        url: self.baseurl + "delete-group",
+        type: 'post',
+        data: {
+          sectionId: self.section.id,
+          groupId: self.group.id,
+        },
+        success: function() {
+          self.$emit('splat');
+        },
+      });
+    },
     showDescriptionModal: function() {
       this.$refs.descriptionModal.open();
       this.$refs.descriptionInput.value = this.group.description || '';
@@ -620,10 +637,17 @@ Vue.component('section-table', {
     <div>
       <template v-if="section">
           <h2 v-show="section.groups.length === 1">{{section.name}}</h2>
-          <split-action v-show="!section.split" :section="section" v-on:splat="resetPolling()">
+          <split-action
+            v-show="!section.split"
+            :section="section"
+            v-on:splat="resetPolling()">
           </split-action>
           <template v-for="group in sortedGroups">
             <section-group :group="group" :section="section" v-on:splat="resetPolling()"></section-group>
+          </template>
+          <template v-if="section.groups.length < section.maxGroups">
+            <hr/>
+            <button @click="addGroup()">Add Another Section Cohort</button>
           </template>
       </template>
     </div>
@@ -661,6 +685,19 @@ Vue.component('section-table', {
       },
   },
   methods: {
+      addGroup: function() {
+        var self = this;
+        $.ajax({
+          url: self.baseurl + "add-group",
+          type: 'post',
+          data: {
+            sectionId: self.section.id,
+          },
+          success: function() {
+            self.resetPolling();
+          },
+        });
+      },
       fetchData: function() {
           var self = this;
 
