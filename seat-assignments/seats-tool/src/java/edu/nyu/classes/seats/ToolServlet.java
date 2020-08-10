@@ -153,6 +153,10 @@ public class ToolServlet extends HttpServlet {
             return new StudentMeetingsHandler();
         }
 
+        if (path.startsWith("/save-group-description")) {
+            return new GroupDescriptionHandler();
+        }
+
         // FIXME
         return new HomeHandler();
     }
