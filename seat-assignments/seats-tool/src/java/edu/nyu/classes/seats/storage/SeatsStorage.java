@@ -42,6 +42,13 @@ public class SeatsStorage {
         return obj.toString();
     }
 
+    public static void setGroupDescription(DBConnection db, String groupId, String description) throws SQLException {
+        db.run("update seat_group set description = ? where id = ?")
+            .param(description)
+            .param(groupId)
+            .executeUpdate();
+    }
+
     public static Map<String, String> getMemberNames(SeatSection seatSection) {
         Set<String> allEids = new HashSet<>();
 

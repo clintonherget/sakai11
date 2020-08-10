@@ -465,6 +465,29 @@ Vue.component('section-group', {
     <h2>{{group.name}} {{groupLabel}}</h2>
     <p>{{section.name}}</p>
   </template>
+  <template v-if="group.description">
+    <p>{{group.description}} <a href="javascript:void(0)" @click="showDescriptionModal()">Edit</a></p>
+  </template>
+  <template v-else>
+    <button @click="showDescriptionModal()">Add Description (optional)</button>
+  </template>
+  <modal ref="descriptionModal">
+    <template v-slot:header>Add Cohort Description {{group.name}}</template>
+    <template v-slot:body>
+      <div>
+        <p>Add a short description for your cohort, which will display to students.</p>
+
+        <div class="form-group">
+          <label :for="_uid + '_description'">Description text:</label>
+          <input :id="_uid + '_description'" ref="descriptionInput" type="text" class="form-control">
+        </div>
+     </div>
+    </template>
+    <template v-slot:footer>
+      <button @click="saveDescription()" class="pull-left btn-primary">Save</button>
+      <button @click="closeDescriptionModal()">Cancel</button>
+    </template>
+  </modal>
   <template v-for="meeting in group.meetings">
     <group-meeting :group="group" :section="section" :meeting="meeting"></group-meeting>
   </template>
@@ -504,7 +527,6 @@ Vue.component('section-group', {
       <button @click="closeModal()">Cancel</button>
     </template>
   </modal>
-
 </div>`,
   props: ['section', 'group'],
   data: function () {
@@ -514,6 +536,30 @@ Vue.component('section-group', {
     }
   },
   methods: {
+    showDescriptionModal: function() {
+      this.$refs.descriptionModal.open();
+      this.$refs.descriptionInput.value = this.group.description || '';
+    },
+    saveDescription: function() {
+      var self = this;
+
+      $.ajax({
+        url: self.baseurl + "/save-group-description",
+        type: 'post',
+        data: {
+          groupId: self.group.id,
+          description: self.$refs.descriptionInput.value,
+        },
+        dataType: 'json',
+        success: function(json) {
+          self.$refs.descriptionModal.close();
+          self.$emit('splat');
+        }
+      });
+    },
+    closeDescriptionModal: function() {
+      this.$refs.descriptionModal.close();
+    },
     addAdhocMembers: function() {
       var self = this;
 
@@ -753,6 +799,7 @@ Vue.component('student-home', {
             <div v-for="meeting in meetings">
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
+                <p>{{meeting.groupDescription}}</p>
                 <p>{{meeting.studentName}}, enter your seat number here:</p>
                 <seat-assignment-widget
                   :seat="meeting.seat"
