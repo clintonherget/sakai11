@@ -13,6 +13,7 @@ public class Audit {
         GROUP_CREATED,
         MEETING_CREATED,
         MEMBER_ADDED,
+        MEMBER_DELETED,
     }
 
     public static void insert(DBConnection db, AuditEvents event, String json, String[] args) throws SQLException {

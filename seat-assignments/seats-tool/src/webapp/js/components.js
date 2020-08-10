@@ -55,7 +55,7 @@ Vue.component('seat-assignment-widget', {
       <div v-if="isStudent && isEditable && !!editableUntil" class="alert alert-warning">
         Note: You have {{timeLeftToEdit}} to make further edits to your seat assignment.
       </div>
-      <template v-if="editing || seatValue">
+      <template v-if="editing || seat">
         <label :for="inputId" class="sr-only">
           Seat assignment for {{netid}}
         </label>
@@ -82,7 +82,7 @@ Vue.component('seat-assignment-widget', {
           <button @click="edit()">
             <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
           </button>
-          <button v-show="!isStudent && seatValue !== null" @click="clear()">
+          <button v-show="!isStudent && seat !== null" @click="clear()">
             <i class="glyphicon glyphicon-remove" aria-hidden="true"></i> Clear
           </button>
         </template>
@@ -97,7 +97,7 @@ Vue.component('seat-assignment-widget', {
   data: function() {
     return {
       hasError: false,
-      seatValue: null,
+      seatValueUponEditing: null,
       editing: false,
       inputValue: '',
       currentTime: 0,
@@ -161,17 +161,22 @@ Vue.component('seat-assignment-widget', {
   },
   watch: {
     seat: function(a, b) {
+      if (this.isStudent) {
+        this.resetSeatValue();
+        this.editing = false;
+        return;
+      }
+
       if (!this.editing) {
         this.resetSeatValue();
         if (a !== b) {
           // FIXME notify user of change
         }
       }
-    }
+    },
   },
   methods: {
     resetSeatValue: function() {
-      this.seatValue = this.seat;
       this.inputValue = this.cleanSeatValue;
     },
     cancel: function() {
@@ -204,12 +209,13 @@ Vue.component('seat-assignment-widget', {
       }
 
       this.editing = true;
+      this.seatValueUponEditing = this.seat;
       this.selectInput();
     },
     focusInput: function() {
       var self = this;
       self.$nextTick(function() {
-        if (self.seatValue) {
+        if (self.seat) {
           self.$refs.input.focus();
         } else {
           self.$refs.enterSeatButton.focus();
@@ -236,12 +242,6 @@ Vue.component('seat-assignment-widget', {
       var self = this;
       self.clearHasError();
 
-      if (self.seatValue === (self.inputValue === '' ? null : self.inputValue)) {
-        // noop
-        self.editing = false;
-        return;
-      }
-
       $.ajax({
         url: this.baseurl + "/seat-assignment",
         type: 'post',
@@ -252,7 +252,7 @@ Vue.component('seat-assignment-widget', {
           meetingId: self.meetingId,
           netid: self.netid,
           seat: self.inputValue,
-          currentSeat: self.seatValue,
+          currentSeat: self.seatValueUponEditing,
         },
         success: function(json) {
           if (json.error) {
@@ -261,12 +261,9 @@ Vue.component('seat-assignment-widget', {
             // FIXME notify user of error
           } else {
             self.editing = false;
-            // assume save succeeded and set what we expect the seat to be
-            // the next poll-update will re-sync if required
-            self.seat = self.inputValue === '' ? null : self.inputValue
-            self.seatValue = self.seat;
-
+            self.seatValueUponEditing = null;
             self.focusInput();
+            self.$emit("splat");
             // FIXME notify user of save success
           }
         }
@@ -275,13 +272,12 @@ Vue.component('seat-assignment-widget', {
   },
   beforeDestroy: function() {
     if (this.currentTimePoll) {
-      clearInterval(currentTimePoll);
+      clearInterval(this.currentTimePoll);
     }
   },
   mounted: function() {
     var self = this;
 
-    self.seatValue = self.seat;
     self.inputValue = self.cleanSeatValue;
 
     if (self.isStudent) {
@@ -425,7 +421,8 @@ Vue.component('group-meeting', {
             :meetingId="meeting.id"
             :groupId="group.id"
             :sectionId="section.id"
-            :isStudent="false">
+            :isStudent="false"
+            v-on:splat="$emit('splat')">
           </seat-assignment-widget>
         </td>
         <td>
@@ -435,6 +432,7 @@ Vue.component('group-meeting', {
         <td>
           <template v-if="$parent.isNotOnlyGroup">
             {{group.name}}
+            <a href="javascript:void(0)" @click="openMoveModal(assignment)">Move</a>
           </template>
           <template v-else>
             {{section.shortName}}
@@ -443,8 +441,37 @@ Vue.component('group-meeting', {
       </tr>
     </tbody>
   </table>
+  <modal v-if="assignmentToBeMoved" ref="moveModal">
+    <template v-slot:header>Move Member ({{assignmentToBeMoved.displayName}})</template>
+    <template v-slot:body>
+      <div>
+
+        <div v-if="assignmentToBeMoved.seat" class="alert alert-danger">
+            <p>This member has an existing seat assignment. Moving to another cohort will clear their existing seat assignment.</p>
+        </div>
+
+        <p>Select the cohort to which you would like to move this section member.</p>
+
+        <div class="form-group">
+          <label :for="_uid + '_group'">Move to:</label>
+          <select :id="_uid + '_group'" ref="moveToGroupSelect" type="text" class="form-control">
+            <option v-for="otherGroup in otherGroups" :value="otherGroup.id">{{otherGroup.name}}</option>
+          </select>
+        </div>
+     </div>
+    </template>
+    <template v-slot:footer>
+      <button @click="move()" class="pull-left btn-primary">Move</button>
+      <button @click="closeMoveModal()">Cancel</button>
+    </template>
+  </modal>
 </div>
 `,
+  data: function() {
+    return {
+      assignmentToBeMoved: null,
+    };
+  },
   props: ['section', 'group', 'meeting'],
   computed: {
     baseurl: function() {
@@ -455,7 +482,54 @@ Vue.component('group-meeting', {
         return (a.netid < b.netid) ? -1 : 1;
       })
     },
+    otherGroups: function() {
+      var otherGroups = [];
+
+      for (var i=0; i<this.section.groups.length; i++) {
+        var otherGroup = this.section.groups[i];
+        if (this.group.id !== otherGroup.id) {
+          otherGroups.push(otherGroup);
+        }
+      }
+
+      return otherGroups.sort(function(a, b) {
+        return a.name < b.name ? -1 : 1;
+      });
+    },
   },
+  methods: {
+    openMoveModal: function(assignment) {
+      var self = this;
+
+      self.assignmentToBeMoved = assignment;
+      self.$nextTick(function() {
+        self.$refs.moveModal.open();
+      });
+    },
+    move: function() {
+      var self = this;
+
+      $.ajax({
+        url: this.baseurl + "transfer-groups",
+        type: 'post',
+        data: {
+          sectionId: self.section.id,
+          fromGroupId: self.group.id,
+          toGroupId: self.$refs.moveToGroupSelect.value,
+          netid: self.assignmentToBeMoved.netid,
+        },
+        success: function() {
+          self.closeMoveModal();
+          self.$emit('splat');
+        },
+      });
+    },
+    closeMoveModal: function() {
+      if (this.$refs.moveModal) {
+        this.$refs.moveModal.close();
+      }
+    },
+  }
 });
 
 Vue.component('section-group', {
@@ -492,7 +566,13 @@ Vue.component('section-group', {
     <button @click="deleteGroup">Delete Group</button>
   </template>
   <template v-for="meeting in group.meetings">
-    <group-meeting :group="group" :section="section" :meeting="meeting"></group-meeting>
+    <group-meeting
+      :group="group"
+      :section="section"
+      :meeting="meeting"
+      v-on:splat="$emit('splat')"
+    >
+    </group-meeting>
   </template>
   <button @click="addAdhocMembers()">Add Non-Official Site Member(s)</button>
   <modal ref="membersModal">
@@ -730,7 +810,7 @@ Vue.component('section-table', {
         self.pollInterval = setInterval(function() {
             self.fetchData();
         }, 5000);
-      }
+      },
   },
   mounted: function() {
     this.resetPolling();
@@ -845,7 +925,8 @@ Vue.component('student-home', {
                   :groupId="meeting.groupId"
                   :sectionId="meeting.sectionId"
                   :isStudent="true"
-                  :editableUntil="meeting.editableUntil">
+                  :editableUntil="meeting.editableUntil"
+                  v-on:splat="resetPolling()">
                 </seat-assignment-widget>
                 <p>Note: Only enter your seat assignment once your are in class and have chosen your seat</p>
             </div>
@@ -877,6 +958,19 @@ Vue.component('student-home', {
       handleSectionSelect: function(sectionId) {
         this.selectedSectionId = sectionId;
       },
+      resetPolling: function() {
+        var self = this;
+
+        if (self.pollInterval) {
+          clearInterval(self.pollInterval);
+        }
+
+        self.fetchData();
+
+        self.pollInterval = setInterval(function() {
+            self.fetchData();
+        }, 5000);
+      }
   },
   beforeDestroy: function() {
     if (this.pollInterval) {
@@ -886,9 +980,6 @@ Vue.component('student-home', {
   mounted: function() {
       var self = this;
 
-      self.fetchData();
-      self.pollInterval = setInterval(function() {
-          self.fetchData();
-      }, 5000);
+      self.resetPolling();
   },
 });

@@ -165,6 +165,10 @@ public class ToolServlet extends HttpServlet {
             return new DeleteGroupHandler();
         }
 
+        if (path.startsWith("/transfer-group")) {
+            return new TransferGroupsHandler();
+        }
+
         // FIXME
         return new HomeHandler();
     }
