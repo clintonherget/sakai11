@@ -52,7 +52,7 @@ Vue.component('modal', {
       var self = this;
 
       if (callback) {
-        $(this.$refs.modal).on('shown.bs.modal', function () {
+        $(this.$refs.modal).on('shown.bs.modal', function() {
           callback(self.$refs.modal);
         })
       }
@@ -558,6 +558,36 @@ Vue.component('group-meeting', {
   }
 });
 
+Vue.component('input-with-char-count', {
+  template: `
+    <div style="text-align: right">
+      <input :id="id" ref="textInput" type="text" class="form-control" v-model="value" v-on:keyup="adjustCount()" :maxlength="chars" />
+      <small><span>{{remaining}}</span> characters remaining</small>
+    </div>
+  `,
+  props: ['id', 'chars'],
+  data: function() {
+    return {
+      value: '',
+      remaining: this.chars,
+    }
+  },
+  methods: {
+    setValue: function (s) {
+      this.value = s;
+      this.$nextTick(function() {
+        this.adjustCount();
+      });
+    },
+    getValue: function() {
+      return this.value;
+    },
+    adjustCount: function() {
+      this.remaining = Math.max(this.chars - this.$refs.textInput.value.length, 0);
+    }
+  }
+});
+
 Vue.component('section-group', {
   template: `
 <div>
@@ -579,7 +609,7 @@ Vue.component('section-group', {
 
         <div class="form-group">
           <label :for="_uid + '_description'">Description text:</label>
-          <input :id="_uid + '_description'" ref="descriptionInput" type="text" class="form-control">
+          <input-with-char-count chars=200 :id="_uid + '_description'" ref="descriptionInput" />
         </div>
      </div>
     </template>
@@ -638,7 +668,7 @@ Vue.component('section-group', {
   </modal>
 </div>`,
   props: ['section', 'group'],
-  data: function () {
+  data: function() {
     return {
       selectedMembers: [],
       membersForAdd: [],
@@ -661,7 +691,7 @@ Vue.component('section-group', {
     },
     showDescriptionModal: function() {
       this.$refs.descriptionModal.open();
-      this.$refs.descriptionInput.value = this.group.description || '';
+      this.$refs.descriptionInput.setValue(this.group.description || '');
     },
     saveDescription: function() {
       var self = this;
@@ -671,7 +701,7 @@ Vue.component('section-group', {
         type: 'post',
         data: {
           groupId: self.group.id,
-          description: self.$refs.descriptionInput.value,
+          description: self.$refs.descriptionInput.getValue(),
         },
         dataType: 'json',
         success: function(json) {
