@@ -195,7 +195,7 @@ Vue.component('seat-assignment-widget', {
       if (!this.editing) {
         this.resetSeatValue();
         if (a !== b) {
-          // FIXME notify user of change
+          this.highlightInput();
         }
       }
     },
@@ -247,6 +247,21 @@ Vue.component('seat-assignment-widget', {
         }
       });
     },
+    highlightInput: function() {
+      var self = this;
+      self.$nextTick(function() {
+        if (self.$refs.input) {
+          var elt = $(self.$refs.input);
+          elt.animate({
+            backgroundColor: "#90EE90",
+          }, 400, function () {
+            elt.animate({
+              backgroundColor: "rgba(0, 0, 0, 0)",
+            }, 1000)
+          });
+        }
+      });
+    },
     selectInput: function() {
       var self = this;
       self.$nextTick(function() {
@@ -290,7 +305,6 @@ Vue.component('seat-assignment-widget', {
             self.seatValueUponEditing = null;
             self.focusInput();
             self.$emit("splat");
-            Alerts.success("SAVE_SUCCESS");
           }
         }
       });
@@ -433,7 +447,7 @@ Vue.component('group-meeting', {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="assignment in sortedSeatAssignments">
+      <tr v-for="assignment in sortedSeatAssignments" :key="assignment.netid">
         <td>
           <div class="profile-pic">
             <img :src="'/direct/profile/' + assignment.netid + '/image/official'"/>
@@ -969,7 +983,7 @@ Vue.component('student-home', {
   template: `
     <div>
         <template v-if="fetched">
-            <div v-for="meeting in meetings">
+            <div v-for="meeting in meetings" :key="meeting.netid">
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
                 <p>{{meeting.groupDescription}}</p>
