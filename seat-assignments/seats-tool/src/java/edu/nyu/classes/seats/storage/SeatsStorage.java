@@ -186,8 +186,8 @@ public class SeatsStorage {
 
     public static void clearSeat(DBConnection db, SeatAssignment seat) throws SQLException {
         int rowsUpdated = db.run("delete from seat_meeting_assignment where meeting_id = ? and netid = ?")
-            .param(seat.netid)
             .param(seat.meeting.id)
+            .param(seat.netid)
             .executeUpdate();
 
         if (rowsUpdated > 0) {

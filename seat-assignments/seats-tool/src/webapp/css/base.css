@@ -92,5 +92,17 @@
 }
 
 .seats-body .seats-student .seat-assignment-widget {
-    width: 400px;
+    display: inline-block;
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid #CCC;
+    border-radius: 10px;
+    text-align: center;
+}
+.seats-body .seats-student .seat-assignment-widget input {
+    text-align: center;
+}
+.seats-body .seats-student .seat-assignment-widget input[readonly] {
+    font-size: 22px;
+    vertical-align: middle;
 }
