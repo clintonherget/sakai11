@@ -336,6 +336,9 @@ Vue.component('split-action', {
   <modal ref="splitModal">
     <template v-slot:header>Create Section Cohorts</template>
     <template v-slot:body>
+      <div v-if="hasSeatAssignments" class="alert alert-danger">
+        <b>WARNING:</b> One or more members of this section has a seat assignment.  Any existing seat assignments will be cleared.
+      </div>
       <div>
         <p>Break down your section into cohorts, which can be used to create multiple seating charts for the same room
            (e.g., if different cohorts will alternate in-class attendance by week).</p>
@@ -380,6 +383,23 @@ Vue.component('split-action', {
   computed: {
       baseurl: function() {
           return this.$parent.baseurl;
+      },
+      hasSeatAssignments: function() {
+          for (var g = 0; g < this.section.groups.length; g++) {
+              var group = this.section.groups[g];
+              for (var m = 0; m < group.meetings.length; m++) {
+                  var meeting = group.meetings[m];
+                  for (var a = 0; a < meeting.seatAssignments.length; a++) {
+                      var seatAssignment = meeting.seatAssignments[a];
+
+                      if (seatAssignment.seat) {
+                          return true;
+                      }
+                  }
+              }
+          }
+
+          return false;
       },
   },
   methods: {
