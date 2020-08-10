@@ -208,8 +208,8 @@ public class SeatsStorage {
         }
     }
 
-    public static boolean setSeat(DBConnection db, SeatAssignment seat, String lastSeat, boolean shouldSetEditWindow) throws SQLException {
-        db.run("select id" +
+    public static boolean setSeat(DBConnection db, SeatAssignment seat, String lastSeat, boolean isInstructor) throws SQLException {
+        db.run("select id, editable_until" +
                 " from seat_meeting_assignment" +
                 " where meeting_id = ? and netid = ?")
                 .param(seat.meeting.id)
@@ -217,9 +217,21 @@ public class SeatsStorage {
                 .executeQuery()
                 .each(row -> {
                     seat.id = row.getString("id");
+                    seat.editableUntil = row.getLong("editable_until");
                 });
 
-        long editWindow = shouldSetEditWindow ? System.currentTimeMillis() + EDIT_WINDOW_MS : 0;
+
+        long editWindow = isInstructor ? 0 : System.currentTimeMillis() + EDIT_WINDOW_MS;
+
+        if (!isInstructor && seat.editableUntil > 0) {
+            // check edit within edit window
+            if (System.currentTimeMillis() >= seat.editableUntil) {
+                return false;
+            } else {
+                // update will go through but retain previous edit window
+                editWindow = seat.editableUntil;
+            }
+        }
 
         if (seat.id == null) {
             try {
@@ -262,6 +274,7 @@ public class SeatsStorage {
                      (seat.id == null) ? AuditEvents.SEAT_ASSIGNED : AuditEvents.SEAT_REASSIGNED,
                      json("seat", seat.seat,
                           "lastSeat", lastSeat,
+                          "editWindow", String.valueOf(editWindow),
                           "meeting", seat.meeting.id,
                           "meeting_name", seat.meeting.name,
                           "meeting_location", seat.meeting.locationCode,
@@ -368,7 +381,7 @@ public class SeatsStorage {
                         .getOrCreateMeeting(row.getString("meeting_id"));
                 });
 
-        db.run("select sm.group_id, sm.id as meeting_id, assign.id as assign_id, assign.netid, assign.seat" +
+        db.run("select sm.group_id, sm.id as meeting_id, assign.id as assign_id, assign.netid, assign.seat, assign.editable_until" +
                " from seat_meeting sm" +
                " inner join seat_meeting_assignment assign on assign.meeting_id = sm.id" +
                " where sm.group_id in (" + db.placeholders(section.groupIds()) + ")")
@@ -378,7 +391,10 @@ public class SeatsStorage {
                     section.fetchGroup(row.getString("group_id"))
                         .get()
                         .getOrCreateMeeting(row.getString("meeting_id"))
-                        .addSeatAssignment(row.getString("assign_id"), row.getString("netid"), row.getString("seat"));
+                        .addSeatAssignment(row.getString("assign_id"),
+                                           row.getString("netid"),
+                                           row.getString("seat"),
+                                           row.getLong("editable_until"));
                 });
 
         buildSectionName(db, section);

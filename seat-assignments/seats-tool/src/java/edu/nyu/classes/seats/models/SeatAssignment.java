@@ -5,12 +5,14 @@ public class SeatAssignment {
     public String netid;
     public String seat;
     public Meeting meeting;
+    public long editableUntil;
 
-    public SeatAssignment(String id, String netid, String seat, Meeting meeting) {
+    public SeatAssignment(String id, String netid, String seat, long editableUntil, Meeting meeting) {
         this.id = id;
         this.netid = netid;
         this.seat = seat;
         this.meeting = meeting;
+        this.editableUntil = editableUntil;
     }
 }
 

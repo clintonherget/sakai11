@@ -95,16 +95,19 @@ public class SeatAssignmentHandler implements Handler {
             String seat = p.getString("seat", null);
             String currentSeat = p.getString("currentSeat", null);
 
-            SeatAssignment seatAssignment = new SeatAssignment(null, netid, seat, meeting);
+            SeatAssignment seatAssignment = new SeatAssignment(null, netid, seat, 0, meeting);
 
-            if (seat == null) {
+            if (isInstructor && seat == null) {
                 SeatsStorage.clearSeat(db, seatAssignment);
-            } else {
-                boolean succeeded = SeatsStorage.setSeat(db, seatAssignment, currentSeat, !isInstructor);
+            } else if (seat != null) {
+                boolean succeeded = SeatsStorage.setSeat(db, seatAssignment, currentSeat, isInstructor);
                 if (!succeeded) {
                     // FIXME concurrency, uniqueness constraint error etc
                     result.put("error", true);
                 }
+            } else {
+                // FIXME likely student tried to clear seat...
+                result.put("error", true);
             }
 
             try {

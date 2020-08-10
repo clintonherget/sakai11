@@ -53,8 +53,10 @@ public class StudentMeetingsHandler implements Handler {
                                 Optional<SeatAssignment> seatAssignment = meeting.listSeatAssignments().stream().filter(a -> a.netid.equals(currentUser.getEid())).findFirst();
                                 if (seatAssignment.isPresent()) {
                                     obj.put("seat", seatAssignment.get().seat);
+                                    obj.put("editableUntil", seatAssignment.get().editableUntil);
                                 } else {
                                     obj.put("seat", null);
+                                    obj.put("editableUntil", null);
                                 }
 
                                 meetings.add(obj.clone());

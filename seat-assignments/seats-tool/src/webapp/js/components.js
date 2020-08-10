@@ -52,6 +52,9 @@ Vue.component('modal', {
 Vue.component('seat-assignment-widget', {
   template: `
     <span class="seat-assignment-widget">
+      <div v-if="isStudent && isEditable && !!editableUntil" class="alert alert-warning">
+        Note: You have {{timeLeftToEdit}} to make further edits to your seat assignment.
+      </div>
       <template v-if="editing || seatValue">
         <label :for="inputId" class="sr-only">
           Seat assignment for {{netid}}
@@ -65,8 +68,9 @@ Vue.component('seat-assignment-widget', {
           :readonly="!editing"
           v-on:keydown.enter="editOrSave()"
           v-on:keydown.esc="cancel()"
+          :required="isStudent"
         />
-        <template v-if="editing">
+        <template v-if="isEditable && editing">
           <button class="btn-primary" @click="save()">
             <i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Save
           </button>
@@ -74,16 +78,16 @@ Vue.component('seat-assignment-widget', {
             <i class="glyphicon glyphicon-ban-circle" aria-hidden="true"></i> Cancel
           </button>
         </template>
-        <template v-else>
+        <template v-else-if="isEditable">
           <button @click="edit()">
             <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
           </button>
-          <button v-show="seatValue !== null" @click="clear()">
+          <button v-show="!isStudent && seatValue !== null" @click="clear()">
             <i class="glyphicon glyphicon-remove" aria-hidden="true"></i> Clear
           </button>
         </template>
       </template>
-      <template v-else>
+      <template v-else-if="isEditable">
         <button ref="enterSeatButton" @click="edit()">
           <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> Enter Seat Assignment
         </button>
@@ -96,9 +100,11 @@ Vue.component('seat-assignment-widget', {
       seatValue: null,
       editing: false,
       inputValue: '',
+      currentTime: 0,
+      currentTimePoll: null,
     };
   },
-  props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId'],
+  props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil'],
   computed: {
       inputId: function() {
           return [this.meetingId, this.netid].join('__');
@@ -119,7 +125,39 @@ Vue.component('seat-assignment-widget', {
           } else {
               return '' + this.seat;
           }
-      }
+      },
+      isEditable: function() {
+          if (!this.isStudent) {
+              return true;
+          }
+
+          if (this.editableUntil === null) {
+            // no seat value set so editable
+            return true;
+          }
+
+          if (this.editableUntil === 0) {
+            // seat was set by instructor
+            return false;
+          }
+
+          // check the edit window
+          return this.currentTime < this.editableUntil;
+      },
+      timeLeftToEdit: function() {
+        var ms = this.editableUntil - this.currentTime;
+        if (ms <= 0) {
+          return 'no time';
+        }
+
+        var sec = parseInt(ms / 1000);
+        if (sec <= 60) {
+          return sec + " seconds"
+        }
+
+        var min = parseInt(sec / 60);
+        return min + " minutes " + (sec % 60) + " seconds";
+      },
   },
   watch: {
     seat: function(a, b) {
@@ -143,6 +181,10 @@ Vue.component('seat-assignment-widget', {
       this.focusInput();
     },
     editOrSave: function() {
+      if (!this.isEditable) {
+          return;
+      }
+
       if (this.editing) {
         this.save();
       } else {
@@ -150,10 +192,18 @@ Vue.component('seat-assignment-widget', {
       }
     },
     clear: function() {
+      if (!this.isEditable) {
+          return;
+      }
+
       this.inputValue = '';
       this.save();
     },
     edit: function() {
+      if (!this.isEditable) {
+          return;
+      }
+
       this.editing = true;
       this.selectInput();
     },
@@ -180,6 +230,10 @@ Vue.component('seat-assignment-widget', {
       this.hasError = false;
     },
     save: function() {
+      if (!this.isEditable) {
+          return;
+      }
+
       var self = this;
       self.clearHasError();
 
@@ -216,9 +270,23 @@ Vue.component('seat-assignment-widget', {
       })
     }
   },
+  beforeDestroy: function() {
+    if (this.currentTimePoll) {
+      clearInterval(currentTimePoll);
+    }
+  },
   mounted: function() {
-    this.seatValue = this.seat;
-    this.inputValue = this.cleanSeatValue;
+    var self = this;
+
+    self.seatValue = self.seat;
+    self.inputValue = self.cleanSeatValue;
+
+    if (self.isStudent) {
+      self.currentTime = new Date().getTime();
+      self.currentTimePoll = setInterval(function() {
+        self.currentTime = new Date().getTime();
+      }, 1000);
+    }
   },
 });
 
@@ -348,7 +416,13 @@ Vue.component('group-meeting', {
         </td>
         <td>{{assignment.displayName}} ({{assignment.netid}})</td>
         <td>
-          <seat-assignment-widget :seat="assignment.seat" :netid="assignment.netid" :meetingId="meeting.id" :groupId="group.id" :sectionId="section.id">
+          <seat-assignment-widget
+            :seat="assignment.seat"
+            :netid="assignment.netid"
+            :meetingId="meeting.id"
+            :groupId="group.id"
+            :sectionId="section.id"
+            :isStudent="false">
           </seat-assignment-widget>
         </td>
         <td>
@@ -682,7 +756,9 @@ Vue.component('student-home', {
                   :netid="meeting.netid"
                   :meetingId="meeting.meetingId"
                   :groupId="meeting.groupId"
-                  :sectionId="meeting.sectionId">
+                  :sectionId="meeting.sectionId"
+                  :isStudent="true"
+                  :editableUntil="meeting.editableUntil">
                 </seat-assignment-widget>
                 <p>Note: Only enter your seat assignment once your are in class and have chosen your seat</p>
             </div>
@@ -693,6 +769,7 @@ Vue.component('student-home', {
     return {
         meetings: [],
         fetched: false,
+        pollInterval: null,
     };
   },
   props: ['baseurl'],
@@ -714,7 +791,17 @@ Vue.component('student-home', {
         this.selectedSectionId = sectionId;
       },
   },
+  beforeDestroy: function() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+    }
+  },
   mounted: function() {
-      this.fetchData();
+      var self = this;
+
+      self.fetchData();
+      self.pollInterval = setInterval(function() {
+          self.fetchData();
+      }, 5000);
   },
 });
