@@ -447,7 +447,7 @@ Vue.component('group-meeting', {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="assignment in sortedSeatAssignments" :key="assignment.netid">
+      <tr v-for="assignment in sortedSeatAssignments" :key="assignment.netid + group.id">
         <td>
           <div class="profile-pic">
             <img :src="'/direct/profile/' + assignment.netid + '/image/official'"/>
