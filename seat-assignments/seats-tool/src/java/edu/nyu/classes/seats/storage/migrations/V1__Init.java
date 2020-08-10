@@ -29,7 +29,7 @@ public class V1__Init extends BaseMigration {
         "create table seat_group (                                                                           " +
         "    id varchar2(255) primary key,                                                                   " +
         "    name varchar2(255) not null,                                                                    " +
-        "    description varchar2(4096),                                                                      " +
+        "    description varchar2(4000),                                                                     " +
         "    section_id varchar2(255),                                                                       " +
         "    constraint fk_seat_section_id foreign key (section_id) references seat_group_section (id)       " +
         ");                                                                                                  " +

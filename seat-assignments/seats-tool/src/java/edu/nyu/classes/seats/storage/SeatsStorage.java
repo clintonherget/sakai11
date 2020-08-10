@@ -42,6 +42,40 @@ public class SeatsStorage {
         return obj.toString();
     }
 
+    public static void transferMember(DBConnection db, String siteId, String sectionId, String fromGroupId, String toGroupId, String netid) throws SQLException {
+        SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
+
+        SeatGroup fromGroup = seatSection.fetchGroup(fromGroupId).get();
+
+        Member memberToTransfer = fromGroup.listMembers().stream().filter(m -> m.netid.equals(netid)).findFirst().get(); 
+
+        for (Meeting meeting : fromGroup.listMeetings()) {
+            for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
+                if (seatAssignment.netid.equals(netid)) {
+                    clearSeat(db, seatAssignment);
+                }
+            }
+        }
+
+        db.run("delete from seat_group_members where group_id = ? and netid = ?")
+                .param(fromGroupId)
+                .param(netid)
+                .executeUpdate();
+
+        Audit.insert(db,
+                AuditEvents.MEMBER_DELETED,
+                json("netid", netid,
+                        "modality", memberToTransfer.modality.toString(),
+                        "group_id", fromGroupId,
+                        "section_id", sectionId),
+                new String[] {
+                        // FIXME: index useful stuff
+                }
+        );
+
+        addMemberToGroup(db, memberToTransfer, toGroupId, sectionId);
+    }
+
     public static void setGroupDescription(DBConnection db, String groupId, String description) throws SQLException {
         db.run("update seat_group set description = ? where id = ?")
             .param(description)
@@ -143,6 +177,10 @@ public class SeatsStorage {
         section.name = sb.toString();
         if (section.shortName == null) {
             section.shortName = section.name;
+        }
+
+        if (section.shortName == null) {
+            throw new RuntimeException("null shortname");
         }
     }
 
@@ -349,6 +387,8 @@ public class SeatsStorage {
 
         SeatSection section = sections.get(0);
 
+        buildSectionName(db, section);
+
         db.run("select sg.*, sec.id as section_id" +
                " from seat_group sg" +
                " inner join seat_group_section sec on sg.section_id = sec.id " +
@@ -403,8 +443,6 @@ public class SeatsStorage {
                                            row.getString("seat"),
                                            row.getLong("editable_until"));
                 });
-
-        buildSectionName(db, section);
 
         return Optional.of(section);
     }
