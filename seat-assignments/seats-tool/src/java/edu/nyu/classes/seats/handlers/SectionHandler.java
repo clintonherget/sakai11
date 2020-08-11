@@ -121,6 +121,7 @@ public class SectionHandler implements Handler {
                             assignmentJSON.put("official", member.official);
                             assignmentJSON.put("seat", null);
                             assignmentJSON.put("displayName", memberNames.getOrDefault(member.netid, member.netid));
+                            assignmentJSON.put("studentLocation", member.studentLocation.toString());
                             seatAssignmentSet.put(member.netid, assignmentJSON);
                         }
 

@@ -83,7 +83,7 @@ public class SeatsStorage {
         Audit.insert(db,
                 AuditEvents.MEMBER_DELETED,
                 json("netid", netid,
-                        "modality", memberToTransfer.modality.toString(),
+                        "student_location", memberToTransfer.studentLocation.toString(),
                         "group_id", fromGroupId,
                         "section_id", sectionId),
                 new String[] {
@@ -238,7 +238,7 @@ public class SeatsStorage {
         Audit.insert(db,
                      AuditEvents.MEMBER_ADDED,
                      json("netid", member.netid,
-                          "modality", member.modality.toString(),
+                          "student_location", member.studentLocation.toString(),
                           "group_id", groupId,
                           "section_id", sectionId),
                      new String[] {
@@ -551,9 +551,9 @@ public class SeatsStorage {
             Collections.sort(members, new Comparator<Member>() {
                 @Override
                 public int compare(Member m1, Member m2) {
-                    if (Member.Modality.ONLINE.equals(m1.modality)) {
+                    if (Member.StudentLocation.REMOTE.equals(m1.studentLocation)) {
                         return -1;
-                    } else if (Member.Modality.ONLINE.equals(m2.modality)) {
+                    } else if (Member.StudentLocation.REMOTE.equals(m2.studentLocation)) {
                         return 1;
                     } else {
                         return 0;
@@ -580,7 +580,7 @@ public class SeatsStorage {
                 result.add(new ArrayList<>());
             }
 
-            Map<Member.Modality, List<Member>> groupedMembers = members.stream().collect(Collectors.groupingBy((m) -> m.modality));
+            Map<Member.StudentLocation, List<Member>> groupedMembers = members.stream().collect(Collectors.groupingBy((m) -> m.studentLocation));
 
             ArrayDeque<List<Member>> memberGroups = new ArrayDeque<>(groupedMembers.values());
             int currentGroup = 0;

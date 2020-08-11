@@ -1,5 +1,17 @@
 SeatToolEventBus = new Vue();
 
+StudentLocationLabels = {
+  'IN_PERSON': 'In-Person',
+  'UNSURE': 'Unsure',
+  'REMOTE': 'Remote',
+};
+
+StudentLocationSortOrder = {
+  'IN_PERSON': 0,
+  'UNSURE': 1,
+  'REMOTE': 2,
+};
+
 Alerts = {
   messages: {
     "EDIT_CLOSED": "The edit period has closed for this seat. Please contact your instructor.",
@@ -449,16 +461,30 @@ Vue.component('split-action', {
 
 Vue.component('group-meeting-summary', {
   template: `
-<div>
-  <small v-show="meeting.seatAssignments.length > 0">
+<div class="pull-left">
+  <div v-show="meeting.seatAssignments.length > 0">
     <span>{{meeting.seatAssignments.length}} member<template v-if="meeting.seatAssignments.length > 0">s</template></span>
     <span v-bind:style="{ marginLeft: '10px' }">{{locationSummary}}</span>
-  </small>
+  </div>
 </div>`,
   props: ['meeting'],
   computed: {
     locationSummary: function() {
-      return '(TODO summary)';
+      var counts = {};
+      for (var i=0; i<this.meeting.seatAssignments.length; i++) {
+        var studentLocation = this.meeting.seatAssignments[i].studentLocation;
+        if (!counts[studentLocation]) {
+          counts[studentLocation] = 0;
+        }
+        counts[studentLocation]++;
+      }
+
+      var result = [];
+
+      $.each(counts, function(location, count) {
+        result.push(count + ' ' + StudentLocationLabels[location]);
+      });
+      return '(' + result.join(', ') + ')';
     }
   }
 });
@@ -466,7 +492,15 @@ Vue.component('group-meeting-summary', {
 Vue.component('group-meeting', {
   template: `
 <div>
-  <group-meeting-summary :meeting="meeting"></group-meeting-summary>
+  <div v-bind:style="{clear: 'both'}">
+    <group-meeting-summary :meeting="meeting"></group-meeting-summary>
+    <label class="pull-right">Sort by: 
+      <select v-model="sortBy">
+        <option value="STUDENT_LOCATION">Student Location</option>
+        <option value="NETID">NetID</option>
+      </select>
+    </label>
+  </div>
   <table class="seat-table seat-assignment-listing">
     <thead>
       <tr>
@@ -504,7 +538,7 @@ Vue.component('group-meeting', {
           </seat-assignment-widget>
         </td>
         <td>
-          TODO 
+          {{labelForStudentLocation(assignment.studentLocation)}} 
           <template v-if="!assignment.official">(Unofficial)</template>
         </td>
         <td>
@@ -548,6 +582,7 @@ Vue.component('group-meeting', {
   data: function() {
     return {
       assignmentToBeMoved: null,
+      sortBy: 'STUDENT_LOCATION',
     };
   },
   props: ['section', 'group', 'meeting'],
@@ -556,8 +591,28 @@ Vue.component('group-meeting', {
         return this.$parent.baseurl;
     },
     sortedSeatAssignments: function() {
-      return this.meeting.seatAssignments.sort(function(a, b) {
-        return (a.netid < b.netid) ? -1 : 1;
+      var self = this;
+
+      return self.meeting.seatAssignments.sort(function(a, b) {
+        if (self.sortBy === 'NETID') {
+          return (a.netid < b.netid) ? -1 : 1;
+
+        } else if (self.sortBy === 'SEAT') {
+          if (a.seat === null) {
+            return 1;
+          } else if (b.seat === null) {
+            return -1;
+          } else {
+            return (a.seat < b.seat) ? -1 : 1;
+          }
+
+        } else {
+          if (a.studentLocation === b.studentLocation) {
+            return (a.netid < b.netid) ? -1 : 1;
+          } else {
+            return (StudentLocationSortOrder[a.studentLocation] < StudentLocationSortOrder[b.studentLocation]) ? -1 : 1;
+          }
+        }
       })
     },
     otherGroups: function() {
@@ -576,6 +631,9 @@ Vue.component('group-meeting', {
     },
   },
   methods: {
+    labelForStudentLocation: function(studentLocation) {
+      return StudentLocationLabels[studentLocation];
+    },
     openMoveModal: function(assignment) {
       var self = this;
 

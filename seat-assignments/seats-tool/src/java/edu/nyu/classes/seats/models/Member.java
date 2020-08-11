@@ -3,14 +3,14 @@ package edu.nyu.classes.seats.models;
 import java.util.Locale;
 
 public class Member {
-    public enum Modality {
-        ONLINE,
+    public enum StudentLocation {
+        REMOTE,
         IN_PERSON,
         UNSURE,
     }
 
     public String netid;
-    public Modality modality;
+    public StudentLocation studentLocation;
     public boolean official;
     public Role role;
 
@@ -38,7 +38,7 @@ public class Member {
 
     public Member(String netid, boolean official, Role role) {
         this.netid = netid;
-        this.modality = Modality.values()[(int)Math.floor(Math.random() * 3)];
+        this.studentLocation = StudentLocation.values()[Math.abs(netid.hashCode() % 3)];
         this.official = official;
         this.role = role;
     }
