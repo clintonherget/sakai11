@@ -1024,11 +1024,12 @@ Vue.component('instructor-table', {
       <div>
           <template v-if="sections.length > 0">
               <section-selector
+                  v-if="sections.length > 1"
                   ref="sectionSelector"
                   :sections="sections"
                   v-on:selectSection="handleSectionSelect">
               </section-selector>
-              <hr />
+              <hr v-if="sections.length > 1" />
               <template v-if="selectedSectionId">
                   <section-table :sectionId="selectedSectionId"></section-table>
               </template>
@@ -1064,6 +1065,9 @@ Vue.component('instructor-table', {
               success: function (json) {
                   self.fetched = true;
                   self.sections = json;
+                  if (self.sections.length === 1) {
+                    self.selectedSectionId = self.sections[0].id;
+                  }
               }
           });
       },
