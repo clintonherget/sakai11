@@ -75,6 +75,8 @@ public class ToolServlet extends HttpServlet {
 
             context.put("hasSiteUpd", hasSiteUpd((String)context.get("siteId")));
 
+            context.put("portalCdnQuery", ServerConfigurationService.getString("portal.cdn.version", java.util.UUID.randomUUID().toString()));
+
             Handler handler = handlerForRequest(request);
 
             if (handler.isSiteUpdRequired() && !(boolean)context.get("hasSiteUpd")) {
@@ -168,6 +170,11 @@ public class ToolServlet extends HttpServlet {
         if (path.startsWith("/transfer-group")) {
             return new TransferGroupsHandler();
         }
+
+        if (path.startsWith("/email-group")) {
+            return new EmailGroupHandler();
+        }
+
 
         // FIXME
         return new HomeHandler();

@@ -630,6 +630,65 @@ Vue.component('input-with-char-count', {
   }
 });
 
+Vue.component('email-cohort', {
+    template: `
+        <div>
+            <modal ref="emailModal">
+                <template v-slot:header>Email cohort: {{group.name}}</template>
+                <template v-slot:body>
+                    <div class="form-group">
+                        <label :for="_uid + '_subject'">Subject:</label>
+                        <input type="text" ref="emailSubject" class="form-control" :id="_uid + '_subject'" name="subject" />
+
+                        <label :for="_uid + '_body'">Message body:</label>
+                        <textarea :id="_uid + '_body'" ref="emailBody" name="body" class="form-control seats-email-body"></textarea>
+                    </div>
+                </template>
+                <template v-slot:footer>
+                    <button @click="sendEmail()" class="pull-left btn-primary"><i class="fa fa-envelope"></i> Send</button>
+                    <button @click="closeEmailModal()">Cancel</button>
+                </template>
+            </modal>
+
+            <button @click="showModal()" :class="htmlClass"><i class="fa fa-envelope"></i> Send Message to Cohort</button>
+        </div>`,
+    props: ['htmlClass', 'section', 'group'],
+    methods: {
+        showModal: function() {
+            this.$refs.emailSubject.value = '';
+            this.$refs.emailBody.value = '';
+
+            this.$refs.emailModal.open();
+        },
+        sendEmail: function() {
+            var self = this;
+
+            $.ajax({
+                url: self.baseurl + "email-group",
+                type: 'post',
+                data: {
+                    sectionId: self.section.id,
+                    groupId: self.group.id,
+                    subject: self.$refs.emailSubject.value,
+                    body: self.$refs.emailBody.value,
+                },
+                success: function() {
+                    self.closeEmailModal();
+                },
+            });
+
+        },
+        closeEmailModal: function() {
+            this.$refs.emailModal.close();
+        },
+    },
+    computed: {
+        baseurl: function() {
+            return this.$parent.baseurl;
+        },
+    }
+});
+
 Vue.component('section-group', {
   template: `
 <div>
@@ -643,6 +702,7 @@ Vue.component('section-group', {
   <template v-else>
     <button @click="showDescriptionModal()">Add Description (optional)</button>
   </template>
+  <email-cohort v-if="!group.isGroupEmpty" htmlClass="pull-right" :group="group" :section="section" />
   <modal ref="descriptionModal">
     <template v-slot:header>Add Cohort Description {{group.name}}</template>
     <template v-slot:body>
