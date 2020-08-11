@@ -60,12 +60,10 @@ public class SeatsStorage {
         return result;
     }
 
-    public static void transferMember(DBConnection db, String siteId, String sectionId, String fromGroupId, String toGroupId, String netid) throws SQLException {
-        SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
+    public static Member removeMemberFromGroup(DBConnection db, SeatSection seatSection, String groupId, String netid) throws SQLException {
+        SeatGroup fromGroup = seatSection.fetchGroup(groupId).get();
 
-        SeatGroup fromGroup = seatSection.fetchGroup(fromGroupId).get();
-
-        Member memberToTransfer = fromGroup.listMembers().stream().filter(m -> m.netid.equals(netid)).findFirst().get(); 
+        Member memberToRemove = fromGroup.listMembers().stream().filter(m -> m.netid.equals(netid)).findFirst().get();
 
         for (Meeting meeting : fromGroup.listMeetings()) {
             for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
@@ -76,21 +74,26 @@ public class SeatsStorage {
         }
 
         db.run("delete from seat_group_members where group_id = ? and netid = ?")
-                .param(fromGroupId)
+                .param(groupId)
                 .param(netid)
                 .executeUpdate();
 
         Audit.insert(db,
                 AuditEvents.MEMBER_DELETED,
                 json("netid", netid,
-                        "student_location", memberToTransfer.studentLocation.toString(),
-                        "group_id", fromGroupId,
-                        "section_id", sectionId),
+                        "group_id", groupId,
+                        "section_id", seatSection.id),
                 new String[] {
                         // FIXME: index useful stuff
                 }
         );
 
+        return memberToRemove;
+    }
+
+    public static void transferMember(DBConnection db, String siteId, String sectionId, String fromGroupId, String toGroupId, String netid) throws SQLException {
+        SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
+        Member memberToTransfer = removeMemberFromGroup(db, seatSection, fromGroupId, netid);
         addMemberToGroup(db, memberToTransfer, toGroupId, sectionId);
     }
 
@@ -207,6 +210,34 @@ public class SeatsStorage {
         Set<String> seatGroupMembers = new HashSet<>();
         Map<String, Integer> groupCounts = new HashMap<>();
 
+        Set<String> sectionNetids = new HashSet<>();
+        for (Member member : sectionMembers) {
+            sectionNetids.add(member.netid);
+        }
+
+        // handle upgrades to official
+        for (SeatGroup group : section.listGroups()) {
+            for (Member member : group.listMembers()) {
+                if (sectionNetids.contains(member.netid) && !member.official) {
+                    markMemberAsOfficial(db, group.id, member.netid);
+                }
+            }
+        }
+
+        // handle removes
+        for (SeatGroup group : section.listGroups()) {
+            for (Member member : group.listMembers()) {
+                if (!member.official) {
+                    continue;
+                }
+
+                if (!sectionNetids.contains(member.netid)) {
+                    removeMemberFromGroup(db, section, group.id, member.netid);
+                }
+            }
+        }
+
+        // handle adds
         for (SeatGroup group : section.listGroups()) {
             groupCounts.put(group.id, group.listMembers().size());
             seatGroupMembers.addAll(group.listMembers().stream().map(m -> m.netid).collect(Collectors.toList()));
@@ -221,6 +252,13 @@ public class SeatsStorage {
             addMemberToGroup(db, member, groupId, section.id);
             groupCounts.put(groupId, groupCounts.get(groupId) + 1);
         }
+    }
+
+    public static void markMemberAsOfficial(DBConnection db, String groupId, String netid) throws SQLException {
+        db.run("update seat_group_members set official = 1 where group_id = ? and netid = ?")
+            .param(groupId)
+            .param(netid)
+            .executeUpdate();
     }
 
     public static void addMemberToGroup(DBConnection db, Member member, String groupId, String sectionId) throws SQLException {
