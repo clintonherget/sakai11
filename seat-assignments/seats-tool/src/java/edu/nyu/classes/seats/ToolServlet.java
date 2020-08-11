@@ -34,6 +34,10 @@ public class ToolServlet extends HttpServlet {
     private SeatingHandlerBackgroundTask backgroundTask = null;
 
     public void init(ServletConfig config) throws ServletException {
+        if (ServerConfigurationService.getBoolean("seats.development-mode", false)) {
+            SeatsStorage.setRegistryDBSuffix("");
+        }
+
         // FIXME: should be false in production?
         if (ServerConfigurationService.getBoolean("auto.ddl", false) || ServerConfigurationService.getBoolean("auto.ddl.seats", true)) {
             // "TOOT TOOT"

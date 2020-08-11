@@ -3,6 +3,7 @@ package edu.nyu.classes.seats.storage;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.*;
 
 import org.sakaiproject.component.cover.ComponentManager;
@@ -23,6 +24,8 @@ import org.sakaiproject.user.cover.UserDirectoryService;
 public class SeatsStorage {
     public static int EDIT_WINDOW_MS = 5 * 60 * 1000;
 
+    private static AtomicReference<String> registryDBSuffix = new AtomicReference<>("@rdb0");
+
     public enum SelectionType {
         RANDOM,
         WEIGHTED,
@@ -30,6 +33,10 @@ public class SeatsStorage {
 
     public void runDBMigrations() {
         BaseMigration.runMigrations();
+    }
+
+    public static void setRegistryDBSuffix(String suffix) {
+        registryDBSuffix.set((suffix == null) ? "" : suffix);
     }
 
     @SuppressWarnings("unchecked")
@@ -128,7 +135,13 @@ public class SeatsStorage {
         StringBuilder sb = new StringBuilder();
 
         db.run("select mtg.* from NYU_MV_COURSE_CATALOG cc" +
-               " inner join ps_class_mtg_pat mtg on cc.crse_id = mtg.crse_id and cc.strm = mtg.strm and cc.crse_offer_nbr = mtg.crse_offer_nbr and cc.session_code = mtg.session_code and cc.class_section = mtg.class_section" +
+               String.format(" inner join ps_class_mtg_pat%s mtg on " +
+                             " cc.crse_id = mtg.crse_id and" +
+                             " cc.strm = mtg.strm and" +
+                             " cc.crse_offer_nbr = mtg.crse_offer_nbr and" +
+                             " cc.session_code = mtg.session_code and" +
+                             " cc.class_section = mtg.class_section",
+                             registryDBSuffix.get()) +
                " inner join seat_group_section sgc on cc.stem_name = sgc.primary_roster_id" +
                " where sgc.id = ?")
             .param(section.id)
