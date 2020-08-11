@@ -1,3 +1,5 @@
+SeatToolEventBus = new Vue();
+
 Alerts = {
   messages: {
     "EDIT_CLOSED": "The edit period has closed for this seat. Please contact your instructor.",
@@ -241,6 +243,8 @@ Vue.component('seat-assignment-widget', {
           return;
       }
 
+      SeatToolEventBus.$emit("editing", this._uid);
+
       this.editing = true;
       this.seatValueUponEditing = this.seat;
       this.selectInput();
@@ -334,6 +338,12 @@ Vue.component('seat-assignment-widget', {
         self.currentTime = new Date().getTime();
       }, 1000);
     }
+
+    SeatToolEventBus.$on('editing', function(componentUid) {
+      if (self._uid != componentUid && self.editing) {
+        self.cancel();
+      }
+    });
   },
 });
 
