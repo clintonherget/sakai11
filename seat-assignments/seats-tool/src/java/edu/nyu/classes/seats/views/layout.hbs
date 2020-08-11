@@ -13,9 +13,11 @@
         <link rel="stylesheet" type="text/css" href="/seats-tool/css/base.css?t={{portalCdnQuery}}" />
         <link rel="stylesheet" type="text/css" media="print" href="/seats-tool/css/print.css?t={{portalCdnQuery}}" />
 
-        <!-- FIXME DEV ONLY -->
-        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-        <!-- script src="/seats-tool/js/vue.min.js"></script -->
+        {{#if developmentMode}}
+            <script src="/seats-tool/js/vue.js"></script>
+        {{else}}
+            <script src="/seats-tool/js/vue.min.js"></script>
+        {{/if}}
 
         <script src="/seats-tool/js/components.js?t={{portalCdnQuery}}"></script>
 
