@@ -218,7 +218,17 @@ public class SeatsStorage {
         }
     }
 
-    public static void syncGroupsToSection(DBConnection db, SeatSection section) throws SQLException {
+    public static class SyncResult {
+        final public Map<String, List<Member>> adds;
+        final public Map<String, List<Member>> drops;
+
+        public SyncResult(Map<String, List<Member>> adds, Map<String, List<Member>> drops) {
+            this.adds = adds;
+            this.drops = drops;
+        }
+    }
+
+    public static SyncResult syncGroupsToSection(DBConnection db, SeatSection section) throws SQLException {
         List<Member> sectionMembers = getMembersForSection(db, section);
         Set<String> seatGroupMembers = new HashSet<>();
         Map<String, Integer> groupCounts = new HashMap<>();
@@ -238,6 +248,7 @@ public class SeatsStorage {
         }
 
         // handle removes
+        Map<String, List<Member>> drops = new HashMap<>();
         for (SeatGroup group : section.listGroups()) {
             for (Member member : group.listMembers()) {
                 if (!member.official) {
@@ -246,6 +257,9 @@ public class SeatsStorage {
 
                 if (!sectionNetids.contains(member.netid)) {
                     removeMemberFromGroup(db, section, group.id, member.netid);
+
+                    drops.putIfAbsent(group.id, new ArrayList<>());
+                    drops.get(group.id).add(member);
                 }
             }
         }
@@ -256,6 +270,7 @@ public class SeatsStorage {
             seatGroupMembers.addAll(group.listMembers().stream().map(m -> m.netid).collect(Collectors.toList()));
         }
 
+        Map<String, List<Member>> adds = new HashMap<>();
         for (Member member : sectionMembers) {
             if (seatGroupMembers.contains(member.netid)) {
                 continue;
@@ -264,7 +279,12 @@ public class SeatsStorage {
             String groupId = groupCounts.keySet().stream().min((o1, o2) -> groupCounts.get(o1) - groupCounts.get(o2)).get();
             addMemberToGroup(db, member, groupId, section.id);
             groupCounts.put(groupId, groupCounts.get(groupId) + 1);
+
+            adds.putIfAbsent(groupId, new ArrayList<>());
+            adds.get(groupId).add(member);
         }
+
+        return new SyncResult(adds, drops);
     }
 
     public static void markMemberAsOfficial(DBConnection db, String groupId, String netid) throws SQLException {

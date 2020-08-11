@@ -218,7 +218,21 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
                         for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
                             if (section.provisioned) {
-                                SeatsStorage.syncGroupsToSection(db, section);
+                                SeatsStorage.SyncResult syncResult = SeatsStorage.syncGroupsToSection(db, section);
+
+                                if (section.listGroups().size() > 1) {
+                                    // FIXME: email peeps
+
+                                    // syncResult
+                                    System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatingHandlerBackgroundTask.java:226 BowedAnteater]: " + "\n    syncResult => " + (syncResult) + "\n");
+
+                                    for (Map.Entry<String, List<Member>> entry : syncResult.adds.entrySet()) {
+                                        for (Member m : entry.getValue()) {
+                                            // "ADD", entry.getKey(), m.netid
+                                            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatingHandlerBackgroundTask.java:232 LameChimpanzee]: " + "\n    'ADD' => " + ("ADD") + "\n    entry.getKey() => " + (entry.getKey()) + "\n    m.netid => " + (m.netid) + "\n");
+                                        }
+                                    }
+                                }
                             } else {
                                 SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
                             }
