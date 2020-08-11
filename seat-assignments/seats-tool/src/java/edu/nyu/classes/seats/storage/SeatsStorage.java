@@ -7,6 +7,7 @@ import java.util.stream.*;
 
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.coursemanagement.api.Membership;
+import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 
@@ -40,6 +41,23 @@ public class SeatsStorage {
         }
 
         return obj.toString();
+    }
+
+    public static String getSectionInstructionMode(DBConnection db, String primaryRosterId) throws SQLException, IdUnusedException {
+        String result = null;
+
+        Optional<String> instructionMode = db.run("select instruction_mode from nyu_t_course_catalog where stem_name = ?")
+           .param(primaryRosterId)
+           .executeQuery()
+           .getStringColumn("instruction_mode")
+           .stream()
+           .findFirst();
+
+        if (instructionMode.isPresent()) {
+            result = instructionMode.get();
+        }
+
+        return result;
     }
 
     public static void transferMember(DBConnection db, String siteId, String sectionId, String fromGroupId, String toGroupId, String netid) throws SQLException {
@@ -108,7 +126,7 @@ public class SeatsStorage {
 
         db.run("select mtg.* from NYU_MV_COURSE_CATALOG cc" +
                " inner join ps_class_mtg_pat mtg on cc.crse_id = mtg.crse_id and cc.strm = mtg.strm and cc.crse_offer_nbr = mtg.crse_offer_nbr and cc.session_code = mtg.session_code and cc.class_section = mtg.class_section" +
-               " inner join seat_group_section sgc on cc.stem_name = replace(sgc.primary_roster_id, '_', ':')" +
+               " inner join seat_group_section sgc on cc.stem_name = sgc.primary_roster_id" +
                " where sgc.id = ?")
             .param(section.id)
             .executeQuery()
@@ -170,7 +188,7 @@ public class SeatsStorage {
                 .param(section.id)
                 .executeQuery()
                 .each(row -> {
-                    sb.append(row.getString("primary_roster_id").replace("_", ":"));
+                    sb.append(row.getString("primary_roster_id"));
                 });
         }
 
@@ -385,7 +403,7 @@ public class SeatsStorage {
                 .param(sectionId)
                 .executeQuery()
                 .map(row -> {
-                    return new SeatSection(sectionId, siteId, row.getInt("provisioned") == 1, row.getInt("has_split") == 1);
+                    return new SeatSection(sectionId, siteId, row.getInt("provisioned") == 1, row.getInt("has_split") == 1, row.getString("primary_roster_id"));
                 });
 
         if (sections.isEmpty()) {

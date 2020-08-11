@@ -363,13 +363,10 @@ Vue.component('split-action', {
         <p>Section membership will be randomly distributed among the cohorts according to the rules defined below.</p>
         <label for="numberofgroups">Number of cohorts to create:</label>
         <select id="numberofgroups" v-model="numberOfGroups" class="form-control">
-          <option>1</option>
-          <option>2</option>
-          <option>3</option>
-          <option>4</option>
+          <option v-for="i in section.maxGroups" :value="i">{{i}}</option>
         </select>
       </div>
-      <div>
+      <div v-if="instructionModeSupportsWeighted">
         <label for="selectionType">Remote student random cohort assignment:</label>
         <div class="well">
           <label>
@@ -401,6 +398,9 @@ Vue.component('split-action', {
   computed: {
       baseurl: function() {
           return this.$parent.baseurl;
+      },
+      instructionModeSupportsWeighted: function() {
+        return this.section.instructionMode === 'OB';
       },
       hasSeatAssignments: function() {
           for (var g = 0; g < this.section.groups.length; g++) {

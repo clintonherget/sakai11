@@ -1,13 +1,6 @@
 package edu.nyu.classes.seats.handlers;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TimeZone;
-import java.util.Comparator;
+import java.util.*;
 import java.text.DateFormat;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,7 +11,6 @@ import org.sakaiproject.time.cover.TimeService;
 import org.sakaiproject.time.api.Time;
 
 import java.util.stream.Collectors;
-import java.util.Collections;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
@@ -74,7 +66,23 @@ public class SectionHandler implements Handler {
                 sectionJSON.put("shortName", seatSection.get().shortName);
                 sectionJSON.put("provisioned", seatSection.get().provisioned);
                 sectionJSON.put("split", seatSection.get().hasSplit);
-                sectionJSON.put("maxGroups", 4);
+
+
+
+                Site site = SiteService.getSite(siteId);
+                ResourceProperties props = site.getProperties();
+                String instructionMode = null;
+                String propInstructionModeOverrides = props.getProperty("OverrideToBlended");
+                if (propInstructionModeOverrides != null) {
+                    if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.get().primaryRosterId)) {
+                        instructionMode = "OB";
+                    };
+                }
+
+                String propMaxGroupsString = props.getProperty("SeatingAssignmentsMaxGroups");
+
+                sectionJSON.put("maxGroups", propMaxGroupsString == null ? 4 : Integer.valueOf(propMaxGroupsString));
+                sectionJSON.put("instructionMode", instructionMode == null ? SeatsStorage.getSectionInstructionMode(db, seatSection.get().primaryRosterId) : instructionMode);
 
                 JSONArray sectionGroups = new JSONArray();
                 sectionJSON.put("groups", sectionGroups);
