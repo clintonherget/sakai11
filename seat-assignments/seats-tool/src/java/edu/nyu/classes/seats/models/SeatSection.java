@@ -14,12 +14,14 @@ public class SeatSection {
     public boolean hasSplit;
     public String name;
     public String shortName;
+    public String primaryRosterId;
 
-    public SeatSection(String id, String siteId, boolean provisioned, boolean hasSplit) {
+    public SeatSection(String id, String siteId, boolean provisioned, boolean hasSplit, String primaryRosterId) {
         this.id = id;
         this.siteId = siteId;
         this.provisioned = provisioned;
         this.hasSplit = hasSplit;
+        this.primaryRosterId = primaryRosterId;
     }
 
     public Collection<String> groupIds() {

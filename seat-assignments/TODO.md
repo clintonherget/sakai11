@@ -20,9 +20,3 @@
   * where are student locations/modalities coming from?
 
   * audit all permissions
-
-  * site property overrides for instruction mode
-
-  * site property overrides max groups
-
-  * don't offer options for non-blended instruction mode?
