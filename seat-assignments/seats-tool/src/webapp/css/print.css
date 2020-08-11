@@ -1,0 +1,14 @@
+.pasystem-banner-alerts,
+.modal,
+footer,
+nav,
+button,
+hr,
+a {
+  display: none !important;
+}
+
+.seat-assignment-widget * {
+    width: auto !important;
+    min-width: auto !important;
+}
