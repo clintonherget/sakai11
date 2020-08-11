@@ -24,6 +24,8 @@ import org.sakaiproject.tool.cover.ToolManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import edu.nyu.classes.seats.storage.*;
 import edu.nyu.classes.seats.storage.db.*;
 import edu.nyu.classes.seats.handlers.*;
@@ -33,9 +35,12 @@ public class ToolServlet extends HttpServlet {
     private static final Logger LOG = LoggerFactory.getLogger(ToolServlet.class);
     private SeatingHandlerBackgroundTask backgroundTask = null;
 
+    private AtomicBoolean developmentMode = new AtomicBoolean(false);
+
     public void init(ServletConfig config) throws ServletException {
         if (ServerConfigurationService.getBoolean("seats.development-mode", false)) {
             SeatsStorage.setRegistryDBSuffix("");
+            developmentMode.set(true);
         }
 
         // FIXME: should be false in production?
@@ -76,6 +81,8 @@ public class ToolServlet extends HttpServlet {
             if (ToolManager.getCurrentPlacement() != null) {
                 context.put("siteId", ToolManager.getCurrentPlacement().getContext());
             }
+
+            context.put("developmentMode", developmentMode.get());
 
             context.put("hasSiteUpd", hasSiteUpd((String)context.get("siteId")));
 
