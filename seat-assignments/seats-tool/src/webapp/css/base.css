@@ -113,3 +113,7 @@
   opacity: 1.0;
   filter: alpha(opacity=100);
 }
+
+textarea.form-control.seats-email-body {
+    height: 10em;
+}
