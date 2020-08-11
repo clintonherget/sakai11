@@ -60,6 +60,11 @@ public class SectionHandler implements Handler {
 
                 Optional<SeatSection> seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
 
+                if (!seatSection.isPresent()) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    return;
+                }
+
                 JSONObject sectionJSON = new JSONObject();
                 sectionJSON.put("id", seatSection.get().id);
                 sectionJSON.put("name", seatSection.get().name);
