@@ -845,6 +845,7 @@ Vue.component('confirm-button', {
 Vue.component('section-group', {
   template: `
 <div>
+  <hr v-if="isNotFirstGroup" />
   <template v-if="isNotOnlyGroup">
     <h2>{{group.name}} {{groupLabel}}</h2>
     <p>{{section.name}}</p>
@@ -1016,6 +1017,9 @@ Vue.component('section-group', {
     },
     isNotOnlyGroup: function() {
       return this.section.groups.length > 1;
+    },
+    isNotFirstGroup: function() {
+      return this.section.groups.indexOf(this.group) > 0;
     },
     groupLabel: function() {
       return "(" + (this.section.groups.indexOf(this.group) + 1) + " of " + this.section.groups.length +  ")";
