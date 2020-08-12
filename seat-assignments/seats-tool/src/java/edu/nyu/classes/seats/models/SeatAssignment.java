@@ -1,5 +1,7 @@
 package edu.nyu.classes.seats.models;
 
+import java.util.*;
+
 public class SeatAssignment {
     public String id;
     public String netid;
@@ -7,10 +9,18 @@ public class SeatAssignment {
     public Meeting meeting;
     public long editableUntil;
 
+    private String normalizeSeat(String seat) {
+        if (seat == null) {
+            return null;
+        } else {
+            return seat.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "");
+        }
+    }
+
     public SeatAssignment(String id, String netid, String seat, long editableUntil, Meeting meeting) {
         this.id = id;
         this.netid = netid;
-        this.seat = seat;
+        this.seat = normalizeSeat(seat);
         this.meeting = meeting;
         this.editableUntil = editableUntil;
     }
