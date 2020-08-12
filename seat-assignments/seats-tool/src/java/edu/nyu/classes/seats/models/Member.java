@@ -6,7 +6,6 @@ public class Member {
     public enum StudentLocation {
         REMOTE,
         IN_PERSON,
-        UNSURE,
     }
 
     public String netid;
@@ -38,7 +37,7 @@ public class Member {
 
     public Member(String netid, boolean official, Role role) {
         this.netid = netid;
-        this.studentLocation = StudentLocation.values()[Math.abs(netid.hashCode() % 3)];
+        this.studentLocation = StudentLocation.values()[Math.abs(netid.hashCode() % StudentLocation.values().length)];
         this.official = official;
         this.role = role;
     }
