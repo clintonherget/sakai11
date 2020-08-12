@@ -84,6 +84,7 @@ public class V1__Init extends BaseMigration {
         "    timestamp_ms number not null,                                                                            " +
         "    event_code varchar2(32) not null,                                                                        " +
         "    json clob not null,                                                                                      " +
+        "    logged_in_user varchar2(255),                                                                            " +
         "    group_id varchar2(255),                                                                                  " +
         "    group_name varchar2(255),                                                                                " +
         "    meeting_id varchar2(255),                                                                                " +
