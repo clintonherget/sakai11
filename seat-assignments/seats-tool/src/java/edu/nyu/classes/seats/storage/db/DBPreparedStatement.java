@@ -26,6 +26,7 @@ package edu.nyu.classes.seats.storage.db;
 
 import java.io.Reader;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Calendar;
@@ -38,11 +39,13 @@ public class DBPreparedStatement {
 
     private final DBConnection dbConnection;
     private final PreparedStatement preparedStatement;
+    private final String sql;
     private int paramCount;
 
-    public DBPreparedStatement(PreparedStatement preparedStatement, DBConnection dbc) {
+    public DBPreparedStatement(PreparedStatement preparedStatement, String sql, DBConnection dbc) {
         this.dbConnection = dbc;
         this.preparedStatement = preparedStatement;
+        this.sql = sql;
         this.paramCount = 1;
     }
 
@@ -139,15 +142,26 @@ public class DBPreparedStatement {
     public int executeUpdate() throws SQLException {
         try {
             dbConnection.markAsDirty();
-            return preparedStatement.executeUpdate();
+            long startTime = System.currentTimeMillis();
+            int result = preparedStatement.executeUpdate();
+            long endTime = System.currentTimeMillis();
+
+            dbConnection.maybeLogTime(sql, endTime - startTime);
+
+            return result;
         } finally {
             cleanup();
         }
     }
 
     public DBResults executeQuery() throws SQLException {
-        return new DBResults(preparedStatement.executeQuery(),
-                preparedStatement);
+        long startTime = System.currentTimeMillis();
+        ResultSet rs = preparedStatement.executeQuery();
+        long endTime = System.currentTimeMillis();
+
+        dbConnection.maybeLogTime(sql, endTime - startTime);
+
+        return new DBResults(rs, preparedStatement);
     }
 
     private void cleanup() throws SQLException {
