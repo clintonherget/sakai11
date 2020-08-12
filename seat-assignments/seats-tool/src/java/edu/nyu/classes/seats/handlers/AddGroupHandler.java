@@ -4,6 +4,8 @@ import edu.nyu.classes.seats.models.SeatSection;
 import edu.nyu.classes.seats.storage.Locks;
 import edu.nyu.classes.seats.storage.SeatsStorage;
 import edu.nyu.classes.seats.storage.db.DBConnection;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.cover.SiteService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,15 +26,20 @@ public class AddGroupHandler implements Handler {
         RequestParams p = new RequestParams(request);
         String sectionId = p.getString("sectionId", null);
 
+        Site site = SiteService.getSite(siteId);
+
         Locks.lockSiteForUpdate(siteId);
         try {
             SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
-            for (int i=0;;i++) {
-                String groupName = String.format("%s-%c", seatSection.shortName, 65 + i);
-                if (seatSection.listGroups().stream().noneMatch(g -> groupName.equals(g.name))) {
-                    SeatsStorage.createGroup(db, seatSection, groupName, Collections.emptyList());
-                    SeatsStorage.markSectionAsSplit(db, seatSection);
-                    break;
+            Integer maxGroups = SeatsStorage.getGroupMaxForSite(site);
+            if (seatSection.listGroups().size() < maxGroups) {
+                for (int i = 0; ; i++) {
+                    String groupName = String.format("%s-%c", seatSection.shortName, 65 + i);
+                    if (seatSection.listGroups().stream().noneMatch(g -> groupName.equals(g.name))) {
+                        SeatsStorage.createGroup(db, seatSection, groupName, Collections.emptyList());
+                        SeatsStorage.markSectionAsSplit(db, seatSection);
+                        break;
+                    }
                 }
             }
         } finally {

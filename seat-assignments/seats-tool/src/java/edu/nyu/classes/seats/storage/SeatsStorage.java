@@ -8,6 +8,7 @@ import java.util.stream.*;
 
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.coursemanagement.api.Membership;
+import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.Group;
@@ -52,7 +53,7 @@ public class SeatsStorage {
         return obj;
     }
 
-    public static String getSectionInstructionMode(DBConnection db, String primaryStemName) throws SQLException, IdUnusedException {
+    public static String getSectionInstructionMode(DBConnection db, String primaryStemName) throws SQLException {
         String result = null;
 
         Optional<String> instructionMode = db.run("select instruction_mode from nyu_t_course_catalog where stem_name = ?")
@@ -718,6 +719,27 @@ public class SeatsStorage {
             .orElse(Utils.rosterToStemName(rosterId));
     }
 
+    public static String getInstructionModeForSection(DBConnection db, SeatSection seatSection, Site site) throws SQLException {
+        ResourceProperties props = site.getProperties();
+        String instructionMode = null;
+        String propInstructionModeOverrides = props.getProperty("OverrideToBlended");
+        if (propInstructionModeOverrides != null) {
+            if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.primaryStemName)) {
+                instructionMode = "OB";
+            };
+        }
+        if (instructionMode == null) {
+            return SeatsStorage.getSectionInstructionMode(db, seatSection.primaryStemName);
+        } else {
+            return instructionMode;
+        }
+    }
+
+    public static Integer getGroupMaxForSite(Site site) {
+        ResourceProperties props = site.getProperties();
+        String propMaxGroupsString = props.getProperty("SeatingAssignmentsMaxGroups");
+        return propMaxGroupsString == null ? 4 : Integer.valueOf(propMaxGroupsString);
+    }
 
     public static void ensureRosterEntry(DBConnection db, String siteId, String primaryRosterId, Optional<String> secondaryRosterId) throws SQLException {
         Optional<String> sectionId = db.run("select id from seat_group_section where primary_stem_name = ? AND site_id = ?")

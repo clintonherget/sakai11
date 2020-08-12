@@ -7,6 +7,8 @@ import edu.nyu.classes.seats.storage.db.DBConnection;
 import edu.nyu.classes.seats.storage.Locks;
 import edu.nyu.classes.seats.storage.SeatsStorage;
 import org.json.simple.JSONObject;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.cover.SiteService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,11 +47,16 @@ public class SplitSectionHandler implements Handler {
             throw new RuntimeException("Need argument: selectionType");
         }
 
+        Site site = SiteService.getSite(siteId);
+
         Locks.lockSiteForUpdate(siteId);
         try {
             SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
-            SeatsStorage.bootstrapGroupsForSection(db, seatSection, numberOfGroups, selectionType);
-            SeatsStorage.markSectionAsSplit(db, seatSection);
+            if (!seatSection.hasSplit) {
+                Integer maxGroups = SeatsStorage.getGroupMaxForSite(site);
+                SeatsStorage.bootstrapGroupsForSection(db, seatSection, Math.min(numberOfGroups, maxGroups), selectionType);
+                SeatsStorage.markSectionAsSplit(db, seatSection);
+            }
         } finally {
             Locks.unlockSiteForUpdate(siteId);
         }
