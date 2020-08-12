@@ -17,35 +17,30 @@ public class AddGroupHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        DBConnection db = (DBConnection)context.get("db");
+        String siteId = (String)context.get("siteId");
+
+        RequestParams p = new RequestParams(request);
+        String sectionId = p.getString("sectionId", null);
+
+        Locks.lockSiteForUpdate(siteId);
         try {
-            DBConnection db = (DBConnection)context.get("db");
-            String siteId = (String)context.get("siteId");
-
-            RequestParams p = new RequestParams(request);
-            String sectionId = p.getString("sectionId", null);
-
-            Locks.lockSiteForUpdate(siteId);
-            try {
-                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
-                for (int i=0;;i++) {
-                    String groupName = String.format("%s-%c", seatSection.shortName, 65 + i);
-                    if (seatSection.listGroups().stream().noneMatch(g -> groupName.equals(g.name))) {
-                        SeatsStorage.createGroup(db, seatSection, groupName, Collections.emptyList());
-                        SeatsStorage.markSectionAsSplit(db, seatSection);
-                        break;
-                    }
+            SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
+            for (int i=0;;i++) {
+                String groupName = String.format("%s-%c", seatSection.shortName, 65 + i);
+                if (seatSection.listGroups().stream().noneMatch(g -> groupName.equals(g.name))) {
+                    SeatsStorage.createGroup(db, seatSection, groupName, Collections.emptyList());
+                    SeatsStorage.markSectionAsSplit(db, seatSection);
+                    break;
                 }
-            } finally {
-                Locks.unlockSiteForUpdate(siteId);
             }
+        } finally {
+            Locks.unlockSiteForUpdate(siteId);
+        }
 
-            try {
-                response.getWriter().write("{}");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+        try {
+            response.getWriter().write("{}");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

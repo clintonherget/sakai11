@@ -26,44 +26,40 @@ public class EmailGroupHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
-        try {
-            DBConnection db = (DBConnection)context.get("db");
-            String siteId = (String)context.get("siteId");
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        DBConnection db = (DBConnection)context.get("db");
+        String siteId = (String)context.get("siteId");
 
-            RequestParams p = new RequestParams(request);
-            String sectionId = p.getString("sectionId", null);
-            String groupId = p.getString("groupId", null);
+        RequestParams p = new RequestParams(request);
+        String sectionId = p.getString("sectionId", null);
+        String groupId = p.getString("groupId", null);
 
-            String subject = p.getString("subject", "");
-            String body = p.getString("body", "");
+        String subject = p.getString("subject", "");
+        String body = p.getString("body", "");
 
-            Optional<SeatSection> section = SeatsStorage.getSeatSection(db, sectionId, siteId);
+        Optional<SeatSection> section = SeatsStorage.getSeatSection(db, sectionId, siteId);
 
-            if (!section.isPresent()) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-
-            Optional<SeatGroup> group = section.get().listGroups().stream().filter((g) -> g.id.equals(groupId)).findFirst();
-
-            if (!group.isPresent()) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-
-            List<String> netids = group.get().listMembers().stream().map((m) -> m.netid).collect(Collectors.toList());
-            List<User> users = UserDirectoryService.getUsersByEids(netids);
-
-            Emails.sendPlaintextEmail(users,
-                                      SiteService.getSite(siteId),
-                                      subject,
-                                      body);
-
-            response.getWriter().write("{}");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (!section.isPresent()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
         }
+
+        Optional<SeatGroup> group = section.get().listGroups().stream().filter((g) -> g.id.equals(groupId)).findFirst();
+
+        if (!group.isPresent()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        List<String> netids = group.get().listMembers().stream().map((m) -> m.netid).collect(Collectors.toList());
+        List<User> users = UserDirectoryService.getUsersByEids(netids);
+
+        Emails.sendPlaintextEmail(users,
+                                  SiteService.getSite(siteId),
+                                  subject,
+                                  body);
+
+        response.getWriter().write("{}");
     }
 
     @Override

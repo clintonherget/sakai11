@@ -13,7 +13,13 @@ public class SeatAssignment {
         if (seat == null) {
             return null;
         } else {
-            return seat.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "");
+            String s = seat.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "");
+
+            if (s.isEmpty()) {
+                return null;
+            } else {
+                return s;
+            }
         }
     }
 

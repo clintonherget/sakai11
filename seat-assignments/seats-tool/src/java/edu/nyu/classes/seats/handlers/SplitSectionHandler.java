@@ -20,47 +20,42 @@ public class SplitSectionHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        String siteId = (String)context.get("siteId");
+        DBConnection db = (DBConnection)context.get("db");
+
+        RequestParams p = new RequestParams(request);
+
+        String sectionId = p.getString("sectionId", null);
+        if (sectionId == null) {
+            throw new RuntimeException("Need argument: sectionId");
+        }
+
+        String numberOfGroupsParam = p.getString("numberOfGroups", null);
+        if (numberOfGroupsParam == null) {
+            throw new RuntimeException("Need argument: numberOfGroups");
+        }
+        Integer numberOfGroups = Integer.parseInt(numberOfGroupsParam);
+
+        String selectionTypeParam = p.getString("selectionType", null);
+        SeatsStorage.SelectionType selectionType = null;
         try {
-            String siteId = (String)context.get("siteId");
-            DBConnection db = (DBConnection)context.get("db");
+            selectionType = SeatsStorage.SelectionType.valueOf(selectionTypeParam);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Need argument: selectionType");
+        }
 
-            RequestParams p = new RequestParams(request);
+        Locks.lockSiteForUpdate(siteId);
+        try {
+            SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
+            SeatsStorage.bootstrapGroupsForSection(db, seatSection, numberOfGroups, selectionType);
+            SeatsStorage.markSectionAsSplit(db, seatSection);
+        } finally {
+            Locks.unlockSiteForUpdate(siteId);
+        }
 
-            String sectionId = p.getString("sectionId", null);
-            if (sectionId == null) {
-                throw new RuntimeException("Need argument: sectionId");
-            }
-
-            String numberOfGroupsParam = p.getString("numberOfGroups", null);
-            if (numberOfGroupsParam == null) {
-                throw new RuntimeException("Need argument: numberOfGroups");
-            }
-            Integer numberOfGroups = Integer.parseInt(numberOfGroupsParam);
-
-            String selectionTypeParam = p.getString("selectionType", null);
-            SeatsStorage.SelectionType selectionType = null;
-            try {
-                selectionType = SeatsStorage.SelectionType.valueOf(selectionTypeParam);
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Need argument: selectionType");
-            }
-
-            Locks.lockSiteForUpdate(siteId);
-            try {
-                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
-                SeatsStorage.bootstrapGroupsForSection(db, seatSection, numberOfGroups, selectionType);
-                SeatsStorage.markSectionAsSplit(db, seatSection);
-            } finally {
-                Locks.unlockSiteForUpdate(siteId);
-            }
-
-            try {
-                response.getWriter().write("{}");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+        try {
+            response.getWriter().write("{}");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -17,35 +17,30 @@ public class DeleteGroupHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        DBConnection db = (DBConnection)context.get("db");
+        String siteId = (String)context.get("siteId");
+
+        RequestParams p = new RequestParams(request);
+        String sectionId = p.getString("sectionId", null);
+        String groupId = p.getString("groupId", null);
+
+        Locks.lockSiteForUpdate(siteId);
         try {
-            DBConnection db = (DBConnection)context.get("db");
-            String siteId = (String)context.get("siteId");
-
-            RequestParams p = new RequestParams(request);
-            String sectionId = p.getString("sectionId", null);
-            String groupId = p.getString("groupId", null);
-
-            Locks.lockSiteForUpdate(siteId);
-            try {
-                SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
-                Optional<SeatGroup> group = seatSection.listGroups().stream().filter(g -> g.id.equals(groupId)).findFirst();
-                if (group.isPresent()) {
-                    for (Meeting meeting : group.get().listMeetings()) {
-                        SeatsStorage.deleteMeeting(db, meeting);
-                    }
-                    SeatsStorage.deleteGroup(db, group.get());
+            SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
+            Optional<SeatGroup> group = seatSection.listGroups().stream().filter(g -> g.id.equals(groupId)).findFirst();
+            if (group.isPresent()) {
+                for (Meeting meeting : group.get().listMeetings()) {
+                    SeatsStorage.deleteMeeting(db, meeting);
                 }
-            } finally {
-                Locks.unlockSiteForUpdate(siteId);
+                SeatsStorage.deleteGroup(db, group.get());
             }
+        } finally {
+            Locks.unlockSiteForUpdate(siteId);
+        }
 
-            try {
-                response.getWriter().write("{}");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+        try {
+            response.getWriter().write("{}");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

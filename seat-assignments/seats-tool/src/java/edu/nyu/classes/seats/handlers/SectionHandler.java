@@ -46,108 +46,103 @@ public class SectionHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
-            try {
-                String siteId = (String)context.get("siteId");
-                DBConnection db = (DBConnection)context.get("db");
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        String siteId = (String)context.get("siteId");
+        DBConnection db = (DBConnection)context.get("db");
 
-                RequestParams p = new RequestParams(request);
-                String sectionId = p.getString("sectionId", null);
+        RequestParams p = new RequestParams(request);
+        String sectionId = p.getString("sectionId", null);
 
-                if (sectionId == null) {
-                    throw new RuntimeException("Need argument: sectionId");
+        if (sectionId == null) {
+            throw new RuntimeException("Need argument: sectionId");
+        }
+
+        Optional<SeatSection> seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
+
+        if (!seatSection.isPresent()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        JSONObject sectionJSON = new JSONObject();
+        sectionJSON.put("id", seatSection.get().id);
+        sectionJSON.put("name", seatSection.get().name);
+        sectionJSON.put("shortName", seatSection.get().shortName);
+        sectionJSON.put("provisioned", seatSection.get().provisioned);
+        sectionJSON.put("split", seatSection.get().hasSplit);
+
+
+
+        Site site = SiteService.getSite(siteId);
+        ResourceProperties props = site.getProperties();
+        String instructionMode = null;
+        String propInstructionModeOverrides = props.getProperty("OverrideToBlended");
+        if (propInstructionModeOverrides != null) {
+            if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.get().primaryStemName)) {
+                instructionMode = "OB";
+            };
+        }
+
+        String propMaxGroupsString = props.getProperty("SeatingAssignmentsMaxGroups");
+
+        sectionJSON.put("maxGroups", propMaxGroupsString == null ? 4 : Integer.valueOf(propMaxGroupsString));
+        sectionJSON.put("instructionMode", instructionMode == null ? SeatsStorage.getSectionInstructionMode(db, seatSection.get().primaryStemName) : instructionMode);
+
+        JSONArray sectionGroups = new JSONArray();
+        sectionJSON.put("groups", sectionGroups);
+
+        Map<String, String> memberNames = SeatsStorage.getMemberNames(seatSection.get());
+
+        for (SeatGroup group : seatSection.get().listGroups()) {
+            JSONObject groupJSON = new JSONObject();
+            sectionGroups.add(groupJSON);
+
+            groupJSON.put("id", group.id);
+            groupJSON.put("name", group.name);
+            groupJSON.put("description", group.description);
+
+            groupJSON.put("isGroupEmpty", group.listMembers().isEmpty());
+
+            JSONArray meetingsJSON = new JSONArray();
+            groupJSON.put("meetings", meetingsJSON);
+
+            for (Meeting meeting : group.listMeetings()) {
+                JSONObject meetingJSON = new JSONObject();
+                meetingsJSON.add(meetingJSON);
+
+                meetingJSON.put("id", meeting.id);
+                meetingJSON.put("name", meeting.name);
+
+                JSONArray seatAssignments = new JSONArray();
+                meetingJSON.put("seatAssignments", seatAssignments);
+
+                Map<String, JSONObject> seatAssignmentSet = new HashMap<>();
+
+                for (Member member : group.listMembers()) {
+                    JSONObject assignmentJSON = new JSONObject();
+                    assignmentJSON.put("netid", member.netid);
+                    assignmentJSON.put("official", member.official);
+                    assignmentJSON.put("seat", null);
+                    assignmentJSON.put("displayName", memberNames.getOrDefault(member.netid, member.netid));
+                    assignmentJSON.put("studentLocation", member.studentLocation.toString());
+                    seatAssignmentSet.put(member.netid, assignmentJSON);
                 }
 
-                Optional<SeatSection> seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId);
-
-                if (!seatSection.isPresent()) {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    return;
+                for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
+                    JSONObject assignmentJSON = seatAssignmentSet.get(seatAssignment.netid);
+                    assignmentJSON.put("id", seatAssignment.id);
+                    assignmentJSON.put("seat", seatAssignment.seat);
                 }
 
-                JSONObject sectionJSON = new JSONObject();
-                sectionJSON.put("id", seatSection.get().id);
-                sectionJSON.put("name", seatSection.get().name);
-                sectionJSON.put("shortName", seatSection.get().shortName);
-                sectionJSON.put("provisioned", seatSection.get().provisioned);
-                sectionJSON.put("split", seatSection.get().hasSplit);
-
-
-
-                Site site = SiteService.getSite(siteId);
-                ResourceProperties props = site.getProperties();
-                String instructionMode = null;
-                String propInstructionModeOverrides = props.getProperty("OverrideToBlended");
-                if (propInstructionModeOverrides != null) {
-                    if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.get().primaryStemName)) {
-                        instructionMode = "OB";
-                    };
-                }
-
-                String propMaxGroupsString = props.getProperty("SeatingAssignmentsMaxGroups");
-
-                sectionJSON.put("maxGroups", propMaxGroupsString == null ? 4 : Integer.valueOf(propMaxGroupsString));
-                sectionJSON.put("instructionMode", instructionMode == null ? SeatsStorage.getSectionInstructionMode(db, seatSection.get().primaryStemName) : instructionMode);
-
-                JSONArray sectionGroups = new JSONArray();
-                sectionJSON.put("groups", sectionGroups);
-
-                Map<String, String> memberNames = SeatsStorage.getMemberNames(seatSection.get());
-
-                for (SeatGroup group : seatSection.get().listGroups()) {
-                    JSONObject groupJSON = new JSONObject();
-                    sectionGroups.add(groupJSON);
-
-                    groupJSON.put("id", group.id);
-                    groupJSON.put("name", group.name);
-                    groupJSON.put("description", group.description);
-
-                    groupJSON.put("isGroupEmpty", group.listMembers().isEmpty());
-
-                    JSONArray meetingsJSON = new JSONArray();
-                    groupJSON.put("meetings", meetingsJSON);
-
-                    for (Meeting meeting : group.listMeetings()) {
-                        JSONObject meetingJSON = new JSONObject();
-                        meetingsJSON.add(meetingJSON);
-
-                        meetingJSON.put("id", meeting.id);
-                        meetingJSON.put("name", meeting.name);
-
-                        JSONArray seatAssignments = new JSONArray();
-                        meetingJSON.put("seatAssignments", seatAssignments);
-
-                        Map<String, JSONObject> seatAssignmentSet = new HashMap<>();
-
-                        for (Member member : group.listMembers()) {
-                            JSONObject assignmentJSON = new JSONObject();
-                            assignmentJSON.put("netid", member.netid);
-                            assignmentJSON.put("official", member.official);
-                            assignmentJSON.put("seat", null);
-                            assignmentJSON.put("displayName", memberNames.getOrDefault(member.netid, member.netid));
-                            assignmentJSON.put("studentLocation", member.studentLocation.toString());
-                            seatAssignmentSet.put(member.netid, assignmentJSON);
-                        }
-
-                        for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
-                            JSONObject assignmentJSON = seatAssignmentSet.get(seatAssignment.netid);
-                            assignmentJSON.put("id", seatAssignment.id);
-                            assignmentJSON.put("seat", seatAssignment.seat);
-                        }
-
-                        seatAssignments.addAll(seatAssignmentSet.values());
-                    }
-                }
-
-                try {
-                    response.getWriter().write(sectionJSON.toString());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                seatAssignments.addAll(seatAssignmentSet.values());
             }
+        }
+
+        try {
+            response.getWriter().write(sectionJSON.toString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
