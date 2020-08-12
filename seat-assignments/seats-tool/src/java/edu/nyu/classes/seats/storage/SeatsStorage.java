@@ -16,6 +16,7 @@ import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.db.*;
 import edu.nyu.classes.seats.storage.migrations.BaseMigration;
 import edu.nyu.classes.seats.storage.Audit.AuditEvents;
+import edu.nyu.classes.seats.Utils;
 
 import org.json.simple.JSONObject;
 import org.sakaiproject.user.api.User;
@@ -50,11 +51,11 @@ public class SeatsStorage {
         return obj.toString();
     }
 
-    public static String getSectionInstructionMode(DBConnection db, String primaryRosterId) throws SQLException, IdUnusedException {
+    public static String getSectionInstructionMode(DBConnection db, String primaryStemName) throws SQLException, IdUnusedException {
         String result = null;
 
         Optional<String> instructionMode = db.run("select instruction_mode from nyu_t_course_catalog where stem_name = ?")
-           .param(primaryRosterId)
+           .param(primaryStemName)
            .executeQuery()
            .getStringColumn("instruction_mode")
            .stream()
@@ -142,7 +143,7 @@ public class SeatsStorage {
                              " cc.session_code = mtg.session_code and" +
                              " cc.class_section = mtg.class_section",
                              registryDBSuffix.get()) +
-               " inner join seat_group_section sgc on cc.stem_name = sgc.primary_roster_id" +
+               " inner join seat_group_section sgc on cc.stem_name = sgc.primary_stem_name" +
                " where sgc.id = ?")
             .param(section.id)
             .executeQuery()
@@ -200,11 +201,11 @@ public class SeatsStorage {
             });
 
         if (sb.length() == 0) {
-            db.run("select primary_roster_id from seat_group_section where id = ?")
+            db.run("select primary_stem_name from seat_group_section where id = ?")
                 .param(section.id)
                 .executeQuery()
                 .each(row -> {
-                    sb.append(row.getString("primary_roster_id"));
+                    sb.append(row.getString("primary_stem_name"));
                 });
         }
 
@@ -474,7 +475,7 @@ public class SeatsStorage {
                 .param(sectionId)
                 .executeQuery()
                 .map(row -> {
-                    return new SeatSection(sectionId, siteId, row.getInt("provisioned") == 1, row.getInt("has_split") == 1, row.getString("primary_roster_id"));
+                    return new SeatSection(sectionId, siteId, row.getInt("provisioned") == 1, row.getInt("has_split") == 1, row.getString("primary_stem_name"));
                 });
 
         if (sections.isEmpty()) {
@@ -708,16 +709,16 @@ public class SeatsStorage {
 
     public static String getSponsorSectionId(DBConnection db, String rosterId) throws SQLException {
         return db.run("select sponsor_course from nyu_t_crosslistings where nonsponsor_course = ?")
-            .param(rosterId)
+            .param(Utils.rosterToStemName(rosterId))
             .executeQuery()
             .oneString()
-            .orElse(rosterId);
+            .orElse(Utils.rosterToStemName(rosterId));
     }
 
 
     public static void ensureRosterEntry(DBConnection db, String siteId, String primaryRosterId, Optional<String> secondaryRosterId) throws SQLException {
-        Optional<String> sectionId = db.run("select id from seat_group_section where primary_roster_id = ? AND site_id = ?")
-            .param(primaryRosterId)
+        Optional<String> sectionId = db.run("select id from seat_group_section where primary_stem_name = ? AND site_id = ?")
+            .param(Utils.rosterToStemName(primaryRosterId))
             .param(siteId)
             .executeQuery()
             .oneString();
@@ -725,9 +726,11 @@ public class SeatsStorage {
         if (!sectionId.isPresent()) {
             sectionId = Optional.of(db.uuid());
 
-            db.run("insert into seat_group_section (id, primary_roster_id, site_id, provisioned, has_split) values (?, ?, ?, ?, ?)")
+            // primary_stem_name needs to match the stem_name we see in SIS tables, not the
+            // underscored Sakai rosters.
+            db.run("insert into seat_group_section (id, primary_stem_name, site_id, provisioned, has_split) values (?, ?, ?, ?, ?)")
                 .param(sectionId.get())
-                .param(primaryRosterId)
+                .param(Utils.rosterToStemName(primaryRosterId))
                 .param(siteId)
                 .param(0)
                 .param(0)
@@ -735,7 +738,7 @@ public class SeatsStorage {
 
             db.run("insert into seat_group_section_rosters (section_id, sakai_roster_id, role) values (?, ?, ?)")
                 .param(sectionId.get())
-                .param(primaryRosterId)
+                .param(Utils.stemNameToRosterId(primaryRosterId))
                 .param("primary")
                 .executeUpdate();
         }
@@ -743,14 +746,14 @@ public class SeatsStorage {
         if (secondaryRosterId.isPresent()) {
             int count = db.run("select count(1) from seat_group_section_rosters where section_id = ? AND sakai_roster_id = ?")
                 .param(sectionId.get())
-                .param(secondaryRosterId.get())
+                .param(Utils.stemNameToRosterId(secondaryRosterId.get()))
                 .executeQuery()
                 .getCount();
 
             if (count == 0) {
                 db.run("insert into seat_group_section_rosters (section_id, sakai_roster_id, role) values (?, ?, ?)")
                     .param(sectionId.get())
-                    .param(secondaryRosterId.get())
+                    .param(Utils.stemNameToRosterId(secondaryRosterId.get()))
                     .param("secondary")
                     .executeUpdate();
             }
