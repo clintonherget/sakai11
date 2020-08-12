@@ -706,7 +706,7 @@ Vue.component('group-meeting', {
 Vue.component('input-with-char-count', {
   template: `
     <div style="text-align: right">
-      <input :id="id" ref="textInput" type="text" class="form-control" v-model="value" v-on:keyup="adjustCount()" :maxlength="chars" />
+      <input :id="id" ref="textInput" type="text" class="form-control" v-on="$listeners" v-model="value" v-on:keyup="adjustCount()" :maxlength="chars" />
       <small><span>{{remaining}}</span> characters remaining</small>
     </div>
   `,
@@ -864,7 +864,7 @@ Vue.component('section-group', {
 
         <div class="form-group">
           <label :for="_uid + '_description'">Description text:</label>
-          <input-with-char-count chars=200 :id="_uid + '_description'" ref="descriptionInput" />
+          <input-with-char-count v-on:keydown.enter="saveDescription()" chars=200 :id="_uid + '_description'" ref="descriptionInput" />
         </div>
      </div>
     </template>
@@ -946,7 +946,12 @@ Vue.component('section-group', {
       });
     },
     showDescriptionModal: function() {
-      this.$refs.descriptionModal.open();
+      var self = this;
+
+      this.$refs.descriptionModal.open(function () {
+        $(self.$refs.descriptionModal.$el).find('.form-control').first().focus();
+      });
+
       this.$refs.descriptionInput.setValue(this.group.description || '');
     },
     saveDescription: function() {
