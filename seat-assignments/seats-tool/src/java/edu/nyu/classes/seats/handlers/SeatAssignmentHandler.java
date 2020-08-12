@@ -96,9 +96,9 @@ public class SeatAssignmentHandler implements Handler {
 
         SeatAssignment seatAssignment = new SeatAssignment(null, netid, seat, 0, meeting);
 
-        if (isInstructor && seat == null) {
+        if (isInstructor && seatAssignment.seat == null) {
             SeatsStorage.clearSeat(db, seatAssignment);
-        } else if (seat != null) {
+        } else if (seatAssignment.seat != null) {
             SeatsStorage.SetSeatResult seatResult = SeatsStorage.setSeat(db, seatAssignment, currentSeat, isInstructor);
             if (!SeatsStorage.SetSeatResult.OK.equals(seatResult)) {
                 result.put("error", true);
