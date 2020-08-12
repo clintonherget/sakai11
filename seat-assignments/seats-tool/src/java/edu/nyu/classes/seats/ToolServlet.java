@@ -37,6 +37,8 @@ public class ToolServlet extends HttpServlet {
 
     private AtomicBoolean developmentMode = new AtomicBoolean(false);
 
+    private Long logQueryThresholdMs = null;
+
     public void init(ServletConfig config) throws ServletException {
         if (ServerConfigurationService.getBoolean("seats.development-mode", false)) {
             SeatsStorage.setRegistryDBSuffix("");
@@ -51,9 +53,27 @@ public class ToolServlet extends HttpServlet {
             new SeatsStorage().runDBMigrations();
         }
 
+        String thresholdFromConfig = ServerConfigurationService.getString("seats.log-query-threshold-ms", null);
+        if (thresholdFromConfig != null) {
+            try {
+                logQueryThresholdMs = Long.valueOf(thresholdFromConfig);
+            } catch (NumberFormatException e) {
+                logQueryThresholdMs = null;
+            }
+        }
+
         this.backgroundTask = new SeatingHandlerBackgroundTask().startThread();
+        this.backgroundTask.setDBTimingThresholdMs(dbTimingThresholdMs());
 
         super.init(config);
+    }
+
+    private long dbTimingThresholdMs() {
+        if (logQueryThresholdMs != null) {
+            return logQueryThresholdMs;
+        } else {
+            return developmentMode.get() ? 10 : 1000;
+        }
     }
 
     public void destroy() {
@@ -102,6 +122,8 @@ public class ToolServlet extends HttpServlet {
 
             DB.transaction("Handle seats API request",
                            (DBConnection db) -> {
+                               db.setTimingEnabled(dbTimingThresholdMs());
+
                                context.put("db", db);
                                try {
                                    handler.handle(request, response, context);

@@ -9,6 +9,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.*;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.exception.IdUnusedException;
@@ -27,6 +28,17 @@ public class SeatingHandlerBackgroundTask extends Thread {
     private Map<String, Long> recentProcessed = new LinkedHashMap<>();
 
     private AtomicBoolean running = new AtomicBoolean(false);
+
+    private static AtomicLong dbTimingThresholdMs = new AtomicLong(-1);
+
+
+    public static void setDBTimingThresholdMs(long ms) {
+        dbTimingThresholdMs.set(ms);
+    }
+
+    public long dbTimingThresholdMs() {
+        return dbTimingThresholdMs.get();
+    }
 
     private class ToProcess {
         public String siteId;
@@ -52,6 +64,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         DB.transaction
             ("Find sites to process",
              (DBConnection db) -> {
+                db.setTimingEnabled(dbTimingThresholdMs());
                 List<String> entries = new ArrayList<>(recentProcessed.keySet());
 
                 for (String e : entries) {
@@ -88,6 +101,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         DB.transaction
             ("Mark site as processed",
              (DBConnection db) -> {
+                db.setTimingEnabled(dbTimingThresholdMs());
                 db.run("update seat_sync_queue set last_sync_time = ? where site_id = ?")
                     .param(timestamp)
                     .param(entry.siteId)
@@ -147,25 +161,26 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
         DB.transaction
                 ("Mark any site or realm changed in the last 60 seconds for sync",
-                        (DBConnection db) -> {
-                            List<String> updatedSiteIds = db.run("select site_id from sakai_site where modifiedon >= ?")
-                                .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
-                                .executeQuery()
-                                .getStringColumn("site_id");
+                 (DBConnection db) -> {
+                    db.setTimingEnabled(dbTimingThresholdMs());
+                    List<String> updatedSiteIds = db.run("select site_id from sakai_site where modifiedon >= ?")
+                        .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
+                        .executeQuery()
+                        .getStringColumn("site_id");
 
-                            service.markSitesForSync(updatedSiteIds.toArray(new String[0]));
+                    service.markSitesForSync(updatedSiteIds.toArray(new String[0]));
 
-                            List<String> updatedRealmSiteIds = db.run("select ss.site_id from sakai_site ss" +
-                                                                      " inner join sakai_realm sr on sr.realm_id = concat('/site/', ss.site_id)" +
-                                                                      " where sr.modifiedon >= ?")
-                                .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
-                                .executeQuery()
-                                .getStringColumn("site_id");
+                    List<String> updatedRealmSiteIds = db.run("select ss.site_id from sakai_site ss" +
+                                                              " inner join sakai_realm sr on sr.realm_id = concat('/site/', ss.site_id)" +
+                                                              " where sr.modifiedon >= ?")
+                        .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
+                        .executeQuery()
+                        .getStringColumn("site_id");
 
-                            service.markSitesForSync(updatedRealmSiteIds.toArray(new String[0]));
+                    service.markSitesForSync(updatedRealmSiteIds.toArray(new String[0]));
 
-                            return null;
-                        }
+                    return null;
+                }
                 );
 
         return now;
@@ -212,6 +227,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
                 DB.transaction
                     ("Bootstrap groups for a site and section",
                      (DBConnection db) -> {
+                        db.setTimingEnabled(dbTimingThresholdMs());
                         // Sync the rosters
                         for (Group section : site.getGroups()) {
                             if (section.getProviderGroupId() == null) {

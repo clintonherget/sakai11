@@ -31,19 +31,36 @@ import java.util.UUID;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A database connection with commit/rollback tracking.
  */
 public class DBConnection {
+    private static final Logger LOG = LoggerFactory.getLogger(DBConnection.class);
 
     private final Connection connection;
     private boolean resolved;
     private boolean dirty;
+    private long logQueryThresholdMS = -1;
 
     public DBConnection(Connection connection) {
         this.connection = connection;
         this.dirty = false;
         this.resolved = false;
+    }
+
+    public void setTimingEnabled() {
+        this.logQueryThresholdMS = 0;
+    }
+
+    public void setTimingEnabled(long msThreshold) {
+        this.logQueryThresholdMS = msThreshold;
+    }
+
+    public void setTimingDisabled() {
+        this.logQueryThresholdMS = -1;
     }
 
     public void commit() throws SQLException {
@@ -79,7 +96,7 @@ public class DBConnection {
     }
 
     public DBPreparedStatement run(String sql) throws SQLException {
-        return new DBPreparedStatement(connection.prepareStatement(sql), this);
+        return new DBPreparedStatement(connection.prepareStatement(sql), sql, this);
     }
 
     public String uuid() {
@@ -92,6 +109,12 @@ public class DBConnection {
 
     public boolean isConstraintViolation(SQLException e) {
         return e.getSQLState().startsWith("23");
+    }
+
+    public void maybeLogTime(String sql, long timeMs) {
+        if (logQueryThresholdMS >= 0 && timeMs >= logQueryThresholdMS) {
+            LOG.info(String.format("DBConnection query took %d ms: %s", timeMs, sql));
+        }
     }
 
 }
