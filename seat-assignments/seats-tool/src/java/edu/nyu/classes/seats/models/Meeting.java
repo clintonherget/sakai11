@@ -6,7 +6,6 @@ import java.util.List;
 public class Meeting {
     public String id;
     public String name;
-    public String locationCode;
     public SeatGroup group;
 
     private List<SeatAssignment> seatAssignments = new ArrayList<>();
@@ -14,7 +13,6 @@ public class Meeting {
     public Meeting(String id, SeatGroup group) {
         this.id = id;
         this.name = "MEETING " + id;
-        this.locationCode = "SOMEPLACE";
         this.group = group;
     }
 

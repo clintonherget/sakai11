@@ -56,6 +56,16 @@ public class DBPreparedStatement {
         }
     }
 
+    public DBPreparedStatement nullParam() throws SQLException {
+        try {
+            preparedStatement.setNull(paramCount(), java.sql.Types.VARCHAR);
+            return this;
+        } catch (SQLException e) {
+            cleanup();
+            throw e;
+        }
+    }
+
     public DBPreparedStatement param(Date parameter, Calendar cal) throws SQLException {
         try {
             preparedStatement.setTimestamp(paramCount(), new java.sql.Timestamp(parameter.getTime()), cal);
@@ -116,7 +126,11 @@ public class DBPreparedStatement {
 
     public DBPreparedStatement stringParams(Collection<String> strings) throws SQLException {
         for (String s : strings) {
-            this.param(s);
+            if (s == null) {
+                this.nullParam();
+            } else {
+                this.param(s);
+            }
         }
 
         return this;
