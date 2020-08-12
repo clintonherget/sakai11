@@ -346,7 +346,6 @@ public class SeatsStorage {
                          json("seat", seat.seat,
                               "meeting_id", seat.meeting.id,
                               "meeting_name", seat.meeting.name,
-                              // "meeting_location", seat.meeting.locationCode,
                               "group_name", seat.meeting.group.name,
                               "group_id", seat.meeting.group.id,
                               "section_id", seat.meeting.group.section.id,
@@ -431,7 +430,6 @@ public class SeatsStorage {
                           "editWindow", String.valueOf(editWindow),
                           "meeting_id", seat.meeting.id,
                           "meeting_name", seat.meeting.name,
-                          // "meeting_location", seat.meeting.locationCode,
                           "group_name", seat.meeting.group.name,
                           "group_id", seat.meeting.group.id,
                           "section_id", seat.meeting.group.section.id,
@@ -446,7 +444,6 @@ public class SeatsStorage {
                      AuditEvents.MEETING_DELETED,
                      json("meeting_id", meeting.id,
                           "meeting_name", meeting.name,
-                          // "meeting_location", meeting.locationCode,
                           "group_name", meeting.group.name,
                           "group_id", meeting.group.id,
                           "section_id", meeting.group.section.id)
