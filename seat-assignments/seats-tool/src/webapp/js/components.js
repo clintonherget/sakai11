@@ -827,7 +827,7 @@ Vue.component('confirm-button', {
           self.confirmShown = false;
         }, 3000);
 
-      }, 100);
+      }, 200);
     },
     doit: function() {
       this.clearTimer();
