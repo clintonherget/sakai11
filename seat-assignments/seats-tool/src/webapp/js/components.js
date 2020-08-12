@@ -379,7 +379,7 @@ Vue.component('split-action', {
           <option v-for="i in (section.maxGroups - 1)" :value="i + 1">{{i + 1}}</option>
         </select>
       </div>
-      <div v-if="instructionModeSupportsWeighted">
+      <div v-if="instructionModeSupportsWeighted && hasRemoteUsers">
         <label for="selectionType">Remote student random cohort assignment:</label>
         <div class="well">
           <label>
@@ -409,29 +409,46 @@ Vue.component('split-action', {
     }
   },
   computed: {
-      baseurl: function() {
-          return this.$parent.baseurl;
-      },
-      instructionModeSupportsWeighted: function() {
-        return this.section.instructionMode === 'OB';
-      },
-      hasSeatAssignments: function() {
-          for (var g = 0; g < this.section.groups.length; g++) {
-              var group = this.section.groups[g];
-              for (var m = 0; m < group.meetings.length; m++) {
-                  var meeting = group.meetings[m];
-                  for (var a = 0; a < meeting.seatAssignments.length; a++) {
-                      var seatAssignment = meeting.seatAssignments[a];
+    baseurl: function() {
+      return this.$parent.baseurl;
+    },
+    instructionModeSupportsWeighted: function() {
+      return this.section.instructionMode === 'OB';
+    },
+    hasRemoteUsers: function() {
+      for (var g = 0; g < this.section.groups.length; g++) {
+        var group = this.section.groups[g];
+        for (var m = 0; m < group.meetings.length; m++) {
+          var meeting = group.meetings[m];
+          for (var a = 0; a < meeting.seatAssignments.length; a++) {
+            var seatAssignment = meeting.seatAssignments[a];
 
-                      if (seatAssignment.seat) {
-                          return true;
-                      }
-                  }
-              }
+            if (seatAssignment.studentLocation === 'REMOTE') {
+              return true;
+            }
           }
+        }
+      }
 
-          return false;
-      },
+      return false;
+    },
+    hasSeatAssignments: function() {
+      for (var g = 0; g < this.section.groups.length; g++) {
+        var group = this.section.groups[g];
+        for (var m = 0; m < group.meetings.length; m++) {
+          var meeting = group.meetings[m];
+          for (var a = 0; a < meeting.seatAssignments.length; a++) {
+            var seatAssignment = meeting.seatAssignments[a];
+
+            if (seatAssignment.seat) {
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    },
   },
   methods: {
     openModal: function() {
