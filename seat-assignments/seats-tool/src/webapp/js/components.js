@@ -2,14 +2,12 @@ SeatToolEventBus = new Vue();
 
 StudentLocationLabels = {
   'IN_PERSON': 'In-Person',
-  'UNSURE': 'Unsure',
   'REMOTE': 'Remote',
 };
 
 StudentLocationSortOrder = {
   'IN_PERSON': 0,
-  'UNSURE': 1,
-  'REMOTE': 2,
+  'REMOTE': 1,
 };
 
 Alerts = {
