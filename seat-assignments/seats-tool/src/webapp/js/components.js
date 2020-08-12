@@ -376,7 +376,7 @@ Vue.component('split-action', {
         <p>Section membership will be randomly distributed among the cohorts according to the rules defined below.</p>
         <label for="numberofgroups">Number of cohorts to create:</label>
         <select id="numberofgroups" v-model="numberOfGroups" class="form-control">
-          <option v-for="i in section.maxGroups" :value="i">{{i}}</option>
+          <option v-for="i in (section.maxGroups - 1)" :value="i + 1">{{i + 1}}</option>
         </select>
       </div>
       <div v-if="instructionModeSupportsWeighted">
@@ -404,7 +404,7 @@ Vue.component('split-action', {
   props: ['section'],
   data: function() {
     return {
-      numberOfGroups: 1,
+      numberOfGroups: 2,
       selectionType: 'RANDOM',
     }
   },
