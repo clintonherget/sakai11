@@ -7,14 +7,13 @@ public class V1__Init extends BaseMigration {
     final static String TABLE_DEFS =
         "create table seat_group_section (                                                                   " +
         "    id varchar2(255) primary key,                                                                   " +
-        "    primary_roster_id varchar2(255),                                                                " +
+        "    primary_stem_name varchar2(255),                                                                " +
         "    site_id varchar2(255),                                                                          " +
         "    provisioned number(1) not null,                                                                 " +
         "    has_split number(1) not null,                                                                   " +
-        "    constraint uniq_section_id_siteid unique (primary_roster_id, site_id)                           " +
+        "    constraint uniq_section_id_siteid unique (primary_stem_name, site_id)                           " +
         ");                                                                                                  " +
 
-        "create index sgs_roster_stem on seat_group_section (replace(primary_roster_id, '_', ':'));          " +
         "create index sgs_site on seat_group_section (site_id);                                              " +
 
         "create table seat_group_section_rosters (                                                           " +

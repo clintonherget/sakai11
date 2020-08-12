@@ -79,7 +79,7 @@ public class SectionHandler implements Handler {
                 String instructionMode = null;
                 String propInstructionModeOverrides = props.getProperty("OverrideToBlended");
                 if (propInstructionModeOverrides != null) {
-                    if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.get().primaryRosterId)) {
+                    if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.get().primaryStemName)) {
                         instructionMode = "OB";
                     };
                 }
@@ -87,7 +87,7 @@ public class SectionHandler implements Handler {
                 String propMaxGroupsString = props.getProperty("SeatingAssignmentsMaxGroups");
 
                 sectionJSON.put("maxGroups", propMaxGroupsString == null ? 4 : Integer.valueOf(propMaxGroupsString));
-                sectionJSON.put("instructionMode", instructionMode == null ? SeatsStorage.getSectionInstructionMode(db, seatSection.get().primaryRosterId) : instructionMode);
+                sectionJSON.put("instructionMode", instructionMode == null ? SeatsStorage.getSectionInstructionMode(db, seatSection.get().primaryStemName) : instructionMode);
 
                 JSONArray sectionGroups = new JSONArray();
                 sectionJSON.put("groups", sectionGroups);

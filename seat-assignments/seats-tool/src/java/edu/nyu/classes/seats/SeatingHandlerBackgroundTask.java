@@ -16,6 +16,8 @@ import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sakaiproject.email.cover.EmailService;
+import org.sakaiproject.user.cover.UserDirectoryService;
 
 public class SeatingHandlerBackgroundTask extends Thread {
 
@@ -185,6 +187,40 @@ public class SeatingHandlerBackgroundTask extends Thread {
         return now;
     }
 
+    private void notifyUser(String studentNetId, SeatGroup group, Site site) {
+        Set<org.sakaiproject.authz.api.Member> members = site.getMembers();
+        List<String> instructorNetIds = members.stream()
+            .filter((m) -> "Instructor".equals(m.getRole().getId()))
+            .map((m) -> m.getUserEid())
+            .collect(Collectors.toList());
+
+        List<org.sakaiproject.user.api.User> instructorUsers = UserDirectoryService.getUsersByEids(instructorNetIds);
+        List<org.sakaiproject.user.api.User> studentUser = UserDirectoryService.getUsersByEids(Arrays.asList(new String[] { studentNetId }));
+
+        if (studentUser.size() == 0) {
+            return;
+        }
+
+        String subject = "You've been added to a group";
+        String body = "This would be a most excellent place for some explanatory text.";
+
+        List<String> headers = new ArrayList();
+
+        headers.add("Subject: " + subject);
+
+        String ccString = instructorUsers
+            .stream()
+            .filter((u) -> u.getEmail() != null)
+            .map((u) -> u.getEmail())
+            .collect(Collectors.joining(", "));
+
+        if (!ccString.isEmpty()) {
+            headers.add("CC: " + ccString);
+        }
+
+        EmailService.sendToUsers(studentUser, headers, body);
+    }
+
     private boolean processSite(String siteId) {
         try {
             if (!Locks.trylockSiteForUpdate(siteId)) {
@@ -207,12 +243,12 @@ public class SeatingHandlerBackgroundTask extends Thread {
                             }
 
                             String rosterId = section.getProviderGroupId();
-                            String sponsorRosterId = SeatsStorage.getSponsorSectionId(db, rosterId);
+                            String sponsorStemName = SeatsStorage.getSponsorSectionId(db, rosterId);
 
-                            if (rosterId.equals(sponsorRosterId)) {
-                                SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.empty());
+                            if (Utils.rosterToStemName(rosterId).equals(sponsorStemName)) {
+                                SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorStemName, Optional.empty());
                             } else {
-                                SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorRosterId, Optional.of(rosterId));
+                                SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorStemName, Optional.of(rosterId));
                             }
                         }
 
@@ -221,15 +257,19 @@ public class SeatingHandlerBackgroundTask extends Thread {
                                 SeatsStorage.SyncResult syncResult = SeatsStorage.syncGroupsToSection(db, section);
 
                                 if (section.listGroups().size() > 1) {
-                                    // FIXME: email peeps
-
-                                    // syncResult
-                                    System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatingHandlerBackgroundTask.java:226 BowedAnteater]: " + "\n    syncResult => " + (syncResult) + "\n");
-
                                     for (Map.Entry<String, List<Member>> entry : syncResult.adds.entrySet()) {
+                                        String groupId = entry.getKey();
+
                                         for (Member m : entry.getValue()) {
-                                            // "ADD", entry.getKey(), m.netid
-                                            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SeatingHandlerBackgroundTask.java:232 LameChimpanzee]: " + "\n    'ADD' => " + ("ADD") + "\n    entry.getKey() => " + (entry.getKey()) + "\n    m.netid => " + (m.netid) + "\n");
+                                            if (m.isInstructor()) {
+                                                // No email sent to instructors
+                                                continue;
+                                            }
+
+                                            Optional<SeatGroup> group = section.fetchGroup(groupId);
+                                            if (group.isPresent()) {
+                                                notifyUser(m.netid, group.get(), site);
+                                            }
                                         }
                                     }
                                 }
@@ -248,7 +288,9 @@ public class SeatingHandlerBackgroundTask extends Thread {
                 LOG.info("SeatJob: site not found: " + siteId);
                 return true;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                LOG.error(String.format("Error while processing site '%s': ", siteId) + e);
+                e.printStackTrace();
+                return true;
             }
         } finally {
             Locks.unlockSiteForUpdate(siteId);
