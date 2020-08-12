@@ -18,6 +18,7 @@ Alerts = {
     "SEAT_TAKEN": "Someone is already in the seat you have selected. Please check your seat number and contact your instructor if necessary.",
     "CONCURRENT_UPDATE": "This seat has been updated since you started editing. Please check the new value and retry if needed.",
     "SAVE_SUCCESS": "Seat successfully updated",
+    "EMAIL_SENT": "Your email has been sent",
   }
 }
 
@@ -741,6 +742,7 @@ Vue.component('email-cohort', {
                     body: self.$refs.emailBody.value,
                 },
                 success: function() {
+                    Alerts.success("EMAIL_SENT");
                     self.closeEmailModal();
                 },
             });
