@@ -32,49 +32,45 @@ public class GroupAddMembersHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
-        try {
-            DBConnection db = (DBConnection)context.get("db");
-            String siteId = (String)context.get("siteId");
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        DBConnection db = (DBConnection)context.get("db");
+        String siteId = (String)context.get("siteId");
 
-            RequestParams p = new RequestParams(request);
-            String groupId = p.getString("groupId", null);
-            String sectionId = p.getString("sectionId", null);
+        RequestParams p = new RequestParams(request);
+        String groupId = p.getString("groupId", null);
+        String sectionId = p.getString("sectionId", null);
 
-            List<String> netIdsForAdd = p.getStrings("selectedMembers[]");
+        List<String> netIdsForAdd = p.getStrings("selectedMembers[]");
 
-            Site site = SiteService.getSite(siteId);
+        Site site = SiteService.getSite(siteId);
 
-            Map<String, org.sakaiproject.authz.api.Member> siteMembers = site
-                .getMembers()
-                .stream()
-                .collect(Collectors.toMap(org.sakaiproject.authz.api.Member::getUserEid, (m) -> m));
+        Map<String, org.sakaiproject.authz.api.Member> siteMembers = site
+            .getMembers()
+            .stream()
+            .collect(Collectors.toMap(org.sakaiproject.authz.api.Member::getUserEid, (m) -> m));
 
-            List<Member> addme = netIdsForAdd.stream().map((netid) -> {
-                    org.sakaiproject.authz.api.Member siteMembership = siteMembers.get(netid);
+        List<Member> addme = netIdsForAdd.stream().map((netid) -> {
+                org.sakaiproject.authz.api.Member siteMembership = siteMembers.get(netid);
 
-                    Member.Role memberRole = Member.Role.STUDENT;
+                Member.Role memberRole = Member.Role.STUDENT;
 
-                    if (siteMembership != null) {
-                        try {
-                            String siteRole = siteMembership.getRole().getId().toUpperCase(Locale.ROOT);
-                            memberRole = Member.Role.valueOf(siteRole.replace(" ", "_"));
-                        } catch (IllegalArgumentException e) {
-                            // Fall through to student
-                        }
+                if (siteMembership != null) {
+                    try {
+                        String siteRole = siteMembership.getRole().getId().toUpperCase(Locale.ROOT);
+                        memberRole = Member.Role.valueOf(siteRole.replace(" ", "_"));
+                    } catch (IllegalArgumentException e) {
+                        // Fall through to student
                     }
+                }
 
-                    return new Member(netid, false, memberRole);
-                }).collect(Collectors.toList());
+                return new Member(netid, false, memberRole);
+            }).collect(Collectors.toList());
 
-            for (Member m : addme) {
-                SeatsStorage.addMemberToGroup(db, m, groupId, sectionId);
-            }
-
-            response.getWriter().write("{}");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        for (Member m : addme) {
+            SeatsStorage.addMemberToGroup(db, m, groupId, sectionId);
         }
+
+        response.getWriter().write("{}");
     }
 
     @Override

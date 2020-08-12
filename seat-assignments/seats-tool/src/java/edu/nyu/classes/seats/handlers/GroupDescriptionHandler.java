@@ -19,23 +19,18 @@ public class GroupDescriptionHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        DBConnection db = (DBConnection)context.get("db");
+        String siteId = (String)context.get("siteId");
+
+        RequestParams p = new RequestParams(request);
+        String groupId = p.getString("groupId", null);
+        String description = p.getString("description", "");
+
+        SeatsStorage.setGroupDescription(db, groupId, description);
+
         try {
-            DBConnection db = (DBConnection)context.get("db");
-            String siteId = (String)context.get("siteId");
-
-            RequestParams p = new RequestParams(request);
-            String groupId = p.getString("groupId", null);
-            String description = p.getString("description", "");
-
-            SeatsStorage.setGroupDescription(db, groupId, description);
-
-            try {
-                response.getWriter().write("{}");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+            response.getWriter().write("{}");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

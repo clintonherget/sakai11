@@ -20,28 +20,24 @@ public class TransferGroupsHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        DBConnection db = (DBConnection)context.get("db");
+        String siteId = (String)context.get("siteId");
+
+        RequestParams p = new RequestParams(request);
+        String sectionId = p.getString("sectionId", null);
+        String fromGroupId = p.getString("fromGroupId", null);
+        String toGroupId = p.getString("toGroupId", null);
+        String netid = p.getString("netid", null);
+
+        Locks.lockSiteForUpdate(siteId);
         try {
-            DBConnection db = (DBConnection)context.get("db");
-            String siteId = (String)context.get("siteId");
-
-            RequestParams p = new RequestParams(request);
-            String sectionId = p.getString("sectionId", null);
-            String fromGroupId = p.getString("fromGroupId", null);
-            String toGroupId = p.getString("toGroupId", null);
-            String netid = p.getString("netid", null);
-
-            Locks.lockSiteForUpdate(siteId);
-            try {
-                SeatsStorage.transferMember(db, siteId, sectionId, fromGroupId, toGroupId, netid);
-            } finally {
-                Locks.unlockSiteForUpdate(siteId);
-            }
-
-            response.getWriter().write("{}");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            SeatsStorage.transferMember(db, siteId, sectionId, fromGroupId, toGroupId, netid);
+        } finally {
+            Locks.unlockSiteForUpdate(siteId);
         }
+
+        response.getWriter().write("{}");
     }
 
     @Override

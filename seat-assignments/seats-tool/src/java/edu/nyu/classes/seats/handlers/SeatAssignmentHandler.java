@@ -57,65 +57,60 @@ public class SeatAssignmentHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
-        try {
-            JSONObject result = new JSONObject();
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        JSONObject result = new JSONObject();
 
-            String siteId = (String)context.get("siteId");
-            DBConnection db = (DBConnection)context.get("db");
+        String siteId = (String)context.get("siteId");
+        DBConnection db = (DBConnection)context.get("db");
 
-            RequestParams p = new RequestParams(request);
+        RequestParams p = new RequestParams(request);
 
-            User currentUser = UserDirectoryService.getCurrentUser();
-            boolean isInstructor = (boolean)context.get("hasSiteUpd");
+        User currentUser = UserDirectoryService.getCurrentUser();
+        boolean isInstructor = (boolean)context.get("hasSiteUpd");
 
-            String sectionId = p.getString("sectionId", null);
-            if (sectionId == null) {
-                throw new RuntimeException("Need argument: sectionId");
-            }
+        String sectionId = p.getString("sectionId", null);
+        if (sectionId == null) {
+            throw new RuntimeException("Need argument: sectionId");
+        }
 
-            String groupId = p.getString("groupId", null);
-            if (groupId == null) {
-                throw new RuntimeException("Need argument: groupId");
-            }
+        String groupId = p.getString("groupId", null);
+        if (groupId == null) {
+            throw new RuntimeException("Need argument: groupId");
+        }
 
-            String meetingId = p.getString("meetingId", null);
-            if (meetingId == null) {
-                throw new RuntimeException("Need argument: meetingId");
-            }
+        String meetingId = p.getString("meetingId", null);
+        if (meetingId == null) {
+            throw new RuntimeException("Need argument: meetingId");
+        }
 
-            String netid = p.getString("netid", null);
-            if (netid == null) {
-                throw new RuntimeException("Need argument: netid");
-            }
+        String netid = p.getString("netid", null);
+        if (netid == null) {
+            throw new RuntimeException("Need argument: netid");
+        }
 
-            SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
-            Meeting meeting = seatSection.fetchGroup(groupId).get().getOrCreateMeeting(meetingId);
+        SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
+        Meeting meeting = seatSection.fetchGroup(groupId).get().getOrCreateMeeting(meetingId);
 
-            String seat = p.getString("seat", null);
-            String currentSeat = p.getString("currentSeat", null);
+        String seat = p.getString("seat", null);
+        String currentSeat = p.getString("currentSeat", null);
 
-            SeatAssignment seatAssignment = new SeatAssignment(null, netid, seat, 0, meeting);
+        SeatAssignment seatAssignment = new SeatAssignment(null, netid, seat, 0, meeting);
 
-            if (isInstructor && seat == null) {
-                SeatsStorage.clearSeat(db, seatAssignment);
-            } else if (seat != null) {
-                SeatsStorage.SetSeatResult seatResult = SeatsStorage.setSeat(db, seatAssignment, currentSeat, isInstructor);
-                if (!SeatsStorage.SetSeatResult.OK.equals(seatResult)) {
-                    result.put("error", true);
-                    result.put("error_code", seatResult.toString());
-                }
-            } else {
+        if (isInstructor && seat == null) {
+            SeatsStorage.clearSeat(db, seatAssignment);
+        } else if (seat != null) {
+            SeatsStorage.SetSeatResult seatResult = SeatsStorage.setSeat(db, seatAssignment, currentSeat, isInstructor);
+            if (!SeatsStorage.SetSeatResult.OK.equals(seatResult)) {
                 result.put("error", true);
-                result.put("error_code", "UNEXPECTED_ERROR");
+                result.put("error_code", seatResult.toString());
             }
+        } else {
+            result.put("error", true);
+            result.put("error_code", "UNEXPECTED_ERROR");
+        }
 
-            try {
-                response.getWriter().write(result.toString());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+        try {
+            response.getWriter().write(result.toString());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

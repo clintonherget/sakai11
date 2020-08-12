@@ -103,9 +103,14 @@ public class ToolServlet extends HttpServlet {
             DB.transaction("Handle seats API request",
                            (DBConnection db) -> {
                                context.put("db", db);
-                               handler.handle(request, response, context);
-                               db.commit();
-                               return null;
+                               try {
+                                   handler.handle(request, response, context);
+                                   db.commit();
+                                   return null;
+                               } catch (Exception e) {
+                                   db.rollback();
+                                   throw new RuntimeException(e);
+                               }
                            });
 
             if (handler.hasRedirect()) {

@@ -18,7 +18,7 @@ public interface Handler {
      * If a string entry called "subpage" is added to the context, this will be
      * resolved to a handlebars template and rendered.
      */
-    void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context);
+    void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception;
 
     /**
      * True if the handler has returned a redirect.

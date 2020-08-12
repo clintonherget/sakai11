@@ -56,40 +56,35 @@ public class SectionsHandler implements Handler {
     protected String redirectTo = null;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) {
-            try {
-                // Site site = SiteService.getSite();
-                String siteId = (String)context.get("siteId");
-                DBConnection db = (DBConnection)context.get("db");
+    public void handle(HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws Exception {
+        // Site site = SiteService.getSite();
+        String siteId = (String)context.get("siteId");
+        DBConnection db = (DBConnection)context.get("db");
 
-                JSONArray sections = new JSONArray();
+        JSONArray sections = new JSONArray();
 
-                for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
-                    JSONObject obj = new JSONObject();
-                    obj.put("id", section.id);
-                    obj.put("name", section.name);
-                    obj.put("shortName", section.shortName);
-                    obj.put("hasSplit", section.hasSplit);
-                    obj.put("groupCount", section.listGroups().size());
+        for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
+            JSONObject obj = new JSONObject();
+            obj.put("id", section.id);
+            obj.put("name", section.name);
+            obj.put("shortName", section.shortName);
+            obj.put("hasSplit", section.hasSplit);
+            obj.put("groupCount", section.listGroups().size());
 
-                    sections.add(obj);
-                }
+            sections.add(obj);
+        }
 
-                if (sections.isEmpty()) {
-                    // Last ditch effort to populate this site
-                    SeatsService seats = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
-                    seats.markSitesForSync(siteId);
-                }
+        if (sections.isEmpty()) {
+            // Last ditch effort to populate this site
+            SeatsService seats = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+            seats.markSitesForSync(siteId);
+        }
 
-                try {
-                    response.getWriter().write(sections.toString());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            response.getWriter().write(sections.toString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
