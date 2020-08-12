@@ -71,22 +71,9 @@ public class SectionHandler implements Handler {
         sectionJSON.put("provisioned", seatSection.get().provisioned);
         sectionJSON.put("split", seatSection.get().hasSplit);
 
-
-
         Site site = SiteService.getSite(siteId);
-        ResourceProperties props = site.getProperties();
-        String instructionMode = null;
-        String propInstructionModeOverrides = props.getProperty("OverrideToBlended");
-        if (propInstructionModeOverrides != null) {
-            if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.get().primaryStemName)) {
-                instructionMode = "OB";
-            };
-        }
-
-        String propMaxGroupsString = props.getProperty("SeatingAssignmentsMaxGroups");
-
-        sectionJSON.put("maxGroups", propMaxGroupsString == null ? 4 : Integer.valueOf(propMaxGroupsString));
-        sectionJSON.put("instructionMode", instructionMode == null ? SeatsStorage.getSectionInstructionMode(db, seatSection.get().primaryStemName) : instructionMode);
+        sectionJSON.put("maxGroups", SeatsStorage.getGroupMaxForSite(site));
+        sectionJSON.put("instructionMode", SeatsStorage.getInstructionModeForSection(db, seatSection.get(), site));
 
         JSONArray sectionGroups = new JSONArray();
         sectionJSON.put("groups", sectionGroups);

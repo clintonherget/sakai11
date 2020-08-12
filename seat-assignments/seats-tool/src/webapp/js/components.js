@@ -110,18 +110,18 @@ Vue.component('seat-assignment-widget', {
           v-bind:style="{width: inputWidth}"
         />
         <template v-if="isEditable && editing">
-          <button class="btn-primary" @click="save()">
+          <button class="btn-primary" @click="save()" :disabled="waitingOnSave">
             <i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Save
           </button>
-          <button @click="cancel()">
+          <button @click="cancel()" :disabled="waitingOnSave">
             <i class="glyphicon glyphicon-ban-circle" aria-hidden="true"></i> Cancel
           </button>
         </template>
         <template v-else-if="isEditable">
-          <button @click="edit()">
+          <button @click="edit()" :disabled="waitingOnSave">
             <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
           </button>
-          <button v-show="!isStudent && seat !== null" @click="clear()">
+          <button v-show="!isStudent && seat !== null" @click="clear()" :disabled="waitingOnSave">
             <i class="glyphicon glyphicon-remove" aria-hidden="true"></i> Clear
           </button>
         </template>
@@ -141,6 +141,7 @@ Vue.component('seat-assignment-widget', {
       inputValue: '',
       currentTime: 0,
       currentTimePoll: null,
+      waitingOnSave: false,
     };
   },
   props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil'],
@@ -302,8 +303,13 @@ Vue.component('seat-assignment-widget', {
           return;
       }
 
+      if (this.waitingOnSave) {
+          return;
+      }
+
       var self = this;
       self.clearHasError();
+      self.waitingOnSave = true;
 
       $.ajax({
         url: this.baseurl + "/seat-assignment",
@@ -329,7 +335,10 @@ Vue.component('seat-assignment-widget', {
             self.focusInput();
             self.$emit("splat");
           }
-        }
+        },
+        complete: function() {
+            self.waitingOnSave = false;
+        },
       });
     }
   },
