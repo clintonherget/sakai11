@@ -1,5 +1,6 @@
 package edu.nyu.classes.seats.handlers;
 
+import edu.nyu.classes.seats.Emails;
 import edu.nyu.classes.seats.models.Meeting;
 import edu.nyu.classes.seats.models.Member;
 import edu.nyu.classes.seats.models.SeatGroup;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import org.sakaiproject.email.cover.EmailService;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.user.api.User;
+
 
 public class EmailGroupHandler implements Handler {
 
@@ -53,11 +55,10 @@ public class EmailGroupHandler implements Handler {
             List<String> netids = group.get().listMembers().stream().map((m) -> m.netid).collect(Collectors.toList());
             List<User> users = UserDirectoryService.getUsersByEids(netids);
 
-            EmailService.sendToUsers(users,
-                                     Arrays.asList(new String[] {
-                                             "Subject: " + subject
-                                         }),
-                                     body);
+            Emails.sendPlaintextEmail(users,
+                                      SiteService.getSite(siteId),
+                                      subject,
+                                      body);
 
             response.getWriter().write("{}");
         } catch (Exception e) {

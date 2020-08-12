@@ -1,6 +1,7 @@
 package edu.nyu.classes.seats;
 
 import edu.nyu.classes.seats.api.SeatsService;
+import edu.nyu.classes.seats.Emails;
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.*;
 import edu.nyu.classes.seats.storage.db.*;
@@ -16,12 +17,7 @@ import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sakaiproject.email.cover.EmailService;
 import org.sakaiproject.user.cover.UserDirectoryService;
-import org.sakaiproject.email.api.EmailAddress.RecipientType;
-import org.sakaiproject.util.FormattedText;
-import org.sakaiproject.email.api.EmailAddress;
-import org.sakaiproject.email.api.EmailMessage;
 
 public class SeatingHandlerBackgroundTask extends Thread {
 
@@ -191,18 +187,6 @@ public class SeatingHandlerBackgroundTask extends Thread {
         return now;
     }
 
-    Set<String> ROLES_TO_CC = new HashSet<>(Arrays.asList(new String[] { "Instructor", "Teaching Assistant", "Course Site Admin" }));
-
-    private List<org.sakaiproject.user.api.User> usersToCC(Site site) {
-        Set<org.sakaiproject.authz.api.Member> members = site.getMembers();
-        List<String> netIds = members.stream()
-            .filter((m) -> ROLES_TO_CC.contains(m.getRole().getId()))
-            .map((m) -> m.getUserEid())
-            .collect(Collectors.toList());
-
-        return UserDirectoryService.getUsersByEids(netIds);
-    }
-
     private void notifyUser(String studentNetId, SeatGroup group, Site site) throws Exception {
         List<org.sakaiproject.user.api.User> studentUser = UserDirectoryService.getUsersByEids(Arrays.asList(new String[] { studentNetId }));
 
@@ -210,39 +194,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
             return;
         }
 
-        EmailMessage msg = new EmailMessage();
-        // Overriden by the email service anyway...
-        msg.setFrom(new EmailAddress("no-reply-nyuclasses@nyu.edu", "NYU Classes"));
-        msg.setSubject(String.format("You've been added to a cohort for %s",
-                                     site.getTitle()));
-
-        String body = String.format("<p>Dear %s,</p>" +
-                                    "<p>You've been added to %s for %s. Please contact your instructor for information on when you will be meeting in-person for your course.</p>" +
-                                    "<p>Note: you will be required to record your seating assignment for the duration of the semester in the Seating Assignments tool in NYU Classes. " +
-                                    "For more information, see the <a href=\"%s\">Seating Assignments knowledgebase article</a>.</p>" +
-                                    "<p>Best regards,<br>" +
-                                    "The NYU Classes Team</p>",
-
-                                    studentUser.get(0).getDisplayName(),
-                                    group.name,
-                                    site.getTitle(),
-                                    "http://www.nyu.edu/servicelink/KB0018304"
-                                    );
-
-        msg.setBody(FormattedText.escapeHtmlFormattedText(body));
-        msg.setContentType("text/html");
-        msg.setCharacterSet("utf-8");
-        msg.addHeader("Content-Transfer-Encoding", "quoted-printable");
-
-        msg.setRecipients(RecipientType.TO, studentUser.stream().map((u) -> new EmailAddress(u.getEmail())).collect(Collectors.toList()));
-        msg.setRecipients(RecipientType.CC,
-                          usersToCC(site)
-                          .stream()
-                          .filter((u) -> u.getEmail() != null)
-                          .map((u) -> new EmailAddress(u.getEmail()))
-                          .collect(Collectors.toList()));
-
-        EmailService.getInstance().send(msg);
+        Emails.sendUserAddedEmail(studentUser, group, site);
     }
 
     private boolean processSite(String siteId) {
