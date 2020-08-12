@@ -9,6 +9,7 @@ import java.util.stream.*;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.coursemanagement.api.Membership;
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 
@@ -247,7 +248,7 @@ public class SeatsStorage {
         }
     }
 
-    public static SyncResult syncGroupsToSection(DBConnection db, SeatSection section) throws SQLException {
+    public static SyncResult syncGroupsToSection(DBConnection db, SeatSection section, Site site) throws SQLException {
         List<Member> sectionMembers = getMembersForSection(db, section);
         Set<String> seatGroupMembers = new HashSet<>();
         Map<String, Integer> groupCounts = new HashMap<>();
@@ -266,11 +267,18 @@ public class SeatsStorage {
             }
         }
 
+        Set<String> siteMembers = site.getMembers()
+            .stream()
+            .filter((m) -> m.isActive())
+            .map((m) -> m.getUserEid())
+            .collect(Collectors.toSet());
+
         // handle removes
         Map<String, List<Member>> drops = new HashMap<>();
         for (SeatGroup group : section.listGroups()) {
             for (Member member : group.listMembers()) {
-                if (!member.official) {
+                if (!member.official && siteMembers.contains(member.netid)) {
+                    // Manual adds can stay in their groups, unless they've been removed from the site completely.
                     continue;
                 }
 

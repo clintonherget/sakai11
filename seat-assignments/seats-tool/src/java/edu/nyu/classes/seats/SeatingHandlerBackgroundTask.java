@@ -230,7 +230,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
                         for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
                             if (section.provisioned) {
-                                SeatsStorage.SyncResult syncResult = SeatsStorage.syncGroupsToSection(db, section);
+                                SeatsStorage.SyncResult syncResult = SeatsStorage.syncGroupsToSection(db, section, site);
 
                                 if (section.listGroups().size() > 1) {
                                     for (Map.Entry<String, List<Member>> entry : syncResult.adds.entrySet()) {

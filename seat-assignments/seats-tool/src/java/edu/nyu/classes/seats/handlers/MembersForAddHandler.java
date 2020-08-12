@@ -64,6 +64,8 @@ public class MembersForAddHandler implements Handler {
                         return false;
                     } else if (allAddedUsers.contains(m.getUserEid()) && "Student".equals(m.getRole().getId())) {
                         return false;
+                    } else if (!m.isActive()) {
+                        return false;
                     }
 
                     return true;
