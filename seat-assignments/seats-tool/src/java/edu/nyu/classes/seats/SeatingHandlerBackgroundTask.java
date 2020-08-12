@@ -18,6 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sakaiproject.email.cover.EmailService;
 import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.email.api.EmailAddress.RecipientType;
+import org.sakaiproject.util.FormattedText;
+import org.sakaiproject.email.api.EmailAddress;
+import org.sakaiproject.email.api.EmailMessage;
 
 public class SeatingHandlerBackgroundTask extends Thread {
 
@@ -187,38 +191,58 @@ public class SeatingHandlerBackgroundTask extends Thread {
         return now;
     }
 
-    private void notifyUser(String studentNetId, SeatGroup group, Site site) {
+    Set<String> ROLES_TO_CC = new HashSet<>(Arrays.asList(new String[] { "Instructor", "Teaching Assistant", "Course Site Admin" }));
+
+    private List<org.sakaiproject.user.api.User> usersToCC(Site site) {
         Set<org.sakaiproject.authz.api.Member> members = site.getMembers();
-        List<String> instructorNetIds = members.stream()
-            .filter((m) -> "Instructor".equals(m.getRole().getId()))
+        List<String> netIds = members.stream()
+            .filter((m) -> ROLES_TO_CC.contains(m.getRole().getId()))
             .map((m) -> m.getUserEid())
             .collect(Collectors.toList());
 
-        List<org.sakaiproject.user.api.User> instructorUsers = UserDirectoryService.getUsersByEids(instructorNetIds);
+        return UserDirectoryService.getUsersByEids(netIds);
+    }
+
+    private void notifyUser(String studentNetId, SeatGroup group, Site site) throws Exception {
         List<org.sakaiproject.user.api.User> studentUser = UserDirectoryService.getUsersByEids(Arrays.asList(new String[] { studentNetId }));
 
         if (studentUser.size() == 0) {
             return;
         }
 
-        String subject = "You've been added to a group";
-        String body = "This would be a most excellent place for some explanatory text.";
+        EmailMessage msg = new EmailMessage();
+        // Overriden by the email service anyway...
+        msg.setFrom(new EmailAddress("no-reply-nyuclasses@nyu.edu", "NYU Classes"));
+        msg.setSubject(String.format("You've been added to a cohort for %s",
+                                     site.getTitle()));
 
-        List<String> headers = new ArrayList();
+        String body = String.format("<p>Dear %s,</p>" +
+                                    "<p>You've been added to %s for %s. Please contact your instructor for information on when you will be meeting in-person for your course.</p>" +
+                                    "<p>Note: you will be required to record your seating assignment for the duration of the semester in the Seating Assignments tool in NYU Classes. " +
+                                    "For more information, see the <a href=\"%s\">Seating Assignments knowledgebase article</a>.</p>" +
+                                    "<p>Best regards,<br>" +
+                                    "The NYU Classes Team</p>",
 
-        headers.add("Subject: " + subject);
+                                    studentUser.get(0).getDisplayName(),
+                                    group.name,
+                                    site.getTitle(),
+                                    "http://www.nyu.edu/servicelink/KB0018304"
+                                    );
 
-        String ccString = instructorUsers
-            .stream()
-            .filter((u) -> u.getEmail() != null)
-            .map((u) -> u.getEmail())
-            .collect(Collectors.joining(", "));
+        msg.setBody(FormattedText.escapeHtmlFormattedText(body));
+        msg.setContentType("text/html");
+        msg.setCharacterSet("utf-8");
+        msg.addHeader("Content-Transfer-Encoding", "quoted-printable");
 
-        if (!ccString.isEmpty()) {
-            headers.add("CC: " + ccString);
-        }
+        msg.setRecipients(RecipientType.TO, studentUser.stream().map((u) -> new EmailAddress(u.getEmail())).collect(Collectors.toList()));
+        msg.setRecipients(RecipientType.CC,
+                          usersToCC(site)
+                          .stream()
+                          .filter((u) -> u.getEmail() != null)
+                          .map((u) -> new EmailAddress(u.getEmail()))
+                          .collect(Collectors.toList()));
 
-        EmailService.sendToUsers(studentUser, headers, body);
+        EmailService.getInstance().send(msg);
     }
 
     private boolean processSite(String siteId) {
@@ -268,7 +292,16 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
                                             Optional<SeatGroup> group = section.fetchGroup(groupId);
                                             if (group.isPresent()) {
-                                                notifyUser(m.netid, group.get(), site);
+                                                try {
+                                                    notifyUser(m.netid, group.get(), site);
+                                                } catch (Exception e) {
+                                                    LOG.error(String.format("Failure while notifying user '%s' in group '%s' for site '%s': %s",
+                                                                            m.netid,
+                                                                            group.get().id,
+                                                                            site.getId(),
+                                                                            e));
+                                                    e.printStackTrace();
+                                                }
                                             }
                                         }
                                     }
