@@ -723,7 +723,7 @@ Vue.component('email-cohort', {
                     <div class="form-group">
                         <label :for="_uid + '_subject'">Subject:</label>
                         <input type="text" ref="emailSubject" class="form-control" :id="_uid + '_subject'" name="subject" />
-
+                        <br />
                         <label :for="_uid + '_body'">Message body:</label>
                         <textarea :id="_uid + '_body'" ref="emailBody" name="body" class="form-control seats-email-body"></textarea>
                     </div>
@@ -739,10 +739,14 @@ Vue.component('email-cohort', {
     props: ['htmlClass', 'section', 'group'],
     methods: {
         showModal: function() {
-            this.$refs.emailSubject.value = '';
-            this.$refs.emailBody.value = '';
+            var self = this;
 
-            this.$refs.emailModal.open();
+            self.$refs.emailSubject.value = '';
+            self.$refs.emailBody.value = '';
+
+            self.$refs.emailModal.open(function () {
+                $(self.$refs.emailModal.$el).find('.form-control').first().focus();
+            });
         },
         sendEmail: function() {
             var self = this;
