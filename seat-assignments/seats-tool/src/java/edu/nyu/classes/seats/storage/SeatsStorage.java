@@ -394,7 +394,7 @@ public class SeatsStorage {
                         .param(seat.meeting.id)
                         .param(editWindow)
                         .param(seat.netid)
-                        .param(seat.seat.toUpperCase())
+                        .param(seat.seat)
                         .executeUpdate();
             } catch (SQLException e) {
                 if (db.isConstraintViolation(e)) {
@@ -407,7 +407,7 @@ public class SeatsStorage {
             try {
                 int updated = db.run("update seat_meeting_assignment set editable_until = ?, seat = ? where id = ? and seat = ?")
                         .param(editWindow)
-                        .param(seat.seat.toUpperCase())
+                        .param(seat.seat)
                         .param(seat.id)
                         .param(lastSeat)
                         .executeUpdate();
@@ -426,7 +426,7 @@ public class SeatsStorage {
 
         Audit.insert(db,
                      (seat.id == null) ? AuditEvents.SEAT_ASSIGNED : AuditEvents.SEAT_REASSIGNED,
-                     json("seat", seat.seat.toUpperCase(),
+                     json("seat", seat.seat,
                           "lastSeat", lastSeat,
                           "editWindow", String.valueOf(editWindow),
                           "meeting_id", seat.meeting.id,
