@@ -133,3 +133,8 @@
 textarea.form-control.seats-email-body {
     height: 10em;
 }
+
+.seats-body .seat-section-description {
+    float: left;
+    max-width: 600px;
+}
