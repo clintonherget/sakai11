@@ -859,12 +859,14 @@ Vue.component('section-group', {
     <h2>{{group.name}} {{groupLabel}}</h2>
     <p>{{section.name}}</p>
   </template>
-  <template v-if="group.description">
-    <p>{{group.description}} <a href="javascript:void(0)" @click="showDescriptionModal()">Edit</a></p>
-  </template>
-  <template v-else>
-    <button @click="showDescriptionModal()">Add Description (optional)</button>
-  </template>
+  <div class="seat-section-description">
+    <template v-if="group.description">
+      <p>{{group.description}} <a href="javascript:void(0)" @click="showDescriptionModal()">Edit</a></p>
+    </template>
+    <template v-else>
+      <button @click="showDescriptionModal()">Add Description (optional)</button>
+    </template>
+  </div>
   <modal ref="descriptionModal">
     <template v-slot:header>Add Cohort Description {{group.name}}</template>
     <template v-slot:body>
