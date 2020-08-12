@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.cover.TimeService;
 import org.sakaiproject.tool.cover.ToolManager;
@@ -40,20 +41,20 @@ public class ToolServlet extends HttpServlet {
     private Long logQueryThresholdMs = null;
 
     public void init(ServletConfig config) throws ServletException {
-        if (ServerConfigurationService.getBoolean("seats.development-mode", false)) {
+        if ("true".equals(HotReloadConfigurationService.getString("seats.development-mode", "false"))) {
             SeatsStorage.setRegistryDBSuffix("");
             developmentMode.set(true);
         }
 
-        // FIXME: should be false in production?
-        if (ServerConfigurationService.getBoolean("auto.ddl", false) || ServerConfigurationService.getBoolean("auto.ddl.seats", true)) {
+        if ("true".equals(HotReloadConfigurationService.getString("auto.ddl.seats", "false")) ||
+            developmentMode.get()) {
             // "TOOT TOOT"
             System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[ToolServlet.java:46 ViciousFrog]: " + "\n    'TOOT TOOT' => " + ("TOOT TOOT") + "\n");
 
             new SeatsStorage().runDBMigrations();
         }
 
-        String thresholdFromConfig = ServerConfigurationService.getString("seats.log-query-threshold-ms", null);
+        String thresholdFromConfig = HotReloadConfigurationService.getString("seats.log-query-threshold-ms", null);
         if (thresholdFromConfig != null) {
             try {
                 logQueryThresholdMs = Long.valueOf(thresholdFromConfig);
@@ -62,8 +63,12 @@ public class ToolServlet extends HttpServlet {
             }
         }
 
-        this.backgroundTask = new SeatingHandlerBackgroundTask().startThread();
-        this.backgroundTask.setDBTimingThresholdMs(dbTimingThresholdMs());
+        String runBackgroundTask = HotReloadConfigurationService.getString("seats.run-background-task", null);
+
+        if ("true".equals(runBackgroundTask) || (developmentMode.get() && runBackgroundTask == null)) {
+            this.backgroundTask = new SeatingHandlerBackgroundTask().startThread();
+            this.backgroundTask.setDBTimingThresholdMs(dbTimingThresholdMs());
+        }
 
         super.init(config);
     }
@@ -95,7 +100,7 @@ public class ToolServlet extends HttpServlet {
             Map<String, Object> context = new HashMap<String, Object>();
             context.put("baseURL", toolBaseURL);
             context.put("layout", true);
-            context.put("skinRepo", ServerConfigurationService.getString("skin.repo", ""));
+            context.put("skinRepo", HotReloadConfigurationService.getString("skin.repo", ""));
             context.put("randomSakaiHeadStuff", request.getAttribute("sakai.html.head"));
 
             if (ToolManager.getCurrentPlacement() != null) {
@@ -106,7 +111,7 @@ public class ToolServlet extends HttpServlet {
 
             context.put("hasSiteUpd", hasSiteUpd((String)context.get("siteId")));
 
-            context.put("portalCdnQuery", ServerConfigurationService.getString("portal.cdn.version", java.util.UUID.randomUUID().toString()));
+            context.put("portalCdnQuery", HotReloadConfigurationService.getString("portal.cdn.version", java.util.UUID.randomUUID().toString()));
 
             Handler handler = handlerForRequest(request);
 
