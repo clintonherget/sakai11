@@ -1,3 +1,7 @@
+.seats-body {
+  max-width: 1200px;
+}
+
 .seats-body .profile-pic  {
     height: 55px;
     width: 55px;
@@ -53,6 +57,14 @@
 .seats-body .seat-table tbody tr:last-child td:last-child {
     border-bottom-right-radius: 10px;
 }
+
+/* Columns widths */
+.seats-body .seat-table tr td:nth-child(1) { width: 10%; }
+.seats-body .seat-table tr td:nth-child(2) { width: 25%; }
+.seats-body .seat-table tr td:nth-child(3) { width: 40%; }
+.seats-body .seat-table tr td:nth-child(4) { width: 10%; }
+.seats-body .seat-table tr td:nth-child(5) { width: 15%; }
+
 
 .seats-body .seat-table th {
     padding: 6px 12px;
@@ -112,6 +124,10 @@
 .growl {
   opacity: 1.0;
   filter: alpha(opacity=100);
+}
+
+.seats-body .email-cohort-btn {
+  margin: 0 0 1em 0;
 }
 
 textarea.form-control.seats-email-body {

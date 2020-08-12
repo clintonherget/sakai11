@@ -770,7 +770,6 @@ Vue.component('section-group', {
   <template v-else>
     <button @click="showDescriptionModal()">Add Description (optional)</button>
   </template>
-  <email-cohort v-if="!group.isGroupEmpty" htmlClass="pull-right" :group="group" :section="section" />
   <modal ref="descriptionModal">
     <template v-slot:header>Add Cohort Description {{group.name}}</template>
     <template v-slot:body>
@@ -788,6 +787,7 @@ Vue.component('section-group', {
       <button @click="closeDescriptionModal()">Cancel</button>
     </template>
   </modal>
+  <email-cohort v-if="!group.isGroupEmpty" htmlClass="email-cohort-btn pull-right" :group="group" :section="section" />
   <template v-if="group.isGroupEmpty">
     <button @click="deleteGroup">Delete Group</button>
   </template>
