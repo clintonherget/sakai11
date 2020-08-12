@@ -84,16 +84,14 @@ public class V1__Init extends BaseMigration {
         "    timestamp_ms number not null,                                                                   " +
         "    event_code varchar2(32) not null,                                                               " +
         "    json clob not null,                                                                             " +
-        "    arg0 varchar2(255),                                                                             " +
-        "    arg1 varchar2(255),                                                                             " +
-        "    arg2 varchar2(255),                                                                             " +
-        "    arg3 varchar2(255),                                                                             " +
-        "    arg4 varchar2(255),                                                                             " +
-        "    arg5 varchar2(255),                                                                             " +
-        "    arg6 varchar2(255),                                                                             " +
-        "    arg7 varchar2(255),                                                                             " +
-        "    arg8 varchar2(255),                                                                             " +
-        "    arg9 varchar2(255)                                                                              " +
+        "    group_id varchar2(255),                                                                         " +
+        "    group_name varchar2(255),                                                                       " +
+        "    meeting_id varchar2(255),                                                                       " +
+        "    meeting_location varchar2(255),                                                                 " +
+        "    netid varchar2(255),                                                                            " +
+        "    primary_stem_name varchar2(255),                                                                " +
+        "    section_id varchar2(255),                                                                       " +
+        "    seat varchar2(255)                                                                              " +
         ");                                                                                                  ";
 
 

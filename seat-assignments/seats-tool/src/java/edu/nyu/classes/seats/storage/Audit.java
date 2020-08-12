@@ -2,6 +2,10 @@ package edu.nyu.classes.seats.storage;
 
 import edu.nyu.classes.seats.storage.db.*;
 import java.sql.SQLException;
+import java.util.*;
+import java.util.stream.*;
+
+import org.json.simple.JSONObject;
 
 public class Audit {
     public enum AuditEvents {
@@ -14,16 +18,35 @@ public class Audit {
         MEETING_CREATED,
         MEMBER_ADDED,
         MEMBER_DELETED,
+        GROUP_DESCRIPTION_CHANGED,
     }
 
-    public static void insert(DBConnection db, AuditEvents event, String json, String[] args) throws SQLException {
+    private static String[] COLUMNS = new String[] {
+        "netid",
+        "group_id",
+        "group_name",
+        "section_id",
+        "meeting_id",
+        "meeting_location",
+        "primary_stem_name",
+        "seat",
+    };
+
+    public static void insert(DBConnection db, AuditEvents event, JSONObject json) throws SQLException {
         long timestamp = System.currentTimeMillis();
 
-        db.run("insert into seat_audit (id, timestamp_ms, event_code, json) values (?, ?, ?, ?)")
+        String columns = Arrays.stream(COLUMNS).collect(Collectors.joining(", "));
+        String placeholders = Arrays.stream(COLUMNS).map(_c -> "?").collect(Collectors.joining(", "));
+
+        List<String> extraValues = Arrays.stream(COLUMNS).map((c) -> (String)json.get(c)).collect(Collectors.toList());
+
+        db.run(String.format("insert into seat_audit (id, timestamp_ms, event_code, json, %s) values (?, ?, ?, ?, %s)",
+                             columns, placeholders))
             .param(db.uuid())
             .param(timestamp)
             .param(event.toString())
-            .param(json)
+            .param(json.toString())
+            .stringParams(extraValues)
             .executeUpdate();
     }
 }

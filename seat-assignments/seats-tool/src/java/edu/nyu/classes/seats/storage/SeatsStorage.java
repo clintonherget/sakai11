@@ -41,14 +41,14 @@ public class SeatsStorage {
     }
 
     @SuppressWarnings("unchecked")
-    private static String json(String ...args) {
+    private static JSONObject json(String ...args) {
         JSONObject obj = new JSONObject();
 
         for (int i = 0; i < args.length; i += 2) {
             obj.put(args[i], args[i + 1]);
         }
 
-        return obj.toString();
+        return obj;
     }
 
     public static String getSectionInstructionMode(DBConnection db, String primaryStemName) throws SQLException, IdUnusedException {
@@ -90,10 +90,7 @@ public class SeatsStorage {
                 AuditEvents.MEMBER_DELETED,
                 json("netid", netid,
                         "group_id", groupId,
-                        "section_id", seatSection.id),
-                new String[] {
-                        // FIXME: index useful stuff
-                }
+                        "section_id", seatSection.id)
         );
 
         return memberToRemove;
@@ -110,6 +107,12 @@ public class SeatsStorage {
             .param(description)
             .param(groupId)
             .executeUpdate();
+
+        Audit.insert(db,
+                     AuditEvents.GROUP_DESCRIPTION_CHANGED,
+                     json("group_id", groupId,
+                          "description", description)
+                     );
     }
 
     public static Map<String, String> getMemberNames(SeatSection seatSection) {
@@ -130,6 +133,21 @@ public class SeatsStorage {
         }
 
         return result;
+    }
+
+    public static Optional<String> locationForSection(DBConnection db, String stemName) throws SQLException {
+        return db.run("select mtg.facility_id from NYU_MV_COURSE_CATALOG cc" +
+               String.format(" inner join ps_class_mtg_pat%s mtg on " +
+                             " cc.crse_id = mtg.crse_id and" +
+                             " cc.strm = mtg.strm and" +
+                             " cc.crse_offer_nbr = mtg.crse_offer_nbr and" +
+                             " cc.session_code = mtg.session_code and" +
+                             " cc.class_section = mtg.class_section",
+                             registryDBSuffix.get()) +
+               " where cc.stem_name = ?")
+            .param(stemName)
+            .executeQuery()
+            .oneString();
     }
 
     public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
@@ -312,10 +330,7 @@ public class SeatsStorage {
                      json("netid", member.netid,
                           "student_location", member.studentLocation.toString(),
                           "group_id", groupId,
-                          "section_id", sectionId),
-                     new String[] {
-                         // FIXME: index useful stuff
-                     }
+                          "section_id", sectionId)
                      );
     }
 
@@ -329,16 +344,13 @@ public class SeatsStorage {
             Audit.insert(db,
                          AuditEvents.SEAT_CLEARED,
                          json("seat", seat.seat,
-                              "meeting", seat.meeting.id,
+                              "meeting_id", seat.meeting.id,
                               "meeting_name", seat.meeting.name,
-                              "meeting_location", seat.meeting.locationCode,
+                              // "meeting_location", seat.meeting.locationCode,
                               "group_name", seat.meeting.group.name,
                               "group_id", seat.meeting.group.id,
                               "section_id", seat.meeting.group.section.id,
-                              "user", seat.netid),
-                         new String[] {
-                             // FIXME: index useful stuff
-                         }
+                              "netid", seat.netid)
                          );
         }
     }
@@ -417,16 +429,13 @@ public class SeatsStorage {
                      json("seat", seat.seat.toUpperCase(),
                           "lastSeat", lastSeat,
                           "editWindow", String.valueOf(editWindow),
-                          "meeting", seat.meeting.id,
+                          "meeting_id", seat.meeting.id,
                           "meeting_name", seat.meeting.name,
-                          "meeting_location", seat.meeting.locationCode,
+                          // "meeting_location", seat.meeting.locationCode,
                           "group_name", seat.meeting.group.name,
                           "group_id", seat.meeting.group.id,
                           "section_id", seat.meeting.group.section.id,
-                          "user", seat.netid),
-                     new String[] {
-                         // FIXME: index useful stuff
-                     }
+                          "netid", seat.netid)
                      );
 
         return SetSeatResult.OK;
@@ -435,15 +444,12 @@ public class SeatsStorage {
     public static void deleteMeeting(DBConnection db, Meeting meeting) throws SQLException {
         Audit.insert(db,
                      AuditEvents.MEETING_DELETED,
-                     json("meeting", meeting.id,
+                     json("meeting_id", meeting.id,
                           "meeting_name", meeting.name,
-                          "meeting_location", meeting.locationCode,
+                          // "meeting_location", meeting.locationCode,
                           "group_name", meeting.group.name,
                           "group_id", meeting.group.id,
-                          "section_id", meeting.group.section.id),
-                     new String[] {
-                         // FIXME: index useful stuff
-                     }
+                          "section_id", meeting.group.section.id)
                      );
 
         db.run("delete from seat_meeting where id = ?")
@@ -456,10 +462,7 @@ public class SeatsStorage {
                      AuditEvents.GROUP_DELETED,
                      json("group_name", group.name,
                           "group_id", group.id,
-                          "section_id", group.section.id),
-                     new String[] {
-                         // FIXME: index useful stuff
-                     }
+                          "section_id", group.section.id)
                      );
 
         db.run("delete from seat_group_members where group_id = ?")
@@ -551,10 +554,8 @@ public class SeatsStorage {
                      AuditEvents.GROUP_CREATED,
                      json("group_name", groupTitle,
                           "group_id", groupId,
-                          "section_id", section.id),
-                     new String[] {
-                         // FIXME: index useful stuff
-                     }
+                          "primary_stem_name", section.primaryStemName,
+                          "section_id", section.id)
                      );
 
         db.run("insert into seat_group (id, name, section_id) values (?, ?, ?)")
@@ -564,19 +565,15 @@ public class SeatsStorage {
             .executeUpdate();
 
         String meetingId = db.uuid();
-        // FIXME pull location from somewhere
-        String location = "FIXME";
+        String location = locationForSection(db, section.primaryStemName).orElse("UNSET");
 
         Audit.insert(db,
                      AuditEvents.MEETING_CREATED,
-                     json("meeting", meetingId,
-                          "location", location,
+                     json("meeting_id", meetingId,
+                          "meeting_location", location,
                           "group_name", groupTitle,
                           "group_id", groupId,
-                          "section_id", section.id),
-                     new String[] {
-                         // FIXME: index useful stuff
-                     }
+                          "section_id", section.id)
                      );
 
         db.run("insert into seat_meeting (id, group_id, location) values (?, ?, ?)")

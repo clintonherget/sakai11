@@ -48,7 +48,6 @@ public class StudentMeetingsHandler implements Handler {
 
                             for (Meeting meeting : group.listMeetings()) {
                                 obj.put("meetingId", meeting.id);
-                                obj.put("meetingLocation", meeting.locationCode);
 
                                 Optional<SeatAssignment> seatAssignment = meeting.listSeatAssignments().stream().filter(a -> a.netid.equals(currentUser.getEid())).findFirst();
                                 if (seatAssignment.isPresent()) {
