@@ -554,7 +554,7 @@ Vue.component('group-meeting', {
           </seat-assignment-widget>
         </td>
         <td>
-          {{labelForStudentLocation(assignment.studentLocation)}} 
+          {{labelForStudentLocation(assignment.studentLocation)}}
           <template v-if="!assignment.official">(Unofficial)</template>
         </td>
         <td>
@@ -564,6 +564,9 @@ Vue.component('group-meeting', {
           </template>
           <template v-else>
             {{section.shortName}}
+          </template>
+          <template v-if="!assignment.official">
+            <confirm-button :action="function () { removeUser(assignment) }" confirmMessage="Really Remove?">Remove User</confirm-button>
           </template>
         </td>
       </tr>
@@ -681,6 +684,22 @@ Vue.component('group-meeting', {
         this.$refs.moveModal.close();
       }
     },
+    removeUser: function(assignment) {
+      var self = this;
+
+      $.ajax({
+        url: self.baseurl + "/remove-group-user",
+        type: 'post',
+        data: {
+          sectionId: self.section.id,
+          groupId: self.group.id,
+          netid: assignment.netid,
+        },
+        success: function() {
+          self.$emit('splat');
+        }
+      });
+    },
   }
 });
 
@@ -778,6 +797,51 @@ Vue.component('email-cohort', {
     }
 });
 
+Vue.component('confirm-button', {
+  template: `
+    <span>
+      <template v-if="confirmShown">
+        <button @click="doit()" style="background-color: #da4f49 !important; color: #fff !important">{{confirmMessage}}</button>
+      </template>
+      <template v-else>
+        <button @click="confirm()"><slot></slot></button>
+      </template>
+    </span>
+  `,
+  props: ['action', 'confirmMessage'],
+  data: function() {
+    return {
+      confirmShown: false,
+      confirmTimer: null,
+    }
+  },
+  methods: {
+    confirm: function() {
+      var self = this;
+      self.clearTimer();
+
+      setTimeout(function () {
+        self.confirmShown = true;
+
+        self.confirmTimer = setTimeout(function () {
+          self.confirmShown = false;
+        }, 3000);
+
+      }, 100);
+    },
+    doit: function() {
+      this.clearTimer();
+      this.action();
+    },
+    clearTimer: function() {
+      if (this.confirmTimer) {
+        clearTimeout(this.confirmTimer);
+        this.confirmTimer = null;
+      }
+    }
+  }
+});
+
 Vue.component('section-group', {
   template: `
 <div>
@@ -810,7 +874,7 @@ Vue.component('section-group', {
   </modal>
   <email-cohort v-if="!group.isGroupEmpty" htmlClass="email-cohort-btn pull-right" :group="group" :section="section" />
   <template v-if="group.isGroupEmpty">
-    <button @click="deleteGroup">Delete Group</button>
+    <confirm-button :action="deleteGroup" confirmMessage="Really Delete?">Delete Group</confirm-button>
   </template>
   <template v-for="meeting in group.meetings">
     <group-meeting

@@ -191,6 +191,9 @@ public class ToolServlet extends HttpServlet {
             return new EmailGroupHandler();
         }
 
+        if (path.startsWith("/remove-group-user")) {
+            return new GroupRemoveMembersHandler();
+        }
 
         // FIXME
         return new HomeHandler();
