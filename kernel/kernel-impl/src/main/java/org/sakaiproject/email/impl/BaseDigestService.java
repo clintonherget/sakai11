@@ -662,6 +662,12 @@ public abstract class BaseDigestService implements DigestService, SingleStorageU
 		@Override
 		public void run() {
 			try {
+				if ("true".equals(serverConfigurationService.getString("testMode@org.sakaiproject.email.api.EmailService", "false"))) {
+					// This server isn't sending mail, so don't do anything.
+					log.info("Digests skipped because test mode is enabled");
+					return;
+				}
+
 				log.debug("running timer task");
 				// process the queue of digest requests
 				processQueue();
