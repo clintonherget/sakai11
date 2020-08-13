@@ -223,7 +223,6 @@ public class ToolServlet extends HttpServlet {
             return new GroupRemoveMembersHandler();
         }
 
-        // FIXME
         return new HomeHandler();
     }
 
