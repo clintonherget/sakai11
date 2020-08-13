@@ -371,6 +371,10 @@ Vue.component('split-action', {
   template: `
 <div>
   <button @click="openModal()">Create Section Cohorts</button>
+  <contextual-help
+    feature="Create Section Cohorts"
+    helpText="Divides your section into two, three, or four cohorts, for alternating in-person attendance. Consult with your school or department leadership if you are unsure if you should create cohorts for this section.">
+  </contextual-help>
   <modal ref="splitModal">
     <template v-slot:header>Create Section Cohorts</template>
     <template v-slot:body>
@@ -382,6 +386,10 @@ Vue.component('split-action', {
            (e.g., if different cohorts will alternate in-class attendance by week).</p>
         <p>Section membership will be randomly distributed among the cohorts according to the rules defined below.</p>
         <label for="numberofgroups">Number of cohorts to create:</label>
+        <contextual-help
+          feature="Number of cohorts to create"
+          helpText="Divide your section into two, three, or four cohorts, for alternating in-person attendance. Consult with your school or department leadership if you are unsure if you should create cohorts for this section.">
+        </contextual-help>
         <select id="numberofgroups" v-model="numberOfGroups" class="form-control">
           <option v-for="i in (section.maxGroups - 1)" :value="i + 1">{{i + 1}}</option>
         </select>
