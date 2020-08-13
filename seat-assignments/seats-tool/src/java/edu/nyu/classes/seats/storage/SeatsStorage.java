@@ -138,7 +138,7 @@ public class SeatsStorage {
     }
 
     public static Optional<String> locationForSection(DBConnection db, String stemName) throws SQLException {
-        return db.run("select mtg.facility_id from NYU_MV_COURSE_CATALOG cc" +
+        return db.run("select mtg.facility_id from NYU_T_COURSE_CATALOG cc" +
                String.format(" inner join ps_class_mtg_pat%s mtg on " +
                              " cc.crse_id = mtg.crse_id and" +
                              " cc.strm = mtg.strm and" +
@@ -160,7 +160,7 @@ public class SeatsStorage {
     public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
         StringBuilder sb = new StringBuilder();
 
-        db.run("select mtg.* from NYU_MV_COURSE_CATALOG cc" +
+        db.run("select mtg.* from NYU_T_COURSE_CATALOG cc" +
                String.format(" inner join ps_class_mtg_pat%s mtg on " +
                              " cc.crse_id = mtg.crse_id and" +
                              " cc.strm = mtg.strm and" +
@@ -392,7 +392,7 @@ public class SeatsStorage {
 
         long editWindow = isInstructor ? 0 : System.currentTimeMillis() + EDIT_WINDOW_MS;
 
-        if (!isInstructor && seat.editableUntil > 0) {
+        if (false && !isInstructor && seat.editableUntil > 0) {
             // check edit within edit window
             if (System.currentTimeMillis() >= seat.editableUntil) {
                 return SetSeatResult.EDIT_CLOSED;
