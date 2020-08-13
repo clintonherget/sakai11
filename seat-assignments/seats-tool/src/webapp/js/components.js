@@ -1329,7 +1329,7 @@ Vue.component('student-home', {
 
         self.pollInterval = setInterval(function() {
             self.fetchData();
-        }, 5000);
+        }, 20000);
       }
   },
   beforeDestroy: function() {
