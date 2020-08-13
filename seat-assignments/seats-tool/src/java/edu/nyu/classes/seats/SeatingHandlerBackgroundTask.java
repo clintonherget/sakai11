@@ -227,61 +227,66 @@ public class SeatingHandlerBackgroundTask extends Thread {
                 DB.transaction
                     ("Bootstrap groups for a site and section",
                      (DBConnection db) -> {
-                        db.setTimingEnabled(dbTimingThresholdMs());
-                        // Sync the rosters
-                        for (Group section : site.getGroups()) {
-                            if (section.getProviderGroupId() == null) {
-                                continue;
+                        try {
+                            db.setTimingEnabled(dbTimingThresholdMs());
+                            // Sync the rosters
+                            for (Group section : site.getGroups()) {
+                                if (section.getProviderGroupId() == null) {
+                                    continue;
+                                }
+
+                                String rosterId = section.getProviderGroupId();
+                                String sponsorStemName = SeatsStorage.getSponsorSectionId(db, rosterId);
+
+                                if (Utils.rosterToStemName(rosterId).equals(sponsorStemName)) {
+                                    SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorStemName, Optional.empty());
+                                } else {
+                                    SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorStemName, Optional.of(rosterId));
+                                }
                             }
 
-                            String rosterId = section.getProviderGroupId();
-                            String sponsorStemName = SeatsStorage.getSponsorSectionId(db, rosterId);
+                            for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
+                                if (section.provisioned) {
+                                    SeatsStorage.SyncResult syncResult = SeatsStorage.syncGroupsToSection(db, section, site);
 
-                            if (Utils.rosterToStemName(rosterId).equals(sponsorStemName)) {
-                                SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorStemName, Optional.empty());
-                            } else {
-                                SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorStemName, Optional.of(rosterId));
-                            }
-                        }
+                                    if (section.listGroups().size() > 1) {
+                                        for (Map.Entry<String, List<Member>> entry : syncResult.adds.entrySet()) {
+                                            String groupId = entry.getKey();
 
-                        for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
-                            if (section.provisioned) {
-                                SeatsStorage.SyncResult syncResult = SeatsStorage.syncGroupsToSection(db, section, site);
+                                            for (Member m : entry.getValue()) {
+                                                if (m.isInstructor()) {
+                                                    // No email sent to instructors
+                                                    continue;
+                                                }
 
-                                if (section.listGroups().size() > 1) {
-                                    for (Map.Entry<String, List<Member>> entry : syncResult.adds.entrySet()) {
-                                        String groupId = entry.getKey();
-
-                                        for (Member m : entry.getValue()) {
-                                            if (m.isInstructor()) {
-                                                // No email sent to instructors
-                                                continue;
-                                            }
-
-                                            Optional<SeatGroup> group = section.fetchGroup(groupId);
-                                            if (group.isPresent()) {
-                                                try {
-                                                    notifyUser(m.netid, group.get(), site);
-                                                } catch (Exception e) {
-                                                    LOG.error(String.format("Failure while notifying user '%s' in group '%s' for site '%s': %s",
-                                                                            m.netid,
-                                                                            group.get().id,
-                                                                            site.getId(),
-                                                                            e));
-                                                    e.printStackTrace();
+                                                Optional<SeatGroup> group = section.fetchGroup(groupId);
+                                                if (group.isPresent()) {
+                                                    try {
+                                                        notifyUser(m.netid, group.get(), site);
+                                                    } catch (Exception e) {
+                                                        LOG.error(String.format("Failure while notifying user '%s' in group '%s' for site '%s': %s",
+                                                                                m.netid,
+                                                                                group.get().id,
+                                                                                site.getId(),
+                                                                                e));
+                                                        e.printStackTrace();
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+                                } else {
+                                    SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
                                 }
-                            } else {
-                                SeatsStorage.bootstrapGroupsForSection(db, section, 1, SeatsStorage.SelectionType.RANDOM);
                             }
+
+                            db.commit();
+
+                            return null;
+                        } catch (Exception e) {
+                            db.rollback();
+                            throw e;
                         }
-
-                        db.commit();
-
-                        return null;
                     });
 
                 return true;
