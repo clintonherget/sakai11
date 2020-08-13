@@ -152,6 +152,11 @@ public class SeatsStorage {
             .oneString();
     }
 
+    private static Optional<String> getFacilityLabel(String facilityId) {
+        // Still need this data source from... somewhere
+        return Optional.empty();
+    }
+
     public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
         StringBuilder sb = new StringBuilder();
 
@@ -182,10 +187,11 @@ public class SeatsStorage {
                 sb.append(" ");
 
                 String facilityId = row.getString("facility_id");
-                if (facilityId != null) {
-                    sb.append(facilityId);
-                    sb.append(" - ");
-                }
+                getFacilityLabel(facilityId).ifPresent((label) -> {
+                        sb.append(label);
+                        sb.append(" - ");
+                    });
+
                 List<String> daysOfWeek = new ArrayList<>();
                 if ("Y".equals(row.getString("MON"))) {
                     daysOfWeek.add("M");
