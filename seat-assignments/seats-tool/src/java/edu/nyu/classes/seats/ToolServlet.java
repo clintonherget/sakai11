@@ -159,6 +159,7 @@ public class ToolServlet extends HttpServlet {
             LOG.warn("Write failed", e);
         } catch (Exception e) {
             // FIXME: generic error handler
+            LOG.error("Error caught by ToolServlet: " + e);
             e.printStackTrace();
         }
     }
