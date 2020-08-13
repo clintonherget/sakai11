@@ -65,7 +65,6 @@ public class SeatAssignmentHandler implements Handler {
 
         RequestParams p = new RequestParams(request);
 
-        User currentUser = UserDirectoryService.getCurrentUser();
         boolean isInstructor = (boolean)context.get("hasSiteUpd");
 
         String sectionId = p.getString("sectionId", null);
@@ -95,6 +94,12 @@ public class SeatAssignmentHandler implements Handler {
         String currentSeat = p.getString("currentSeat", null);
 
         SeatAssignment seatAssignment = new SeatAssignment(null, netid, seat, 0, meeting);
+
+        // Force student to their own netid
+        if (!isInstructor) {
+            User currentUser = UserDirectoryService.getCurrentUser();
+            netid = currentUser.getEid();
+        }
 
         if (isInstructor && seatAssignment.seat == null) {
             SeatsStorage.clearSeat(db, seatAssignment);
