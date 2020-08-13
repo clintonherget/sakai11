@@ -392,7 +392,7 @@ public class SeatsStorage {
 
         long editWindow = isInstructor ? 0 : System.currentTimeMillis() + EDIT_WINDOW_MS;
 
-        if (false && !isInstructor && seat.editableUntil > 0) {
+        if (!isInstructor && seat.editableUntil > 0) {
             // check edit within edit window
             if (System.currentTimeMillis() >= seat.editableUntil) {
                 return SetSeatResult.EDIT_CLOSED;
