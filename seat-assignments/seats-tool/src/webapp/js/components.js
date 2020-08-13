@@ -851,6 +851,27 @@ Vue.component('confirm-button', {
   }
 });
 
+Vue.component('contextual-help', {
+  template: `
+    <a
+      href="javascript:void(0);"
+      data-toggle="popover"
+      data-trigger="focus"
+      :data-content="helpText"
+      :aria-label="helpText"
+      ref="popover"
+    >
+      <i class="fa fa-question-circle" aria-hidden="true"></i>
+      <span class="sr-only">Help on {{feature}}</span>
+    </a>
+`,
+  props: ['feature', 'helpText'],
+  mounted: function() {
+    $(this.$refs.popover).popover();
+  }
+});
+
+
 Vue.component('section-group', {
   template: `
 <div>
@@ -898,6 +919,10 @@ Vue.component('section-group', {
     </group-meeting>
   </template>
   <button @click="addAdhocMembers()">Add Non-Official Site Member(s)</button>
+  <contextual-help 
+    feature="Add Non-Official Site Member(s)"
+    helpText="Non-official site members are students, instructors, TAs, or course site administrators within the course site who are not part of the official course roster(s) from Albert. These individuals are manually added to the course site in the Settings tool.">
+  </contextual-help>
   <modal ref="membersModal">
     <template v-slot:header>Add Non-Official Site Member(s) {{group.name}}</template>
     <template v-slot:body>
