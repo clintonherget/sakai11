@@ -4,13 +4,17 @@ import edu.nyu.classes.seats.storage.db.*;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.json.simple.JSONObject;
 
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.user.api.User;
 
+
 public class Audit {
+    private static AtomicLong sequence = new AtomicLong(0);
+
     public enum AuditEvents {
         SEAT_CLEARED,
         SEAT_ASSIGNED,
@@ -35,6 +39,10 @@ public class Audit {
         "seat",
     };
 
+    private static String generateId(String uuid, long timestamp, long sequence) {
+        return String.format("%d_%016d_%s", timestamp, sequence, uuid);
+    }
+
     public static void insert(DBConnection db, AuditEvents event, JSONObject json) throws SQLException {
         long timestamp = System.currentTimeMillis();
 
@@ -48,7 +56,7 @@ public class Audit {
 
         db.run(String.format("insert into seat_audit (id, timestamp_ms, event_code, json, logged_in_user, %s) values (?, ?, ?, ?, ?, %s)",
                              columns, placeholders))
-            .param(db.uuid())
+            .param(generateId(db.uuid(), timestamp, sequence.incrementAndGet()))
             .param(timestamp)
             .param(event.toString())
             .param(json.toString())
