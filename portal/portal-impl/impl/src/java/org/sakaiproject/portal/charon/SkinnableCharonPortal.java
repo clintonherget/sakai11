@@ -1181,6 +1181,9 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		rcontext.put("cookieNoticeEnabled", ServerConfigurationService.getBoolean("portal.cookie.policy.warning.enabled",false));
 		rcontext.put("cookieNoticeText", cookieNoticeText);
 
+		// NYU we want a "class-less" page site type please
+		rcontext.put("cleanPageSiteType", siteType);
+
 		if (siteType != null && siteType.length() > 0)
 		{
 			siteType = "class=\"" + siteType + "\"";

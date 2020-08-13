@@ -16,6 +16,14 @@
 	<h:outputText value="#{CalBean.initValues}"/>
 
 	<h:form id="calendarForm" styleClass="nyu-synoptic-calendar-summary">
+	<h:panelGroup rendered="#{CalBean.onWorkspaceTab}">
+		<f:verbatim><p style="padding: 15px 15px 0;"><span class="icon-sakai--sakai-schedule"></span>&nbsp;</f:verbatim>
+		<h:outputLink value="#{CalBean.myWorkspaceCalendarToolPath}" target="_parent">
+			<h:outputText value="Click here to view your calendar"/>
+		</h:outputLink>
+		<f:verbatim></p></f:verbatim>
+	</h:panelGroup>
+	<h:panelGroup rendered="#{not CalBean.onWorkspaceTab}">
 	<h:panelGroup>
 		<sakai:tool_bar rendered="#{CalBean.userId ne null && CalBean.preferencesVisible}">
 			<h:commandLink action="#{MenuBean.processPreferences}" >
@@ -218,7 +226,7 @@
 		
 	<%--</h:panelGroup>--%>
 	<f:verbatim></div></f:verbatim>
-	
+	</h:panelGroup>
 	</h:form>
 </sakai:view>
 </f:view>
