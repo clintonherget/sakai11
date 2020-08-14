@@ -111,7 +111,7 @@ public class SeatAssignmentHandler implements Handler {
             }
         } else {
             result.put("error", true);
-            result.put("error_code", "UNEXPECTED_ERROR");
+            result.put("error_code", "SEAT_REQUIRED");
         }
 
         try {
