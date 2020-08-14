@@ -122,7 +122,7 @@ Vue.component('seat-assignment-widget', {
           <button @click="edit()" :disabled="waitingOnSave">
             <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
           </button>
-          <button v-show="!isStudent && seat !== null" @click="clear()" :disabled="waitingOnSave">
+          <button v-if="!isStudent && seat !== null" @click="clear()" :disabled="waitingOnSave">
             <i class="glyphicon glyphicon-remove" aria-hidden="true"></i> Clear
           </button>
         </template>
@@ -492,7 +492,7 @@ Vue.component('split-action', {
 Vue.component('group-meeting-summary', {
   template: `
 <div class="pull-left">
-  <div v-show="meeting.seatAssignments.length > 0">
+  <div v-if="meeting.seatAssignments.length > 0">
     <span>{{meeting.seatAssignments.length}} member<template v-if="meeting.seatAssignments.length > 0">s</template></span>
     <span v-bind:style="{ marginLeft: '10px' }">{{locationSummary}}</span>
   </div>
@@ -549,7 +549,7 @@ Vue.component('group-meeting', {
       </tr>
     </thead>
     <tbody>
-      <tr v-show="sortedSeatAssignments.length === 0">
+      <tr v-if="sortedSeatAssignments.length === 0">
         <td colspan="5">
           This cohort has no members.
         </td>
@@ -891,7 +891,7 @@ Vue.component('section-group', {
     <h2>{{group.name}} {{groupLabel}}</h2>
     <p>{{section.name}}</p>
   </template>
-  <div v-show="section.split" class="seat-section-description">
+  <div v-if="section.split" class="seat-section-description">
     <template v-if="group.description">
       <p>{{group.description}} <a href="javascript:void(0)" @click="showDescriptionModal()">Edit</a></p>
     </template>
@@ -1083,9 +1083,9 @@ Vue.component('section-table', {
   template: `
     <div>
       <template v-if="section">
-          <h2 v-show="section.groups.length === 1">{{section.name}}</h2>
+          <h2 v-if="section.groups.length === 1">{{section.name}}</h2>
           <split-action
-            v-show="section.hasBlended && !section.split"
+            v-if="section.hasBlended && !section.split"
             :section="section"
             v-on:splat="resetPolling()">
           </split-action>
@@ -1221,7 +1221,7 @@ Vue.component('section-selector', {
 Vue.component('instructor-table', {
   template: `
       <div>
-          <button v-show="selectedSectionId" @click="print()" class="pull-right">Print</button>
+          <button v-if="selectedSectionId" @click="print()" class="pull-right">Print</button>
           <template v-if="sections.length > 0">
               <section-selector
                   v-if="sections.length > 1"
