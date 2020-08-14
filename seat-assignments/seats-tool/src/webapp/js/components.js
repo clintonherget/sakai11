@@ -1220,7 +1220,7 @@ Vue.component('section-selector', {
 Vue.component('instructor-table', {
   template: `
       <div>
-          <button @click="print()" class="pull-right">Print</button>
+          <button v-show="selectedSectionId" @click="print()" class="pull-right">Print</button>
           <template v-if="sections.length > 0">
               <section-selector
                   v-if="sections.length > 1"
