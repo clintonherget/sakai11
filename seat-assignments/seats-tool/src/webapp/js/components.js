@@ -937,7 +937,7 @@ Vue.component('section-group', {
     <template v-slot:header>Add Non-Official Site Member(s) {{group.name}}</template>
     <template v-slot:body>
       <div>
-        <p>Select manually-added, non-official site members in this site to ad to this cohort. For more information on manually adding members to your course <a href="">click here</a>.</p>
+        <p>Select manually-added, non-official site members in this site to ad to this cohort. For more information on manually adding members to your course site, <a target="_blank" href="https://www.nyu.edu/servicelink/041212911320118">click here</a>.</p>
 
         <table class="seat-table">
           <thead>
@@ -1302,7 +1302,7 @@ Vue.component('student-home', {
                   :editableUntil="meeting.editableUntil"
                   v-on:splat="resetPolling()">
                 </seat-assignment-widget>
-                <p>Note: Only enter your seat assignment once your are in class and have chosen your seat</p>
+                <p>Note: Only enter your seat assignment once your are in class and have chosen your seat.</p>
             </div>
         </template>
     </div>

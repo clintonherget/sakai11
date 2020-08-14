@@ -51,7 +51,7 @@ public class Emails {
                                     studentUser.get(0).getDisplayName(),
                                     group.name,
                                     site.getTitle(),
-                                    "http://www.nyu.edu/servicelink/KB0018304"
+                                    "https://www.nyu.edu/servicelink/KB0018304"
                                     );
 
         msg.setBody(FormattedText.escapeHtmlFormattedText(body));
