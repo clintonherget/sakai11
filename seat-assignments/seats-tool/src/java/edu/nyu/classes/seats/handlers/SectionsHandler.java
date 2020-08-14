@@ -68,7 +68,6 @@ public class SectionsHandler implements Handler {
             obj.put("id", section.id);
             obj.put("name", section.name);
             obj.put("shortName", section.shortName);
-            obj.put("hasSplit", section.hasSplit);
             obj.put("groupCount", section.listGroups().size());
 
             sections.add(obj);

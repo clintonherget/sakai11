@@ -53,21 +53,16 @@ public class SeatsStorage {
         return obj;
     }
 
-    public static String getSectionInstructionMode(DBConnection db, String primaryStemName) throws SQLException {
-        String result = null;
-
-        Optional<String> instructionMode = db.run("select instruction_mode from nyu_t_course_catalog where stem_name = ?")
-           .param(primaryStemName)
+    public static boolean hasBlendedInstructionMode(DBConnection db, SeatSection seatSection) throws SQLException {
+         int count = db.run("select count(*) from nyu_t_course_catalog cc " +
+            " inner join seat_group_section_rosters sgsr on replace(sgsr.sakai_roster_id, '_', ':') = cc.stem_name" +
+            " where sgsr.section_id = ?" + 
+            " and cc.instruction_mode = 'OB'")
+           .param(seatSection.id)
            .executeQuery()
-           .getStringColumn("instruction_mode")
-           .stream()
-           .findFirst();
+           .getCount();
 
-        if (instructionMode.isPresent()) {
-            result = instructionMode.get();
-        }
-
-        return result;
+        return count > 0;
     }
 
     public static Member removeMemberFromGroup(DBConnection db, SeatSection seatSection, String groupId, String netid) throws SQLException {
@@ -739,20 +734,16 @@ public class SeatsStorage {
             .orElse(Utils.rosterToStemName(rosterId));
     }
 
-    public static String getInstructionModeForSection(DBConnection db, SeatSection seatSection, Site site) throws SQLException {
+    public static boolean hasBlendedInstructionMode(DBConnection db, SeatSection seatSection, Site site) throws SQLException {
         ResourceProperties props = site.getProperties();
-        String instructionMode = null;
         String propInstructionModeOverrides = props.getProperty("OverrideToBlended");
         if (propInstructionModeOverrides != null) {
             if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.primaryStemName)) {
-                instructionMode = "OB";
-            };
+                return true;
+            }
         }
-        if (instructionMode == null) {
-            return SeatsStorage.getSectionInstructionMode(db, seatSection.primaryStemName);
-        } else {
-            return instructionMode;
-        }
+
+        return SeatsStorage.hasBlendedInstructionMode(db, seatSection);
     }
 
     public static Integer getGroupMaxForSite(Site site) {
