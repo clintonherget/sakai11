@@ -914,7 +914,7 @@ Vue.component('section-group', {
     </template>
   </modal>
   <email-cohort v-if="section.split && !group.isGroupEmpty" htmlClass="email-cohort-btn pull-right" :group="group" :section="section" />
-  <template v-if="group.isGroupEmpty">
+  <template v-if="isNotOnlyGroup && group.isGroupEmpty">
     <confirm-button :action="deleteGroup" confirmMessage="Really Delete?">Delete Group</confirm-button>
   </template>
   <template v-for="meeting in group.meetings">
