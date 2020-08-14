@@ -1218,6 +1218,7 @@ Vue.component('section-selector', {
 Vue.component('instructor-table', {
   template: `
       <div>
+          <button @click="print()" class="pull-right">Print</button>
           <template v-if="sections.length > 0">
               <section-selector
                   v-if="sections.length > 1"
@@ -1251,6 +1252,9 @@ Vue.component('instructor-table', {
   },
   props: ['baseurl'],
   methods: {
+      print: function() {
+        window.print();
+      },
       fetchData: function() {
           var self = this;
 
