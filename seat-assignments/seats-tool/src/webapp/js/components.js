@@ -548,6 +548,11 @@ Vue.component('group-meeting', {
       </tr>
     </thead>
     <tbody>
+      <tr v-show="sortedSeatAssignments.length === 0">
+        <td colspan="5">
+          This cohort has no members.
+        </td>
+      </tr>
       <tr v-for="assignment in sortedSeatAssignments" :key="assignment.netid + group.id">
         <td>
           <div class="profile-pic">
