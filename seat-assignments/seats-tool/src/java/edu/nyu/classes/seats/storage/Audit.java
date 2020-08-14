@@ -18,7 +18,6 @@ public class Audit {
     public enum AuditEvents {
         SEAT_CLEARED,
         SEAT_ASSIGNED,
-        SEAT_REASSIGNED,
         MEETING_DELETED,
         GROUP_DELETED,
         GROUP_CREATED,

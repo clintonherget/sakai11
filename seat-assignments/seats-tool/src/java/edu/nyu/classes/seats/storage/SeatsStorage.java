@@ -439,10 +439,24 @@ public class SeatsStorage {
             }
         }
 
+        if (seat.id != null) {
+            Audit.insert(db,
+                         AuditEvents.SEAT_CLEARED,
+                         json("seat", lastSeat,
+                              "editWindow", String.valueOf(editWindow),
+                              "meeting_id", seat.meeting.id,
+                              "meeting_name", seat.meeting.name,
+                              "group_name", seat.meeting.group.name,
+                              "group_id", seat.meeting.group.id,
+                              "section_id", seat.meeting.group.section.id,
+                              "netid", seat.netid)
+                         );
+        }
+
         Audit.insert(db,
-                     (seat.id == null) ? AuditEvents.SEAT_ASSIGNED : AuditEvents.SEAT_REASSIGNED,
+                     AuditEvents.SEAT_ASSIGNED,
                      json("seat", seat.seat,
-                          "lastSeat", lastSeat,
+                          "reassignedFromSeat", lastSeat,
                           "editWindow", String.valueOf(editWindow),
                           "meeting_id", seat.meeting.id,
                           "meeting_name", seat.meeting.name,
