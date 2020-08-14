@@ -394,7 +394,7 @@ Vue.component('split-action', {
           <option v-for="i in (section.maxGroups - 1)" :value="i + 1">{{i + 1}}</option>
         </select>
       </div>
-      <div v-if="instructionModeSupportsWeighted && hasRemoteUsers">
+      <div v-if="hasBlended && hasRemoteUsers">
         <label for="selectionType">Remote student random cohort assignment:</label>
         <div class="well">
           <label>
@@ -427,8 +427,8 @@ Vue.component('split-action', {
     baseurl: function() {
       return this.$parent.baseurl;
     },
-    instructionModeSupportsWeighted: function() {
-      return this.section.instructionMode === 'OB';
+    hasBlended: function() {
+      return this.section.hasBlended;
     },
     hasRemoteUsers: function() {
       for (var g = 0; g < this.section.groups.length; g++) {
@@ -913,7 +913,7 @@ Vue.component('section-group', {
       <button @click="closeDescriptionModal()">Cancel</button>
     </template>
   </modal>
-  <email-cohort v-if="!group.isGroupEmpty" htmlClass="email-cohort-btn pull-right" :group="group" :section="section" />
+  <email-cohort v-if="section.split && !group.isGroupEmpty" htmlClass="email-cohort-btn pull-right" :group="group" :section="section" />
   <template v-if="group.isGroupEmpty">
     <confirm-button :action="deleteGroup" confirmMessage="Really Delete?">Delete Group</confirm-button>
   </template>
@@ -1082,14 +1082,14 @@ Vue.component('section-table', {
       <template v-if="section">
           <h2 v-show="section.groups.length === 1">{{section.name}}</h2>
           <split-action
-            v-show="!section.split"
+            v-show="section.hasBlended && !section.split"
             :section="section"
             v-on:splat="resetPolling()">
           </split-action>
           <template v-for="group in sortedGroups">
             <section-group :group="group" :section="section" v-on:splat="resetPolling()"></section-group>
           </template>
-          <template v-if="section.groups.length < section.maxGroups">
+          <template v-if="section.split && section.groups.length < section.maxGroups">
             <hr/>
             <button @click="addGroup()">Add Another Section Cohort</button>
           </template>

@@ -69,11 +69,11 @@ public class SectionHandler implements Handler {
         sectionJSON.put("name", seatSection.get().name);
         sectionJSON.put("shortName", seatSection.get().shortName);
         sectionJSON.put("provisioned", seatSection.get().provisioned);
-        sectionJSON.put("split", seatSection.get().hasSplit);
+        sectionJSON.put("split", seatSection.get().listGroups().size() > 1);
 
         Site site = SiteService.getSite(siteId);
         sectionJSON.put("maxGroups", SeatsStorage.getGroupMaxForSite(site));
-        sectionJSON.put("instructionMode", SeatsStorage.getInstructionModeForSection(db, seatSection.get(), site));
+        sectionJSON.put("hasBlended", SeatsStorage.hasBlendedInstructionMode(db, seatSection.get(), site));
 
         JSONArray sectionGroups = new JSONArray();
         sectionJSON.put("groups", sectionGroups);

@@ -52,7 +52,7 @@ public class SplitSectionHandler implements Handler {
         Locks.lockSiteForUpdate(siteId);
         try {
             SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
-            if (!seatSection.hasSplit) {
+            if (seatSection.listGroups().size() <= 1) {
                 Integer maxGroups = SeatsStorage.getGroupMaxForSite(site);
                 SeatsStorage.bootstrapGroupsForSection(db, seatSection, Math.min(numberOfGroups, maxGroups), selectionType);
                 SeatsStorage.markSectionAsSplit(db, seatSection);
