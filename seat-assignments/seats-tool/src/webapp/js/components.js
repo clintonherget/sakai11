@@ -757,6 +757,7 @@ Vue.component('email-cohort', {
             <modal ref="emailModal">
                 <template v-slot:header>Email cohort: {{group.name}}</template>
                 <template v-slot:body>
+                    <p>Send a message to this cohort. You and other instructors, course site admins and teaching assistants in the site will be cc'd on the email.</p>
                     <div class="form-group">
                         <label :for="_uid + '_subject'">Subject:</label>
                         <input type="text" ref="emailSubject" class="form-control" :id="_uid + '_subject'" name="subject" />
