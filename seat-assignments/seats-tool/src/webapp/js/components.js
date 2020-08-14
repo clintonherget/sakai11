@@ -884,12 +884,12 @@ Vue.component('section-group', {
     <h2>{{group.name}} {{groupLabel}}</h2>
     <p>{{section.name}}</p>
   </template>
-  <div class="seat-section-description">
+  <div v-show="section.split" class="seat-section-description">
     <template v-if="group.description">
       <p>{{group.description}} <a href="javascript:void(0)" @click="showDescriptionModal()">Edit</a></p>
     </template>
     <template v-else>
-      <button @click="showDescriptionModal()">Add Description (optional)</button>
+      <a href="javascript:void(0);" @click="showDescriptionModal()">Add Description (optional)</a>
     </template>
   </div>
   <modal ref="descriptionModal">
