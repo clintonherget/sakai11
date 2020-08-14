@@ -139,6 +139,10 @@ textarea.form-control.seats-email-body {
     max-width: 600px;
 }
 
+.seats-body .modal-title {
+    font-size: 18px;
+}
+
 .seats-body .modal-body {
     overflow: auto;
     max-height: 80vh;
