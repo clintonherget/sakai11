@@ -113,6 +113,10 @@ public class ToolServlet extends HttpServlet {
 
             context.put("portalCdnQuery", HotReloadConfigurationService.getString("portal.cdn.version", java.util.UUID.randomUUID().toString()));
 
+            if ("true".equals(HotReloadConfigurationService.getString("seats.enable-fiddler", "false"))) {
+                context.put("rosterFiddlerEnabled", "true");
+            }
+
             Handler handler = handlerForRequest(request);
 
             if (handler.isSiteUpdRequired() && !(boolean)context.get("hasSiteUpd")) {
@@ -221,6 +225,12 @@ public class ToolServlet extends HttpServlet {
 
         if (path.startsWith("/remove-group-user")) {
             return new GroupRemoveMembersHandler();
+        }
+
+        if ("true".equals(HotReloadConfigurationService.getString("seats.enable-fiddler", "false"))) {
+            if (path.startsWith("/roster-fiddler")) {
+                return new RosterFiddler();
+            }
         }
 
         return new HomeHandler();
