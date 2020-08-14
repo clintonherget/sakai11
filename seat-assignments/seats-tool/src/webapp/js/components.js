@@ -147,11 +147,7 @@ Vue.component('seat-assignment-widget', {
   props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil'],
   computed: {
       inputWidth: function() {
-        if (this.isStudent) {
-          return this.inputValue.length + 4 + 'vw';
-        }
-
-        return 'inherit';
+        return Math.max(this.inputValue.length, 5) + 'em';
       },
       inputId: function() {
           return [this.meetingId, this.netid].join('__');
