@@ -226,7 +226,7 @@ public class SeatsStorage {
                 .param(section.id)
                 .executeQuery()
                 .each(row -> {
-                    sb.append(row.getString("primary_stem_name"));
+                    sb.append(Utils.stemNameToRosterId(row.getString("primary_stem_name")));
                 });
         }
 
@@ -738,7 +738,7 @@ public class SeatsStorage {
         ResourceProperties props = site.getProperties();
         String propInstructionModeOverrides = props.getProperty("OverrideToBlended");
         if (propInstructionModeOverrides != null) {
-            if (Arrays.asList(propInstructionModeOverrides.split(" *, *")).contains(seatSection.primaryStemName)) {
+            if (Arrays.asList(Utils.stemNameToRosterId(propInstructionModeOverrides).split(" *, *")).contains(Utils.stemNameToRosterId(seatSection.primaryStemName))) {
                 return true;
             }
         }
