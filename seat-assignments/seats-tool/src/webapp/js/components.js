@@ -1104,6 +1104,7 @@ Vue.component('section-table', {
     return {
         section: null,
         pollInterval: null,
+        pollDelay: 5000,
     };
   },
   props: ['sectionId'],
@@ -1163,7 +1164,7 @@ Vue.component('section-table', {
       cancelPolling: function() {
         var self = this;
         if (self.pollInterval) {
-          clearInterval(self.pollInterval);
+          clearTimeout(self.pollInterval);
         }
         
       },
@@ -1174,9 +1175,11 @@ Vue.component('section-table', {
 
         self.fetchData();
 
-        self.pollInterval = setInterval(function() {
-            self.fetchData();
-        }, 5000);
+        (function nextTick() {
+          self.pollInterval = setTimeout(nextTick, self.pollDelay);
+
+          self.fetchData();
+        })();
       },
   },
   mounted: function() {
@@ -1288,7 +1291,7 @@ Vue.component('student-home', {
   template: `
     <div>
         <template v-if="fetched">
-            <div v-for="meeting in meetings" :key="meeting.netid">
+            <div v-for="meeting in meetings" :key="meeting.id">
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
                 <p>{{meeting.groupDescription}}</p>
@@ -1313,6 +1316,7 @@ Vue.component('student-home', {
         meetings: [],
         fetched: false,
         pollInterval: null,
+        pollDelay: 20000,
     };
   },
   props: ['baseurl'],
@@ -1337,19 +1341,19 @@ Vue.component('student-home', {
         var self = this;
 
         if (self.pollInterval) {
-          clearInterval(self.pollInterval);
+          clearTimeout(self.pollInterval);
         }
 
-        self.fetchData();
+        (function nextTick() {
+          self.pollInterval = setTimeout(nextTick, self.pollDelay);
 
-        self.pollInterval = setInterval(function() {
-            self.fetchData();
-        }, 20000);
+          self.fetchData();
+        })();
       }
   },
   beforeDestroy: function() {
     if (this.pollInterval) {
-      clearInterval(this.pollInterval);
+      clearTimeout(this.pollInterval);
     }
   },
   mounted: function() {
