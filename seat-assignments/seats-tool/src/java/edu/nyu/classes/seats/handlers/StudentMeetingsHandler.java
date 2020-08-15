@@ -12,6 +12,7 @@ import org.json.simple.JSONObject;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,6 +30,9 @@ public class StudentMeetingsHandler implements Handler {
         String siteId = (String)context.get("siteId");
         DBConnection db = (DBConnection)context.get("db");
         User currentUser = UserDirectoryService.getCurrentUser();
+
+        response.addHeader("X-Poll-Frequency",
+                           HotReloadConfigurationService.getString("seats.student-poll-ms", "20000"));
 
         JSONArray meetings = new JSONArray();
 

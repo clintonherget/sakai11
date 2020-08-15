@@ -1156,7 +1156,16 @@ Vue.component('section-table', {
               },
               type: 'get',
               dataType: 'json',
-              success: function (json) {
+              success: function (json, _status, request) {
+                  var newDelay = parseInt(request.getResponseHeader("X-Poll-Frequency"));
+                  if (!isNaN(newDelay)) {
+                      if (newDelay < 1000) {
+                          newDelay = 1000;
+                      }
+
+                      self.pollDelay = newDelay;
+                  }
+
                   self.section = json;
               }
           });
@@ -1172,8 +1181,6 @@ Vue.component('section-table', {
         var self = this;
 
         self.cancelPolling();
-
-        self.fetchData();
 
         (function nextTick() {
           self.pollInterval = setTimeout(nextTick, self.pollDelay);
@@ -1328,7 +1335,16 @@ Vue.component('student-home', {
               url: self.baseurl + 'student-meetings',
               type: 'get',
               dataType: 'json',
-              success: function (json) {
+              success: function (json, _status, request) {
+                  var newDelay = parseInt(request.getResponseHeader("X-Poll-Frequency"));
+                  if (!isNaN(newDelay)) {
+                      if (newDelay < 1000) {
+                          newDelay = 1000;
+                      }
+
+                      self.pollDelay = newDelay;
+                  }
+
                   self.fetched = true;
                   self.meetings = json;
               }

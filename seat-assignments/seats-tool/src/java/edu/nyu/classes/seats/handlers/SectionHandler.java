@@ -29,7 +29,6 @@ import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.content.api.GroupAwareEntity.AccessMode;
 
-
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
@@ -40,6 +39,8 @@ import edu.nyu.classes.seats.storage.db.DBConnection;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 
 public class SectionHandler implements Handler {
 
@@ -63,6 +64,10 @@ public class SectionHandler implements Handler {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
+
+        response.addHeader("X-Poll-Frequency",
+                           HotReloadConfigurationService.getString("seats.instructor-poll-ms", "5000"));
+
 
         JSONObject sectionJSON = new JSONObject();
         sectionJSON.put("id", seatSection.get().id);
