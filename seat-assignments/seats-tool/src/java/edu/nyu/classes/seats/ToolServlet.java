@@ -128,6 +128,7 @@ public class ToolServlet extends HttpServlet {
             }
 
             response.setHeader("Content-Type", handler.getContentType());
+            response.setHeader("Cache-Control", "Cache-Control: no-cache, max-age=0");
 
             DB.transaction("Handle seats API request",
                            (DBConnection db) -> {
