@@ -90,6 +90,10 @@ Vue.component('modal', {
 
 Vue.component('seat-assignment-widget', {
   template: `
+<div>
+    <div v-if="isStudent">
+      <p>{{studentInstruction}}</p>
+    </div>
     <span class="seat-assignment-widget">
       <div v-if="isStudent && isEditable && !!editableUntil" class="alert alert-warning">
         Note: You have {{timeLeftToEdit}} to make further edits to your seat number.
@@ -133,6 +137,10 @@ Vue.component('seat-assignment-widget', {
         </button>
       </template>
     </span>
+    <div v-if="isStudent">
+      <p>{{studentNote}}</p>
+    </div>
+</div>
   `,
   data: function() {
     return {
@@ -145,7 +153,7 @@ Vue.component('seat-assignment-widget', {
       waitingOnSave: false,
     };
   },
-  props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil'],
+  props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil', 'studentName'],
   computed: {
       labelText: function() {
         if (this.isStudent) {
@@ -208,6 +216,20 @@ Vue.component('seat-assignment-widget', {
 
         var min = parseInt(sec / 60);
         return min + " minutes " + (sec % 60) + " seconds";
+      },
+      studentInstruction: function() {
+        if (this.isEditable) {
+          return this.studentName + ", enter your seat number here:";
+        } else {
+          return this.studentName + ", your seat number is:";
+        }
+      },
+      studentNote: function() {
+        if (this.isEditable) {
+          return "Note: Only enter your seat number once you are in class and have chosen your seat.";
+        } else {
+          return "Note: If you need to change your seat number, contact your instructor.";
+        }
       },
   },
   watch: {
@@ -572,6 +594,7 @@ Vue.component('group-meeting', {
           <seat-assignment-widget
             :seat="assignment.seat"
             :netid="assignment.netid"
+            :studentName="assignment.displayName"
             :meetingId="meeting.id"
             :groupId="group.id"
             :sectionId="section.id"
@@ -1309,10 +1332,10 @@ Vue.component('student-home', {
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
                 <p class="seat-section-description">{{meeting.groupDescription}}</p>
-                <p>{{meeting.studentName}}, enter your seat number here:</p>
                 <seat-assignment-widget
                   :seat="meeting.seat"
                   :netid="meeting.netid"
+                  :studentName="meeting.studentName"
                   :meetingId="meeting.meetingId"
                   :groupId="meeting.groupId"
                   :sectionId="meeting.sectionId"
@@ -1320,7 +1343,6 @@ Vue.component('student-home', {
                   :editableUntil="meeting.editableUntil"
                   v-on:splat="resetPolling()">
                 </seat-assignment-widget>
-                <p>Note: Only enter your seat number once you are in class and have chosen your seat.</p>
             </div>
         </template>
     </div>
