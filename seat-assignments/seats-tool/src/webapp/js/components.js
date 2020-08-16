@@ -92,7 +92,7 @@ Vue.component('seat-assignment-widget', {
   template: `
     <span class="seat-assignment-widget">
       <div v-if="isStudent && isEditable && !!editableUntil" class="alert alert-warning">
-        Note: You have {{timeLeftToEdit}} to make further edits to your seat assignment.
+        Note: You have {{timeLeftToEdit}} to make further edits to your seat number.
       </div>
       <template v-if="editing || seat">
         <label :for="inputId" class="sr-only">
@@ -129,7 +129,7 @@ Vue.component('seat-assignment-widget', {
       </template>
       <template v-else-if="isEditable">
         <button ref="enterSeatButton" @click="edit()">
-          <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> Enter Seat Assignment
+          <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> {{labelText}}
         </button>
       </template>
     </span>
@@ -147,6 +147,13 @@ Vue.component('seat-assignment-widget', {
   },
   props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil'],
   computed: {
+      labelText: function() {
+        if (this.isStudent) {
+          return "Enter Seat Number";
+        } else {
+          return "Enter Seat Assignment"
+        }
+      },
       inputWidth: function() {
         return Math.max(this.inputValue.length, 5) + 'em';
       },
@@ -1301,7 +1308,7 @@ Vue.component('student-home', {
             <div v-for="meeting in meetings" :key="meeting.id">
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
-                <p>{{meeting.groupDescription}}</p>
+                <p class="seat-section-description">{{meeting.groupDescription}}</p>
                 <p>{{meeting.studentName}}, enter your seat number here:</p>
                 <seat-assignment-widget
                   :seat="meeting.seat"
@@ -1313,7 +1320,7 @@ Vue.component('student-home', {
                   :editableUntil="meeting.editableUntil"
                   v-on:splat="resetPolling()">
                 </seat-assignment-widget>
-                <p>Note: Only enter your seat assignment once your are in class and have chosen your seat.</p>
+                <p>Note: Only enter your seat number once you are in class and have chosen your seat.</p>
             </div>
         </template>
     </div>
