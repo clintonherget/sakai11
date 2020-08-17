@@ -505,6 +505,53 @@ public class SeatsStorage {
             .executeUpdate();
     }
 
+    private static class StudentLocations {
+        private HashMap<String, Member.StudentLocation> map = new HashMap<>();
+
+        public void add(String netid, String studyAgreement) {
+            if (netid == null || netid.trim().isEmpty()) {
+                return;
+            }
+
+            if (studyAgreement == null ||
+                studyAgreement.trim().isEmpty() ||
+                "GNU-WS".equals(studyAgreement) ||
+                "LOCAL-WS".equals(studyAgreement)) {
+                // These are IN_PERSON, which is our default anyway.
+                return;
+            }
+
+            map.put(netid, Member.StudentLocation.REMOTE);
+        }
+
+        public Member.StudentLocation forNetid(String netid) {
+            if (map.containsKey(netid)) {
+                return map.get(netid);
+            } else {
+                return Member.StudentLocation.IN_PERSON;
+            }
+        }
+    }
+
+    private static StudentLocations getStudentLocationsForSection(DBConnection db, String sectionId) throws SQLException {
+        StudentLocations result = new StudentLocations();
+
+        db.run("select enrl.netid, sl.study_agreement" +
+               " from seat_group_section sgs" +
+               " inner join seat_group_section_rosters sgsr on sgsr.section_id = sgs.id" +
+               " inner join nyu_t_course_catalog cc on cc.stem_name = replace(sgsr.sakai_roster_id, '_', ':')" +
+               " inner join nyu_t_student_enrollments enrl on enrl.stem_name = cc.stem_name" +
+               " inner join mv_ps_stdnt_car_term sl on cc.strm = sl.strm AND cc.acad_career = sl.acad_career AND enrl.emplid = sl.emplid" +
+               " where sgs.id = ?")
+            .param(sectionId)
+            .executeQuery()
+            .each((row) -> {
+                    result.add(row.getString("netid"), row.getString("study_agreement"));
+                });
+
+        return result;
+    }
+
     public static Optional<SeatSection> getSeatSection(DBConnection db, String sectionId, String siteId) throws SQLException {
         List<SeatSection> sections = db.run("select * from seat_group_section where id = ?")
                 .param(sectionId)
@@ -520,6 +567,8 @@ public class SeatsStorage {
         SeatSection section = sections.get(0);
 
         buildSectionName(db, section);
+
+        StudentLocations locations = getStudentLocationsForSection(db, sectionId);
 
         db.run("select sg.*, sec.id as section_id" +
                " from seat_group sg" +
@@ -546,7 +595,8 @@ public class SeatsStorage {
                         .get()
                         .addMember(row.getString("netid"),
                                    row.getInt("official") == 1,
-                                   Member.Role.valueOf(row.getString("role")));
+                                   Member.Role.valueOf(row.getString("role")),
+                                   locations.forNetid(row.getString("netid")));
                 });
 
         db.run("select sm.group_id, sm.id as meeting_id" +
@@ -629,10 +679,15 @@ public class SeatsStorage {
 
         Set<Member> result = new HashSet<>();
 
+        StudentLocations locations = getStudentLocationsForSection(db, section.id);
+
         CourseManagementService cms = (CourseManagementService) ComponentManager.get("org.sakaiproject.coursemanagement.api.CourseManagementService");
         for (String rosterId : rosterIds) {
             for (Membership membership : cms.getSectionMemberships(rosterId)) {
-                result.add(new Member(membership.getUserId(), true, Member.Role.forCMRole(membership.getRole())));
+                result.add(new Member(membership.getUserId(),
+                                      true,
+                                      Member.Role.forCMRole(membership.getRole()),
+                                      locations.forNetid(membership.getUserId())));
             }
         }
 

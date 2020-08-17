@@ -15,8 +15,8 @@ public class SeatGroup {
         return meetings.values();
     }
 
-    public void addMember(String netid, boolean official, Member.Role role) {
-        this.members.put(netid, new Member(netid, official, role));
+    public void addMember(String netid, boolean official, Member.Role role, Member.StudentLocation location) {
+        this.members.put(netid, new Member(netid, official, role, location));
     }
 
     public List<Member> listMembers() {

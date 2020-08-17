@@ -63,7 +63,7 @@ public class GroupAddMembersHandler implements Handler {
                     }
                 }
 
-                return new Member(netid, false, memberRole);
+                return new Member(netid, false, memberRole, Member.StudentLocation.IN_PERSON);
             }).collect(Collectors.toList());
 
         for (Member m : addme) {

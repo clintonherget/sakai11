@@ -35,9 +35,9 @@ public class Member {
         }
     }
 
-    public Member(String netid, boolean official, Role role) {
+    public Member(String netid, boolean official, Role role, StudentLocation location) {
         this.netid = netid;
-        this.studentLocation = StudentLocation.values()[Math.abs(netid.hashCode() % StudentLocation.values().length)];
+        this.studentLocation = location;
         this.official = official;
         this.role = role;
     }
