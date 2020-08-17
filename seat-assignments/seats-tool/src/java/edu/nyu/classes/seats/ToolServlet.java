@@ -42,7 +42,6 @@ public class ToolServlet extends HttpServlet {
 
     public void init(ServletConfig config) throws ServletException {
         if ("true".equals(HotReloadConfigurationService.getString("seats.development-mode", "false"))) {
-            SeatsStorage.setRegistryDBSuffix("");
             developmentMode.set(true);
         }
 
