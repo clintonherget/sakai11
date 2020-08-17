@@ -985,8 +985,8 @@ Vue.component('section-group', {
             </template>
             <template v-else>
               <tr v-for="user in membersForAdd" :key="user.netid">
-                <td><input type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
-                <td>{{user.displayName}} ({{user.netid}})</td>
+                <td style="padding: 0 0 0 1em; width: 1.5em; text-align: right;"><input style="margin: 0" :id="'checkbox_' + this._uid + '_' + user.netid" type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
+                <td><label :for="'checkbox_' + this._uid + '_' + user.netid">{{user.displayName}} ({{user.netid}})</label></td>
                 <td>{{user.role}}</td>
               </tr>
             </template>
