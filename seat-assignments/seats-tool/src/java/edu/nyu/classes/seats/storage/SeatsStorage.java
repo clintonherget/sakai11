@@ -24,7 +24,12 @@ import org.json.simple.JSONObject;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SeatsStorage {
+    private static final Logger LOG = LoggerFactory.getLogger(SeatsStorage.class);
+
     public static int EDIT_WINDOW_MS = 5 * 60 * 1000;
 
     public enum SelectionType {
@@ -140,9 +145,22 @@ public class SeatsStorage {
             .oneString();
     }
 
-    private static Optional<String> getFacilityLabel(String facilityId) {
-        // Still need this data source from... somewhere
-        return Optional.empty();
+    private static Optional<String> getFacilityLabel(DBConnection db, String facilityId) {
+        try {
+        return db.run("select descr" +
+               " from nyu_t_facility_description fac" +
+               " where facility_id = ? AND effdt <= SYSDATE AND eff_status = 'A'" +
+               " order by effdt desc")
+            .param(facilityId)
+            .executeQuery()
+            .oneString();
+        } catch (SQLException e) {
+            LOG.error("Failure getting facility label for ID: " + facilityId);
+            LOG.error(e.toString());
+            e.printStackTrace();
+
+            return Optional.empty();
+        }
     }
 
     public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
@@ -174,7 +192,7 @@ public class SeatsStorage {
                 sb.append(" ");
 
                 String facilityId = row.getString("facility_id");
-                getFacilityLabel(facilityId).ifPresent((label) -> {
+                getFacilityLabel(db, facilityId).ifPresent((label) -> {
                         sb.append(label);
                         sb.append(" - ");
                     });
