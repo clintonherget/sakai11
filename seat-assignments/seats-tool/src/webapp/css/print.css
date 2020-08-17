@@ -12,3 +12,7 @@ a {
     width: auto !important;
     min-width: auto !important;
 }
+
+.seats-body table th {
+    text-align: left;
+}
