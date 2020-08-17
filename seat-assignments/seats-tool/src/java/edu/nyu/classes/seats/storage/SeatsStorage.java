@@ -27,8 +27,6 @@ import org.sakaiproject.user.cover.UserDirectoryService;
 public class SeatsStorage {
     public static int EDIT_WINDOW_MS = 5 * 60 * 1000;
 
-    private static AtomicReference<String> registryDBSuffix = new AtomicReference<>("@rdb0");
-
     public enum SelectionType {
         RANDOM,
         WEIGHTED,
@@ -36,10 +34,6 @@ public class SeatsStorage {
 
     public void runDBMigrations() {
         BaseMigration.runMigrations();
-    }
-
-    public static void setRegistryDBSuffix(String suffix) {
-        registryDBSuffix.set((suffix == null) ? "" : suffix);
     }
 
     @SuppressWarnings("unchecked")
@@ -134,14 +128,13 @@ public class SeatsStorage {
 
     public static Optional<String> locationForSection(DBConnection db, String stemName) throws SQLException {
         return db.run("select mtg.facility_id from NYU_T_COURSE_CATALOG cc" +
-               String.format(" inner join ps_class_mtg_pat%s mtg on " +
-                             " cc.crse_id = mtg.crse_id and" +
-                             " cc.strm = mtg.strm and" +
-                             " cc.crse_offer_nbr = mtg.crse_offer_nbr and" +
-                             " cc.session_code = mtg.session_code and" +
-                             " cc.class_section = mtg.class_section",
-                             registryDBSuffix.get()) +
-               " where cc.stem_name = ?")
+                      " inner join nyu_t_class_mtg_pat mtg on " +
+                      " cc.crse_id = mtg.crse_id and" +
+                      " cc.strm = mtg.strm and" +
+                      " cc.crse_offer_nbr = mtg.crse_offer_nbr and" +
+                      " cc.session_code = mtg.session_code and" +
+                      " cc.class_section = mtg.class_section" +
+                      " where cc.stem_name = ?")
             .param(stemName)
             .executeQuery()
             .oneString();
@@ -156,13 +149,12 @@ public class SeatsStorage {
         StringBuilder sb = new StringBuilder();
 
         db.run("select mtg.* from NYU_T_COURSE_CATALOG cc" +
-               String.format(" inner join ps_class_mtg_pat%s mtg on " +
-                             " cc.crse_id = mtg.crse_id and" +
-                             " cc.strm = mtg.strm and" +
-                             " cc.crse_offer_nbr = mtg.crse_offer_nbr and" +
-                             " cc.session_code = mtg.session_code and" +
-                             " cc.class_section = mtg.class_section",
-                             registryDBSuffix.get()) +
+               " inner join nyu_t_class_mtg_pat mtg on " +
+               " cc.crse_id = mtg.crse_id and" +
+               " cc.strm = mtg.strm and" +
+               " cc.crse_offer_nbr = mtg.crse_offer_nbr and" +
+               " cc.session_code = mtg.session_code and" +
+               " cc.class_section = mtg.class_section" +
                " inner join seat_group_section sgc on cc.stem_name = sgc.primary_stem_name" +
                " where sgc.id = ?")
             .param(section.id)
