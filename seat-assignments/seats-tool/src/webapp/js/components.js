@@ -604,7 +604,7 @@ Vue.component('group-meeting', {
         </td>
         <td>
           {{labelForStudentLocation(assignment.studentLocation)}}
-          <template v-if="!assignment.official">(Unofficial)</template>
+          <template v-if="!assignment.official">(Non-Official)</template>
         </td>
         <td>
           <template v-if="$parent.isNotOnlyGroup">
@@ -963,7 +963,7 @@ Vue.component('section-group', {
   <button @click="addAdhocMembers()">Add Non-Official Site Member(s)</button>
   <contextual-help 
     feature="Add Non-Official Site Member(s)"
-    helpText="Non-official site members are students, instructors, TAs, or course site administrators within the course site who are not part of the official course roster(s) from Albert. These individuals are manually added to the course site in the Settings tool.">
+    helpText="Non-official site members are students, instructors, TAs, or course site administrators within the course site who are not part of the official student roster(s) from Albert. This includes individuals manually added to the course site in the Settings tool.">
   </contextual-help>
   <modal ref="membersModal">
     <template v-slot:header>Add Non-Official Site Member(s) {{group.name}}</template>
