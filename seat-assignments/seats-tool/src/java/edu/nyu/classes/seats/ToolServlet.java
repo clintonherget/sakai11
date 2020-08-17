@@ -47,9 +47,6 @@ public class ToolServlet extends HttpServlet {
 
         if ("true".equals(HotReloadConfigurationService.getString("auto.ddl.seats", "false")) ||
             developmentMode.get()) {
-            // "TOOT TOOT"
-            System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[ToolServlet.java:46 ViciousFrog]: " + "\n    'TOOT TOOT' => " + ("TOOT TOOT") + "\n");
-
             new SeatsStorage().runDBMigrations();
         }
 
