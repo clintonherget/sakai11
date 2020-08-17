@@ -255,7 +255,7 @@ public class SeatsStorage {
         // handle upgrades to official
         for (SeatGroup group : section.listGroups()) {
             for (Member member : group.listMembers()) {
-                if (sectionNetids.contains(member.netid) && !member.official) {
+                if (sectionNetids.contains(member.netid) && !member.official && Member.Role.STUDENT.equals(member.role)) {
                     markMemberAsOfficial(db, group.id, member.netid);
                 }
             }

@@ -58,13 +58,13 @@ public class MembersForAddHandler implements Handler {
             .getMembers()
             .stream()
             .filter((m) -> {
-                    if (m.isProvided()) {
-                        return false;
-                    } else if (existingGroupMembers.contains(m.getUserEid())) {
+                    if (existingGroupMembers.contains(m.getUserEid())) {
                         return false;
                     } else if (allAddedUsers.contains(m.getUserEid()) && "Student".equals(m.getRole().getId())) {
                         return false;
                     } else if (!m.isActive()) {
+                        return false;
+                    } else if (m.isProvided() && "Student".equals(m.getRole().getId())) {
                         return false;
                     }
 

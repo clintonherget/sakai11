@@ -58,8 +58,9 @@ public class GroupRemoveMembersHandler implements Handler {
             .filter((m) -> m.getUserEid().equals(netid))
             .findFirst();
 
-        // No removing users if they're in a roster
-        if (!member.isPresent() || member.get().isProvided()) {
+        // No removing student users if they're in a roster
+        boolean isStudent = Member.Role.STUDENT.toString().equals(member.get().getRole().toString().toUpperCase(Locale.ROOT));
+        if (!member.isPresent() || (member.get().isProvided() && isStudent)) {
             return;
         }
 
