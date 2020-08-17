@@ -952,6 +952,7 @@ Vue.component('section-group', {
   </template>
   <template v-for="meeting in group.meetings">
     <group-meeting
+      :key="meeting.id"
       :group="group"
       :section="section"
       :meeting="meeting"
@@ -983,7 +984,7 @@ Vue.component('section-group', {
               <tr><td colspan="3">Loading...</td></tr>
             </template>
             <template v-else>
-              <tr v-for="user in membersForAdd">
+              <tr v-for="user in membersForAdd" :key="user.netid">
                 <td><input type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
                 <td>{{user.displayName}} ({{user.netid}})</td>
                 <td>{{user.role}}</td>
@@ -1120,7 +1121,7 @@ Vue.component('section-table', {
             v-on:splat="resetPolling()">
           </split-action>
           <template v-for="group in sortedGroups">
-            <section-group :group="group" :section="section" v-on:splat="resetPolling()"></section-group>
+            <section-group :key="group.id" :group="group" :section="section" v-on:splat="resetPolling()"></section-group>
           </template>
           <template v-if="section.split && section.groups.length < section.maxGroups">
             <hr/>
@@ -1328,7 +1329,7 @@ Vue.component('student-home', {
   template: `
     <div>
         <template v-if="fetched">
-            <div v-for="meeting in meetings" :key="meeting.id">
+            <div v-for="meeting in meetings" :key="meeting.meetingId">
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
                 <p class="seat-section-description">{{meeting.groupDescription}}</p>
