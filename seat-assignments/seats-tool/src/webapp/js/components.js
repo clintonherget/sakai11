@@ -1346,6 +1346,12 @@ Vue.component('student-home', {
                 </seat-assignment-widget>
             </div>
         </template>
+        <div class="messageInstruction">
+            <i style="color: #265b81; font-size: 150%; float: left; padding: 0 1em 0 0; line-height: 2em;" aria-hidden="true" class="fa fa-universal-access"></i>
+
+            <p>Please note that instructors may need to reassign seats to accommodate those with disabilities.<br>
+            Your cooperation and support is much appreciated.</p>
+        </div>
     </div>
   `,
   data: function() {
