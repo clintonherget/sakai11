@@ -75,6 +75,7 @@ public class SectionHandler implements Handler {
         sectionJSON.put("shortName", seatSection.get().shortName);
         sectionJSON.put("provisioned", seatSection.get().provisioned);
         sectionJSON.put("split", seatSection.get().listGroups().size() > 1);
+        sectionJSON.put("siteId", siteId);
 
         Site site = SiteService.getSite(siteId);
         sectionJSON.put("maxGroups", SeatsStorage.getGroupMaxForSite(site));

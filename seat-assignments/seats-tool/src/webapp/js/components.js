@@ -586,7 +586,7 @@ Vue.component('group-meeting', {
       <tr v-for="assignment in sortedSeatAssignments" :key="assignment.netid + group.id">
         <td>
           <div class="profile-pic">
-            <img :src="'/direct/profile/' + assignment.netid + '/image/official'"/>
+            <img :src="'/direct/profile/' + assignment.netid + '/image/official?siteId=' + section.siteId"/>
           </div>
         </td>
         <td>{{assignment.displayName}} ({{assignment.netid}})</td>
