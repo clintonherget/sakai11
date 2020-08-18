@@ -911,4 +911,18 @@ public class CalendarBean {
 	private final static String ASSN_ENTITY_ACTION = "item";
 	private EntityBroker entityBroker;
 	private final static String ASSN_ENTITY_PREFIX = EntityReference.SEPARATOR+ASSN_ENTITY_ID+EntityReference.SEPARATOR+ASSN_ENTITY_ACTION+EntityReference.SEPARATOR;
+
+	// NYU custom behaviours
+	public boolean isOnWorkspaceTab() {
+		return M_ss.isUserSite(getSiteId());
+	}
+	public String getMyWorkspaceCalendarToolPath() {
+		try {
+			Site site = M_ss.getSite(getSiteId());
+			ToolConfiguration tool = site.getToolForCommonId("sakai.schedule");
+			return String.format("/portal/site/%s/tool/%s", tool.getSiteId(), tool.getId());
+		} catch (IdUnusedException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

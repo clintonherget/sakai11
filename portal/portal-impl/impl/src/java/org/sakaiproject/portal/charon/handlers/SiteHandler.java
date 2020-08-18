@@ -518,9 +518,9 @@ public class SiteHandler extends WorksiteHandler
 				// We are concerned when we neither got output, nor a redirect
 				if ( redir != null ) {
 					msg = msg + " redirect to="+redir;
-					log.debug(msg);
+					// log.debug(msg);
 				} else {
-					log.warn(msg);
+					// log.warn(msg);
 				}
 				bufferResponse.forwardResponse();
 				return;

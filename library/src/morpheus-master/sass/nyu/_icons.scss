@@ -198,4 +198,11 @@
     @extend .fa-id-card-o;
   }
 
+  .icon-sakai--nyu-seat-assignments {
+    font-family: 'nyu-classes-icons' !important;
+    &:before {
+      content: '\f1c9' !important;
+    }
+  }
+
 }

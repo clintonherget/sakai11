@@ -21,6 +21,12 @@
 	</properties>
 	<dependencies>
 		<dependency>
+			<groupId>edu.nyu.classes.seats</groupId>
+			<artifactId>seats-api</artifactId>
+			<version>12.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.sakaiproject.kernel</groupId>
 			<artifactId>sakai-kernel-api</artifactId>
 			<scope>provided</scope>
