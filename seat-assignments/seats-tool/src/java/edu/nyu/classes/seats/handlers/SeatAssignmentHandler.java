@@ -107,7 +107,11 @@ public class SeatAssignmentHandler implements Handler {
             SeatsStorage.SetSeatResult seatResult = SeatsStorage.setSeat(db, seatAssignment, currentSeat, isInstructor);
             if (!SeatsStorage.SetSeatResult.OK.equals(seatResult)) {
                 result.put("error", true);
-                result.put("error_code", seatResult.toString());
+                if (SeatsStorage.SetSeatResult.SEAT_TAKEN.equals(seatResult)) {
+                    result.put("error_code", isInstructor ? "SEAT_TAKEN_INSTRUCTOR" : "SEAT_TAKEN");
+                } else {
+                    result.put("error_code", seatResult.toString());
+                }
             }
         } else {
             result.put("error", true);
