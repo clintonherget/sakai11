@@ -73,12 +73,15 @@
 }
 
 /* Columns widths */
-.seats-body .seat-table thead tr th:nth-child(1) { width: 10%; }
-.seats-body .seat-table thead tr th:nth-child(2) { width: 25%; }
-.seats-body .seat-table thead tr th:nth-child(3) { width: 40%; }
-.seats-body .seat-table thead tr th:nth-child(4) { width: 10%; }
-.seats-body .seat-table thead tr th:nth-child(5) { width: 15%; }
+.seats-body .seat-assignment-listing thead tr th:nth-child(1) { width: 80px; }
+.seats-body .seat-assignment-listing thead tr th:nth-child(2) { width: 25%; }
+.seats-body .seat-assignment-listing thead tr th:nth-child(3) { width: 40%; }
+.seats-body .seat-assignment-listing thead tr th:nth-child(4) { width: 10%; }
+.seats-body .seat-assignment-listing thead tr th:nth-child(5) { width: 15%; }
 
+.seats-body .members-for-add-listing thead tr th:nth-child(1) { width: 80px; }
+.seats-body .members-for-add-listing thead tr th:nth-child(2) { width: 60%; }
+.seats-body .members-for-add-listing thead tr th:nth-child(3) { width: 40%; }
 
 .seats-body .seat-table thead th {
     padding: 6px 12px;

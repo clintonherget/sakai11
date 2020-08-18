@@ -990,7 +990,7 @@ Vue.component('section-group', {
       <div>
         <p>Select manually-added, non-official site members in this site to add to this cohort. For more information on manually adding members to your course site, <a target="_blank" href="https://www.nyu.edu/servicelink/041212911320118">click here</a>.</p>
 
-        <table class="seat-table">
+        <table class="seat-table members-for-add-listing">
           <thead>
             <tr>
               <th scope="col"><span class="sr-only">Checkbox to select row</span></th>
@@ -1004,7 +1004,7 @@ Vue.component('section-group', {
             </template>
             <template v-else>
               <tr v-for="user in membersForAdd" :key="user.netid">
-                <td style="padding: 0 0 0 1em; width: 1.5em; text-align: right;"><input style="margin: 0" :id="'checkbox_' + this._uid + '_' + user.netid" type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
+                <td style="padding: 0 0 0 1em; text-align: right;"><input style="margin: 0" :id="'checkbox_' + this._uid + '_' + user.netid" type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
                 <th scope="row"><label :for="'checkbox_' + this._uid + '_' + user.netid">{{user.displayName}} ({{user.netid}})</label></th>
                 <td>{{user.role}}</td>
               </tr>
