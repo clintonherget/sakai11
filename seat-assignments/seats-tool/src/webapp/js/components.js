@@ -1348,7 +1348,13 @@ Vue.component('student-home', {
   template: `
     <div>
         <template v-if="fetched">
-            <div v-for="meeting in meetings" :key="meeting.meetingId">
+            <div v-if="roleSwap" class="messageInstruction">
+              Students will be able to enter and view their seat number from here. For more info, see the following Kbase article: <a href="http://www.nyu.edu/servicelink/KB0018304" target="_blank">Entering and viewing your seating assignments (student article)</a>.
+            </div>
+            <div v-if="meetings.length === 0" class="alertMessage">
+                You are currently not a member of any section or cohort. Please contact your instructor to be added.
+            </div>
+            <div v-for="meeting in sortedMeetings" :key="meeting.meetingId">
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
                 <p class="seat-section-description">{{meeting.groupDescription}}</p>
@@ -1379,6 +1385,7 @@ Vue.component('student-home', {
         fetched: false,
         pollInterval: null,
         pollDelay: 20000,
+        roleSwap: false,
     };
   },
   props: ['baseurl'],
@@ -1401,7 +1408,8 @@ Vue.component('student-home', {
                   }
 
                   self.fetched = true;
-                  self.meetings = json;
+                  self.meetings = json.meetings;
+                  self.roleSwap = !!json.roleSwap;
               }
           });
       },
@@ -1421,6 +1429,15 @@ Vue.component('student-home', {
           self.fetchData();
         })();
       }
+  },
+  computed: {
+    sortedMeetings: function() {
+      if (this.fetched) {
+        return this.meetings.sort(function (a, b) { return a.groupName.localeCompare(b.groupName) });
+      } else {
+        return [];
+      }
+    },
   },
   beforeDestroy: function() {
     if (this.pollInterval) {

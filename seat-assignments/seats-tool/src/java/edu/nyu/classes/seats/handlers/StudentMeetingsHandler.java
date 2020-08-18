@@ -9,7 +9,9 @@ import edu.nyu.classes.seats.storage.SeatsStorage;
 import edu.nyu.classes.seats.storage.db.DBConnection;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.component.cover.HotReloadConfigurationService;
@@ -34,7 +36,15 @@ public class StudentMeetingsHandler implements Handler {
         response.addHeader("X-Poll-Frequency",
                            HotReloadConfigurationService.getString("seats.student-poll-ms", "20000"));
 
+        JSONObject result = new JSONObject();
+
+        if ("Student".equals(SecurityService.getUserEffectiveRole(SiteService.siteReference(siteId)))) {
+            // instructor pretending to be a student
+            result.put("roleSwap", true);
+        }
+
         JSONArray meetings = new JSONArray();
+        result.put("meetings", meetings);
 
         for (SeatSection section : SeatsStorage.siteSeatSections(db, siteId)) {
             JSONObject obj = new JSONObject();
@@ -43,6 +53,7 @@ public class StudentMeetingsHandler implements Handler {
             obj.put("sectionId", section.id);
             obj.put("sectionName", section.name);
             obj.put("sectionShortName", section.shortName);
+
             for (SeatGroup group : section.listGroups()) {
                 if (group.listMembers().stream().anyMatch(m -> m.netid.equals(currentUser.getEid()))) {
                     obj.put("groupId", group.id);
@@ -68,7 +79,7 @@ public class StudentMeetingsHandler implements Handler {
         }
 
         try {
-            response.getWriter().write(meetings.toString());
+            response.getWriter().write(result.toString());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
