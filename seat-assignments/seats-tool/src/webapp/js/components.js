@@ -114,6 +114,7 @@ Vue.component('seat-assignment-widget', {
           v-on:keydown.esc="cancel()"
           :required="isStudent"
           v-bind:style="{width: inputWidth}"
+          maxlength="20"
         />
         <template v-if="isEditable && editing">
           <button class="btn-primary" @click="save()" :disabled="waitingOnSave">
