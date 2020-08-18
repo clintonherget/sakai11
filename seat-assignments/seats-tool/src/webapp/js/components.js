@@ -126,9 +126,7 @@ Vue.component('seat-assignment-widget', {
           <button @click="edit()" :disabled="waitingOnSave || editDisabled">
             <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
           </button>
-          <button v-if="!isStudent && seat !== null" @click="clear()" :disabled="waitingOnSave || editDisabled">
-            <i class="glyphicon glyphicon-remove" aria-hidden="true"></i> Clear
-          </button>
+          <confirm-button v-if="!isStudent && seat !== null" :disabled="waitingOnSave || editDisabled" :action="function () { clear() }" :confirmMessage="'Clear seat assignment for ' + netid + '?'"><i class="glyphicon glyphicon-remove" aria-hidden="true"></i></i> Clear</confirm-button>
         </template>
       </template>
       <template v-else-if="isEditable">
@@ -637,12 +635,18 @@ Vue.component('group-meeting', {
           <template v-if="$parent.isNotOnlyGroup">
             {{group.name}}
             <a href="javascript:void(0)" @click="openMoveModal(assignment)">Move</a>
+
+            <template v-if="!assignment.official">
+              <confirm-button :action="function () { removeUser(assignment) }" :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + group.name + '?'">Remove User</confirm-button>
+            </template>
           </template>
           <template v-else>
             {{section.shortName}}
-          </template>
-          <template v-if="!assignment.official">
-            <confirm-button :action="function () { removeUser(assignment) }" confirmMessage="Really Remove?">Remove User</confirm-button>
+
+            <template v-if="!assignment.official">
+              <confirm-button :action="function () { removeUser(assignment) }" :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + section.shortName + '?'">Remove User</confirm-button>
+            </template>
+
           </template>
         </td>
       </tr>
@@ -877,44 +881,31 @@ Vue.component('email-cohort', {
 Vue.component('confirm-button', {
   template: `
     <span>
-      <template v-if="confirmShown">
-        <button @click="doit()" style="background-color: #da4f49 !important; color: #fff !important">{{confirmMessage}}</button>
-      </template>
-      <template v-else>
-        <button @click="confirm()"><slot></slot></button>
-      </template>
+      <modal ref="confirmModal">
+        <template v-slot:header>Please Confirm</template>
+        <template v-slot:body>
+          <p>{{confirmMessage}}</p>
+        </template>
+        <template v-slot:footer>
+          <button @click="doit()" class="pull-left btn-primary" style="background-color: #da4f49 !important; color: #fff !important"><slot></slot></button>
+          <button @click="cancel()">Cancel</button>
+        </template>
+      </modal>
+
+      <button :disabled="disabled" @click="showModal()"><slot></slot></button>
     </span>
   `,
-  props: ['action', 'confirmMessage'],
-  data: function() {
-    return {
-      confirmShown: false,
-      confirmTimer: null,
-    }
-  },
+  props: ['action', 'confirmMessage', 'disabled'],
   methods: {
-    confirm: function() {
-      var self = this;
-      self.clearTimer();
-
-      setTimeout(function () {
-        self.confirmShown = true;
-
-        self.confirmTimer = setTimeout(function () {
-          self.confirmShown = false;
-        }, 3000);
-
-      }, 200);
+    showModal: function() {
+      this.$refs.confirmModal.open();
     },
     doit: function() {
-      this.clearTimer();
       this.action();
+      this.$refs.confirmModal.close();
     },
-    clearTimer: function() {
-      if (this.confirmTimer) {
-        clearTimeout(this.confirmTimer);
-        this.confirmTimer = null;
-      }
+    cancel: function() {
+      this.$refs.confirmModal.close();
     }
   }
 });
@@ -975,7 +966,7 @@ Vue.component('section-group', {
   </modal>
   <email-cohort v-if="section.split && !group.isGroupEmpty" htmlClass="email-cohort-btn pull-right" :group="group" :section="section" />
   <template v-if="isNotOnlyGroup && group.isGroupEmpty">
-    <confirm-button :action="deleteGroup" confirmMessage="Really Delete?">Delete Group</confirm-button>
+    <confirm-button :action="deleteGroup" :confirmMessage="'Really delete group ' + group.name + '?'">Delete Group</confirm-button>
   </template>
   <template v-for="meeting in group.meetings">
     <group-meeting

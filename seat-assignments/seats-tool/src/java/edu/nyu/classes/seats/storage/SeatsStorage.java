@@ -338,20 +338,28 @@ public class SeatsStorage {
             return;
         }
 
-        db.run("insert into seat_group_members (netid, group_id, official, role) values (?, ?, ?, ?)")
-            .param(member.netid)
-            .param(groupId)
-            .param(member.official ? 1 : 0)
-            .param(member.role.toString())
-            .executeUpdate();
+        try {
+            db.run("insert into seat_group_members (netid, group_id, official, role) values (?, ?, ?, ?)")
+                .param(member.netid)
+                .param(groupId)
+                .param(member.official ? 1 : 0)
+                .param(member.role.toString())
+                .executeUpdate();
 
-        Audit.insert(db,
-                     AuditEvents.MEMBER_ADDED,
-                     json("netid", member.netid,
-                          "student_location", member.studentLocation.toString(),
-                          "group_id", groupId,
-                          "section_id", sectionId)
-                     );
+            Audit.insert(db,
+                         AuditEvents.MEMBER_ADDED,
+                         json("netid", member.netid,
+                              "student_location", member.studentLocation.toString(),
+                              "group_id", groupId,
+                              "section_id", sectionId)
+                         );
+        } catch (SQLException e) {
+            if (db.isConstraintViolation(e)) {
+                // This member is already in the group
+            } else {
+                throw e;
+            }
+        }
     }
 
 
