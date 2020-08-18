@@ -629,7 +629,7 @@ Vue.component('group-meeting', {
         </td>
         <td>
           {{labelForStudentLocation(assignment.studentLocation)}}
-          <template v-if="!assignment.official">(Non-Official)</template>
+          <div v-if="!assignment.official">(Non-Official)</div>
         </td>
         <td>
           <template v-if="$parent.isNotOnlyGroup">
