@@ -14,6 +14,7 @@ Alerts = {
   messages: {
     "EDIT_CLOSED": "The edit period has closed for this seat. Please contact your instructor.",
     "SEAT_TAKEN": "Someone is already in the seat you have selected. Please check your seat number and contact your instructor if necessary.",
+    "SEAT_TAKEN_INSTRUCTOR": "The seat number you entered is already in use. Please enter a different seat number.",
     "CONCURRENT_UPDATE": "This seat has been updated since you started editing. Please check the new value and retry if needed.",
     "SAVE_SUCCESS": "Seat successfully updated.",
     "EMAIL_SENT": "Your email has been sent.",
