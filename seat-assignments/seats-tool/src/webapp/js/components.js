@@ -589,11 +589,11 @@ Vue.component('group-meeting', {
   <table class="seat-table seat-assignment-listing">
     <thead>
       <tr>
-        <th>Picture</th>
-        <th>Name</th>
-        <th>Seat Assignment</th>
-        <th>Student Location</th>
-        <th>
+        <th scope="col">Picture</th>
+        <th scope="col">Name</th>
+        <th scope="col">Seat Assignment</th>
+        <th scope="col">Student Location</th>
+        <th scope="col">
           <template v-if="$parent.isNotOnlyGroup">
             Section Cohort
           </template>
@@ -615,7 +615,7 @@ Vue.component('group-meeting', {
             <img :src="'/direct/profile/' + assignment.netid + '/image/official?siteId=' + section.siteId"/>
           </div>
         </td>
-        <td>{{assignment.displayName}} ({{assignment.netid}})</td>
+        <th scope="row">{{assignment.displayName}} ({{assignment.netid}})</th>
         <td>
           <seat-assignment-widget
             :seat="assignment.seat"
@@ -993,9 +993,9 @@ Vue.component('section-group', {
         <table class="seat-table">
           <thead>
             <tr>
-              <th></th>
-              <th>Participant</th>
-              <th>Role</th>
+              <th scope="col"><span class="sr-only">Checkbox to select row</span></th>
+              <th scope="col">Participant</th>
+              <th scope="col">Role</th>
             </tr>
           </thead>
           <tbody>
@@ -1005,7 +1005,7 @@ Vue.component('section-group', {
             <template v-else>
               <tr v-for="user in membersForAdd" :key="user.netid">
                 <td style="padding: 0 0 0 1em; width: 1.5em; text-align: right;"><input style="margin: 0" :id="'checkbox_' + this._uid + '_' + user.netid" type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
-                <td><label :for="'checkbox_' + this._uid + '_' + user.netid">{{user.displayName}} ({{user.netid}})</label></td>
+                <th scope="row"><label :for="'checkbox_' + this._uid + '_' + user.netid">{{user.displayName}} ({{user.netid}})</label></th>
                 <td>{{user.role}}</td>
               </tr>
             </template>
