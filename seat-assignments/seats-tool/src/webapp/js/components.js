@@ -123,16 +123,16 @@ Vue.component('seat-assignment-widget', {
           </button>
         </template>
         <template v-else-if="isEditable">
-          <button @click="edit()" :disabled="waitingOnSave">
+          <button @click="edit()" :disabled="waitingOnSave || editDisabled">
             <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
           </button>
-          <button v-if="!isStudent && seat !== null" @click="clear()" :disabled="waitingOnSave">
+          <button v-if="!isStudent && seat !== null" @click="clear()" :disabled="waitingOnSave || editDisabled">
             <i class="glyphicon glyphicon-remove" aria-hidden="true"></i> Clear
           </button>
         </template>
       </template>
       <template v-else-if="isEditable">
-        <button ref="enterSeatButton" @click="edit()">
+        <button ref="enterSeatButton" @click="edit()" :disabled="editDisabled">
           <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> {{labelText}}
         </button>
       </template>
@@ -151,6 +151,7 @@ Vue.component('seat-assignment-widget', {
       currentTime: 0,
       currentTimePoll: null,
       waitingOnSave: false,
+      editDisabled: false,
     };
   },
   props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil', 'studentName'],
@@ -255,6 +256,9 @@ Vue.component('seat-assignment-widget', {
     cancel: function() {
       this.hasError = false;
       this.editing = false;
+
+      SeatToolEventBus.$emit("done-editing", this._uid);
+
       this.resetSeatValue();
       this.focusInput();
     },
@@ -357,6 +361,8 @@ Vue.component('seat-assignment-widget', {
             Alerts.error_for_code(json.error_code);
           } else {
             self.editing = false;
+            SeatToolEventBus.$emit("done-editing", this._uid);
+
             self.seatValueUponEditing = null;
             self.focusInput();
             self.$emit("splat");
@@ -386,10 +392,31 @@ Vue.component('seat-assignment-widget', {
     }
 
     SeatToolEventBus.$on('editing', function(componentUid) {
-      if (self._uid != componentUid && self.editing) {
-        self.cancel();
+      $('tr.row-currently-editing').removeClass('row-currently-editing');
+
+      if (self._uid === componentUid) {
+        if (!self.isStudent) {
+          self.$nextTick(function() {
+            $(self.$el).closest('tr').addClass('row-currently-editing');
+          });
+        }
+      } else {
+        if (self.editing) {
+          self.cancel();
+        }
+        self.editDisabled = true;
       }
     });
+
+    SeatToolEventBus.$on('done-editing', function(componentUid) {
+      $('tr.row-currently-editing').removeClass('row-currently-editing');
+
+      if (self._uid != componentUid) {
+        self.editDisabled = false;
+      }
+    });
+
+
   },
 });
 

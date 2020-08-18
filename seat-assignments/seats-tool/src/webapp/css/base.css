@@ -58,6 +58,10 @@
     border-bottom-right-radius: 10px;
 }
 
+.seats-body .seat-table tbody tr.row-currently-editing {
+  outline: 2px solid #3dbbdb;
+}
+
 /* Columns widths */
 .seats-body .seat-table tr td:nth-child(1) { width: 10%; }
 .seats-body .seat-table tr td:nth-child(2) { width: 25%; }

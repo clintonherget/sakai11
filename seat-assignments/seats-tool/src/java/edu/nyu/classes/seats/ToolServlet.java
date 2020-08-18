@@ -107,7 +107,10 @@ public class ToolServlet extends HttpServlet {
 
             context.put("hasSiteUpd", hasSiteUpd((String)context.get("siteId")));
 
-            context.put("portalCdnQuery", HotReloadConfigurationService.getString("portal.cdn.version", java.util.UUID.randomUUID().toString()));
+            context.put("portalCdnQuery",
+                        developmentMode.get() ?
+                        java.util.UUID.randomUUID().toString() :
+                        HotReloadConfigurationService.getString("portal.cdn.version", java.util.UUID.randomUUID().toString()));
 
             if ("true".equals(HotReloadConfigurationService.getString("seats.enable-fiddler", "false"))) {
                 context.put("rosterFiddlerEnabled", "true");
