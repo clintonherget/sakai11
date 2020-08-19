@@ -44,9 +44,7 @@ public class Emails {
         String body = String.format("<p>Dear %s,</p>" +
                                     "<p>You've been added to %s for %s. Please contact your instructor for information on when you will be meeting in-person for your course.</p>" +
                                     "<p>Note: you will be required to record your seating assignment for the duration of the semester in the Seating Assignments tool in NYU Classes. " +
-                                    "For more information, see the <a href=\"%s\">Seating Assignments knowledgebase article</a>.</p>" +
-                                    "<p>Best regards,<br>" +
-                                    "The NYU Classes Team</p>",
+                                    "For more information, see the <a href=\"%s\">Seating Assignments knowledgebase article</a>.</p>",
 
                                     studentUser.getDisplayName(),
                                     group.name,
