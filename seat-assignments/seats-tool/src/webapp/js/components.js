@@ -22,25 +22,37 @@ Alerts = {
   }
 }
 
+Alerts.clear = function() {
+  $('.growl-close').click();
+};
+
 Alerts.success = function (code) {
+  Alerts.clear();
+
   $.growl.notice({
     title: "Success!",
     message: (Alerts.messages[code] || ""),
     size: "large",
+    fixed: true,
+    duration: 30000,
   });
 };
 
 Alerts.error_for_code = function (error_code) {
+  Alerts.clear();
+
   $.growl.error({
     message: (Alerts.messages[error_code] || "Unexpected error!  Please retry."),
     size: "large",
+    fixed: true,
+    duration: 30000,
   });
 };
 
 
 Vue.component('modal', {
   template: `
-<div class="modal" tabindex="-1" role="dialog" ref="modal">
+<div class="modal" tabindex="-1" role="dialog" aria-modal="true" ref="modal" :aria-label="headerText">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -62,6 +74,11 @@ Vue.component('modal', {
 </div>
   `,
   props: [],
+  data: function() {
+    return {
+      headerText: "",
+    }
+  },
   methods: {
     open: function(callback) {
       var self = this;
@@ -86,6 +103,8 @@ Vue.component('modal', {
         show: false,
       });
     });
+
+    this.headerText = this.$slots.header[0].text;
   }
 });
 
@@ -115,6 +134,7 @@ Vue.component('seat-assignment-widget', {
           :required="isStudent"
           v-bind:style="{width: inputWidth}"
           maxlength="20"
+          :aria-label="'Seat assignment for ' + studentName + ' (' + netid + ')'"
         />
         <template v-if="isEditable && editing">
           <button class="btn-primary" @click="save()" :disabled="waitingOnSave">
@@ -132,7 +152,12 @@ Vue.component('seat-assignment-widget', {
         </template>
       </template>
       <template v-else-if="isEditable">
-        <button ref="enterSeatButton" @click="edit()" :disabled="editDisabled">
+        <button
+            ref="enterSeatButton"
+            @click="edit()"
+            :disabled="editDisabled"
+            :aria-label="'Enter seat number for ' + studentName + ' (' + netid + ')'"
+          >
           <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> {{labelText}}
         </button>
       </template>
@@ -366,6 +391,8 @@ Vue.component('seat-assignment-widget', {
             self.seatValueUponEditing = null;
             self.focusInput();
             self.$emit("splat");
+
+            Alerts.clear();
           }
         },
         complete: function() {
@@ -989,12 +1016,12 @@ Vue.component('section-group', {
     <template v-slot:header>Add Non-Official Site Member(s) {{group.name}}</template>
     <template v-slot:body>
       <div>
-        <p>Select manually-added, non-official site members in this site to add to this cohort. For more information on manually adding members to your course site, <a target="_blank" href="https://www.nyu.edu/servicelink/041212911320118">click here</a>.</p>
+        <p>Select manually-added, non-official site members in this site to add to this cohort. More information on <a target="_blank" href="https://www.nyu.edu/servicelink/041212911320118">manually adding members to your course site</a>.</p>
 
         <table class="seat-table members-for-add-listing">
           <thead>
             <tr>
-              <th scope="col"><span class="sr-only">Checkbox to select row</span></th>
+              <th scope="col" class="sr-only">Checkbox</th>
               <th scope="col">Participant</th>
               <th scope="col">Role</th>
             </tr>
