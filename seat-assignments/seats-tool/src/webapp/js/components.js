@@ -52,55 +52,47 @@ Alerts.error_for_code = function (error_code) {
 
 Vue.component('modal', {
   template: `
-<template>
-  <div v-if="rendered" class="modal" tabindex="-1" role="dialog" aria-modal="true" ref="modal" :aria-label="headerText">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="modal-title" style="float: left">
-            <slot name="header"></slot>
-          </div>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
+<div class="modal" tabindex="-1" role="dialog" aria-modal="true" ref="modal" :aria-label="headerText">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" style="float: left">
+          <slot name="header"></slot>
         </div>
-        <div class="modal-body">
-          <slot name="body"></slot>
-        </div>
-        <div class="modal-footer">
-          <slot name="footer"></slot>
-        </div>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <slot name="body"></slot>
+      </div>
+      <div class="modal-footer">
+        <slot name="footer"></slot>
       </div>
     </div>
   </div>
-</template>
+</div>
   `,
   props: [],
   data: function() {
     return {
       headerText: "",
-      rendered: false,
     }
   },
   methods: {
     open: function(callback) {
       var self = this;
 
-      self.rendered = true;
+      if (callback) {
+        $(this.$refs.modal).on('shown.bs.modal', function() {
+          callback(self.$refs.modal);
+        })
+      }
 
-      self.$nextTick(function() {
-        if (callback) {
-          $(self.$refs.modal).on('shown.bs.modal', function() {
-            callback(self.$refs.modal);
-          })
-        }
-
-        $(self.$refs.modal).modal('show');
-      });
+      $(this.$refs.modal).modal('show');
     },
     close: function() {
       $(this.$refs.modal).modal('hide');
-      this.rendered = false;
     }
   },
   mounted: function() {
