@@ -391,9 +391,17 @@ public class StarfishExport implements InterruptableJob {
 			log.error("Missing required field for CSV", e);
 		}
 
-		writeOutputsToSite(assessmentFile, scoreFile);
+		Path inactiveFile = Paths.get(getOutputPath() + fileSep + "inactive.txt");
+		writeInactiveCSV(inactiveFile);
+
+		writeOutputsToSite(assessmentFile, scoreFile, inactiveFile);
 
 		log.info(JOB_NAME + " ended.");
+	}
+
+
+	private void writeInactiveCSV(Path outputFile) {
+		InactiveStudents.writeToFile(outputFile);
 	}
 
 
@@ -428,7 +436,7 @@ public class StarfishExport implements InterruptableJob {
 		return result;
 	}
 
-	private void writeOutputsToSite(java.nio.file.Path assessmentFile, java.nio.file.Path scoreFile) {
+	private void writeOutputsToSite(java.nio.file.Path assessmentFile, java.nio.file.Path scoreFile, java.nio.file.Path inactiveFile) {
 		try {
 			String exportSiteId = org.sakaiproject.component.cover.HotReloadConfigurationService.getString("nyu.starfish-export-site", "");
 
@@ -521,6 +529,20 @@ public class StarfishExport implements InterruptableJob {
 												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
 			}
 
+			// Write inactive (archive copy)
+			try (java.io.InputStream inactiveInputStream = gzipInputStream(new java.io.FileInputStream(inactiveFile.toFile()))) {
+				org.sakaiproject.content.api.ContentResourceEdit inactiveResource =
+					org.sakaiproject.content.cover.ContentHostingService.addResource(currentArchiveDir,
+													 String.format("%s_Inactive_Students", now),
+													 "csv.gz",
+													 10);
+
+				inactiveResource.setContentType("application/gzip");
+				inactiveResource.setContent(inactiveInputStream);
+
+				org.sakaiproject.content.cover.ContentHostingService.commitResource(inactiveResource,
+												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
+			}
 
 			// Write assessments
 			try (java.io.InputStream assessmentsInputStream = new java.io.FileInputStream(assessmentFile.toFile())) {
@@ -549,6 +571,21 @@ public class StarfishExport implements InterruptableJob {
 				scoresResource.setContent(scoresInputStream);
 
 				org.sakaiproject.content.cover.ContentHostingService.commitResource(scoresResource,
+												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
+			}
+
+			// Write inactive
+			try (java.io.InputStream inactiveInputStream = new java.io.FileInputStream(scoreFile.toFile())) {
+				org.sakaiproject.content.api.ContentResourceEdit inactiveResource =
+					org.sakaiproject.content.cover.ContentHostingService.addResource(exportDir,
+													 "Inactive_Students",
+													 "csv",
+													 10);
+
+				inactiveResource.setContentType("text/csv");
+				inactiveResource.setContent(inactiveInputStream);
+
+				org.sakaiproject.content.cover.ContentHostingService.commitResource(inactiveResource,
 												    org.sakaiproject.event.cover.NotificationService.NOTI_NONE);
 			}
 
