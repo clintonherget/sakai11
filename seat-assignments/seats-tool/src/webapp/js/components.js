@@ -135,6 +135,7 @@ Vue.component('seat-assignment-widget', {
           v-bind:style="{width: inputWidth}"
           maxlength="20"
           :aria-label="'Seat assignment for ' + studentName + ' (' + netid + ')'"
+          :aria-invalid="hasError"
         />
         <template v-if="isEditable && editing">
           <button class="btn-primary" @click="save()" :disabled="waitingOnSave">
@@ -145,10 +146,18 @@ Vue.component('seat-assignment-widget', {
           </button>
         </template>
         <template v-else-if="isEditable">
-          <button @click="edit()" :disabled="waitingOnSave || editDisabled">
+          <button @click="edit()" :disabled="waitingOnSave || editDisabled" :aria-label="'Edit - ' + studentName + ' (' + netid + ')'">
             <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
           </button>
-          <confirm-button v-if="!isStudent && seat !== null" :disabled="waitingOnSave || editDisabled" :action="function () { clear() }" :confirmMessage="'Clear seat assignment for ' + netid + '?'"><i class="glyphicon glyphicon-remove" aria-hidden="true"></i></i> Clear</confirm-button>
+          <confirm-button
+            v-if="!isStudent && seat !== null"
+            :disabled="waitingOnSave || editDisabled"
+            :action="function () { clear() }"
+            :confirmMessage="'Clear seat assignment for ' + netid + '?'"
+            :ariaLabel="'Clear seat number for ' + studentName + ' (' + netid + ')'"
+          >
+            <i class="glyphicon glyphicon-remove" aria-hidden="true"></i></i> Clear
+          </confirm-button>
         </template>
       </template>
       <template v-else-if="isEditable">
@@ -693,17 +702,29 @@ Vue.component('group-meeting', {
         <td>
           <template v-if="$parent.isNotOnlyGroup">
             {{group.name}}
-            <a href="javascript:void(0)" @click="openMoveModal(assignment)">Move</a>
+            <a
+              href="javascript:void(0)"
+              @click="openMoveModal(assignment)"
+              :aria-label="'Move User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+            >Move</a>
 
             <template v-if="!assignment.official">
-              <confirm-button :action="function () { removeUser(assignment) }" :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + group.name + '?'">Remove User</confirm-button>
+              <confirm-button
+                :action="function () { removeUser(assignment) }"
+                :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + group.name + '?'"
+                :ariaLabel="'Remove User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+              >Remove User</confirm-button>
             </template>
           </template>
           <template v-else>
             {{section.shortName}}
 
             <template v-if="!assignment.official">
-              <confirm-button :action="function () { removeUser(assignment) }" :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + section.shortName + '?'">Remove User</confirm-button>
+              <confirm-button
+                :action="function () { removeUser(assignment) }"
+                :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + section.shortName + '?'"
+                :ariaLabel="'Remove User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+              >Remove User</confirm-button>
             </template>
 
           </template>
@@ -951,10 +972,16 @@ Vue.component('confirm-button', {
         </template>
       </modal>
 
-      <button :disabled="disabled" @click="showModal()"><slot></slot></button>
+      <button
+        :disabled="disabled"
+        @click="showModal()"
+        :aria-label="ariaLabel"
+      >
+        <slot></slot>
+      </button>
     </span>
   `,
-  props: ['action', 'confirmMessage', 'disabled'],
+  props: ['action', 'confirmMessage', 'disabled', 'ariaLabel'],
   methods: {
     showModal: function() {
       this.$refs.confirmModal.open();
