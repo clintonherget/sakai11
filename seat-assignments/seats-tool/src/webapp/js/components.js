@@ -1443,7 +1443,7 @@ Vue.component('student-home', {
             <div v-if="meetings.length === 0" class="alertMessage">
                 You are currently not a member of any section or cohort. Please contact your instructor to be added.
             </div>
-            <div v-for="meeting in sortedMeetings" :key="meeting.meetingId">
+            <div v-for="(meeting, index) in sortedMeetings" :key="meeting.meetingId">
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
                 <p class="seat-section-description">{{meeting.groupDescription}}</p>
@@ -1458,6 +1458,7 @@ Vue.component('student-home', {
                   :editableUntil="meeting.editableUntil"
                   v-on:splat="resetPolling()">
                 </seat-assignment-widget>
+                <hr v-if="index < sortedMeetings.length - 1"/>
             </div>
         </template>
         <div class="messageInstruction">
