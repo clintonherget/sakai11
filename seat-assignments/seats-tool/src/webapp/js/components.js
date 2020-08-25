@@ -165,6 +165,16 @@ Vue.component('seat-assignment-widget', {
     <div v-if="isStudent">
       <p>{{studentNote}}</p>
     </div>
+    <modal v-if="isStudent" ref="studentConfirmationModal">
+      <template v-slot:header>Enter Seat Number</template>
+      <template v-slot:body>
+          <p>I agree to enter a seat number <em>only on my first day in the classroom</em> and as directed by my instructor. I understand that seats <strong>cannot</strong> be reserved prior to my first class meeting, and that such entries will not be honored and may be removed by my instructor.</p>
+      </template>
+      <template v-slot:footer>
+        <button @click="studentConfirmSave()" class="pull-left btn-primary">Proceed</button>
+        <button @click="hideStudentConfirmation(true)">Cancel</button>
+      </template>
+    </modal>
 </div>
   `,
   data: function() {
@@ -177,6 +187,7 @@ Vue.component('seat-assignment-widget', {
       currentTimePoll: null,
       waitingOnSave: false,
       editDisabled: false,
+      studentConfirmationReceived: false,
     };
   },
   props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil', 'studentName'],
@@ -275,6 +286,20 @@ Vue.component('seat-assignment-widget', {
     },
   },
   methods: {
+    studentConfirmSave: function() {
+      this.studentConfirmationReceived = true;
+      this.save();
+      this.hideStudentConfirmation();
+    },
+    showStudentConfirmation: function() {
+      this.$refs.studentConfirmationModal.open();
+    },
+    hideStudentConfirmation: function(cancelled) {
+      this.$refs.studentConfirmationModal.close();
+      if (cancelled) {
+        this.cancel();
+      }
+    },
     resetSeatValue: function() {
       this.inputValue = this.cleanSeatValue;
     },
@@ -360,6 +385,11 @@ Vue.component('seat-assignment-widget', {
 
       if (this.waitingOnSave) {
           return;
+      }
+
+      if (this.isStudent && !this.seat && !this.studentConfirmationReceived) {
+        this.showStudentConfirmation();
+        return;
       }
 
       var self = this;
