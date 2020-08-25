@@ -1376,6 +1376,8 @@ Vue.component('instructor-table', {
                   :sections="sections"
                   v-on:selectSection="handleSectionSelect">
               </section-selector>
+              <p :style="{marginTop: '20px'}" v-if="fetched && sections.length > 1">To get started, see the <a target="_blank" href="https://drive.google.com/file/d/1uN1ihjlbvmjb8EOMvG4ZJVCh4GQweRrr/view?usp=sharing">Quick-Start guide</a> or review the <a target="_blank" href="http://www.nyu.edu/servicelink/KB0018303">instructor Knowledgebase article</a>.</p>
+
               <hr v-if="sections.length > 1" />
               <template v-if="selectedSectionId">
                   <section-table :sectionId="selectedSectionId"></section-table>
