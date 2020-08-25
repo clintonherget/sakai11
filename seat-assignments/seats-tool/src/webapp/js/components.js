@@ -19,6 +19,7 @@ Alerts = {
     "SAVE_SUCCESS": "Seat successfully updated.",
     "EMAIL_SENT": "Your email has been sent.",
     "SEAT_REQUIRED": "A seat value is required.",
+    "MEMBER_ADDED": "Additional site member(s) successfully added.",
   }
 }
 
@@ -1191,6 +1192,7 @@ Vue.component('section-group', {
         success: function() {
           self.$emit('splat');
           self.closeModal();
+          Alerts.success("MEMBER_ADDED");
         }
       });
     },
