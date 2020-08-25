@@ -697,7 +697,7 @@ Vue.component('group-meeting', {
         </td>
         <td>
           {{labelForStudentLocation(assignment.studentLocation)}}
-          <div v-if="!assignment.official">(Non-Official)</div>
+          <div v-if="!assignment.official">(Manually Added)</div>
         </td>
         <td>
           <template v-if="$parent.isNotOnlyGroup">
@@ -1064,13 +1064,13 @@ Vue.component('section-group', {
     >
     </group-meeting>
   </template>
-  <button @click="addAdhocMembers()">Add Non-Official Site Member(s)</button>
+  <button @click="addAdhocMembers()">Add additional site member(s)</button>
   <contextual-help 
-    feature="Add Non-Official Site Member(s)"
-    helpText="Non-official site members are students, instructors, TAs, or course site administrators within the course site who are not part of the official student roster(s) from Albert. This includes individuals manually added to the course site in the Settings tool.">
+    feature="Add additional site member(s)"
+    helpText="Additional site members are students, instructors, TAs, or course site administrators within the course site who are not part of the official student roster(s) from Albert. This includes individuals manually added to the course site in the Settings tool.">
   </contextual-help>
   <modal ref="membersModal">
-    <template v-slot:header>Add Non-Official Site Member(s) {{group.name}}</template>
+    <template v-slot:header>Add additional site member(s) {{group.name}}</template>
     <template v-slot:body>
       <div>
         <p>Select manually-added, non-official site members in this site to add to this cohort. More information on <a target="_blank" href="https://www.nyu.edu/servicelink/041212911320118">manually adding members to your course site</a>.</p>
