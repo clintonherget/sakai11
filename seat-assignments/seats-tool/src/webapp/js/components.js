@@ -200,7 +200,7 @@ Vue.component('seat-assignment-widget', {
       studentConfirmationReceived: false,
     };
   },
-  props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil', 'studentName'],
+  props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil', 'studentName', 'groupName'],
   computed: {
       labelText: function() {
         if (this.isStudent) {
@@ -345,7 +345,11 @@ Vue.component('seat-assignment-widget', {
           return;
       }
 
-      SeatToolEventBus.$emit("editing", this._uid);
+      SeatToolEventBus.$emit("editing", this._uid, {
+        studentName: this.studentName,
+        netid: this.netid,
+        group: this.groupName,
+      });
 
       this.editing = true;
       this.seatValueUponEditing = this.seat;
@@ -459,14 +463,8 @@ Vue.component('seat-assignment-widget', {
     }
 
     SeatToolEventBus.$on('editing', function(componentUid) {
-      $('tr.row-currently-editing').removeClass('row-currently-editing');
-
       if (self._uid === componentUid) {
-        if (!self.isStudent) {
-          self.$nextTick(function() {
-            $(self.$el).closest('tr').addClass('row-currently-editing');
-          });
-        }
+        // nothing
       } else {
         if (self.editing) {
           self.cancel();
@@ -476,14 +474,10 @@ Vue.component('seat-assignment-widget', {
     });
 
     SeatToolEventBus.$on('done-editing', function(componentUid) {
-      $('tr.row-currently-editing').removeClass('row-currently-editing');
-
       if (self._uid != componentUid) {
         self.editDisabled = false;
       }
     });
-
-
   },
 });
 
@@ -642,6 +636,122 @@ Vue.component('group-meeting-summary', {
   }
 });
 
+Vue.component('group-meeting-entry', {
+  template: `
+<tr :class="entryCSSClass" :title="disabled ? disabledMessage : ''">
+  <td>
+    <div class="profile-pic">
+      <img :src="'/direct/profile/' + assignment.netid + '/image/official?siteId=' + section.siteId"/>
+    </div>
+  </td>
+  <th scope="row">{{assignment.displayName}} ({{assignment.netid}})</th>
+  <td>
+    <seat-assignment-widget
+      ref="seatWidget"
+      :seat="assignment.seat"
+      :netid="assignment.netid"
+      :studentName="assignment.displayName"
+      :meetingId="meeting.id"
+      :groupId="group.id"
+      :sectionId="section.id"
+      :isStudent="false"
+      :groupName="groupName"
+      v-on:splat="$emit('splat')">
+    </seat-assignment-widget>
+  </td>
+  <td>
+    {{labelForStudentLocation(assignment.studentLocation)}}
+    <div v-if="!assignment.official">(Manually Added)</div>
+  </td>
+  <td>
+    {{groupName}}
+    <template v-if="isNotOnlyGroup">
+      <a
+        href="javascript:void(0)"
+        @click="handleMove()"
+        :aria-label="'Move User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+      >Move</a>
+
+      <template v-if="!assignment.official">
+        <confirm-button
+          :disabled="disabled || editing"
+          :action="function () { removeUser(assignment) }"
+          :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + group.name + '?'"
+          :ariaLabel="'Remove User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+        >Remove User</confirm-button>
+      </template>
+    </template>
+    <template v-else>
+      <template v-if="!assignment.official">
+        <confirm-button
+          :disabled="disabled || editing"
+          :action="function () { removeUser(assignment) }"
+          :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + section.shortName + '?'"
+          :ariaLabel="'Remove User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+        >Remove User</confirm-button>
+      </template>
+    </template>
+  </td>
+</tr>
+`,
+  props: ['assignment', 'meeting', 'group', 'section', 'isNotOnlyGroup', 'openMoveModal'],
+  data: function() {
+    return {
+      disabled: false,
+      editing: false,
+      disabledMessage: '',
+    };
+  },
+  computed: {
+    groupName: function() {
+      if (this.isNotOnlyGroup) {
+        return this.group.name;
+      } else {
+        return this.section.shortName;
+      }
+    },
+    baseurl: function() {
+        return this.$parent.baseurl;
+    },
+    entryCSSClass: function() {
+      if (this.disabled) {
+        return 'seat-entry-disabled';
+      } else if (this.editing) {
+        return 'seat-entry-editing';
+      } else {
+        return 'seat-entry-enabled';
+      }
+    },
+  },
+  methods: {
+    handleMove: function() {
+      if (!this.disabled && !this.editing) {
+        this.openMoveModal(this.assignment);
+      }
+    },
+    labelForStudentLocation: function(studentLocation) {
+      return StudentLocationLabels[studentLocation];
+    },
+  },
+  mounted: function() {
+    var self = this;
+
+    SeatToolEventBus.$on("done-editing", function(seatWidgetUid) {
+      self.disabled = false;
+      self.editing = false;
+    });
+
+    SeatToolEventBus.$on("editing", function(seatWidgetUid, data) {
+      if (self.$refs.seatWidget._uid === seatWidgetUid) {
+        self.editing = true;
+      } else if (self.$refs.seatWidget._uid !== seatWidgetUid) {
+        self.disabled = true;
+        self.disabledMessage = "You are already editing the seat assignment for " + data.studentName + " (" + data.netid + ") in " + data.group;
+      }
+    });
+  }
+});
+
 Vue.component('group-meeting', {
   template: `
 <div>
@@ -677,60 +787,18 @@ Vue.component('group-meeting', {
           This cohort has no members.
         </td>
       </tr>
-      <tr v-for="assignment in sortedSeatAssignments" :key="assignment.netid + group.id">
-        <td>
-          <div class="profile-pic">
-            <img :src="'/direct/profile/' + assignment.netid + '/image/official?siteId=' + section.siteId"/>
-          </div>
-        </td>
-        <th scope="row">{{assignment.displayName}} ({{assignment.netid}})</th>
-        <td>
-          <seat-assignment-widget
-            :seat="assignment.seat"
-            :netid="assignment.netid"
-            :studentName="assignment.displayName"
-            :meetingId="meeting.id"
-            :groupId="group.id"
-            :sectionId="section.id"
-            :isStudent="false"
-            v-on:splat="$emit('splat')">
-          </seat-assignment-widget>
-        </td>
-        <td>
-          {{labelForStudentLocation(assignment.studentLocation)}}
-          <div v-if="!assignment.official">(Manually Added)</div>
-        </td>
-        <td>
-          <template v-if="$parent.isNotOnlyGroup">
-            {{group.name}}
-            <a
-              href="javascript:void(0)"
-              @click="openMoveModal(assignment)"
-              :aria-label="'Move User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
-            >Move</a>
-
-            <template v-if="!assignment.official">
-              <confirm-button
-                :action="function () { removeUser(assignment) }"
-                :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + group.name + '?'"
-                :ariaLabel="'Remove User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
-              >Remove User</confirm-button>
-            </template>
-          </template>
-          <template v-else>
-            {{section.shortName}}
-
-            <template v-if="!assignment.official">
-              <confirm-button
-                :action="function () { removeUser(assignment) }"
-                :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + section.shortName + '?'"
-                :ariaLabel="'Remove User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
-              >Remove User</confirm-button>
-            </template>
-
-          </template>
-        </td>
-      </tr>
+      <template v-for="assignment in sortedSeatAssignments">
+        <group-meeting-entry
+          :assignment="assignment"
+          :key="assignment.netid + '__' + group.id"
+          :group="group"
+          :section="section"
+          :meeting="meeting"
+          v-on:splat="$emit('splat')"
+          :isNotOnlyGroup="isNotOnlyGroup"
+          :openMoveModal="openMoveModal"
+        ></group-meeting-entry>
+      </template>
     </tbody>
   </table>
   <modal v-if="assignmentToBeMoved" ref="moveModal">
@@ -767,6 +835,9 @@ Vue.component('group-meeting', {
   },
   props: ['section', 'group', 'meeting'],
   computed: {
+    isNotOnlyGroup: function() {
+      return this.$parent.isNotOnlyGroup;
+    },
     baseurl: function() {
         return this.$parent.baseurl;
     },
@@ -811,9 +882,6 @@ Vue.component('group-meeting', {
     },
   },
   methods: {
-    labelForStudentLocation: function(studentLocation) {
-      return StudentLocationLabels[studentLocation];
-    },
     openMoveModal: function(assignment) {
       var self = this;
 
@@ -974,7 +1042,7 @@ Vue.component('confirm-button', {
       </modal>
 
       <button
-        :disabled="disabled"
+        :disabled="!!disabled"
         @click="showModal()"
         :aria-label="ariaLabel"
       >
