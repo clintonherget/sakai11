@@ -182,6 +182,8 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
     // Bring the Sakai Groups we're managing into line with our Seat Groups
     private void handleSakaiGroupSync() {
+        long deadline = System.currentTimeMillis() + 5000;
+
         DB.transaction
             ("Synchronize Seat Groups with their Sakai Groups",
              (DBConnection db) -> {
@@ -189,7 +191,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
 
                     // Process a decent-size chunk, but with an upper limit.  We'll go around again soon anyway
                     List<SakaiGroupSyncRequest> requests =
-                        db.run("select * from (select * from seat_sakai_group_sync_queue order by id) where rownum <= 5000")
+                        db.run("select * from (select * from seat_sakai_group_sync_queue order by id) where rownum <= 500")
                         .executeQuery()
                         .map((row) -> new SakaiGroupSyncRequest(row.getString("id"),
                                                                 SakaiGroupSyncRequest.Action.valueOf(row.getString("action")),
@@ -199,7 +201,6 @@ public class SeatingHandlerBackgroundTask extends Thread {
                     Set<String> alreadyProcessedArgs = new HashSet<>();
                     try {
                         for (SakaiGroupSyncRequest request : requests) {
-
                             // Right now it doesn't make sense to sync a seat group or delete a sakai group
                             // more than once, so skip over the dupes here.
                             if (alreadyProcessedArgs.contains(request.arg1)) {
@@ -221,6 +222,13 @@ public class SeatingHandlerBackgroundTask extends Thread {
                             }
 
                             lastProcessedId = request.id;
+
+                            if (System.currentTimeMillis() > deadline) {
+                                // We've used up our allotted time.  Go around the main loop again to ensure
+                                // we're not starving out seat group actions with slow site API changes.  Each
+                                // group takes a few hundred ms.
+                                break;
+                            }
                         }
                     } finally {
                         if (lastProcessedId != null) {
