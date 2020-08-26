@@ -58,6 +58,7 @@ public class SakaiGroupSyncTask {
                             // Right now it doesn't make sense to sync a seat group or delete a sakai group
                             // more than once, so skip over the dupes here.
                             if (alreadyProcessedArgs.contains(request.arg1)) {
+                                lastProcessedId = request.id;
                                 continue;
                             }
 
