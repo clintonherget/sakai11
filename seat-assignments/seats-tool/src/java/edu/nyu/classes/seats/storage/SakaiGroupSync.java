@@ -114,9 +114,6 @@ public class SakaiGroupSync {
                             return;
                         }
 
-                        // groupDescription
-                        System.err.println("\n*** @DEBUG " + System.currentTimeMillis() + "[SakaiGroupSync.java:124 VerifiableTrout]: " + "\n    groupDescription => " + (groupDescription) + "\n");
-
                         group.get().setDescription(groupDescription);
                         applyMemberUpdates(group.get(), seatGroupMembers);
                         SiteService.save(site);

@@ -207,7 +207,11 @@ public class SeatingHandlerBackgroundTask extends Thread {
                             }
 
                             if (request.action == SakaiGroupSyncRequest.Action.SYNC_SEAT_GROUP) {
+                                long startTime = System.currentTimeMillis();
                                 SakaiGroupSync.syncSeatGroup(db, request.arg1);
+
+                                LOG.info(String.format("Synced seat group to sakai group in %dms", System.currentTimeMillis() - startTime));
+
                                 alreadyProcessedArgs.add(request.arg1);
                             } else if (request.action == SakaiGroupSyncRequest.Action.DELETE_SAKAI_GROUP) {
                                 SakaiGroupSync.deleteSakaiGroup(db, request.arg1);
