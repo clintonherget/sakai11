@@ -732,6 +732,22 @@ Vue.component('group-meeting-entry', {
     labelForStudentLocation: function(studentLocation) {
       return StudentLocationLabels[studentLocation];
     },
+    removeUser: function(assignment) {
+      var self = this;
+
+      $.ajax({
+        url: self.baseurl + "/remove-group-user",
+        type: 'post',
+        data: {
+          sectionId: self.section.id,
+          groupId: self.group.id,
+          netid: assignment.netid,
+        },
+        success: function() {
+          self.$emit('splat');
+        }
+      });
+    },
   },
   mounted: function() {
     var self = this;
@@ -912,22 +928,6 @@ Vue.component('group-meeting', {
       if (this.$refs.moveModal) {
         this.$refs.moveModal.close();
       }
-    },
-    removeUser: function(assignment) {
-      var self = this;
-
-      $.ajax({
-        url: self.baseurl + "/remove-group-user",
-        type: 'post',
-        data: {
-          sectionId: self.section.id,
-          groupId: self.group.id,
-          netid: assignment.netid,
-        },
-        success: function() {
-          self.$emit('splat');
-        }
-      });
     },
   }
 });
