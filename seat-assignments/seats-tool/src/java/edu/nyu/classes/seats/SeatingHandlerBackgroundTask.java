@@ -51,14 +51,6 @@ public class SeatingHandlerBackgroundTask extends Thread {
     }
 
     private List<ToProcess> findSitesToProcess(final long lastTime) {
-        // TODO: Stuff this might look at:
-        //
-        // site createdon (site created)
-        // roster added - site realm update
-        // person added to roster - ???
-        // new section cross-listed/combined in SIS - ???
-        // return Arrays.asList(new String[] { "fdb7a928-f38a-4154-ae46-43b44ad7b5dd", "e682f774-e900-4e00-b555-c9974e06c556", "fe0b92a0-34ec-4bc7-be24-1518f9ad9a81" });
-
         final List<ToProcess> result = new ArrayList<>();
 
         DB.transaction
@@ -138,21 +130,120 @@ public class SeatingHandlerBackgroundTask extends Thread {
         long lastMtimeCheck = System.currentTimeMillis();
         long findProcessedSince = 0;
 
-        while (this.running.get()) {
-            if ((System.currentTimeMillis() / 1000) % 60 == 0) {
-                lastMtimeCheck = runMTimeChecks(lastMtimeCheck);
-            }
+        long loopCount = 0;
 
-            findProcessedSince = runRound(findProcessedSince);
+        // Syncing to Sakai groups needs a logged in user.
+        SakaiGroupSync.login();
+
+        while (this.running.get()) {
+            try {
+                if (loopCount % 60 == 0) {
+                    lastMtimeCheck = runMTimeChecks(lastMtimeCheck);
+                }
+
+                findProcessedSince = handleSeatGroupUpdates(findProcessedSince);
+
+                // THINKME: What frequency should we run this at?
+                // if (loopCount % 30 == 0) {
+                handleSakaiGroupSync();
+                // }
+
+            } catch (Exception e) {
+                LOG.error("SeatingHandlerBackgroundTask main loop hit top level: " + e);
+                e.printStackTrace();
+            }
 
             try {
+                loopCount += 1;
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                LOG.error("Interrupted sleep: " + e);
             }
         }
-
     }
+
+    private static class SakaiGroupSyncRequest {
+        public enum Action {
+            SYNC_SEAT_GROUP,
+            DELETE_SAKAI_GROUP,
+        }
+
+        public final String id;
+        public final Action action;
+        public final String arg1;
+
+        public SakaiGroupSyncRequest(String id, Action action, String arg1) {
+            this.id = id;
+            this.action = action;
+            this.arg1 = arg1;
+        }
+    }
+
+
+    // Bring the Sakai Groups we're managing into line with our Seat Groups
+    private void handleSakaiGroupSync() {
+        DB.transaction
+            ("Synchronize Seat Groups with their Sakai Groups",
+             (DBConnection db) -> {
+                try {
+
+                    // Process a decent-size chunk, but with an upper limit.  We'll go around again soon anyway
+                    List<SakaiGroupSyncRequest> requests =
+                        db.run("select * from (select * from seat_sakai_group_sync_queue order by id) where rownum <= 5000")
+                        .executeQuery()
+                        .map((row) -> new SakaiGroupSyncRequest(row.getString("id"),
+                                                                SakaiGroupSyncRequest.Action.valueOf(row.getString("action")),
+                                                                row.getString("arg1")));
+
+                    String lastProcessedId = null;
+                    Set<String> alreadyProcessedArgs = new HashSet<>();
+                    try {
+                        for (SakaiGroupSyncRequest request : requests) {
+
+                            // Right now it doesn't make sense to sync a seat group or delete a sakai group
+                            // more than once, so skip over the dupes here.
+                            if (alreadyProcessedArgs.contains(request.arg1)) {
+                                continue;
+                            }
+
+                            if (request.action == SakaiGroupSyncRequest.Action.SYNC_SEAT_GROUP) {
+                                SakaiGroupSync.syncSeatGroup(db, request.arg1);
+                                alreadyProcessedArgs.add(request.arg1);
+                            } else if (request.action == SakaiGroupSyncRequest.Action.DELETE_SAKAI_GROUP) {
+                                SakaiGroupSync.deleteSakaiGroup(db, request.arg1);
+                                alreadyProcessedArgs.add(request.arg1);
+                            } else {
+                                LOG.error("Unknown action: " + request.action);
+                            }
+
+                            lastProcessedId = request.id;
+                        }
+                    } finally {
+                        if (lastProcessedId != null) {
+                            // Mark requests as completed by deleting them.
+                            for (SakaiGroupSyncRequest request : requests) {
+                                if (request.id.compareTo(lastProcessedId) > 0) {
+                                    break;
+                                }
+
+                                db.run("delete from seat_sakai_group_sync_queue where id = ?")
+                                    .param(request.id)
+                                    .executeUpdate();
+                            }
+
+                            db.commit();
+                        }
+                    }
+
+                } catch (Exception e) {
+                    LOG.error("Things have gone badly during handleSakaiGroupSync: " + e);
+                    e.printStackTrace();
+                }
+
+                return null;
+            });
+    }
+
 
     private long runMTimeChecks(long lastCheck) {
         long now = System.currentTimeMillis();
@@ -186,7 +277,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         return now;
     }
 
-    public long runRound(long findProcessedSince) {
+    public long handleSeatGroupUpdates(long findProcessedSince) {
         long now = System.currentTimeMillis() - WINDOW_MS;
         List<ToProcess> sites = findSitesToProcess(findProcessedSince);
 

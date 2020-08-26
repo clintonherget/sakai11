@@ -28,8 +28,8 @@ public class SeatSection {
         return groups.keySet();
     }
 
-    public void addGroup(String id, String name, String description) {
-        groups.put(id, new SeatGroup(id, name, description, this));
+    public void addGroup(String id, String name, String description, String sakaiGroupId) {
+        groups.put(id, new SeatGroup(id, name, description, sakaiGroupId, this));
     }
 
     public Optional<SeatGroup> fetchGroup(String id) {

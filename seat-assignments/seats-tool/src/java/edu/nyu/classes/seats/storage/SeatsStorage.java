@@ -82,6 +82,8 @@ public class SeatsStorage {
                 .param(netid)
                 .executeUpdate();
 
+        SakaiGroupSync.markGroupForSync(db, groupId);
+
         Audit.insert(db,
                 AuditEvents.MEMBER_DELETED,
                 json("netid", netid,
@@ -96,6 +98,9 @@ public class SeatsStorage {
         SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
         Member memberToTransfer = removeMemberFromGroup(db, seatSection, fromGroupId, netid);
         addMemberToGroup(db, memberToTransfer, toGroupId, sectionId);
+
+        SakaiGroupSync.markGroupForSync(db, fromGroupId);
+        SakaiGroupSync.markGroupForSync(db, toGroupId);
     }
 
     public static void setGroupDescription(DBConnection db, String groupId, String description) throws SQLException {
@@ -103,6 +108,8 @@ public class SeatsStorage {
             .param(description)
             .param(groupId)
             .executeUpdate();
+
+        SakaiGroupSync.markGroupForSync(db, groupId);
 
         Audit.insert(db,
                      AuditEvents.GROUP_DESCRIPTION_CHANGED,
@@ -346,6 +353,8 @@ public class SeatsStorage {
                 .param(member.role.toString())
                 .executeUpdate();
 
+            SakaiGroupSync.markGroupForSync(db, groupId);
+
             Audit.insert(db,
                          AuditEvents.MEMBER_ADDED,
                          json("netid", member.netid,
@@ -505,6 +514,10 @@ public class SeatsStorage {
                           "section_id", group.section.id)
                      );
 
+        if (group.sakaiGroupId != null) {
+            SakaiGroupSync.markGroupForDelete(db, group.sakaiGroupId);
+        }
+
         db.run("delete from seat_group_members where group_id = ?")
             .param(group.id)
             .executeUpdate();
@@ -585,7 +598,7 @@ public class SeatsStorage {
             .param(sectionId)
             .executeQuery()
             .each(row -> {
-                    section.addGroup(row.getString("id"), row.getString("name"), row.getString("description"));
+                    section.addGroup(row.getString("id"), row.getString("name"), row.getString("description"), row.getString("sakai_group_id"));
                 });
 
         if (section.groupIds().isEmpty()) {
@@ -656,6 +669,8 @@ public class SeatsStorage {
 
         String meetingId = db.uuid();
         String location = locationForSection(db, section.primaryStemName).orElse("UNSET");
+
+        SakaiGroupSync.markGroupForSync(db, groupId);
 
         Audit.insert(db,
                      AuditEvents.MEETING_CREATED,

@@ -33,7 +33,7 @@ public class V2__GroupSync extends BaseMigration {
             connection
                 .run("insert into seat_sakai_group_sync_queue (id, action, arg1) VALUES (?, ?, ?)")
                 .param(String.format("%013d_%016d_%s", 0, sequence, connection.uuid()))
-                .param("CREATE_SAKAI_GROUP_FOR_SEAT_GROUP")
+                .param("SYNC_SEAT_GROUP")
                 .param(seatGroupId)
                 .executeUpdate();
         }
