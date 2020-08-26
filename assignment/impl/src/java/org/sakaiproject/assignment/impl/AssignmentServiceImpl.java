@@ -2507,6 +2507,9 @@ public class AssignmentServiceImpl implements AssignmentService, EntityTransferr
                 // pick the Group objects from the site's groups to return, those that are in the allowedGroupRefs list
                 rv = groups.stream().filter(g -> allowedGroupRefs.contains(g.getReference())).collect(Collectors.toSet());
             }
+
+            // No seat groups!
+            rv = rv.stream().filter((g) -> !"true".equals(g.getProperties().getProperty("isSeatGroup"))).collect(Collectors.toList());
         } catch (IdUnusedException e) {
             log.debug("site {} not found, {}", context, e.getMessage());
         }
