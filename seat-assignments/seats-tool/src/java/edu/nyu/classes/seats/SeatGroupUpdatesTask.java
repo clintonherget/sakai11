@@ -5,12 +5,8 @@ import edu.nyu.classes.seats.Emails;
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.*;
 import edu.nyu.classes.seats.storage.db.*;
-import java.sql.*;
 import java.util.*;
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.*;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Group;
@@ -20,27 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sakaiproject.user.cover.UserDirectoryService;
 
-public class SeatingHandlerBackgroundTask extends Thread {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SeatingHandlerBackgroundTask.class);
+public class SeatGroupUpdatesTask {
+    private static final Logger LOG = LoggerFactory.getLogger(SeatGroupUpdatesTask.class);
 
     private static long WINDOW_MS = 5000;
-    private Map<String, Long> recentProcessed = new LinkedHashMap<>();
-
-    private AtomicBoolean running = new AtomicBoolean(false);
-
+    private static Map<String, Long> recentProcessed = new LinkedHashMap<>();
     private static AtomicLong dbTimingThresholdMs = new AtomicLong(-1);
 
-
-    public static void setDBTimingThresholdMs(long ms) {
-        dbTimingThresholdMs.set(ms);
-    }
-
-    public long dbTimingThresholdMs() {
-        return dbTimingThresholdMs.get();
-    }
-
-    private class ToProcess {
+    private static class ToProcess {
         public String siteId;
         public long lastSyncRequestTime;
 
@@ -50,7 +33,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         }
     }
 
-    private List<ToProcess> findSitesToProcess(final long lastTime) {
+    private static List<ToProcess> findSitesToProcess(final long lastTime) {
         final List<ToProcess> result = new ArrayList<>();
 
         DB.transaction
@@ -89,7 +72,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         return result;
     }
 
-    private void markAsProcessed(ToProcess entry, long timestamp) {
+    private static void markAsProcessed(ToProcess entry, long timestamp) {
         DB.transaction
             ("Mark site as processed",
              (DBConnection db) -> {
@@ -107,189 +90,39 @@ public class SeatingHandlerBackgroundTask extends Thread {
     }
 
 
-    public SeatingHandlerBackgroundTask startThread() {
-        this.running = new AtomicBoolean(true);
-        this.setDaemon(true);
-        this.start();
-
-        return this;
-    }
-
-    public void shutdown() {
-        this.running.set(false);
-
-        try {
-            this.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    public void run() {
-        long lastMtimeCheck = System.currentTimeMillis();
-        long findProcessedSince = 0;
-
-        long loopCount = 0;
-
-        // Syncing to Sakai groups needs a logged in user.
-        SakaiGroupSync.login();
-
-        while (this.running.get()) {
-            try {
-                if (loopCount % 60 == 0) {
-                    lastMtimeCheck = runMTimeChecks(lastMtimeCheck);
-                }
-
-                findProcessedSince = handleSeatGroupUpdates(findProcessedSince);
-
-                // THINKME: What frequency should we run this at?
-                // if (loopCount % 30 == 0) {
-                handleSakaiGroupSync();
-                // }
-
-            } catch (Exception e) {
-                LOG.error("SeatingHandlerBackgroundTask main loop hit top level: " + e);
-                e.printStackTrace();
-            }
-
-            try {
-                loopCount += 1;
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                LOG.error("Interrupted sleep: " + e);
-            }
-        }
-    }
-
-    private static class SakaiGroupSyncRequest {
-        public enum Action {
-            SYNC_SEAT_GROUP,
-            DELETE_SAKAI_GROUP,
-        }
-
-        public final String id;
-        public final Action action;
-        public final String arg1;
-
-        public SakaiGroupSyncRequest(String id, Action action, String arg1) {
-            this.id = id;
-            this.action = action;
-            this.arg1 = arg1;
-        }
-    }
-
-
-    // Bring the Sakai Groups we're managing into line with our Seat Groups
-    private void handleSakaiGroupSync() {
-        long deadline = System.currentTimeMillis() + 5000;
-
-        DB.transaction
-            ("Synchronize Seat Groups with their Sakai Groups",
-             (DBConnection db) -> {
-                try {
-
-                    // Process a decent-size chunk, but with an upper limit.  We'll go around again soon anyway
-                    List<SakaiGroupSyncRequest> requests =
-                        db.run("select * from (select * from seat_sakai_group_sync_queue order by id) where rownum <= 500")
-                        .executeQuery()
-                        .map((row) -> new SakaiGroupSyncRequest(row.getString("id"),
-                                                                SakaiGroupSyncRequest.Action.valueOf(row.getString("action")),
-                                                                row.getString("arg1")));
-
-                    String lastProcessedId = null;
-                    Set<String> alreadyProcessedArgs = new HashSet<>();
-                    try {
-                        for (SakaiGroupSyncRequest request : requests) {
-                            // Right now it doesn't make sense to sync a seat group or delete a sakai group
-                            // more than once, so skip over the dupes here.
-                            if (alreadyProcessedArgs.contains(request.arg1)) {
-                                continue;
-                            }
-
-                            if (request.action == SakaiGroupSyncRequest.Action.SYNC_SEAT_GROUP) {
-                                long startTime = System.currentTimeMillis();
-                                SakaiGroupSync.syncSeatGroup(db, request.arg1);
-
-                                LOG.info(String.format("Synced seat group to sakai group in %dms", System.currentTimeMillis() - startTime));
-
-                                alreadyProcessedArgs.add(request.arg1);
-                            } else if (request.action == SakaiGroupSyncRequest.Action.DELETE_SAKAI_GROUP) {
-                                SakaiGroupSync.deleteSakaiGroup(db, request.arg1);
-                                alreadyProcessedArgs.add(request.arg1);
-                            } else {
-                                LOG.error("Unknown action: " + request.action);
-                            }
-
-                            lastProcessedId = request.id;
-
-                            if (System.currentTimeMillis() > deadline) {
-                                // We've used up our allotted time.  Go around the main loop again to ensure
-                                // we're not starving out seat group actions with slow site API changes.  Each
-                                // group takes a few hundred ms.
-                                break;
-                            }
-                        }
-                    } finally {
-                        if (lastProcessedId != null) {
-                            // Mark requests as completed by deleting them.
-                            for (SakaiGroupSyncRequest request : requests) {
-                                if (request.id.compareTo(lastProcessedId) > 0) {
-                                    break;
-                                }
-
-                                db.run("delete from seat_sakai_group_sync_queue where id = ?")
-                                    .param(request.id)
-                                    .executeUpdate();
-                            }
-
-                            db.commit();
-                        }
-                    }
-
-                } catch (Exception e) {
-                    LOG.error("Things have gone badly during handleSakaiGroupSync: " + e);
-                    e.printStackTrace();
-                }
-
-                return null;
-            });
-    }
-
-
-    private long runMTimeChecks(long lastCheck) {
+    public static long runMTimeChecks(long lastCheck) {
         long now = System.currentTimeMillis();
 
         SeatsService service = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
 
         DB.transaction
-                ("Mark any site or realm changed in the last 60 seconds for sync",
-                 (DBConnection db) -> {
-                    db.setTimingEnabled(dbTimingThresholdMs());
-                    List<String> updatedSiteIds = db.run("select site_id from sakai_site where modifiedon >= ?")
-                        .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
-                        .executeQuery()
-                        .getStringColumn("site_id");
+            ("Mark any site or realm changed in the last 60 seconds for sync",
+             (DBConnection db) -> {
+                db.setTimingEnabled(dbTimingThresholdMs());
+                List<String> updatedSiteIds = db.run("select site_id from sakai_site where modifiedon >= ?")
+                    .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
+                    .executeQuery()
+                    .getStringColumn("site_id");
 
-                    service.markSitesForSync(updatedSiteIds.toArray(new String[0]));
+                service.markSitesForSync(updatedSiteIds.toArray(new String[0]));
 
-                    List<String> updatedRealmSiteIds = db.run("select ss.site_id from sakai_site ss" +
-                                                              " inner join sakai_realm sr on sr.realm_id = concat('/site/', ss.site_id)" +
-                                                              " where sr.modifiedon >= ?")
-                        .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
-                        .executeQuery()
-                        .getStringColumn("site_id");
+                List<String> updatedRealmSiteIds = db.run("select ss.site_id from sakai_site ss" +
+                                                          " inner join sakai_realm sr on sr.realm_id = concat('/site/', ss.site_id)" +
+                                                          " where sr.modifiedon >= ?")
+                    .param(new Date(lastCheck - 60 * 1000), new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")))
+                    .executeQuery()
+                    .getStringColumn("site_id");
 
-                    service.markSitesForSync(updatedRealmSiteIds.toArray(new String[0]));
+                service.markSitesForSync(updatedRealmSiteIds.toArray(new String[0]));
 
-                    return null;
-                }
-                );
+                return null;
+            }
+             );
 
         return now;
     }
 
-    public long handleSeatGroupUpdates(long findProcessedSince) {
+    public static long handleSeatGroupUpdates(long findProcessedSince) {
         long now = System.currentTimeMillis() - WINDOW_MS;
         List<ToProcess> sites = findSitesToProcess(findProcessedSince);
 
@@ -305,7 +138,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         return now;
     }
 
-    private void notifyUser(String studentNetId, SeatGroup group, Site site) throws Exception {
+    private static void notifyUser(String studentNetId, SeatGroup group, Site site) throws Exception {
         List<org.sakaiproject.user.api.User> studentUser = UserDirectoryService.getUsersByEids(Arrays.asList(new String[] { studentNetId }));
 
         if (studentUser.size() == 0) {
@@ -315,7 +148,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
         Emails.sendUserAddedEmail(studentUser.get(0), group, site);
     }
 
-    private boolean processSite(String siteId) {
+    private static boolean processSite(String siteId) {
         try {
             if (!Locks.trylockSiteForUpdate(siteId)) {
                 // Currently locked.  Skip processing and try again later.
@@ -404,5 +237,13 @@ public class SeatingHandlerBackgroundTask extends Thread {
         } finally {
             Locks.unlockSiteForUpdate(siteId);
         }
+    }
+
+    public static void setDBTimingThresholdMs(long ms) {
+        dbTimingThresholdMs.set(ms);
+    }
+
+    private static long dbTimingThresholdMs() {
+        return dbTimingThresholdMs.get();
     }
 }
