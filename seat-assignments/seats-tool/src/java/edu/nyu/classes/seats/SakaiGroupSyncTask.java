@@ -7,8 +7,14 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.*;
+import org.sakaiproject.authz.api.AuthzGroupService;
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.event.cover.EventTrackingService;
+import org.sakaiproject.event.cover.UsageSessionService;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
+import org.sakaiproject.tool.api.Session;
+import org.sakaiproject.tool.cover.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +118,18 @@ public class SakaiGroupSyncTask {
     }
 
     public static void login() {
-        SakaiGroupSync.login();
+        Session sakaiSession = SessionManager.getCurrentSession();
+        sakaiSession.setUserId("admin");
+        sakaiSession.setUserEid("admin");
+
+        // establish the user's session
+        UsageSessionService.startSession("admin", "127.0.0.1", "SakaiGroupSync");
+
+        // update the user's externally provided realm definitions
+        ((AuthzGroupService) ComponentManager.get("org.sakaiproject.authz.api.AuthzGroupService")).refreshUser("admin");
+
+        // post the login event
+        EventTrackingService.post(EventTrackingService.newEvent(UsageSessionService.EVENT_LOGIN, null, true));
     }
 
     public static void setDBTimingThresholdMs(long ms) {
