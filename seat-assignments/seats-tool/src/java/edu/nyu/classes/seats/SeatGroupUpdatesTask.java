@@ -173,6 +173,18 @@ public class SeatGroupUpdatesTask {
                                     continue;
                                 }
 
+                                // Fun note: ad-hoc groups can have providers too, and this doesn't mean that
+                                // the group is an official roster.  We need to check the group property to
+                                // determine that.
+                                if (section.getProperties().getProperty("sections_eid") == null) {
+                                    if (section.getProperties().getProperty("group_prop_wsetup_created") == null) {
+                                        LOG.info("Hmm... expected this group to have group_prop_wsetup_created: " + section.getId());
+                                    }
+
+                                    // Adhoc group... skip it.
+                                    continue;
+                                }
+
                                 String rosterId = section.getProviderGroupId();
                                 String sponsorStemName = SeatsStorage.getSponsorSectionId(db, rosterId);
 
