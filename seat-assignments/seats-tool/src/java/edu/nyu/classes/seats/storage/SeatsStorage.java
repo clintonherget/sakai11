@@ -53,13 +53,18 @@ public class SeatsStorage {
     }
 
     public static boolean stemIsEligible(DBConnection db, String stemName) throws SQLException {
-        int count = db.run("select count(*) from nyu_t_course_catalog cc " +
-                           " where cc.stem_name = ? AND cc.instruction_mode in ('OB', 'P')")
+        Optional<String> instructionMode = db.run("select cc.instruction_mode from nyu_t_course_catalog cc " +
+                                                  " where cc.stem_name = ?")
             .param(stemName)
             .executeQuery()
-            .getCount();
+            .oneString();
 
-        if (count > 0){
+        if (instructionMode.isPresent()){
+            if ("OB".equals(instructionMode.get()) || "P".equals(instructionMode.get())) {
+                return true;
+            }
+        } else {
+            // stem no longer in course catalog but assume still ok
             return true;
         }
 

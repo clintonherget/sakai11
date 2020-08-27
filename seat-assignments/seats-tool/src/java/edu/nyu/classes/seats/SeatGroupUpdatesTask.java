@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
@@ -249,6 +250,7 @@ public class SeatGroupUpdatesTask {
         long now = System.currentTimeMillis();
 
         SeatsService service = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+        boolean performDelete = "true".equals(HotReloadConfigurationService.getString("seats.auto-delete", "false"));
 
         DB.transaction
             ("Handle changed instruction modes for seating tool",
@@ -277,13 +279,44 @@ public class SeatGroupUpdatesTask {
                                     SeatsStorage.getSeatSection(db, row.getString("section_id"), row.getString("site_id"))
                                         .ifPresent((section) -> {
                                                 try {
-                                                    SeatsStorage.deleteSection(db, section);
+                                                    if (performDelete) {
+                                                        SeatsStorage.deleteSection(db, section);
+                                                    } else {
+                                                        LOG.error("Delete skipped due to seat.auto-delete=false");
+                                                    }
                                                 } catch (SQLException e) {
                                                     LOG.error("Failure during delete: " + e);
                                                     e.printStackTrace();
                                                 }
                                             });
                                 }
+                            });
+
+                    // Find any cohorts that linked to a detached roster
+                    db.run("select sec.primary_stem_name, sec.site_id, sec.id as section_id" +
+                            " from SEAT_GROUP_SECTION sec" +
+                            " left join SAKAI_REALM sr on sr.realm_id = concat('/site/', sec.site_id)" +
+                            " left join SAKAI_REALM_PROVIDER srp on srp.realm_key = sr.realm_key and srp.provider_id = replace(sec.primary_stem_name, ':', '_')" +
+                            " where srp.provider_id is null")
+                            .executeQuery()
+                            .each((row) -> {
+                                LOG.info(String.format("Removing Seats section for detached roster '%s' in site '%s'",
+                                        row.getString("primary_stem_name"),
+                                        row.getString("site_id")));
+
+                                SeatsStorage.getSeatSection(db, row.getString("section_id"), row.getString("site_id"))
+                                        .ifPresent((section) -> {
+                                            try {
+                                                if (performDelete) {
+                                                    SeatsStorage.deleteSection(db, section);
+                                                } else {
+                                                    LOG.error("Delete skipped due to seat.auto-delete=false");
+                                                }
+                                            } catch (SQLException e) {
+                                                LOG.error("Failure during delete: " + e);
+                                                e.printStackTrace();
+                                            }
+                                        });
                             });
 
 
