@@ -72,7 +72,7 @@ public class MembersForAddHandler implements Handler {
                 })
             .collect(Collectors.toList());
 
-        Map<String, String> memberNames = SeatsStorage.getMemberNames(candidateMembers.stream().map(m -> m.getUserEid()).collect(Collectors.toList()));
+        Map<String, SeatsStorage.UserDisplayName> memberNames = SeatsStorage.getMemberNames(candidateMembers.stream().map(m -> m.getUserEid()).collect(Collectors.toList()));
 
         JSONArray result = new JSONArray();
 
@@ -81,7 +81,12 @@ public class MembersForAddHandler implements Handler {
 
             JSONObject user = new JSONObject();
             user.put("netid", netid);
-            user.put("displayName", memberNames.getOrDefault(netid, netid));
+            SeatsStorage.UserDisplayName memberName = memberNames.get(netid);
+            if (memberName == null) {
+                user.put("displayName", netid);
+            } else {
+                user.put("displayName", memberName.displayName);
+            }
             user.put("role", m.getRole().getId());
 
             result.add(user);

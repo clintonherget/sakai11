@@ -875,7 +875,11 @@ Vue.component('group-meeting', {
 
         } else {
           if (a.studentLocation === b.studentLocation) {
-            return (a.netid < b.netid) ? -1 : 1;
+            if (a.lastName === b.lastName) {
+              return (a.netid < b.netid) ? -1 : 1;
+            } else {
+              return (a.lastName < b.lastName) ? -1 : 1;
+            }
           } else {
             return (StudentLocationSortOrder[a.studentLocation] < StudentLocationSortOrder[b.studentLocation]) ? -1 : 1;
           }

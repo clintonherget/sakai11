@@ -148,7 +148,7 @@ public class SeatsStorage {
                      );
     }
 
-    public static Map<String, String> getMemberNames(SeatSection seatSection) {
+    public static Map<String, UserDisplayName> getMemberNames(SeatSection seatSection) {
         Set<String> allEids = new HashSet<>();
 
         for (SeatGroup group : seatSection.listGroups()) {
@@ -158,11 +158,25 @@ public class SeatsStorage {
         return getMemberNames(allEids);
     }
 
-    public static Map<String, String> getMemberNames(Collection<String> eids) {
-        Map<String, String> result = new HashMap<>();
+    public static class UserDisplayName {
+        public String displayName;
+        public String firstName;
+        public String lastName;
+        public String netid;
+
+        public UserDisplayName(String netid, String displayName, String firstName, String lastName) {
+            this.netid = netid;
+            this.displayName = displayName;
+            this.firstName = firstName;
+            this.lastName = lastName;
+        }
+    }
+
+    public static Map<String, UserDisplayName> getMemberNames(Collection<String> eids) {
+        Map<String, UserDisplayName> result = new HashMap<>();
 
         for (User user : UserDirectoryService.getUsersByEids(eids)) {
-            result.put(user.getEid(), user.getDisplayName());
+            result.put(user.getEid(), new UserDisplayName(user.getEid(), user.getDisplayName(), user.getFirstName(), user.getLastName()));
         }
 
         return result;
