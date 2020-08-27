@@ -785,7 +785,7 @@ Vue.component('group-meeting', {
       <tr>
         <th scope="col">Picture</th>
         <th scope="col">Name (NetID)</th>
-        <th scope="col">Seat Assignment</th>
+        <th scope="col">Seat<br/>Assignment</th>
         <th scope="col">Student Location</th>
         <th scope="col">
           <template v-if="$parent.isNotOnlyGroup">
