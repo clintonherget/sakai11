@@ -1411,7 +1411,7 @@ Vue.component('section-selector', {
     Viewing seat assignments for:
   </label>
   <select v-model="selectedSectionId" id="sectionSelector">
-    <option value="">Select section / cohorts</option>
+    <option value="">Select a class section or cohort</option>
     <option v-for="section in sections" :value="section.id">
       {{section.name}}
       <template v-if="section.groupCount > 1">
