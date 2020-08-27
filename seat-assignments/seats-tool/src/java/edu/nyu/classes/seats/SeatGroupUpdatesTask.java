@@ -1,10 +1,11 @@
 package edu.nyu.classes.seats;
 
-import edu.nyu.classes.seats.api.SeatsService;
 import edu.nyu.classes.seats.Emails;
+import edu.nyu.classes.seats.api.SeatsService;
 import edu.nyu.classes.seats.models.*;
 import edu.nyu.classes.seats.storage.*;
 import edu.nyu.classes.seats.storage.db.*;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import org.sakaiproject.component.cover.ComponentManager;
@@ -12,9 +13,9 @@ import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.user.cover.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sakaiproject.user.cover.UserDirectoryService;
 
 public class SeatGroupUpdatesTask {
     private static final Logger LOG = LoggerFactory.getLogger(SeatGroupUpdatesTask.class);
@@ -174,6 +175,11 @@ public class SeatGroupUpdatesTask {
                                 String rosterId = section.getProviderGroupId();
                                 String sponsorStemName = SeatsStorage.getSponsorSectionId(db, rosterId);
 
+                                if (!SeatsStorage.stemIsEligible(db, sponsorStemName)) {
+                                    continue;
+                                }
+
+
                                 if (Utils.rosterToStemName(rosterId).equals(sponsorStemName)) {
                                     SeatsStorage.ensureRosterEntry(db, site.getId(), sponsorStemName, Optional.empty());
                                 } else {
@@ -237,6 +243,72 @@ public class SeatGroupUpdatesTask {
         } finally {
             Locks.unlockSiteForUpdate(siteId);
         }
+    }
+
+    public static void findChangedInstructionModes() {
+        long now = System.currentTimeMillis();
+
+        SeatsService service = (SeatsService) ComponentManager.get("edu.nyu.classes.seats.SeatsService");
+
+        DB.transaction
+            ("Handle changed instruction modes for seating tool",
+             (DBConnection db) -> {
+                try {
+                    db.setTimingEnabled(dbTimingThresholdMs());
+
+                    // Find any online roster that has cohorts but should not.
+                    db.run("select sec.primary_stem_name," +
+                           "  sec.site_id," +
+                           "  sec.id as section_id," +
+                           "  to_char(ssp.value) as override_to_blended" +
+                           " from SEAT_GROUP_SECTION sec" +
+                           " inner join NYU_T_COURSE_CATALOG cc on sec.primary_stem_name = cc.stem_name AND cc.instruction_mode = 'OL'" +
+                           " left join sakai_site_property ssp on ssp.site_id = sec.site_id AND ssp.name = 'OverrideToBlended'")
+                        .executeQuery()
+                        .each((row) -> {
+                                String props = row.getString("override_to_blended");
+
+                                if (props != null && Arrays.asList(props.split(" *, *")).contains(row.getString("primary_stem_name"))) {
+                                    // You're OK.
+                                } else {
+                                    LOG.info(String.format("Removing Seats section for online roster '%s' in site '%s'",
+                                                           row.getString("primary_stem_name"),
+                                                           row.getString("site_id")));
+                                    SeatsStorage.getSeatSection(db, row.getString("section_id"), row.getString("site_id"))
+                                        .ifPresent((section) -> {
+                                                try {
+                                                    SeatsStorage.deleteSection(db, section);
+                                                } catch (SQLException e) {
+                                                    LOG.error("Failure during delete: " + e);
+                                                    e.printStackTrace();
+                                                }
+                                            });
+                                }
+                            });
+
+
+                    // Find any in-person or blended roster that hasn't been bootstrapped yet.
+                    db.run("select distinct ss.site_id" +
+                           " from nyu_t_course_catalog cc" +
+                           " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
+                           " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
+                           " inner join sakai_site ss on concat('/site/', ss.site_id) = sr.realm_id" +
+                           " inner join sakai_site_tool sst on sst.site_id = ss.site_id AND sst.registration = 'nyu.seat-assignments'" +
+                           " left join seat_group_section_rosters sgsr on sgsr.sakai_roster_id = srp.provider_id" +
+                           " where sgsr.sakai_roster_id is null AND  cc.instruction_mode in ('OB', 'P')")
+                        .executeQuery()
+                        .each((row) -> {
+                                service.markSitesForSync(row.getString("site_id"));
+                            });
+
+                    db.commit();
+
+                    return null;
+                } catch (Exception e) {
+                    db.rollback();
+                    throw e;
+                }
+            });
     }
 
     public static void setDBTimingThresholdMs(long ms) {

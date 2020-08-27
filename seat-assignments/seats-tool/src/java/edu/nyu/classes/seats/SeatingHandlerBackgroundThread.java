@@ -49,6 +49,11 @@ public class SeatingHandlerBackgroundThread extends Thread {
                     lastMtimeCheck = SeatGroupUpdatesTask.runMTimeChecks(lastMtimeCheck);
                 }
 
+                // FIXME: 600
+                if (loopCount % 10 == 0) {
+                    SeatGroupUpdatesTask.findChangedInstructionModes();
+                }
+
                 findProcessedSince = SeatGroupUpdatesTask.handleSeatGroupUpdates(findProcessedSince);
 
                 // THINKME: What frequency should we run this at?

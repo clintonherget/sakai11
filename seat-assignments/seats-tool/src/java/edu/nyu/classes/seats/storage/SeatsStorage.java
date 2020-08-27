@@ -52,10 +52,40 @@ public class SeatsStorage {
         return obj;
     }
 
+    public static boolean stemIsEligible(DBConnection db, String stemName) throws SQLException {
+        int count = db.run("select count(*) from nyu_t_course_catalog cc " +
+                           " where cc.stem_name = ? AND cc.instruction_mode in ('OB', 'P')")
+            .param(stemName)
+            .executeQuery()
+            .getCount();
+
+        if (count > 0){
+            return true;
+        }
+
+        // Site properties can override too.
+        Optional<String> props = db.run("select to_char(ssp.value) as override_prop" +
+                                        " from nyu_t_course_catalog cc" +
+                                        " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
+                                        " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
+                                        " inner join sakai_site ss on concat('/site/', ss.site_id) = sr.realm_id" +
+                                        " inner join sakai_site_property ssp on ssp.site_id = ss.site_id AND ssp.name = 'OverrideToBlended'" +
+                                        " where cc.stem_name = ?")
+            .param(stemName)
+            .executeQuery()
+            .oneString();
+
+            if (props.isPresent()) {
+                return Arrays.asList(props.get().split(" *, *")).contains(stemName);
+            } else {
+                return false;
+            }
+    }
+
     public static boolean hasBlendedInstructionMode(DBConnection db, SeatSection seatSection) throws SQLException {
          int count = db.run("select count(*) from nyu_t_course_catalog cc " +
             " inner join seat_group_section_rosters sgsr on replace(sgsr.sakai_roster_id, '_', ':') = cc.stem_name" +
-            " where sgsr.section_id = ?" + 
+            " where sgsr.section_id = ?" +
             " and cc.instruction_mode = 'OB'")
            .param(seatSection.id)
            .executeQuery()
@@ -775,7 +805,7 @@ public class SeatsStorage {
         return result;
     }
 
-    public static void bootstrapGroupsForSection(DBConnection db, SeatSection section, int groupCount, SelectionType selection) throws SQLException {
+    public static void clearSection(DBConnection db, SeatSection section) throws SQLException {
         for (SeatGroup group : section.listGroups()) {
             for (Meeting meeting : group.listMeetings()) {
                 for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
@@ -787,6 +817,23 @@ public class SeatsStorage {
 
             deleteGroup(db, group);
         }
+    }
+
+    public static void deleteSection(DBConnection db, SeatSection section) throws SQLException {
+        clearSection(db, section);
+
+        db.run("delete from seat_group_section_rosters where section_id = ?")
+                .param(section.id)
+                .executeUpdate();
+
+        db.run("delete from seat_group_section where id = ?")
+                .param(section.id)
+                .executeUpdate();
+    }
+
+
+    public static void bootstrapGroupsForSection(DBConnection db, SeatSection section, int groupCount, SelectionType selection) throws SQLException {
+        clearSection(db, section);
 
         List<Member> sectionMembers = getMembersForSection(db, section);
 
