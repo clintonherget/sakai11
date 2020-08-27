@@ -67,6 +67,10 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
 
             return hasRowReady;
         } catch (SQLException e) {
+            try {
+                this.close();
+            } catch (SQLException e2) {}
+
             return false;
         }
     }
@@ -97,14 +101,17 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
     }
 
     public <T> List<T> map(SQLMapper<T> fn) throws SQLException {
-        List<T> result = new ArrayList<>();
+        try {
+            List<T> result = new ArrayList<>();
 
-        while (this.hasNext()) {
-            result.add(fn.apply(this.next()));
+            while (this.hasNext()) {
+                result.add(fn.apply(this.next()));
+            }
+
+            return result;
+        } finally {
+            this.close();
         }
-
-        this.close();
-        return result;
     }
 
     @FunctionalInterface
@@ -113,11 +120,13 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
     }
 
     public void each(SQLAction fn) throws SQLException {
-        while (this.hasNext()) {
-            fn.apply(this.next());
+        try {
+            while (this.hasNext()) {
+                fn.apply(this.next());
+            }
+        } finally {
+            this.close();
         }
-
-        this.close();
     }
 
     public List<String> getStringColumn(String column) throws SQLException {
@@ -125,18 +134,30 @@ public class DBResults implements Iterable<ResultSet>, Iterator<ResultSet>, Auto
     }
 
     public Optional<Integer> oneInt() throws SQLException {
-        if (this.hasNext()) {
-            return Optional.ofNullable(this.resultSet.getInt(1));
-        } else {
-            return Optional.empty();
+        try {
+            Optional<Integer> result = Optional.empty();
+
+            if (this.hasNext()) {
+                result = Optional.ofNullable(this.resultSet.getInt(1));
+            }
+
+            return result;
+        } finally {
+            this.close();
         }
     }
 
     public Optional<String> oneString() throws SQLException {
-        if (this.hasNext()) {
-            return Optional.ofNullable(this.resultSet.getString(1));
-        } else {
-            return Optional.empty();
+        try {
+            Optional<String> result = Optional.empty();
+
+            if (this.hasNext()) {
+                result = Optional.ofNullable(this.resultSet.getString(1));
+            }
+
+            return result;
+        } finally {
+            this.close();
         }
     }
 

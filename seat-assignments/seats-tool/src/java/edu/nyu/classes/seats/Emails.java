@@ -32,7 +32,7 @@ public class Emails {
             .collect(Collectors.toList());
     }
 
-    public static void sendUserAddedEmail(List<org.sakaiproject.user.api.User> studentUser,
+    public static void sendUserAddedEmail(org.sakaiproject.user.api.User studentUser,
                                           SeatGroup group,
                                           Site site) throws Exception {
         EmailMessage msg = new EmailMessage();
@@ -44,11 +44,9 @@ public class Emails {
         String body = String.format("<p>Dear %s,</p>" +
                                     "<p>You've been added to %s for %s. Please contact your instructor for information on when you will be meeting in-person for your course.</p>" +
                                     "<p>Note: you will be required to record your seating assignment for the duration of the semester in the Seating Assignments tool in NYU Classes. " +
-                                    "For more information, see the <a href=\"%s\">Seating Assignments knowledgebase article</a>.</p>" +
-                                    "<p>Best regards,<br>" +
-                                    "The NYU Classes Team</p>",
+                                    "For more information, see the <a href=\"%s\">Seating Assignments knowledgebase article</a>.</p>",
 
-                                    studentUser.get(0).getDisplayName(),
+                                    studentUser.getDisplayName(),
                                     group.name,
                                     site.getTitle(),
                                     "https://www.nyu.edu/servicelink/KB0018304"
@@ -59,7 +57,7 @@ public class Emails {
         msg.setCharacterSet("utf-8");
         msg.addHeader("Content-Transfer-Encoding", "quoted-printable");
 
-        msg.setRecipients(RecipientType.TO, studentUser.stream().map((u) -> new EmailAddress(u.getEmail())).collect(Collectors.toList()));
+        msg.setRecipients(RecipientType.TO, Arrays.asList(new EmailAddress(studentUser.getEmail())));
         msg.setRecipients(RecipientType.CC, buildCCList(site));
 
         EmailService.getInstance().send(msg);
@@ -76,7 +74,7 @@ public class Emails {
 
         msg.setBody(plaintextBody);
 
-        msg.setRecipients(RecipientType.TO, recipients.stream().map((u) -> new EmailAddress(u.getEmail())).collect(Collectors.toList()));
+        msg.setRecipients(RecipientType.BCC, recipients.stream().map((u) -> new EmailAddress(u.getEmail())).collect(Collectors.toList()));
         msg.setRecipients(RecipientType.CC, buildCCList(site));
 
         EmailService.getInstance().send(msg);

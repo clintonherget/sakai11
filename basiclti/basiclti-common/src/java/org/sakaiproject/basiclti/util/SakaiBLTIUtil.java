@@ -574,6 +574,7 @@ public class SakaiBLTIUtil {
 			setProperty(props,"ext_sakai_privacy", isViewable ? "visible" : "hidden");
 
 			setProperty(props,BasicLTIConstants.USER_ID,user.getId());
+			setProperty(props, "ext_d2l_username", user.getEid());
 
 			if(ServerConfigurationService.getBoolean(BASICLTI_CONSUMER_USERIMAGE_ENABLED, true)) {
 				String imageUrl = getOurServerUrl() + "/direct/profile/" + user.getId() + "/image";

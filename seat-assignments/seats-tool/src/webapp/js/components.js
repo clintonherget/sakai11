@@ -19,28 +19,41 @@ Alerts = {
     "SAVE_SUCCESS": "Seat successfully updated.",
     "EMAIL_SENT": "Your email has been sent.",
     "SEAT_REQUIRED": "A seat value is required.",
+    "MEMBER_ADDED": "Additional site member(s) successfully added.",
   }
 }
 
+Alerts.clear = function() {
+  $('.growl-close').click();
+};
+
 Alerts.success = function (code) {
+  Alerts.clear();
+
   $.growl.notice({
     title: "Success!",
     message: (Alerts.messages[code] || ""),
     size: "large",
+    fixed: true,
+    duration: 30000,
   });
 };
 
 Alerts.error_for_code = function (error_code) {
+  Alerts.clear();
+
   $.growl.error({
     message: (Alerts.messages[error_code] || "Unexpected error!  Please retry."),
     size: "large",
+    fixed: true,
+    duration: 30000,
   });
 };
 
 
 Vue.component('modal', {
   template: `
-<div class="modal" tabindex="-1" role="dialog" ref="modal">
+<div class="modal" tabindex="-1" role="dialog" aria-modal="true" ref="modal" :aria-label="headerText">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -62,6 +75,11 @@ Vue.component('modal', {
 </div>
   `,
   props: [],
+  data: function() {
+    return {
+      headerText: "",
+    }
+  },
   methods: {
     open: function(callback) {
       var self = this;
@@ -86,6 +104,8 @@ Vue.component('modal', {
         show: false,
       });
     });
+
+    this.headerText = this.$slots.header[0].text;
   }
 });
 
@@ -114,6 +134,9 @@ Vue.component('seat-assignment-widget', {
           v-on:keydown.esc="cancel()"
           :required="isStudent"
           v-bind:style="{width: inputWidth}"
+          maxlength="20"
+          :aria-label="'Seat assignment for ' + studentName + ' (' + netid + ')'"
+          :aria-invalid="hasError"
         />
         <template v-if="isEditable && editing">
           <button class="btn-primary" @click="save()" :disabled="waitingOnSave">
@@ -124,14 +147,27 @@ Vue.component('seat-assignment-widget', {
           </button>
         </template>
         <template v-else-if="isEditable">
-          <button @click="edit()" :disabled="waitingOnSave || editDisabled">
+          <button @click="edit()" :disabled="waitingOnSave || editDisabled" :aria-label="'Edit - ' + studentName + ' (' + netid + ')'">
             <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i> Edit
           </button>
-          <confirm-button v-if="!isStudent && seat !== null" :disabled="waitingOnSave || editDisabled" :action="function () { clear() }" :confirmMessage="'Clear seat assignment for ' + netid + '?'"><i class="glyphicon glyphicon-remove" aria-hidden="true"></i></i> Clear</confirm-button>
+          <confirm-button
+            v-if="!isStudent && seat !== null"
+            :disabled="waitingOnSave || editDisabled"
+            :action="function () { clear() }"
+            :confirmMessage="'Clear seat assignment for ' + netid + '?'"
+            :ariaLabel="'Clear seat number for ' + studentName + ' (' + netid + ')'"
+          >
+            <i class="glyphicon glyphicon-remove" aria-hidden="true"></i></i> Clear
+          </confirm-button>
         </template>
       </template>
       <template v-else-if="isEditable">
-        <button ref="enterSeatButton" @click="edit()" :disabled="editDisabled">
+        <button
+            ref="enterSeatButton"
+            @click="edit()"
+            :disabled="editDisabled"
+            :aria-label="'Enter seat number for ' + studentName + ' (' + netid + ')'"
+          >
           <i class="glyphicon glyphicon-plus" aria-hidden="true"></i> {{labelText}}
         </button>
       </template>
@@ -139,6 +175,16 @@ Vue.component('seat-assignment-widget', {
     <div v-if="isStudent">
       <p>{{studentNote}}</p>
     </div>
+    <modal v-if="isStudent" ref="studentConfirmationModal">
+      <template v-slot:header>Enter Seat Number</template>
+      <template v-slot:body>
+          <p>I agree to enter a seat number <em>only on my first day in the classroom</em> and as directed by my instructor. I understand that seats <strong>cannot</strong> be reserved prior to my first class meeting, and that such entries will not be honored and may be removed by my instructor.</p>
+      </template>
+      <template v-slot:footer>
+        <button @click="studentConfirmSave()" class="pull-left btn-primary">Proceed</button>
+        <button @click="hideStudentConfirmation(true)">Cancel</button>
+      </template>
+    </modal>
 </div>
   `,
   data: function() {
@@ -151,9 +197,10 @@ Vue.component('seat-assignment-widget', {
       currentTimePoll: null,
       waitingOnSave: false,
       editDisabled: false,
+      studentConfirmationReceived: false,
     };
   },
-  props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil', 'studentName'],
+  props: ['seat', 'netid', 'meetingId', 'groupId', 'sectionId', 'isStudent', 'editableUntil', 'studentName', 'groupName'],
   computed: {
       labelText: function() {
         if (this.isStudent) {
@@ -249,6 +296,20 @@ Vue.component('seat-assignment-widget', {
     },
   },
   methods: {
+    studentConfirmSave: function() {
+      this.studentConfirmationReceived = true;
+      this.save();
+      this.hideStudentConfirmation();
+    },
+    showStudentConfirmation: function() {
+      this.$refs.studentConfirmationModal.open();
+    },
+    hideStudentConfirmation: function(cancelled) {
+      this.$refs.studentConfirmationModal.close();
+      if (cancelled) {
+        this.cancel();
+      }
+    },
     resetSeatValue: function() {
       this.inputValue = this.cleanSeatValue;
     },
@@ -284,7 +345,11 @@ Vue.component('seat-assignment-widget', {
           return;
       }
 
-      SeatToolEventBus.$emit("editing", this._uid);
+      SeatToolEventBus.$emit("editing", this._uid, {
+        studentName: this.studentName,
+        netid: this.netid,
+        group: this.groupName,
+      });
 
       this.editing = true;
       this.seatValueUponEditing = this.seat;
@@ -336,6 +401,11 @@ Vue.component('seat-assignment-widget', {
           return;
       }
 
+      if (this.isStudent && !this.seat && !this.studentConfirmationReceived) {
+        this.showStudentConfirmation();
+        return;
+      }
+
       var self = this;
       self.clearHasError();
       self.waitingOnSave = true;
@@ -365,6 +435,8 @@ Vue.component('seat-assignment-widget', {
             self.seatValueUponEditing = null;
             self.focusInput();
             self.$emit("splat");
+
+            Alerts.clear();
           }
         },
         complete: function() {
@@ -391,14 +463,8 @@ Vue.component('seat-assignment-widget', {
     }
 
     SeatToolEventBus.$on('editing', function(componentUid) {
-      $('tr.row-currently-editing').removeClass('row-currently-editing');
-
       if (self._uid === componentUid) {
-        if (!self.isStudent) {
-          self.$nextTick(function() {
-            $(self.$el).closest('tr').addClass('row-currently-editing');
-          });
-        }
+        // nothing
       } else {
         if (self.editing) {
           self.cancel();
@@ -408,14 +474,10 @@ Vue.component('seat-assignment-widget', {
     });
 
     SeatToolEventBus.$on('done-editing', function(componentUid) {
-      $('tr.row-currently-editing').removeClass('row-currently-editing');
-
       if (self._uid != componentUid) {
         self.editDisabled = false;
       }
     });
-
-
   },
 });
 
@@ -574,6 +636,122 @@ Vue.component('group-meeting-summary', {
   }
 });
 
+Vue.component('group-meeting-entry', {
+  template: `
+<tr :class="entryCSSClass" :title="disabled ? disabledMessage : ''">
+  <td>
+    <div class="profile-pic">
+      <img :src="'/direct/profile/' + assignment.netid + '/image/official?siteId=' + section.siteId"/>
+    </div>
+  </td>
+  <th scope="row">{{assignment.displayName}} ({{assignment.netid}})</th>
+  <td>
+    <seat-assignment-widget
+      ref="seatWidget"
+      :seat="assignment.seat"
+      :netid="assignment.netid"
+      :studentName="assignment.displayName"
+      :meetingId="meeting.id"
+      :groupId="group.id"
+      :sectionId="section.id"
+      :isStudent="false"
+      :groupName="groupName"
+      v-on:splat="$emit('splat')">
+    </seat-assignment-widget>
+  </td>
+  <td>
+    {{labelForStudentLocation(assignment.studentLocation)}}
+    <div v-if="!assignment.official">(Manually Added)</div>
+  </td>
+  <td>
+    {{groupName}}
+    <template v-if="isNotOnlyGroup">
+      <a
+        href="javascript:void(0)"
+        @click="handleMove()"
+        :aria-label="'Move User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+      >Move</a>
+
+      <template v-if="!assignment.official">
+        <confirm-button
+          :disabled="disabled || editing"
+          :action="function () { removeUser(assignment) }"
+          :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + group.name + '?'"
+          :ariaLabel="'Remove User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+        >Remove User</confirm-button>
+      </template>
+    </template>
+    <template v-else>
+      <template v-if="!assignment.official">
+        <confirm-button
+          :disabled="disabled || editing"
+          :action="function () { removeUser(assignment) }"
+          :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + section.shortName + '?'"
+          :ariaLabel="'Remove User - ' + assignment.displayName + ' (' + assignment.netid + ')'"
+        >Remove User</confirm-button>
+      </template>
+    </template>
+  </td>
+</tr>
+`,
+  props: ['assignment', 'meeting', 'group', 'section', 'isNotOnlyGroup', 'openMoveModal'],
+  data: function() {
+    return {
+      disabled: false,
+      editing: false,
+      disabledMessage: '',
+    };
+  },
+  computed: {
+    groupName: function() {
+      if (this.isNotOnlyGroup) {
+        return this.group.name;
+      } else {
+        return this.section.shortName;
+      }
+    },
+    baseurl: function() {
+        return this.$parent.baseurl;
+    },
+    entryCSSClass: function() {
+      if (this.disabled) {
+        return 'seat-entry-disabled';
+      } else if (this.editing) {
+        return 'seat-entry-editing';
+      } else {
+        return 'seat-entry-enabled';
+      }
+    },
+  },
+  methods: {
+    handleMove: function() {
+      if (!this.disabled && !this.editing) {
+        this.openMoveModal(this.assignment);
+      }
+    },
+    labelForStudentLocation: function(studentLocation) {
+      return StudentLocationLabels[studentLocation];
+    },
+  },
+  mounted: function() {
+    var self = this;
+
+    SeatToolEventBus.$on("done-editing", function(seatWidgetUid) {
+      self.disabled = false;
+      self.editing = false;
+    });
+
+    SeatToolEventBus.$on("editing", function(seatWidgetUid, data) {
+      if (self.$refs.seatWidget._uid === seatWidgetUid) {
+        self.editing = true;
+      } else if (self.$refs.seatWidget._uid !== seatWidgetUid) {
+        self.disabled = true;
+        self.disabledMessage = "You are already editing the seat assignment for " + data.studentName + " (" + data.netid + ") in " + data.group;
+      }
+    });
+  }
+});
+
 Vue.component('group-meeting', {
   template: `
 <div>
@@ -589,11 +767,11 @@ Vue.component('group-meeting', {
   <table class="seat-table seat-assignment-listing">
     <thead>
       <tr>
-        <th>Picture</th>
-        <th>Name</th>
-        <th>Seat Assignment</th>
-        <th>Student Location</th>
-        <th>
+        <th scope="col">Picture</th>
+        <th scope="col">Name (NetID)</th>
+        <th scope="col">Seat Assignment</th>
+        <th scope="col">Student Location</th>
+        <th scope="col">
           <template v-if="$parent.isNotOnlyGroup">
             Section Cohort
           </template>
@@ -609,48 +787,18 @@ Vue.component('group-meeting', {
           This cohort has no members.
         </td>
       </tr>
-      <tr v-for="assignment in sortedSeatAssignments" :key="assignment.netid + group.id">
-        <td>
-          <div class="profile-pic">
-            <img :src="'/direct/profile/' + assignment.netid + '/image/official?siteId=' + section.siteId"/>
-          </div>
-        </td>
-        <td>{{assignment.displayName}} ({{assignment.netid}})</td>
-        <td>
-          <seat-assignment-widget
-            :seat="assignment.seat"
-            :netid="assignment.netid"
-            :studentName="assignment.displayName"
-            :meetingId="meeting.id"
-            :groupId="group.id"
-            :sectionId="section.id"
-            :isStudent="false"
-            v-on:splat="$emit('splat')">
-          </seat-assignment-widget>
-        </td>
-        <td>
-          {{labelForStudentLocation(assignment.studentLocation)}}
-          <div v-if="!assignment.official">(Non-Official)</div>
-        </td>
-        <td>
-          <template v-if="$parent.isNotOnlyGroup">
-            {{group.name}}
-            <a href="javascript:void(0)" @click="openMoveModal(assignment)">Move</a>
-
-            <template v-if="!assignment.official">
-              <confirm-button :action="function () { removeUser(assignment) }" :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + group.name + '?'">Remove User</confirm-button>
-            </template>
-          </template>
-          <template v-else>
-            {{section.shortName}}
-
-            <template v-if="!assignment.official">
-              <confirm-button :action="function () { removeUser(assignment) }" :confirmMessage="'Remove user ' + assignment.netid + ' from group ' + section.shortName + '?'">Remove User</confirm-button>
-            </template>
-
-          </template>
-        </td>
-      </tr>
+      <template v-for="assignment in sortedSeatAssignments">
+        <group-meeting-entry
+          :assignment="assignment"
+          :key="assignment.netid + '__' + group.id"
+          :group="group"
+          :section="section"
+          :meeting="meeting"
+          v-on:splat="$emit('splat')"
+          :isNotOnlyGroup="isNotOnlyGroup"
+          :openMoveModal="openMoveModal"
+        ></group-meeting-entry>
+      </template>
     </tbody>
   </table>
   <modal v-if="assignmentToBeMoved" ref="moveModal">
@@ -687,6 +835,9 @@ Vue.component('group-meeting', {
   },
   props: ['section', 'group', 'meeting'],
   computed: {
+    isNotOnlyGroup: function() {
+      return this.$parent.isNotOnlyGroup;
+    },
     baseurl: function() {
         return this.$parent.baseurl;
     },
@@ -731,9 +882,6 @@ Vue.component('group-meeting', {
     },
   },
   methods: {
-    labelForStudentLocation: function(studentLocation) {
-      return StudentLocationLabels[studentLocation];
-    },
     openMoveModal: function(assignment) {
       var self = this;
 
@@ -893,10 +1041,16 @@ Vue.component('confirm-button', {
         </template>
       </modal>
 
-      <button :disabled="disabled" @click="showModal()"><slot></slot></button>
+      <button
+        :disabled="!!disabled"
+        @click="showModal()"
+        :aria-label="ariaLabel"
+      >
+        <slot></slot>
+      </button>
     </span>
   `,
-  props: ['action', 'confirmMessage', 'disabled'],
+  props: ['action', 'confirmMessage', 'disabled', 'ariaLabel'],
   methods: {
     showModal: function() {
       this.$refs.confirmModal.open();
@@ -979,23 +1133,23 @@ Vue.component('section-group', {
     >
     </group-meeting>
   </template>
-  <button @click="addAdhocMembers()">Add Non-Official Site Member(s)</button>
+  <button @click="addAdhocMembers()">Add additional site member(s)</button>
   <contextual-help 
-    feature="Add Non-Official Site Member(s)"
-    helpText="Non-official site members are students, instructors, TAs, or course site administrators within the course site who are not part of the official student roster(s) from Albert. This includes individuals manually added to the course site in the Settings tool.">
+    feature="Add additional site member(s)"
+    helpText="Additional site members are students, instructors, TAs, or course site administrators within the course site who are not part of the official student roster(s) from Albert. This includes individuals manually added to the course site in the Settings tool.">
   </contextual-help>
   <modal ref="membersModal">
-    <template v-slot:header>Add Non-Official Site Member(s) {{group.name}}</template>
+    <template v-slot:header>Add additional site member(s) {{group.name}}</template>
     <template v-slot:body>
       <div>
-        <p>Select manually-added, non-official site members in this site to add to this cohort. For more information on manually adding members to your course site, <a target="_blank" href="https://www.nyu.edu/servicelink/041212911320118">click here</a>.</p>
+        <p>Select manually-added, non-official site members in this site to add to this cohort. More information on <a target="_blank" href="https://www.nyu.edu/servicelink/041212911320118">manually adding members to your course site</a>.</p>
 
-        <table class="seat-table">
+        <table class="seat-table members-for-add-listing">
           <thead>
             <tr>
-              <th></th>
-              <th>Participant</th>
-              <th>Role</th>
+              <th scope="col" class="sr-only">Checkbox</th>
+              <th scope="col">Participant</th>
+              <th scope="col">Role</th>
             </tr>
           </thead>
           <tbody>
@@ -1004,8 +1158,8 @@ Vue.component('section-group', {
             </template>
             <template v-else>
               <tr v-for="user in membersForAdd" :key="user.netid">
-                <td style="padding: 0 0 0 1em; width: 1.5em; text-align: right;"><input style="margin: 0" :id="'checkbox_' + this._uid + '_' + user.netid" type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
-                <td><label :for="'checkbox_' + this._uid + '_' + user.netid">{{user.displayName}} ({{user.netid}})</label></td>
+                <td style="padding: 0 0 0 1em; text-align: right;"><input style="margin: 0" :id="'checkbox_' + this._uid + '_' + user.netid" type="checkbox" v-model="selectedMembers" :value="user.netid" /></td>
+                <th scope="row"><label :for="'checkbox_' + this._uid + '_' + user.netid">{{user.displayName}} ({{user.netid}})</label></th>
                 <td>{{user.role}}</td>
               </tr>
             </template>
@@ -1106,6 +1260,7 @@ Vue.component('section-group', {
         success: function() {
           self.$emit('splat');
           self.closeModal();
+          Alerts.success("MEMBER_ADDED");
         }
       });
     },
@@ -1289,6 +1444,8 @@ Vue.component('instructor-table', {
                   :sections="sections"
                   v-on:selectSection="handleSectionSelect">
               </section-selector>
+              <p :style="{marginTop: '20px'}" v-if="fetched && sections.length > 1">To get started, see the <a target="_blank" href="https://drive.google.com/file/d/1uN1ihjlbvmjb8EOMvG4ZJVCh4GQweRrr/view?usp=sharing">Quick-Start guide</a> or review the <a target="_blank" href="http://www.nyu.edu/servicelink/KB0018303">instructor Knowledgebase article</a>.</p>
+
               <hr v-if="sections.length > 1" />
               <template v-if="selectedSectionId">
                   <section-table :sectionId="selectedSectionId"></section-table>
@@ -1348,7 +1505,13 @@ Vue.component('student-home', {
   template: `
     <div>
         <template v-if="fetched">
-            <div v-for="meeting in meetings" :key="meeting.meetingId">
+            <div v-if="roleSwap" class="messageInstruction">
+              Students will be able to enter and view their seat number from here. For more info, see the following Kbase article: <a href="http://www.nyu.edu/servicelink/KB0018304" target="_blank">Entering and viewing your seating assignments (student article)</a>.
+            </div>
+            <div v-if="meetings.length === 0" class="alertMessage">
+                You are currently not a member of any section or cohort. Please contact your instructor to be added.
+            </div>
+            <div v-for="(meeting, index) in sortedMeetings" :key="meeting.meetingId">
                 <h2>{{meeting.groupName}}</h2>
                 <p>{{meeting.sectionName}}<p>
                 <p class="seat-section-description">{{meeting.groupDescription}}</p>
@@ -1363,6 +1526,7 @@ Vue.component('student-home', {
                   :editableUntil="meeting.editableUntil"
                   v-on:splat="resetPolling()">
                 </seat-assignment-widget>
+                <hr v-if="index < sortedMeetings.length - 1"/>
             </div>
         </template>
         <div class="messageInstruction">
@@ -1379,6 +1543,7 @@ Vue.component('student-home', {
         fetched: false,
         pollInterval: null,
         pollDelay: 20000,
+        roleSwap: false,
     };
   },
   props: ['baseurl'],
@@ -1401,7 +1566,8 @@ Vue.component('student-home', {
                   }
 
                   self.fetched = true;
-                  self.meetings = json;
+                  self.meetings = json.meetings;
+                  self.roleSwap = !!json.roleSwap;
               }
           });
       },
@@ -1421,6 +1587,15 @@ Vue.component('student-home', {
           self.fetchData();
         })();
       }
+  },
+  computed: {
+    sortedMeetings: function() {
+      if (this.fetched) {
+        return this.meetings.sort(function (a, b) { return a.groupName.localeCompare(b.groupName) });
+      } else {
+        return [];
+      }
+    },
   },
   beforeDestroy: function() {
     if (this.pollInterval) {

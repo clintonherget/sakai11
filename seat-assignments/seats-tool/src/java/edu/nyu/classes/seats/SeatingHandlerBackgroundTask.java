@@ -209,7 +209,7 @@ public class SeatingHandlerBackgroundTask extends Thread {
             return;
         }
 
-        Emails.sendUserAddedEmail(studentUser, group, site);
+        Emails.sendUserAddedEmail(studentUser.get(0), group, site);
     }
 
     private boolean processSite(String siteId) {
