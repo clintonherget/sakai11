@@ -56,9 +56,9 @@ public class SeatingHandlerBackgroundThread extends Thread {
                 findProcessedSince = SeatGroupUpdatesTask.handleSeatGroupUpdates(findProcessedSince);
 
                 // To be enabled at a future date.
-                // if (loopCount % 30 == 0) {
-                //     SakaiGroupSyncTask.handleSakaiGroupSync();
-                // }
+                if (loopCount % 30 == 0) {
+                    SakaiGroupSyncTask.handleSakaiGroupSync();
+                }
 
             } catch (Exception e) {
                 LOG.error("SeatingHandlerBackgroundTask main loop hit top level: " + e);

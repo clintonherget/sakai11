@@ -5,6 +5,7 @@ import edu.nyu.classes.seats.storage.db.*;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.site.api.Group;
@@ -42,6 +43,42 @@ public class SakaiGroupSync {
 
 
     public static void syncSeatGroup(DBConnection db, String seatGroupId) throws Exception {
+        int sectionSeatGroupCount = db.run("select count(1) from seat_group where section_id in " +
+                                           " (select section_id from seat_group where id = ?)")
+            .param(seatGroupId)
+            .executeQuery()
+            .getCount();
+
+        if (sectionSeatGroupCount == 1) {
+            // This is the only seat group in this section, so we don't create a
+            // corresponding Sakai group for it.  It's just the section group.
+            return;
+        }
+
+        if (syncSingleGroup(db, seatGroupId)) {
+            // We've successfully synced the requested group.  Look for other groups that
+            // haven't been synced yet and do those too.  This catches the case where we
+            // originally just had one seat group that was never synced to a Sakai group,
+            // but now that we have TWO seat groups it's a cohort, baby, and we're ready to
+            // sync.
+            //
+            // Note: It's possible that these Group IDs are already in our queue to process
+            // and we're just doubling up here, but that's OK.  We'd rather do redundant
+            // work than miss updates.
+            List<String> otherSeatGroupIds =
+                db.run("select id from seat_group where sakai_group_id is null AND section_id in " +
+                       " (select section_id from seat_group where id = ?)")
+                .param(seatGroupId)
+                .executeQuery()
+                .getStringColumn("id");
+
+            for (String otherSeatGroupId : otherSeatGroupIds) {
+                syncSingleGroup(db, otherSeatGroupId);
+            }
+        }
+    }
+
+    private static boolean syncSingleGroup(DBConnection db, String seatGroupId) throws Exception {
         // Load our seat group members (keyed on sakai user_id)
         Map<String, Member> seatGroupMembers = new HashMap<>();
 
@@ -60,6 +97,8 @@ public class SakaiGroupSync {
                                                     // unused here
                                                     Member.StudentLocation.IN_PERSON));
                 });
+
+        final AtomicBoolean success = new AtomicBoolean(false);
 
         db.run("select sec.site_id, sg.sakai_group_id, sg.name, sg.description" +
                " from seat_group sg" +
@@ -97,12 +136,16 @@ public class SakaiGroupSync {
                         group.get().setDescription(groupDescription);
                         applyMemberUpdates(group.get(), seatGroupMembers);
                         SiteService.save(site);
+
+                        success.set(true);
                     } catch (IdUnusedException e) {
                         LOG.error("site not found: " + siteId);
                     } catch (PermissionException e) {
                         LOG.error("Permission denied updating site: " + siteId);
                     }
                 });
+
+                return success.get();
     }
 
     private static void applyMemberUpdates(Group sakaiGroup, Map<String, Member> seatGroupMembers) {
@@ -146,37 +189,60 @@ public class SakaiGroupSync {
         return Optional.empty();
     }
 
-    public static void deleteSakaiGroup(DBConnection db, String sakaiGroupId) {
+    public static void deleteSakaiGroup(DBConnection db, String sakaiGroupId, String seatSectionId) {
         try {
-            Optional<String> siteId = db.run("select site_id from sakai_site_group where group_id = ?")
-                .param(sakaiGroupId)
-                .executeQuery()
-                .oneString();
+            if (deleteSingleSakaiGroup(db, sakaiGroupId)) {
+                // If there is only one seat group left, remove its sakai group too
+                List<String> remainingSakaiGroups = db.run("select sakai_group_id from seat_group where section_id = ?")
+                    .param(seatSectionId)
+                    .executeQuery()
+                    .getStringColumn("sakai_group_id");
 
-            if (!siteId.isPresent()) {
-                return;
-            }
-
-            Site site = SiteService.getSite(siteId.get());
-            Group group = site.getGroup(sakaiGroupId);
-
-            if (group == null) {
-                LOG.error("No group found for ID: " + sakaiGroupId);
-                return;
-            }
-
-            if ("true".equals(group.getProperties().getProperty(IS_SEAT_GROUP_PROPERTY))) {
-                group.unlockGroup();
-                site.removeGroup(group);
-                SiteService.save(site);
-            } else {
-                LOG.error("Refusing to delete a non-seat-group group");
-                return;
+                if ((remainingSakaiGroups.size() == 1) && remainingSakaiGroups.get(0) != null) {
+                    if (deleteSingleSakaiGroup(db, remainingSakaiGroups.get(0))) {
+                        if (db.run("update seat_group set sakai_group_id = null where section_id = ? AND sakai_group_id = ?")
+                            .param(seatSectionId)
+                            .param(remainingSakaiGroups.get(0))
+                            .executeUpdate() != 1) {
+                            throw new RuntimeException("Unexpectedly matched multiple sakai groups");
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             LOG.error(String.format("Failure ignored while trying to delete group '%s': %s",
                                     sakaiGroupId, e));
             e.printStackTrace();
+        }
+    }
+
+    public static boolean deleteSingleSakaiGroup(DBConnection db, String sakaiGroupId) throws Exception {
+        Optional<String> siteId = db.run("select site_id from sakai_site_group where group_id = ?")
+            .param(sakaiGroupId)
+            .executeQuery()
+            .oneString();
+
+        if (!siteId.isPresent()) {
+            return false;
+        }
+
+        Site site = SiteService.getSite(siteId.get());
+        Group group = site.getGroup(sakaiGroupId);
+
+        if (group == null) {
+            LOG.error("No group found for ID: " + sakaiGroupId);
+            return false;
+        }
+
+        if ("true".equals(group.getProperties().getProperty(IS_SEAT_GROUP_PROPERTY))) {
+            group.unlockGroup();
+            site.removeGroup(group);
+            SiteService.save(site);
+
+            return true;
+        } else {
+            LOG.error("Refusing to delete a non-seat-group group");
+            return false;
         }
     }
 }
