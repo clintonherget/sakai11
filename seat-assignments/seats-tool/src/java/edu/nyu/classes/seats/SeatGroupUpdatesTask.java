@@ -276,7 +276,7 @@ public class SeatGroupUpdatesTask {
                            "  sec.id as section_id," +
                            "  to_char(ssp.value) as override_to_blended" +
                            " from SEAT_GROUP_SECTION sec" +
-                           " inner join NYU_T_COURSE_CATALOG cc on sec.primary_stem_name = cc.stem_name AND cc.instruction_mode = 'OL'" +
+                           " inner join NYU_T_COURSE_CATALOG cc on sec.primary_stem_name = cc.stem_name AND cc.instruction_mode not in ('OB', 'P')" +
                            " left join sakai_site_property ssp on ssp.site_id = sec.site_id AND ssp.name = 'OverrideToBlended'")
                         .executeQuery()
                         .each((row) -> {
