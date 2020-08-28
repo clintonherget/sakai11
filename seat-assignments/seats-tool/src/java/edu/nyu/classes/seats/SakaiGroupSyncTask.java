@@ -31,11 +31,13 @@ public class SakaiGroupSyncTask {
         public final String id;
         public final Action action;
         public final String arg1;
+        public final String arg2;
 
-        public SakaiGroupSyncRequest(String id, Action action, String arg1) {
+        public SakaiGroupSyncRequest(String id, Action action, String arg1, String arg2) {
             this.id = id;
             this.action = action;
             this.arg1 = arg1;
+            this.arg2 = arg2;
         }
     }
 
@@ -55,7 +57,8 @@ public class SakaiGroupSyncTask {
                         .executeQuery()
                         .map((row) -> new SakaiGroupSyncRequest(row.getString("id"),
                                                                 SakaiGroupSyncRequest.Action.valueOf(row.getString("action")),
-                                                                row.getString("arg1")));
+                                                                row.getString("arg1"),
+                                                                row.getString("arg2")));
 
                     String lastProcessedId = null;
                     Set<String> alreadyProcessedArgs = new HashSet<>();
@@ -70,14 +73,58 @@ public class SakaiGroupSyncTask {
 
                             if (request.action == SakaiGroupSyncRequest.Action.SYNC_SEAT_GROUP) {
                                 long startTime = System.currentTimeMillis();
-                                SakaiGroupSync.syncSeatGroup(db, request.arg1);
+                                Optional<String> siteId = db.run("select site_id from seat_group_section sgs " +
+                                                                 " inner join seat_group sg on sg.section_id = sgs.id" +
+                                                                 " where sg.id = ?")
+                                    .param(request.arg1)
+                                    .executeQuery()
+                                    .oneString();
 
-                                LOG.info(String.format("Synced seat group to sakai group in %dms", System.currentTimeMillis() - startTime));
+                                if (!siteId.isPresent()) {
+                                    // Can't do much without a site.  Shouldn't normally happen...
+                                    continue;
+                                }
 
-                                alreadyProcessedArgs.add(request.arg1);
+                                if (!Locks.trylockSiteForUpdate(siteId.get())) {
+                                    // If we couldn't get a lock immediately, bail out and reprocess later.  This
+                                    // should be a transient issue and we don't want to block.
+                                    LOG.info(String.format("Couldn't lock site '%s'.  Aborting group sync for this run.",
+                                                           siteId.get()));
+                                    break;
+                                }
+
+                                try {
+                                    SakaiGroupSync.syncSeatGroup(db, request.arg1);
+                                    LOG.info(String.format("Synced seat group to sakai group in %dms", System.currentTimeMillis() - startTime));
+                                    alreadyProcessedArgs.add(request.arg1);
+                                } finally {
+                                    Locks.unlockSiteForUpdate(siteId.get());
+                                }
                             } else if (request.action == SakaiGroupSyncRequest.Action.DELETE_SAKAI_GROUP) {
-                                SakaiGroupSync.deleteSakaiGroup(db, request.arg1);
-                                alreadyProcessedArgs.add(request.arg1);
+                                Optional<String> siteId = db.run("select site_id from seat_group_section sgs where id = ?")
+                                    .param(request.arg2)
+                                    .executeQuery()
+                                    .oneString();
+
+                                if (!siteId.isPresent()) {
+                                    // Can't do much without a site.  Shouldn't normally happen...
+                                    continue;
+                                }
+
+                                if (!Locks.trylockSiteForUpdate(siteId.get())) {
+                                    // If we couldn't get a lock immediately, bail out and reprocess later.  This
+                                    // should be a transient issue and we don't want to block.
+                                    LOG.info(String.format("Couldn't lock site '%s'.  Aborting group sync for this run.",
+                                                           siteId.get()));
+                                    break;
+                                }
+
+                                try {
+                                    SakaiGroupSync.deleteSakaiGroup(db, request.arg1, request.arg2);
+                                    alreadyProcessedArgs.add(request.arg1);
+                                } finally {
+                                    Locks.unlockSiteForUpdate(siteId.get());
+                                }
                             } else {
                                 LOG.error("Unknown action: " + request.action);
                             }
