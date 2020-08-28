@@ -9,7 +9,8 @@ public class V2__GroupSync extends BaseMigration {
         "create table seat_sakai_group_sync_queue (                                                                    " +
         "    id varchar2(255) primary key,                                                                             " +
         "    action varchar2(255) not null,                                                                            " +
-        "    arg1 varchar2(255) not null                                                                               " +
+        "    arg1 varchar2(255) not null,                                                                              " +
+        "    arg2 varchar2(255)                                                                                        " +
         ");                                                                                                            " +
 
         "alter table seat_group add (sakai_group_id varchar2(255));                                                    ";

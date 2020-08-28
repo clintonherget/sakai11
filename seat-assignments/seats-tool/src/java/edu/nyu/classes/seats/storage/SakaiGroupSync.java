@@ -31,11 +31,12 @@ public class SakaiGroupSync {
             .executeUpdate();
     }
 
-    public static void markGroupForDelete(DBConnection db, String sakaiGroupId) throws SQLException {
-        db.run("insert into seat_sakai_group_sync_queue (id, action, arg1) VALUES (?, ?, ?)")
+    public static void markGroupForDelete(DBConnection db, String sakaiGroupId, String seatSectionId) throws SQLException {
+        db.run("insert into seat_sakai_group_sync_queue (id, action, arg1, arg2) VALUES (?, ?, ?, ?)")
             .param(buildId(db))
             .param("DELETE_SAKAI_GROUP")
             .param(sakaiGroupId)
+            .param(seatSectionId)
             .executeUpdate();
     }
 

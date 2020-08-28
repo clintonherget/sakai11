@@ -564,7 +564,7 @@ public class SeatsStorage {
                      );
 
         if (group.sakaiGroupId != null) {
-            SakaiGroupSync.markGroupForDelete(db, group.sakaiGroupId);
+            SakaiGroupSync.markGroupForDelete(db, group.sakaiGroupId, group.section.id);
         }
 
         db.run("delete from seat_group_members where group_id = ?")
