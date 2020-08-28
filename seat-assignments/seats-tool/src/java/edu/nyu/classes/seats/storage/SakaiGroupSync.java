@@ -84,7 +84,7 @@ public class SakaiGroupSync {
                             // happen if a section is moved between sites, or if an instructor manually
                             // deleted our group.  Either way, you're getting a new group.
                             group = createSakaiGroup(db, site, seatGroupId,
-                                                     row.getString("name"),
+                                                     String.format("Cohort: %s", row.getString("name")),
                                                      groupDescription);
                         }
 
