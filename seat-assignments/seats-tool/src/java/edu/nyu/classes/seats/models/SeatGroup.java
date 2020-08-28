@@ -6,6 +6,7 @@ public class SeatGroup {
     public String id;
     public String name;
     public String description;
+    public String sakaiGroupId;
     public SeatSection section;
 
     public Map<String, Member> members = new HashMap<>();
@@ -31,10 +32,11 @@ public class SeatGroup {
         return this.meetings.get(meetingId);
     }
 
-    public SeatGroup(String id, String name, String description, SeatSection section) {
+    public SeatGroup(String id, String name, String description, String sakaiGroupId, SeatSection section) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.section = section;
+        this.sakaiGroupId = sakaiGroupId;
     }
 }

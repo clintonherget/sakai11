@@ -52,10 +52,45 @@ public class SeatsStorage {
         return obj;
     }
 
+    public static boolean stemIsEligible(DBConnection db, String stemName) throws SQLException {
+        Optional<String> instructionMode = db.run("select cc.instruction_mode from nyu_t_course_catalog cc " +
+                                                  " where cc.stem_name = ?")
+            .param(stemName)
+            .executeQuery()
+            .oneString();
+
+        if (instructionMode.isPresent()){
+            if ("OB".equals(instructionMode.get()) || "P".equals(instructionMode.get())) {
+                return true;
+            }
+        } else {
+            // stem no longer in course catalog but assume still ok
+            return true;
+        }
+
+        // Site properties can override too.
+        Optional<String> props = db.run("select to_char(ssp.value) as override_prop" +
+                                        " from nyu_t_course_catalog cc" +
+                                        " inner join sakai_realm_provider srp on srp.provider_id = replace(cc.stem_name, ':', '_')" +
+                                        " inner join sakai_realm sr on sr.realm_key = srp.realm_key" +
+                                        " inner join sakai_site ss on concat('/site/', ss.site_id) = sr.realm_id" +
+                                        " inner join sakai_site_property ssp on ssp.site_id = ss.site_id AND ssp.name = 'OverrideToBlended'" +
+                                        " where cc.stem_name = ?")
+            .param(stemName)
+            .executeQuery()
+            .oneString();
+
+            if (props.isPresent()) {
+                return Arrays.asList(props.get().split(" *, *")).contains(stemName);
+            } else {
+                return false;
+            }
+    }
+
     public static boolean hasBlendedInstructionMode(DBConnection db, SeatSection seatSection) throws SQLException {
          int count = db.run("select count(*) from nyu_t_course_catalog cc " +
             " inner join seat_group_section_rosters sgsr on replace(sgsr.sakai_roster_id, '_', ':') = cc.stem_name" +
-            " where sgsr.section_id = ?" + 
+            " where sgsr.section_id = ?" +
             " and cc.instruction_mode = 'OB'")
            .param(seatSection.id)
            .executeQuery()
@@ -82,6 +117,8 @@ public class SeatsStorage {
                 .param(netid)
                 .executeUpdate();
 
+        SakaiGroupSync.markGroupForSync(db, groupId);
+
         Audit.insert(db,
                 AuditEvents.MEMBER_DELETED,
                 json("netid", netid,
@@ -96,6 +133,9 @@ public class SeatsStorage {
         SeatSection seatSection = SeatsStorage.getSeatSection(db, sectionId, siteId).get();
         Member memberToTransfer = removeMemberFromGroup(db, seatSection, fromGroupId, netid);
         addMemberToGroup(db, memberToTransfer, toGroupId, sectionId);
+
+        SakaiGroupSync.markGroupForSync(db, fromGroupId);
+        SakaiGroupSync.markGroupForSync(db, toGroupId);
     }
 
     public static void setGroupDescription(DBConnection db, String groupId, String description) throws SQLException {
@@ -104,6 +144,8 @@ public class SeatsStorage {
             .param(groupId)
             .executeUpdate();
 
+        SakaiGroupSync.markGroupForSync(db, groupId);
+
         Audit.insert(db,
                      AuditEvents.GROUP_DESCRIPTION_CHANGED,
                      json("group_id", groupId,
@@ -111,7 +153,7 @@ public class SeatsStorage {
                      );
     }
 
-    public static Map<String, String> getMemberNames(SeatSection seatSection) {
+    public static Map<String, UserDisplayName> getMemberNames(SeatSection seatSection) {
         Set<String> allEids = new HashSet<>();
 
         for (SeatGroup group : seatSection.listGroups()) {
@@ -121,11 +163,25 @@ public class SeatsStorage {
         return getMemberNames(allEids);
     }
 
-    public static Map<String, String> getMemberNames(Collection<String> eids) {
-        Map<String, String> result = new HashMap<>();
+    public static class UserDisplayName {
+        public String displayName;
+        public String firstName;
+        public String lastName;
+        public String netid;
+
+        public UserDisplayName(String netid, String displayName, String firstName, String lastName) {
+            this.netid = netid;
+            this.displayName = displayName;
+            this.firstName = firstName;
+            this.lastName = lastName;
+        }
+    }
+
+    public static Map<String, UserDisplayName> getMemberNames(Collection<String> eids) {
+        Map<String, UserDisplayName> result = new HashMap<>();
 
         for (User user : UserDirectoryService.getUsersByEids(eids)) {
-            result.put(user.getEid(), user.getDisplayName());
+            result.put(user.getEid(), new UserDisplayName(user.getEid(), user.getDisplayName(), user.getFirstName(), user.getLastName()));
         }
 
         return result;
@@ -346,6 +402,8 @@ public class SeatsStorage {
                 .param(member.role.toString())
                 .executeUpdate();
 
+            SakaiGroupSync.markGroupForSync(db, groupId);
+
             Audit.insert(db,
                          AuditEvents.MEMBER_ADDED,
                          json("netid", member.netid,
@@ -505,6 +563,10 @@ public class SeatsStorage {
                           "section_id", group.section.id)
                      );
 
+        if (group.sakaiGroupId != null) {
+            SakaiGroupSync.markGroupForDelete(db, group.sakaiGroupId, group.section.id);
+        }
+
         db.run("delete from seat_group_members where group_id = ?")
             .param(group.id)
             .executeUpdate();
@@ -585,7 +647,7 @@ public class SeatsStorage {
             .param(sectionId)
             .executeQuery()
             .each(row -> {
-                    section.addGroup(row.getString("id"), row.getString("name"), row.getString("description"));
+                    section.addGroup(row.getString("id"), row.getString("name"), row.getString("description"), row.getString("sakai_group_id"));
                 });
 
         if (section.groupIds().isEmpty()) {
@@ -656,6 +718,8 @@ public class SeatsStorage {
 
         String meetingId = db.uuid();
         String location = locationForSection(db, section.primaryStemName).orElse("UNSET");
+
+        SakaiGroupSync.markGroupForSync(db, groupId);
 
         Audit.insert(db,
                      AuditEvents.MEETING_CREATED,
@@ -760,7 +824,7 @@ public class SeatsStorage {
         return result;
     }
 
-    public static void bootstrapGroupsForSection(DBConnection db, SeatSection section, int groupCount, SelectionType selection) throws SQLException {
+    public static void clearSection(DBConnection db, SeatSection section) throws SQLException {
         for (SeatGroup group : section.listGroups()) {
             for (Meeting meeting : group.listMeetings()) {
                 for (SeatAssignment seatAssignment : meeting.listSeatAssignments()) {
@@ -772,6 +836,23 @@ public class SeatsStorage {
 
             deleteGroup(db, group);
         }
+    }
+
+    public static void deleteSection(DBConnection db, SeatSection section) throws SQLException {
+        clearSection(db, section);
+
+        db.run("delete from seat_group_section_rosters where section_id = ?")
+                .param(section.id)
+                .executeUpdate();
+
+        db.run("delete from seat_group_section where id = ?")
+                .param(section.id)
+                .executeUpdate();
+    }
+
+
+    public static void bootstrapGroupsForSection(DBConnection db, SeatSection section, int groupCount, SelectionType selection) throws SQLException {
+        clearSection(db, section);
 
         List<Member> sectionMembers = getMembersForSection(db, section);
 

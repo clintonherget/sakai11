@@ -732,6 +732,22 @@ Vue.component('group-meeting-entry', {
     labelForStudentLocation: function(studentLocation) {
       return StudentLocationLabels[studentLocation];
     },
+    removeUser: function(assignment) {
+      var self = this;
+
+      $.ajax({
+        url: self.baseurl + "/remove-group-user",
+        type: 'post',
+        data: {
+          sectionId: self.section.id,
+          groupId: self.group.id,
+          netid: assignment.netid,
+        },
+        success: function() {
+          self.$emit('splat');
+        }
+      });
+    },
   },
   mounted: function() {
     var self = this;
@@ -769,7 +785,7 @@ Vue.component('group-meeting', {
       <tr>
         <th scope="col">Picture</th>
         <th scope="col">Name (NetID)</th>
-        <th scope="col">Seat Assignment</th>
+        <th scope="col">Seat<br/>Assignment</th>
         <th scope="col">Student Location</th>
         <th scope="col">
           <template v-if="$parent.isNotOnlyGroup">
@@ -859,7 +875,11 @@ Vue.component('group-meeting', {
 
         } else {
           if (a.studentLocation === b.studentLocation) {
-            return (a.netid < b.netid) ? -1 : 1;
+            if (a.lastName === b.lastName) {
+              return (a.netid < b.netid) ? -1 : 1;
+            } else {
+              return (a.lastName < b.lastName) ? -1 : 1;
+            }
           } else {
             return (StudentLocationSortOrder[a.studentLocation] < StudentLocationSortOrder[b.studentLocation]) ? -1 : 1;
           }
@@ -912,22 +932,6 @@ Vue.component('group-meeting', {
       if (this.$refs.moveModal) {
         this.$refs.moveModal.close();
       }
-    },
-    removeUser: function(assignment) {
-      var self = this;
-
-      $.ajax({
-        url: self.baseurl + "/remove-group-user",
-        type: 'post',
-        data: {
-          sectionId: self.section.id,
-          groupId: self.group.id,
-          netid: assignment.netid,
-        },
-        success: function() {
-          self.$emit('splat');
-        }
-      });
     },
   }
 });
@@ -1407,7 +1411,7 @@ Vue.component('section-selector', {
     Viewing seat assignments for:
   </label>
   <select v-model="selectedSectionId" id="sectionSelector">
-    <option value="">Select section / cohorts</option>
+    <option value="">Select a class section or cohort</option>
     <option v-for="section in sections" :value="section.id">
       {{section.name}}
       <template v-if="section.groupCount > 1">

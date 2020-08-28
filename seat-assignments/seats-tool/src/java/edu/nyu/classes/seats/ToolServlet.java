@@ -34,7 +34,7 @@ import edu.nyu.classes.seats.handlers.*;
 public class ToolServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(ToolServlet.class);
-    private SeatingHandlerBackgroundTask backgroundTask = null;
+    private SeatingHandlerBackgroundThread backgroundThread = null;
 
     private AtomicBoolean developmentMode = new AtomicBoolean(false);
 
@@ -62,8 +62,8 @@ public class ToolServlet extends HttpServlet {
         String runBackgroundTask = HotReloadConfigurationService.getString("seats.run-background-task", null);
 
         if ("true".equals(runBackgroundTask) || (developmentMode.get() && runBackgroundTask == null)) {
-            this.backgroundTask = new SeatingHandlerBackgroundTask().startThread();
-            this.backgroundTask.setDBTimingThresholdMs(dbTimingThresholdMs());
+            this.backgroundThread = new SeatingHandlerBackgroundThread().startThread();
+            this.backgroundThread.setDBTimingThresholdMs(dbTimingThresholdMs());
         }
 
         super.init(config);
@@ -79,7 +79,7 @@ public class ToolServlet extends HttpServlet {
 
     public void destroy() {
         super.destroy();
-        this.backgroundTask.shutdown();
+        this.backgroundThread.shutdown();
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

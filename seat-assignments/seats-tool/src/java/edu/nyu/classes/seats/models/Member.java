@@ -33,6 +33,17 @@ public class Member {
                 return STUDENT;
             }
         }
+
+        public String toSakaiRoleId() {
+            switch (this) {
+            case INSTRUCTOR: return "Instructor";
+            case COURSE_SITE_ADMIN: return "Course Site Admin";
+            case STUDENT: return "Student";
+            case TEACHING_ASSISTANT: return "Teaching Assistant";
+            }
+
+            throw new RuntimeException("BUG: Missed a case in toSakaiRoleId");
+        }
     }
 
     public Member(String netid, boolean official, Role role, StudentLocation location) {
@@ -56,5 +67,9 @@ public class Member {
 
     public boolean isInstructor() {
         return Role.INSTRUCTOR.equals(role) || Role.COURSE_SITE_ADMIN.equals(role);
+    }
+
+    public String sakaiRoleId() {
+        return role.toSakaiRoleId();
     }
 }

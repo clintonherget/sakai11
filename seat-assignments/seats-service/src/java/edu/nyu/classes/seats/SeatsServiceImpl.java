@@ -1,10 +1,3 @@
-// TODO:
-// Lock sites during sync
-// Flag on SeatSection to mark split as done
-// mtime checks for realms/sites to periodically refresh
-// test sync + ui in tight loop
-
-
 package edu.nyu.classes.seats;
 
 import edu.nyu.classes.seats.api.SeatsService;
