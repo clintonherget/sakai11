@@ -125,7 +125,7 @@ public class SeatGroupUpdatesTask {
     }
 
     public static long handleSeatGroupUpdates(long findProcessedSince) {
-        long now = System.currentTimeMillis() - WINDOW_MS;
+        long now = System.currentTimeMillis();
         List<ToProcess> sites = findSitesToProcess(findProcessedSince);
 
         for (ToProcess entry : sites) {
@@ -137,7 +137,7 @@ public class SeatGroupUpdatesTask {
             }
         }
 
-        return now;
+        return now - WINDOW_MS;
     }
 
     private static void notifyUser(String studentNetId, SeatGroup group, Site site) throws Exception {
