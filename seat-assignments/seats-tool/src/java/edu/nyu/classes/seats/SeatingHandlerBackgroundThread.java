@@ -49,17 +49,15 @@ public class SeatingHandlerBackgroundThread extends Thread {
                     lastMtimeCheck = SeatGroupUpdatesTask.runMTimeChecks(lastMtimeCheck);
                 }
 
-                // FIXME: 600
-                if (loopCount % 10 == 0) {
+                if (loopCount % 600 == 0) {
                     SeatGroupUpdatesTask.findChangedInstructionModes();
                 }
 
                 findProcessedSince = SeatGroupUpdatesTask.handleSeatGroupUpdates(findProcessedSince);
 
-                // THINKME: What frequency should we run this at?
-                // if (loopCount % 30 == 0) {
-                SakaiGroupSyncTask.handleSakaiGroupSync();
-                // }
+                if (loopCount % 30 == 0) {
+                    SakaiGroupSyncTask.handleSakaiGroupSync();
+                }
 
             } catch (Exception e) {
                 LOG.error("SeatingHandlerBackgroundTask main loop hit top level: " + e);
