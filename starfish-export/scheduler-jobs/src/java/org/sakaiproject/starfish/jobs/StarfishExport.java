@@ -575,7 +575,7 @@ public class StarfishExport implements InterruptableJob {
 			}
 
 			// Write inactive
-			try (java.io.InputStream inactiveInputStream = new java.io.FileInputStream(scoreFile.toFile())) {
+			try (java.io.InputStream inactiveInputStream = new java.io.FileInputStream(inactiveFile.toFile())) {
 				org.sakaiproject.content.api.ContentResourceEdit inactiveResource =
 					org.sakaiproject.content.cover.ContentHostingService.addResource(exportDir,
 													 "Inactive_Students",
