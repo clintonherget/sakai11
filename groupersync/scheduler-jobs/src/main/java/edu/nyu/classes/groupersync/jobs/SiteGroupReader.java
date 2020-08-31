@@ -9,6 +9,7 @@ import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.coursemanagement.api.exception.IdNotFoundException;
 import org.sakaiproject.coursemanagement.api.CourseManagementService;
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 
@@ -39,6 +40,17 @@ class SiteGroupReader {
         result.addAll(readSakaiGroups());
 
         return result;
+    }
+
+    private String groupTitle(AuthzGroup group) {
+        if (group instanceof Site) {
+            return String.format("%s", ((Site) group).getTitle());
+        } else if (group instanceof Group) {
+            return String.format("%s", ((Group) group).getTitle());
+        } else {
+            // I don't think this should happen, but just covering my bases.
+            return String.format("%s", group.getDescription());
+        }
     }
 
     private Collection<SyncableGroup> readSakaiGroups() throws IdUnusedException {
@@ -116,7 +128,7 @@ class SiteGroupReader {
                 }
             }
 
-            result.add(new SyncableGroup(sakaiGroup.getId(), sakaiGroup.getDescription(), members));
+            result.add(new SyncableGroup(sakaiGroup.getId(), groupTitle(sakaiGroup), members));
         }
 
         return result;
