@@ -52,6 +52,16 @@ public class SeatsStorage {
         return obj;
     }
 
+    public static List<Roster> getRostersForSection(DBConnection db, String sectionId) throws SQLException {
+        return db.run("select sakai_roster_id, role" +
+                        " from seat_group_section_rosters" +
+                        " where section_id = ?")
+                    .param(sectionId)
+                    .executeQuery()
+                    .map((row) -> new Roster(row.getString("sakai_roster_id"),
+                                             "primary".equals(row.getString("role"))));
+    }
+
     public static boolean stemIsEligible(DBConnection db, String stemName) throws SQLException {
         Optional<String> instructionMode = db.run("select cc.instruction_mode from nyu_t_course_catalog cc " +
                                                   " where cc.stem_name = ?")
@@ -222,6 +232,16 @@ public class SeatsStorage {
     public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
         StringBuilder sb = new StringBuilder();
 
+        // grab all the class sections for all rosters linked to this section
+        List<String> classes = db.run("select cc.class_section from NYU_T_COURSE_CATALOG cc" +
+                                      " inner join seat_group_section_rosters sgcr on replace(cc.stem_name, ':', '_') = sgcr.sakai_roster_id" +
+                                      " where sgcr.section_id = ?" +
+                                      " order by sgcr.role asc")
+                                 .param(section.id)
+                                 .executeQuery()
+                                 .getStringColumn("class_section");
+        String classesLabel = classes.stream().collect(Collectors.joining(" & "));
+
         db.run("select mtg.* from NYU_T_COURSE_CATALOG cc" +
                " inner join nyu_t_class_mtg_pat mtg on " +
                " cc.crse_id = mtg.crse_id and" +
@@ -239,7 +259,7 @@ public class SeatsStorage {
                 }
 
                 sb.append("SEC ");
-                sb.append(row.getString("class_section"));
+                sb.append(classesLabel);
 
                 if (section.shortName == null) {
                     section.shortName = sb.toString();

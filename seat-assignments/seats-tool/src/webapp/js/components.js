@@ -1096,7 +1096,7 @@ Vue.component('section-group', {
   <hr v-if="isNotFirstGroup" />
   <template v-if="isNotOnlyGroup">
     <h2>{{group.name}} {{groupLabel}}</h2>
-    <p>{{section.name}}</p>
+    <p>{{section.name}} <section-roster-summary :section="section"></section-roster-summary></p>
   </template>
   <div v-if="section.split" class="seat-section-description">
     <template v-if="group.description">
@@ -1288,11 +1288,51 @@ Vue.component('section-group', {
   },
 });
 
+Vue.component('section-roster-summary', {
+  template: `
+<div>
+  <small v-if="hasCrosslistedRosters" class="text-muted">({{primaryRoster}}, {{croslistedRosters.join(', ')}})</small>
+</div>
+`,
+  props: ['section'],
+  computed: {
+    hasCrosslistedRosters: function() {
+      if (this.section == null) {
+        return false;
+      } else {
+        return this.section.rosters.length > 1;
+      }
+    },
+    primaryRoster: function() {
+      if (this.section == null) {
+        return '';
+      } else {
+        return this.section.rosters.filter(function(roster) {
+          return roster.primary;
+        })[0].id;
+      }
+    },
+    croslistedRosters: function() {
+      if (this.section == null) {
+        return [];
+      } else {
+        return this.section.rosters.filter(function(roster) {
+          return !roster.primary;
+        }).map(function(roster) {
+          return roster.id;
+        });
+      }
+    },
+  },
+});
+
 Vue.component('section-table', {
   template: `
     <div>
       <template v-if="section">
-          <h2 v-if="section.groups.length === 1">{{section.name}}</h2>
+          <h2 v-if="section.groups.length === 1">
+            {{section.name}} <section-roster-summary :section="section"></section-roster-summary>
+          </h2>
           <split-action
             v-if="section.hasBlended && !section.split"
             :section="section"
