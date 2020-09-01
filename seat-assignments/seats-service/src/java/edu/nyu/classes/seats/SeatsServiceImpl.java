@@ -83,6 +83,13 @@ public class SeatsServiceImpl implements SeatsService {
             db.commit();
             db.setAutoCommit(autoCommit);
         } catch (SQLException e) {
+            if (db != null) {
+                try {
+                    db.rollback();
+                } catch (SQLException e2) {
+                    LOG.error("Nested SQLException.  Yeesh: " + e);
+                }
+            }
             LOG.error(String.format("Failure during site sync update: %s", e));
             e.printStackTrace();
         } finally {
@@ -153,6 +160,13 @@ public class SeatsServiceImpl implements SeatsService {
             db.commit();
             db.setAutoCommit(autoCommit);
         } catch (SQLException e) {
+            if (db != null) {
+                try {
+                    db.rollback();
+                } catch (SQLException e2) {
+                    LOG.error("Nested SQLException.  Yeesh: " + e);
+                }
+            }
             LOG.error(String.format("Failure during site sync update: %s", e));
             e.printStackTrace();
         } finally {
