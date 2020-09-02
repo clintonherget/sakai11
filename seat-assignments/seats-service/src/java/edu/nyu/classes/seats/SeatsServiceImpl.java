@@ -37,8 +37,19 @@ public class SeatsServiceImpl implements SeatsService {
                 ps.setLong(1, now);
                 ps.setString(2, siteId);
 
-                if (ps.executeUpdate() == 1) {
-                    synced[i] = true;
+                try {
+                    if (ps.executeUpdate() == 1) {
+                        synced[i] = true;
+                    }
+                } catch (SQLException e) {
+                    if (e.getSQLState().startsWith("61")) {
+                        // We can deadlock on this update if another server is marking the same site for
+                        // sync.  If that happens, it's fine: we just care that the sync happens, but
+                        // don't need to take the credit.
+                        synced[i] = true;
+                    } else {
+                        throw e;
+                    }
                 }
             }
         }
