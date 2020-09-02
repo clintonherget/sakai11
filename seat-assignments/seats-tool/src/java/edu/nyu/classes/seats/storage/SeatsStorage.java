@@ -242,6 +242,14 @@ public class SeatsStorage {
                                  .getStringColumn("class_section");
         String classesLabel = classes.stream().collect(Collectors.joining(" & "));
 
+        if (!classes.isEmpty()) {
+            sb.append("SEC ");
+            sb.append(classesLabel);
+            section.shortName = sb.toString();
+        }
+
+        List<String> meetingPatterns = new ArrayList<>();
+
         db.run("select mtg.* from NYU_T_COURSE_CATALOG cc" +
                " inner join nyu_t_class_mtg_pat mtg on " +
                " cc.crse_id = mtg.crse_id and" +
@@ -254,24 +262,7 @@ public class SeatsStorage {
             .param(section.id)
             .executeQuery()
             .each(row -> {
-                if (sb.length() > 0) {
-                    sb.append("; ");
-                }
-
-                sb.append("SEC ");
-                sb.append(classesLabel);
-
-                if (section.shortName == null) {
-                    section.shortName = sb.toString();
-                }
-
-                sb.append(" ");
-
-                String facilityId = row.getString("facility_id");
-                getFacilityLabel(db, facilityId).ifPresent((label) -> {
-                        sb.append(label);
-                        sb.append(" - ");
-                    });
+                StringBuilder meetingPattern = new StringBuilder();
 
                 List<String> daysOfWeek = new ArrayList<>();
                 if ("Y".equals(row.getString("MON"))) {
@@ -295,17 +286,26 @@ public class SeatsStorage {
                 if ("Y".equals(row.getString("SUN"))) {
                     daysOfWeek.add("SU");
                 }
-                sb.append(daysOfWeek.stream().collect(Collectors.joining(" / ")));
-                sb.append(" ");
+                meetingPattern.append(daysOfWeek.stream().collect(Collectors.joining(" / ")));
+                meetingPattern.append(" ");
                 java.sql.Timestamp start = row.getTimestamp("meeting_time_start");
                 java.sql.Timestamp end = row.getTimestamp("meeting_time_end");
                 if (start != null && end != null) {
                     SimpleDateFormat sdf = new SimpleDateFormat("h:mmaa");
-                    sb.append(sdf.format(start).replace(":00", ""));
-                    sb.append("-");
-                    sb.append(sdf.format(end).replace(":00", ""));
+                    meetingPattern.append(sdf.format(start).replace(":00", ""));
+                    meetingPattern.append("-");
+                    meetingPattern.append(sdf.format(end).replace(":00", ""));
                 }
+
+                meetingPatterns.add(meetingPattern.toString());
             });
+
+        if (!meetingPatterns.isEmpty()) {
+            if (sb.length() > 0) {
+                sb.append(" - ");
+            }
+            sb.append(meetingPatterns.stream().collect(Collectors.joining("; ")));
+        }
 
         if (sb.length() == 0) {
             db.run("select primary_stem_name from seat_group_section where id = ?")
