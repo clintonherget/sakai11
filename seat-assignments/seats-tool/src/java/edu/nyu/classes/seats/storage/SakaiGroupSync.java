@@ -100,7 +100,7 @@ public class SakaiGroupSync {
 
         final AtomicBoolean success = new AtomicBoolean(false);
 
-        db.run("select sec.site_id, sg.sakai_group_id, sg.name, sg.description" +
+        db.run("select sec.site_id, sg.sakai_group_id, sg.name, sg.description, sec.id as section_id" +
                " from seat_group sg" +
                " inner join seat_group_section sec on sec.id = sg.section_id" +
                " where sg.id = ?")
@@ -114,6 +114,10 @@ public class SakaiGroupSync {
                         Optional<Group> group = Optional.ofNullable(row.getString("sakai_group_id"))
                             .map((groupId) -> site.getGroup(groupId));
 
+                        String groupTitle = String.format("Cohort: %s-%s",
+                                SeatsStorage.buildSectionShortName(db, row.getString("section_id")),
+                                row.getString("name"));
+
                         String groupDescription = row.getString("description");
                         if (groupDescription == null) {
                             groupDescription = "";
@@ -123,9 +127,7 @@ public class SakaiGroupSync {
                             // Either sg.sakai_group_id was null, or the groupId is bogus.  This might
                             // happen if a section is moved between sites, or if an instructor manually
                             // deleted our group.  Either way, you're getting a new group.
-                            group = createSakaiGroup(db, site, seatGroupId,
-                                                     String.format("Cohort: %s", row.getString("name")),
-                                                     groupDescription);
+                            group = createSakaiGroup(db, site, seatGroupId, groupTitle, groupDescription);
                         }
 
                         if (!group.isPresent())  {
@@ -133,6 +135,7 @@ public class SakaiGroupSync {
                             return;
                         }
 
+                        group.get().setTitle(groupTitle);
                         group.get().setDescription(groupDescription);
                         applyMemberUpdates(group.get(), seatGroupMembers);
                         SiteService.save(site);
