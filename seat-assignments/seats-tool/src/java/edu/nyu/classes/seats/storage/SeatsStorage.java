@@ -229,24 +229,40 @@ public class SeatsStorage {
         }
     }
 
-    public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
+    public static String buildSectionShortName(DBConnection db, String sectionId) throws SQLException {
         StringBuilder sb = new StringBuilder();
 
         // grab all the class sections for all rosters linked to this section
         List<String> classes = db.run("select cc.class_section from NYU_T_COURSE_CATALOG cc" +
-                                      " inner join seat_group_section_rosters sgcr on replace(cc.stem_name, ':', '_') = sgcr.sakai_roster_id" +
-                                      " where sgcr.section_id = ?" +
-                                      " order by sgcr.role asc")
-                                 .param(section.id)
-                                 .executeQuery()
-                                 .getStringColumn("class_section");
-        String classesLabel = classes.stream().collect(Collectors.joining(" & "));
+                " inner join seat_group_section_rosters sgcr on replace(cc.stem_name, ':', '_') = sgcr.sakai_roster_id" +
+                " where sgcr.section_id = ?" +
+                " order by sgcr.role asc")
+                .param(sectionId)
+                .executeQuery()
+                .getStringColumn("class_section");
 
-        if (!classes.isEmpty()) {
+        if (classes.isEmpty()) {
+            db.run("select primary_stem_name from seat_group_section where id = ?")
+                    .param(sectionId)
+                    .executeQuery()
+                    .each(row -> {
+                        sb.append(Utils.stemNameToRosterId(row.getString("primary_stem_name")));
+                    });
+        } else {
+            String classesLabel = classes.stream().collect(Collectors.joining(" & "));
             sb.append("SEC ");
             sb.append(classesLabel);
-            section.shortName = sb.toString();
         }
+
+        return sb.toString();
+    }
+
+    public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
+        StringBuilder sb = new StringBuilder();
+
+
+        sb.append(buildSectionShortName(db, section.id));
+        section.shortName = sb.toString();
 
         List<String> meetingPatterns = new ArrayList<>();
 
@@ -307,19 +323,7 @@ public class SeatsStorage {
             sb.append(meetingPatterns.stream().collect(Collectors.joining("; ")));
         }
 
-        if (sb.length() == 0) {
-            db.run("select primary_stem_name from seat_group_section where id = ?")
-                .param(section.id)
-                .executeQuery()
-                .each(row -> {
-                    sb.append(Utils.stemNameToRosterId(row.getString("primary_stem_name")));
-                });
-        }
-
         section.name = sb.toString();
-        if (section.shortName == null) {
-            section.shortName = section.name;
-        }
 
         if (section.shortName == null) {
             throw new RuntimeException("null shortname");
