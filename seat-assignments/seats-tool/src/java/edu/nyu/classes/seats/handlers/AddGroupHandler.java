@@ -34,7 +34,7 @@ public class AddGroupHandler implements Handler {
             Integer maxGroups = SeatsStorage.getGroupMaxForSite(site);
             if (seatSection.listGroups().size() < maxGroups) {
                 for (int i = 0; ; i++) {
-                    String groupName = String.format("%s-%c", seatSection.shortName, 65 + i);
+                    String groupName = String.format("%c", 65 + i);
                     if (seatSection.listGroups().stream().noneMatch(g -> groupName.equals(g.name))) {
                         SeatsStorage.createGroup(db, seatSection, groupName, Collections.emptyList());
                         SeatsStorage.markSectionAsSplit(db, seatSection);

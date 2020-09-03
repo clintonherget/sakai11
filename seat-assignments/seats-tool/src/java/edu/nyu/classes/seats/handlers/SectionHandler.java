@@ -101,7 +101,7 @@ public class SectionHandler implements Handler {
             sectionGroups.add(groupJSON);
 
             groupJSON.put("id", group.id);
-            groupJSON.put("name", group.name);
+            groupJSON.put("name", String.format("%s-%s", seatSection.get().shortName, group.name));
             groupJSON.put("description", group.description);
 
             groupJSON.put("isGroupEmpty", group.listMembers().isEmpty());
