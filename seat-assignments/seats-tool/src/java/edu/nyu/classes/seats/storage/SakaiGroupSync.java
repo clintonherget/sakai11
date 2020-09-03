@@ -248,4 +248,13 @@ public class SakaiGroupSync {
             return false;
         }
     }
+
+    public static void markSectionForSync(DBConnection db, String sectionId) throws SQLException {
+        db.run("select id from seat_group where section_id = ?")
+            .param(sectionId)
+            .executeQuery()
+            .each((row) -> {
+                markGroupForSync(db, row.getString("id"));
+            });
+    }
 }

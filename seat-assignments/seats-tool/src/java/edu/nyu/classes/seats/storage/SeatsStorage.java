@@ -970,6 +970,8 @@ public class SeatsStorage {
                     .param(Utils.stemNameToRosterId(secondaryRosterId.get()))
                     .param("secondary")
                     .executeUpdate();
+
+                SakaiGroupSync.markSectionForSync(db, sectionId.get());
             }
         }
     }
