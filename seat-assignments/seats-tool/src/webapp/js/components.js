@@ -136,7 +136,7 @@ Vue.component('seat-assignment-widget', {
           v-bind:style="{width: inputWidth}"
           maxlength="20"
           :aria-label="'Seat assignment for ' + studentName + ' (' + netid + ')'"
-          :aria-invalid="hasError"
+          :aria-invalid="'' + hasError"
         />
         <template v-if="isEditable && editing">
           <button class="btn-primary" @click="save()" :disabled="waitingOnSave">
