@@ -34,7 +34,7 @@ public class GrouperSyncJob implements StatefulJob {
 
                 String grouperGroupId = groupInfo.getGrouperId();
 
-                log.info("Syncing group: " + syncableGroup.getTitle() + "(" + grouperGroupId + ")");
+                log.info("Syncing group: " + syncableGroup.getTitle() + " (" + grouperGroupId + ")");
 
                 Collection<UserWithRole> formerMembers = grouper.getMembers(grouperGroupId);
                 Collection<UserWithRole> currentMembers = syncableGroup.getMembers();

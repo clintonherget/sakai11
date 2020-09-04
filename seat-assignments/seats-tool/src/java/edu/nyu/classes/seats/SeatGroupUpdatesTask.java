@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 public class SeatGroupUpdatesTask {
     private static final Logger LOG = LoggerFactory.getLogger(SeatGroupUpdatesTask.class);
 
-    private static long WINDOW_MS = 5000;
+    private static long WINDOW_MS = 30000;
     private static Map<String, Long> recentProcessed = new LinkedHashMap<>();
     private static AtomicLong dbTimingThresholdMs = new AtomicLong(-1);
 

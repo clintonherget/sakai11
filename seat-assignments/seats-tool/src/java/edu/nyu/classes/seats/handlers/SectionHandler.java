@@ -81,6 +81,16 @@ public class SectionHandler implements Handler {
         sectionJSON.put("maxGroups", SeatsStorage.getGroupMaxForSite(site));
         sectionJSON.put("hasBlended", SeatsStorage.hasBlendedInstructionMode(db, seatSection.get(), site));
 
+        List<Roster> rosters = SeatsStorage.getRostersForSection(db, seatSection.get().id);
+        JSONArray rostersJSON = new JSONArray();
+        for (Roster roster : rosters) {
+            JSONObject rosterJSON = new JSONObject();
+            rosterJSON.put("id", roster.id);
+            rosterJSON.put("primary", roster.primary);
+            rostersJSON.add(rosterJSON);
+        }
+        sectionJSON.put("rosters", rostersJSON);
+
         JSONArray sectionGroups = new JSONArray();
         sectionJSON.put("groups", sectionGroups);
 
@@ -91,7 +101,7 @@ public class SectionHandler implements Handler {
             sectionGroups.add(groupJSON);
 
             groupJSON.put("id", group.id);
-            groupJSON.put("name", group.name);
+            groupJSON.put("name", String.format("%s-%s", seatSection.get().shortName, group.name));
             groupJSON.put("description", group.description);
 
             groupJSON.put("isGroupEmpty", group.listMembers().isEmpty());

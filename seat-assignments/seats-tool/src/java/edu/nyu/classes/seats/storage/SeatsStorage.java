@@ -52,6 +52,16 @@ public class SeatsStorage {
         return obj;
     }
 
+    public static List<Roster> getRostersForSection(DBConnection db, String sectionId) throws SQLException {
+        return db.run("select sakai_roster_id, role" +
+                        " from seat_group_section_rosters" +
+                        " where section_id = ?")
+                    .param(sectionId)
+                    .executeQuery()
+                    .map((row) -> new Roster(row.getString("sakai_roster_id"),
+                                             "primary".equals(row.getString("role"))));
+    }
+
     public static boolean stemIsEligible(DBConnection db, String stemName) throws SQLException {
         Optional<String> instructionMode = db.run("select cc.instruction_mode from nyu_t_course_catalog cc " +
                                                   " where cc.stem_name = ?")
@@ -219,8 +229,42 @@ public class SeatsStorage {
         }
     }
 
+    public static String buildSectionShortName(DBConnection db, String sectionId) throws SQLException {
+        StringBuilder sb = new StringBuilder();
+
+        // grab all the class sections for all rosters linked to this section
+        List<String> classes = db.run("select cc.class_section from NYU_T_COURSE_CATALOG cc" +
+                " inner join seat_group_section_rosters sgcr on replace(cc.stem_name, ':', '_') = sgcr.sakai_roster_id" +
+                " where sgcr.section_id = ?" +
+                " order by sgcr.role asc")
+                .param(sectionId)
+                .executeQuery()
+                .getStringColumn("class_section");
+
+        if (classes.isEmpty()) {
+            db.run("select primary_stem_name from seat_group_section where id = ?")
+                    .param(sectionId)
+                    .executeQuery()
+                    .each(row -> {
+                        sb.append(Utils.stemNameToRosterId(row.getString("primary_stem_name")));
+                    });
+        } else {
+            String classesLabel = classes.stream().collect(Collectors.joining(" & "));
+            sb.append("SEC ");
+            sb.append(classesLabel);
+        }
+
+        return sb.toString();
+    }
+
     public static void buildSectionName(DBConnection db, SeatSection section) throws SQLException {
         StringBuilder sb = new StringBuilder();
+
+
+        sb.append(buildSectionShortName(db, section.id));
+        section.shortName = sb.toString();
+
+        List<String> meetingPatterns = new ArrayList<>();
 
         db.run("select mtg.* from NYU_T_COURSE_CATALOG cc" +
                " inner join nyu_t_class_mtg_pat mtg on " +
@@ -234,24 +278,7 @@ public class SeatsStorage {
             .param(section.id)
             .executeQuery()
             .each(row -> {
-                if (sb.length() > 0) {
-                    sb.append("; ");
-                }
-
-                sb.append("SEC ");
-                sb.append(row.getString("class_section"));
-
-                if (section.shortName == null) {
-                    section.shortName = sb.toString();
-                }
-
-                sb.append(" ");
-
-                String facilityId = row.getString("facility_id");
-                getFacilityLabel(db, facilityId).ifPresent((label) -> {
-                        sb.append(label);
-                        sb.append(" - ");
-                    });
+                StringBuilder meetingPattern = new StringBuilder();
 
                 List<String> daysOfWeek = new ArrayList<>();
                 if ("Y".equals(row.getString("MON"))) {
@@ -275,31 +302,28 @@ public class SeatsStorage {
                 if ("Y".equals(row.getString("SUN"))) {
                     daysOfWeek.add("SU");
                 }
-                sb.append(daysOfWeek.stream().collect(Collectors.joining(" / ")));
-                sb.append(" ");
+                meetingPattern.append(daysOfWeek.stream().collect(Collectors.joining(" / ")));
+                meetingPattern.append(" ");
                 java.sql.Timestamp start = row.getTimestamp("meeting_time_start");
                 java.sql.Timestamp end = row.getTimestamp("meeting_time_end");
                 if (start != null && end != null) {
                     SimpleDateFormat sdf = new SimpleDateFormat("h:mmaa");
-                    sb.append(sdf.format(start).replace(":00", ""));
-                    sb.append("-");
-                    sb.append(sdf.format(end).replace(":00", ""));
+                    meetingPattern.append(sdf.format(start).replace(":00", ""));
+                    meetingPattern.append("-");
+                    meetingPattern.append(sdf.format(end).replace(":00", ""));
                 }
+
+                meetingPatterns.add(meetingPattern.toString());
             });
 
-        if (sb.length() == 0) {
-            db.run("select primary_stem_name from seat_group_section where id = ?")
-                .param(section.id)
-                .executeQuery()
-                .each(row -> {
-                    sb.append(Utils.stemNameToRosterId(row.getString("primary_stem_name")));
-                });
+        if (!meetingPatterns.isEmpty()) {
+            if (sb.length() > 0) {
+                sb.append(" - ");
+            }
+            sb.append(meetingPatterns.stream().collect(Collectors.joining("; ")));
         }
 
         section.name = sb.toString();
-        if (section.shortName == null) {
-            section.shortName = section.name;
-        }
 
         if (section.shortName == null) {
             throw new RuntimeException("null shortname");
@@ -859,7 +883,7 @@ public class SeatsStorage {
         List<List<Member>> membersPerGroup = splitMembersForGroup(sectionMembers, groupCount, selection);
 
         for (int i=0; i<groupCount; i++) {
-            String groupName = String.format("%s-%c", section.shortName, 65 + i);
+            String groupName = String.format("%c", 65 + i);
             createGroup(db, section, groupName, membersPerGroup.get(i));
         }
 
@@ -946,6 +970,8 @@ public class SeatsStorage {
                     .param(Utils.stemNameToRosterId(secondaryRosterId.get()))
                     .param("secondary")
                     .executeUpdate();
+
+                SakaiGroupSync.markSectionForSync(db, sectionId.get());
             }
         }
     }
