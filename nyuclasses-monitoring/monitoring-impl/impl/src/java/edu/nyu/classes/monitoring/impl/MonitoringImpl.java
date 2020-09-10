@@ -8,6 +8,11 @@ import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.sakaiproject.event.cover.UsageSessionService;
+import org.sakaiproject.tool.cover.SessionManager;
+import org.sakaiproject.tool.api.Session;
+
+
 public class MonitoringImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(MonitoringImpl.class);
@@ -20,6 +25,8 @@ public class MonitoringImpl {
 
         thread = new Thread(new CheckRunner(), "NYUClasses monitoring");
         thread.start();
+
+        new Thread(new NYUClassesCacheEvictor(), "NYUClassesCacheEvictor").start();
     }
 
     public void destroy()
@@ -113,6 +120,42 @@ public class MonitoringImpl {
                         Thread.sleep(60000);
                     } catch (InterruptedException ex) {}
                 }
+            }
+        }
+    }
+
+
+    private static class NYUClassesCacheEvictor implements Runnable {
+        final static int pollMs = 600000;
+
+        public void run() {
+            LOG.info("NYUClassesCacheEvictor starting up");
+
+            while (true) {
+                try {
+                    if ("true".equals(HotReloadConfigurationService.getString("nyu.cache-evictor.disable", "false"))) {
+                        LOG.info("NYUClassesCacheEvictor is disabled");
+                    } else {
+                        Session sakaiSession = SessionManager.getCurrentSession();
+                        sakaiSession.setUserId("admin");
+                        sakaiSession.setUserEid("admin");
+
+                        UsageSessionService.startSession("admin", "127.0.0.1", "MonitoringImpl");
+
+                        try {
+                            LOG.info("NYUClassesCacheEvictor clearing old cache entries");
+                            org.sakaiproject.memory.cover.MemoryServiceLocator.getInstance().evictExpiredMembers();
+                        } finally {
+                            UsageSessionService.logout();
+                        }
+                    }
+                } catch (Throwable e) {
+                    LOG.warn("Throwable caught: ", e);
+                }
+
+                try {
+                    Thread.sleep(pollMs);
+                } catch (InterruptedException ex) {}
             }
         }
     }
