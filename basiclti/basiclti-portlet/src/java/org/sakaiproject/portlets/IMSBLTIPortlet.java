@@ -93,6 +93,9 @@ import org.sakaiproject.service.gradebook.shared.ConflictingAssignmentNameExcept
 import org.sakaiproject.service.gradebook.shared.ConflictingExternalIdException;
 import org.sakaiproject.service.gradebook.shared.GradebookNotFoundException;
 
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * a simple IMSBLTIPortlet Portlet
@@ -228,20 +231,12 @@ public class IMSBLTIPortlet extends GenericPortlet {
 				log.debug("Setting sakai:maximized-url={}", iframeUrl);
 
 				try {
-					String pathToStudentMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.students", placement.getToolId()), null);
-					String pathToInstructorMessage = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.instructors", placement.getToolId()), null);
-					if (pathToStudentMessage != null || pathToInstructorMessage != null) {
-						if (SecurityService.unlock(SessionManager.getCurrentSessionUserId(), "site.upd")) {
-							if (pathToInstructorMessage != null) {
-								for (String line : Files.readAllLines(Paths.get(pathToInstructorMessage))) {
-									text.append(line);
-								}
-							}
-						} else if (pathToStudentMessage != null) {
-							for (String line : Files.readAllLines(Paths.get(pathToStudentMessage))) {
-								text.append(line);
-							}
-						}
+					boolean isInstructor = SecurityService.unlock("site.upd", String.format("/site/%s", context));
+
+					if (isInstructor) {
+						text.append(loadInToolMessage(placement.getToolId(), "instructors"));
+					} else {
+						text.append(loadInToolMessage(placement.getToolId(), "students"));
 					}
 				} catch (Exception e) {
 					log.error(e.toString());
@@ -320,6 +315,56 @@ public class IMSBLTIPortlet extends GenericPortlet {
 			clearErrorMessage(request);
 			log.debug("==== doView complete ====");
 		}
+
+	private static class InToolMessage {
+		public long lastRefreshTime;
+		public String content;
+
+		public InToolMessage(long lastRefreshTime, String content) {
+			this.lastRefreshTime = lastRefreshTime;
+			this.content = content;
+		}
+
+	}
+
+	ConcurrentHashMap<String, InToolMessage> inToolMessages = new ConcurrentHashMap<>();
+	ReentrantLock inToolRefreshLock = new ReentrantLock();
+
+
+	private String loadInToolMessage(String toolRegistration, String role) throws Exception {
+		String key = String.format("%s::%s", toolRegistration, role);
+
+		InToolMessage message = inToolMessages.get(key);
+		long refreshIntervalMs = 120000;
+
+		if (message == null || (System.currentTimeMillis() - message.lastRefreshTime) > refreshIntervalMs) {
+			// Do a refresh
+			inToolRefreshLock.lock();
+			try {
+				// Refresh still needed?
+				message = inToolMessages.get(key);
+				long now = System.currentTimeMillis();
+
+				if (message == null || (now - message.lastRefreshTime) > refreshIntervalMs) {
+					// Do it.
+					String messagePath = HotReloadConfigurationService.getString(String.format("%s.intoolmessagepath.%s", toolRegistration, role),
+												     null);
+
+					if (messagePath == null) {
+						message = new InToolMessage(now, "");
+					} else {
+						message = new InToolMessage(now, new String(Files.readAllBytes(Paths.get(messagePath))));
+					}
+
+					inToolMessages.put(key, message);
+				}
+			} finally {
+				inToolRefreshLock.unlock();
+			}
+		}
+
+		return message.content;
+	}
 
 	// Prepare the edit screen with data
 	public void prepareEdit(RenderRequest request)
