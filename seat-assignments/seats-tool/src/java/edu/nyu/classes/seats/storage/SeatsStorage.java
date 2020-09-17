@@ -602,20 +602,37 @@ public class SeatsStorage {
     private static class StudentLocations {
         private HashMap<String, Member.StudentLocation> map = new HashMap<>();
 
-        public void add(String netid, String studyAgreement) {
+        public void add(String netid, String studyAgreement, String rosterLocation, String acadProgPrimary) {
             if (netid == null || netid.trim().isEmpty()) {
                 return;
             }
 
-            if (studyAgreement == null ||
-                studyAgreement.trim().isEmpty() ||
-                "GNU-WS".equals(studyAgreement) ||
-                "LOCAL-WS".equals(studyAgreement)) {
-                // These are IN_PERSON, which is our default anyway.
-                return;
-            }
+            boolean isShanghai = ("GLOBAL-0S".equals(rosterLocation) || "SH".equals(rosterLocation));
 
-            map.put(netid, Member.StudentLocation.REMOTE);
+            if (isShanghai) {
+                if ("LOCAL-SH".equals(studyAgreement) || "LOCAL-SH-G".equals(studyAgreement) || "GNU-SH".equals(studyAgreement)) {
+                    // IN_PERSON
+                    return;
+                }
+
+                if ((studyAgreement == null || studyAgreement.trim().isEmpty()) &&
+                    acadProgPrimary.matches("^.I.*")) {
+                    // IN_PERSON
+                    return;
+                }
+
+                map.put(netid, Member.StudentLocation.REMOTE);
+            } else {
+                if (studyAgreement == null ||
+                    studyAgreement.trim().isEmpty() ||
+                    "GNU-WS".equals(studyAgreement) ||
+                    "LOCAL-WS".equals(studyAgreement)) {
+                    // These are IN_PERSON, which is our default anyway.
+                    return;
+                }
+
+                map.put(netid, Member.StudentLocation.REMOTE);
+            }
         }
 
         public Member.StudentLocation forNetid(String netid) {
@@ -630,7 +647,7 @@ public class SeatsStorage {
     private static StudentLocations getStudentLocationsForSection(DBConnection db, String sectionId) throws SQLException {
         StudentLocations result = new StudentLocations();
 
-        db.run("select enrl.netid, sl.study_agreement" +
+        db.run("select enrl.netid, sl.study_agreement, sl.acad_prog_primary, cc.location" +
                " from seat_group_section sgs" +
                " inner join seat_group_section_rosters sgsr on sgsr.section_id = sgs.id" +
                " inner join nyu_t_course_catalog cc on cc.stem_name = replace(sgsr.sakai_roster_id, '_', ':')" +
@@ -640,7 +657,10 @@ public class SeatsStorage {
             .param(sectionId)
             .executeQuery()
             .each((row) -> {
-                    result.add(row.getString("netid"), row.getString("study_agreement"));
+                    result.add(row.getString("netid"),
+                               row.getString("study_agreement"),
+                               row.getString("location"),
+                               row.getString("acad_prog_primary"));
                 });
 
         return result;
