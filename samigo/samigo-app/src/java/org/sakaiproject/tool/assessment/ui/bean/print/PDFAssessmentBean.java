@@ -677,8 +677,6 @@ public class PDFAssessmentBean implements Serializable {
 				String imsrc=item.getItemData().getItemMetaDataByLabel("IMAGE_MAP_SRC");
 				if (imsrc==null)
 					imsrc="";
-					
-				imsrc=imsrc.replaceAll(" ", "%20");
 				
 				String ext = "";		
 				if (imsrc.lastIndexOf('.') > 0)
@@ -688,8 +686,6 @@ public class PDFAssessmentBean implements Serializable {
 				int w=-1;
 				int h=-1;
 				try {
-					URL url = new URL(ServerConfigurationService.getServerUrl()+imsrc);
-
 					String access_prefix = "/access/content";
 					String resourceId = "";
 					try {
@@ -710,8 +706,9 @@ public class PDFAssessmentBean implements Serializable {
 										 resourceId, e));
 					}
 
-
 					if (img_in == null) {
+						imsrc=imsrc.replaceAll(" ", "%20");
+						URL url = new URL(ServerConfigurationService.getServerUrl()+imsrc);
 						img_in = ImageIO.read(url);
 					}
 
