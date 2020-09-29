@@ -304,7 +304,7 @@ public class HTMLWorker implements SimpleXMLDocHandler, DocListener {
 								// Attempt to grab the image from the ContentHostingService instead of
 								// round-tripping through our own web server.  Otherwise we hit permission
 								// issues.
-								resourceId = src.substring(access_prefix.length());
+								resourceId = URLDecoder.decode(src.substring(access_prefix.length()));
 								ContentResource contentResource = ContentHostingService.getResource(resourceId);
 								byte[] imageBytes = contentResource.getContent();
 
