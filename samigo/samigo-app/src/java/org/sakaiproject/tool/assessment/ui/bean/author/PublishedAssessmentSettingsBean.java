@@ -1572,7 +1572,9 @@ public void setFeedbackComponentOption(String feedbackComponentOption) {
 				for (Iterator iter = enrollments.iterator(); iter.hasNext();) {
 					EnrollmentRecord enrollmentRecord = (EnrollmentRecord) iter.next();
 					String userId = enrollmentRecord.getUser().getUserUid();
-					String userDisplayName = enrollmentRecord.getUser().getSortName();
+					String userDisplayName = String.format("%s (%s)",
+							enrollmentRecord.getUser().getSortName(),
+							enrollmentRecord.getUser().getDisplayId());
 					studentTargets.put(userDisplayName, userId);
 				}
 			}
