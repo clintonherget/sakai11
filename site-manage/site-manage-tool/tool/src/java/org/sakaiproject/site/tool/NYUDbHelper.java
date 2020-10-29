@@ -431,4 +431,44 @@ public class NYUDbHelper {
 		return result;
 	}
 
+	public List<String> getMatchedProviderIds(String termEid, List<String> providerIds, String action) {
+		List<String> result = new ArrayList<>();
+
+		Connection db = null;
+		try {
+			db = sqlService.borrowConnection();
+
+			String placeholders = providerIds.stream().map(e -> "?").collect(Collectors.joining(", "));
+
+			PreparedStatement ps = db.prepareStatement("select replace(cc.stem_name, ':', '_')" +
+				" from nyu_t_course_catalog cc" +
+				" inner join nyu_t_blocked_rosters br on (cc.stem_name = br.stem_name OR cc.acad_org = br.acad_org OR cc.acad_group as br.acad_group)" +
+				" inner join nyu_t_acad_session sess on sess.strm = cc.strm and sess.acad_career = cc.acad_career" +
+				" where br.action = ?" +
+				" and sess.cle_eid = ?" +
+				" and replace(cc.stem_name, ':', '_') in (" + placeholders + ")"); 
+			ps.setString(1, action);
+			ps.setString(2, termEid);
+			for (int i=0; i<providerIds.size(); i++) {
+				ps.setString(i+3, providerIds.get(i));
+			}
+
+			ResultSet rs = null;
+			try {
+				rs = ps.executeQuery();
+				while (rs.next()) {
+					result.add(rs.getString(1));
+				}
+			} finally {
+				if (rs != null) { rs.close(); }
+				if (ps != null) { ps.close(); }
+			}
+		} catch (SQLException e) {
+			M_log.warn(this + ".getMatchedProviderIds: " + e);
+		} finally {
+			sqlService.returnConnection(db);
+		}
+
+		return result;
+	}
 }

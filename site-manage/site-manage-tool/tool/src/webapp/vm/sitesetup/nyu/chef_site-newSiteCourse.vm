@@ -129,7 +129,7 @@ function redirectBasedOnSelection(){
 // -->
 </script>
 <script type="text/javascript" src="/sakai-site-manage-tool/js/site-manage.js"></script>
-<script type="text/javascript" src="/sakai-site-manage-tool/js/site-manage.nyu.js"></script>
+<script type="text/javascript" src="/sakai-site-manage-tool/js/site-manage.nyu.js?version=1603943498"></script>
 <link type="text/css" href="/sakai-site-manage-tool/css/site-manage.nyu.css?version=1502944368" rel="stylesheet" media="screen" />
 
 <div class="portletBody">
@@ -205,6 +205,12 @@ function redirectBasedOnSelection(){
 									id="row-course$courseNumber"
 									data-sponsorsectioneid="$!sectionObject.sponsorSectionEid"
 									data-eid="$!sectionObject.eid"
+									#if ($!blockedProviderIds.contains("$!sectionObject.eid"))
+										data-blocked="true"
+									#end
+									#if ($!allowedProviderIds.contains("$!sectionObject.eid"))
+										data-allowed="true"
+									#end
 								>
 							## If course is already linked to site,
 							##   display an icon instead of a checkbox (it shouldn't be selectable)
