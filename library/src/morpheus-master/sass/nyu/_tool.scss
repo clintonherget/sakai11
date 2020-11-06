@@ -252,6 +252,13 @@ form[name^='announcementListForm'] .instruction {
   .navIntraTool.actionToolbar {
     display: none !important;
   }
+  .sectionContainerNav {
+    .calRight {
+      input {
+        vertical-align: top;
+      }
+    }
+  }
 }
 body > .portletBody > #calendarForm {
   .calHeader {

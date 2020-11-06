@@ -117,7 +117,14 @@ $(document).ready(function() {
                     $hiddenInputEl.attr("name", "providerCourseAdd");
                     $hiddenInputEl.attr("value", $crossListedCourseCheckbox.val());
                     $listItemEl.append($hiddenInputEl);
-                }   
+                }
+
+                if ($this.data('allowed')) {
+                  $listItemEl.attr('data-allowed', 'true');
+                }
+                if ($this.data('blocked')) {
+                  $listItemEl.attr('data-blocked', 'true');
+                }
             }
 
             // add it to the list
@@ -134,6 +141,26 @@ $(document).ready(function() {
         $(".section-count", this).html("("+count+")");
     });
 
+    var alert = $('<div>')
+      .css('color', 'darkred')
+      .css('text-shadow', '0px 1px 1px #FFF')
+      .css('margin', '0 0 0 21px')
+      .append($('<div>').text('This roster cannot be created because it will be using Brightspace.'))
+      .append($('<div>')
+                .text('If you believe this is in error, please contact your school support staff or email ')
+                .append($('<a>').text('askit@nyu.edu').attr('href', 'mailto:askit@nyu.edu'))
+                .append('.'));
+
+    $("#findCoursePanels .collapsible-panel-content > ul > li").each(function() {
+      if ($(this).data('allowed') || $(this).find("[data-allowed]").length > 0) {
+        // do nothing!
+      } else if ($(this).data('blocked') || $(this).find("[data-blocked]").length > 0) {
+        $(this).find(':checkbox').each(function() {
+          $(this).prop('disabled', true);
+        });
+        $(this).find('> label').after(alert.clone());
+      }
+    });
 
     // *************************************************************************
     // Methods specifically for the newSiteCourse.vm (form#addCourseForm)

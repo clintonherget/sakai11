@@ -3540,6 +3540,9 @@ public class SiteAction extends PagedResourceActionII {
 				context.put("backIndex", "");
 			}
 			List ll = (List) state.getAttribute(STATE_TERM_COURSE_LIST);
+			BlockProviderList blockProviderList = getBlockedProviderList(state, ll);
+			context.put("blockedProviderIds", blockProviderList.blockList);
+			context.put("allowedProviderIds", blockProviderList.allowList);
 			context.put("termCourseList", state
 					.getAttribute(STATE_TERM_COURSE_LIST));
 
@@ -4993,6 +4996,34 @@ public class SiteAction extends PagedResourceActionII {
 		boolean rv3 = courseListFromStringIntoContext(state, context, site, PROP_SITE_REQUEST_COURSE, SITE_MANUAL_COURSE_LIST, "manualCourseList");
 		
 		return (rv || rv2 || rv3);
+	}
+
+	private class BlockProviderList {
+		public Set<String> blockList;
+		public Set<String> allowList;
+	}
+
+	private BlockProviderList getBlockedProviderList(SessionState state, List<CourseObject> courseObjects) {
+		Set<String> providerIds = new HashSet<>();
+
+		for (CourseObject courseObject : courseObjects) {
+			for (Object courseOfferingObject : courseObject.getCourseOfferingObjects()) {
+				for (Object sectionObject : ((CourseOfferingObject)courseOfferingObject).getSections()) {
+					providerIds.add(((SectionObject)sectionObject).getEid());
+				}
+			}
+		}
+
+		BlockProviderList result = new BlockProviderList();
+		AcademicSession term = (AcademicSession) state.getAttribute(STATE_TERM_SELECTED);
+		result.blockList = new HashSet<>(new NYUDbHelper().getMatchedProviderIds(term.getEid(), new ArrayList<>(providerIds), "BLOCKED"));
+		result.allowList = new HashSet<>(new NYUDbHelper().getMatchedProviderIds(term.getEid(), new ArrayList<>(providerIds), "ALLOWED"));
+		result.blockList.removeAll(result.allowList);
+
+		result.blockList.addAll(providerIds);
+		result.allowList.add("section_8b07c43aed10c1b9aa5a2112b6cf0d70");
+
+		return result;
 	}
 
 	public void doUser_search(RunData data, Context context) {
@@ -14276,7 +14307,6 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 				courseOfferingHash, sectionHash);
 
 		sectionHash = reGroupSectionsBasedOnNYUCrosslistings(sectionHash);
-
 
 		// courseOfferingHash & sectionHash should now be filled with stuffs
 		// put section list in state for later use
