@@ -5014,14 +5014,16 @@ public class SiteAction extends PagedResourceActionII {
 			}
 		}
 
-		BlockProviderList result = new BlockProviderList();
+			BlockProviderList result = new BlockProviderList();
 		AcademicSession term = (AcademicSession) state.getAttribute(STATE_TERM_SELECTED);
-		result.blockList = new HashSet<>(new NYUDbHelper().getMatchedProviderIds(term.getEid(), new ArrayList<>(providerIds), "BLOCKED"));
-		result.allowList = new HashSet<>(new NYUDbHelper().getMatchedProviderIds(term.getEid(), new ArrayList<>(providerIds), "ALLOWED"));
-		result.blockList.removeAll(result.allowList);
 
-		result.blockList.addAll(providerIds);
-		result.allowList.add("section_8b07c43aed10c1b9aa5a2112b6cf0d70");
+		List<String> blockedProviderIds = new NYUDbHelper().getMatchedProviderIds(term.getEid(), new ArrayList<>(providerIds), "BLOCKED");
+		result.blockList = new HashSet<>(blockedProviderIds);
+
+		List<String> allowedProviderIds = new NYUDbHelper().getMatchedProviderIds(term.getEid(), new ArrayList<>(providerIds), "ALLOWED");
+		result.allowList = new HashSet<>(allowedProviderIds);
+
+		result.blockList.removeAll(result.allowList);
 
 		return result;
 	}
