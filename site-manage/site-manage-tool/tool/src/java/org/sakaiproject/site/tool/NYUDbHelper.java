@@ -442,7 +442,7 @@ public class NYUDbHelper {
 
 			PreparedStatement ps = db.prepareStatement("select replace(cc.stem_name, ':', '_')" +
 				" from nyu_t_course_catalog cc" +
-				" inner join nyu_t_blocked_rosters br on (cc.stem_name = br.stem_name OR cc.acad_org = br.acad_org OR cc.acad_group as br.acad_group)" +
+				" inner join nyu_t_blocked_rosters br on (cc.stem_name = br.stem_name OR cc.acad_org = br.acad_org OR cc.acad_group = br.acad_group)" +
 				" inner join nyu_t_acad_session sess on sess.strm = cc.strm and sess.acad_career = cc.acad_career" +
 				" where br.action = ?" +
 				" and sess.cle_eid = ?" +
