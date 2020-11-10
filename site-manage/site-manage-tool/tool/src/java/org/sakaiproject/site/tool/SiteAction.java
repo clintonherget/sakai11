@@ -5001,9 +5001,20 @@ public class SiteAction extends PagedResourceActionII {
 	private class BlockProviderList {
 		public Set<String> blockList;
 		public Set<String> allowList;
+
+		public BlockProviderList() {
+			blockList = new HashSet<>();
+			allowList = new HashSet<>();
+		}
 	}
 
 	private BlockProviderList getBlockedProviderList(SessionState state, List<CourseObject> courseObjects) {
+		BlockProviderList result = new BlockProviderList();
+
+		if (state == null || courseObjects == null) {
+			return result;
+		}
+
 		Set<String> providerIds = new HashSet<>();
 
 		for (CourseObject courseObject : courseObjects) {
@@ -5014,7 +5025,6 @@ public class SiteAction extends PagedResourceActionII {
 			}
 		}
 
-			BlockProviderList result = new BlockProviderList();
 		AcademicSession term = (AcademicSession) state.getAttribute(STATE_TERM_SELECTED);
 
 		List<String> blockedProviderIds = new NYUDbHelper().getMatchedProviderIds(term.getEid(), new ArrayList<>(providerIds), "BLOCKED");
