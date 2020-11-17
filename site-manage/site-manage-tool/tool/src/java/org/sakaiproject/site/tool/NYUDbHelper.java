@@ -466,6 +466,7 @@ public class NYUDbHelper {
 								   " inner join nyu_t_acad_session sess on sess.strm = cc.strm and sess.acad_career = cc.acad_career" +
 								   " where br.action = ?" +
 								   "   and sess.cle_eid = ?" +
+								   "   and br.system = 'CLASSES'" +
 								   "   and replace(cc.stem_name, ':', '_') in (" + placeholders + ")");
 			ps.setString(1, action);
 			ps.setString(2, termEid);
@@ -484,8 +485,8 @@ public class NYUDbHelper {
 					} else {
 						// Otherwise, AND together the non-null criteria from our rules
 						for (String field : new String[] { "strm", "acad_org", "acad_group" }) {
-							if (rs.getString("rule_" + field) == null) {
-								// Not required to match
+							if ("acad_group".equals(field) && "ALL_DEPARTMENTS".equals(rs.getString("rule_acad_group"))) {
+								// Any department is OK
 								continue;
 							}
 
