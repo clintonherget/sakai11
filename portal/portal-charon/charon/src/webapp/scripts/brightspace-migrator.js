@@ -55,7 +55,19 @@ BrightspaceMigrator.prototype.refreshData = function() {
           self._data.sites.forEach(function(site) {
             var $tr = $('<tr>');
             $tr.data('site', site);
-            $tr.append($('<td>').append($('<a>').text(site.title).attr('href', '/portal/site/'+site.site_id).attr('target', '_blank')));
+            var $siteTitleCell = $('<td>');
+            $siteTitleCell.append($('<a>').text(site.title).attr('href', '/portal/site/'+site.site_id).attr('target', '_blank'));
+            if (site.rosters && site.rosters.length > 0) {
+              var $rosterList = $('<ul>');
+              for (var i=0; i<Math.min(site.rosters.length, 5); i++) {
+                $rosterList.append($('<li>').text(site.rosters[i]));
+              }
+              if (site.rosters.length > 5) {
+                $rosterList.append($('<li>').text('...'));
+              }
+              $siteTitleCell.append($rosterList);
+            }
+            $tr.append($siteTitleCell);
             $tr.append($('<td>').text(site.term));
             if (site.queued) {
               var $state = $($('#nyuBrightspaceMigratorStateTemplate').html());

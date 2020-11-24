@@ -5,7 +5,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.sakaiproject.authz.api.AuthzGroup;
+import org.sakaiproject.authz.api.AuthzGroupService;
+import org.sakaiproject.authz.api.GroupNotDefinedException;
 import org.sakaiproject.authz.cover.SecurityService;
+import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.db.api.SqlService;
 import org.sakaiproject.javax.PagingPosition;
@@ -32,6 +36,8 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
     private static final String SESSION_KEY_IS_INSTRUCTOR = "NYU_IS_INSTRUCTOR";
     private SqlService sqlService;
     private static Log M_log = LogFactory.getLog(BrightspaceMigratorHandler.class);
+
+    private AuthzGroupService authzGroupService = (AuthzGroupService)ComponentManager.get("org.sakaiproject.authz.api.AuthzGroupService");
 
     public BrightspaceMigratorHandler()
     {
@@ -76,6 +82,12 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                     siteJSON.put("site_id", site.siteId);
                     siteJSON.put("title", site.title);
                     siteJSON.put("term", site.term);
+
+                    JSONArray rostersJSON = new JSONArray();
+                    for (String roster : site.rosters) {
+                        rostersJSON.add(roster);
+                    }
+                    siteJSON.put("rosters", rostersJSON);
 
                     boolean queued = false;
                     for (SiteArchiveRequest request : site.requests) {
@@ -215,9 +227,11 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                     siteToArchive.title = userSite.getTitle();
                     siteToArchive.term = userSite.getProperties().getProperty("term_eid");
                     if (siteToArchive.term == null) {
-                        siteToArchive.term = userSite.getType();
+                        siteToArchive.term = StringUtils.capitalize(userSite.getType());
                     }
                     siteToArchive.requests = new ArrayList<>();
+                    siteToArchive.rosters = new ArrayList<>(authzGroupService.getProviderIds(String.format("/site/%s", userSite.getId())));
+
                     results.put(siteToArchive.siteId, siteToArchive);
                 }
 
@@ -264,62 +278,6 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         }
 
         return sortedSiteIds.stream().map((siteId) -> results.get(siteId)).collect(Collectors.toList());
-//        String netid = UserDirectoryService.getCurrentUser().getEid();
-//        Map<String, SiteToArchive> results = new HashMap<>();
-//
-//        try {
-//            Connection db = sqlService.borrowConnection();
-//
-//            try {
-//                PreparedStatement ps = db.prepareStatement("select ss.site_id, ss.title, to_char(ssp.value) as term, saq.*" +
-//                        " from SAKAI_SITE ss" +
-//                        " inner join SAKAI_SITE_USER ssu on ssu.site_id = ss.site_id" +
-//                        " inner join SAKAI_USER_ID_MAP umap on umap.user_id = ssu.user_id" +
-//                        " inner join SAKAI_SITE_PROPERTY ssp on ssp.site_id = ss.site_id and ssp.name = 'term_eid'" +
-//                        " inner join NYU_T_ACAD_SESSION sess on sess.cle_eid = to_char(ssp.value)" +
-//                        " left join NYU_T_SITE_ARCHIVES_QUEUE saq on saq.site_id = ss.site_id" +
-//                        " where umap.eid = ?" +
-//                        " and ssu.permission = -1" +
-//                        " and sess.strm >= 1194" + //Spring 2019
-//                        " order by ss.createdon desc, saq.queued_at asc");
-//                ps.setString(1, netid);
-//
-//                ResultSet rs = ps.executeQuery();
-//                try {
-//                    while (rs.next()) {
-//                        String siteId = rs.getString("site_id");
-//
-//                        if (!results.containsKey(siteId)) {
-//                            SiteToArchive site = new SiteToArchive();
-//                            site.siteId = siteId;
-//                            site.title = rs.getString("title");
-//                            site.term = rs.getString("term");
-//                            site.requests = new ArrayList<>();
-//                            results.put(siteId, site);
-//                        }
-//
-//                        if (rs.getString("queued_by") != null) {
-//                            SiteArchiveRequest request = new SiteArchiveRequest();
-//                            request.queuedAt = rs.getLong("queued_at");
-//                            request.queuedBy = rs.getString("queued_by");
-//                            request.archivedAt = rs.getLong("archived_at");
-//                            request.uploadedAt = rs.getLong("uploaded_at");
-//                            request.completedAt = rs.getLong("completed_at");
-//                            request.brightspaceOrgUnitId = rs.getLong("brightspace_org_unit_id");
-//                            results.get(siteId).requests.add(request);
-//                        }
-//                    }
-//                } finally {
-//                    rs.close();
-//                }
-//            } finally {
-//                sqlService.returnConnection(db);
-//            }
-//        } catch (SQLException e) {
-//            M_log.error(this + ".instructorSites: " + e);
-//        }
-//
-//        return results;
     }
 
     private void queueSiteForArchive(String siteId) {
@@ -351,6 +309,7 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         public String title;
         public String term;
         public List<SiteArchiveRequest> requests;
+        public List<String> rosters;
     }
 
     private class SiteArchiveRequest {
