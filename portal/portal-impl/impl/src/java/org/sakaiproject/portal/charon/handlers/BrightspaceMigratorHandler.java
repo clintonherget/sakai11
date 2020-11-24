@@ -202,8 +202,8 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
 
 
     private List<SiteToArchive> instructorSites() {
-        Map<String, SiteToArchive> results = new HashMap<>();
-        List<String> sortedSiteIds = new ArrayList<>();
+        Map<String, SiteToArchive> results = new LinkedHashMap<>();
+        Set<String> allowedTermEids = allowedTermEids();
 
         Connection db = null;
         try {
@@ -217,11 +217,12 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
             while (true) {
                 paging.setPosition(start, last);
                 List<Site> userSites = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.UPDATE, null, null, null, org.sakaiproject.site.api.SiteService.SortType.CREATED_BY_DESC, paging);
-                List<String> chunkSiteIds = new ArrayList<>();
+                userSites = userSites.stream().filter(s -> {
+                                String termEid = s.getProperties().getProperty("term_eid");
+                                return termEid == null || allowedTermEids.contains(termEid);
+                            }).collect(Collectors.toList());
 
                 for (Site userSite : userSites) {
-                    sortedSiteIds.add(userSite.getId());
-                    chunkSiteIds.add(userSite.getId());
                     SiteToArchive siteToArchive = new SiteToArchive();
                     siteToArchive.siteId = userSite.getId();
                     siteToArchive.title = userSite.getTitle();
@@ -234,6 +235,8 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
 
                     results.put(siteToArchive.siteId, siteToArchive);
                 }
+
+                List<String> chunkSiteIds = userSites.stream().map(s -> s.getId()).collect(Collectors.toList());
 
                 String placeholders = chunkSiteIds.stream().map(_p -> "?").collect(Collectors.joining(","));
                 PreparedStatement ps = db.prepareStatement("select * from NYU_T_SITE_ARCHIVES_QUEUE where site_id in (" + placeholders + ")");
@@ -277,7 +280,7 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
             }
         }
 
-        return sortedSiteIds.stream().map((siteId) -> results.get(siteId)).collect(Collectors.toList());
+        return new ArrayList<>(results.values());
     }
 
     private void queueSiteForArchive(String siteId) {
@@ -302,6 +305,11 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         } catch (SQLException e) {
             M_log.error(this + ".queueSiteForArchive: " + e);
         }
+    }
+
+    private Set<String> allowedTermEids() {
+        String termEidsStr = HotReloadConfigurationService.getString("brightspace.selfservice.termeids", "").trim();
+        return new HashSet<>(Arrays.asList(termEidsStr.split(" *, *")));
     }
 
     private class SiteToArchive {
