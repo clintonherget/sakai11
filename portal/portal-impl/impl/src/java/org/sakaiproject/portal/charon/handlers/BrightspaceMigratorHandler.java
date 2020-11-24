@@ -5,9 +5,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.HotReloadConfigurationService;
 import org.sakaiproject.db.api.SqlService;
+import org.sakaiproject.javax.PagingPosition;
 import org.sakaiproject.portal.api.PortalHandlerException;
+import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.user.cover.UserDirectoryService;
@@ -19,6 +23,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class BrightspaceMigratorHandler extends BasePortalHandler {
 
@@ -43,7 +49,7 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         {
             try
             {
-                if (!isInstructor()) {
+                if (!isAllowedToMigrateSitesToBrightspace()) {
                     return NEXT;
                 }
 
@@ -55,7 +61,7 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                 String termFilter = StringUtils.trimToNull(req.getParameter("term"));
                 String queryFilter = StringUtils.trimToNull(req.getParameter("q"));
 
-                for (SiteToArchive site : instructorSites().values()) {
+                for (SiteToArchive site : instructorSites()) {
                     terms.add(site.term);
 
                     if (termFilter != null && !termFilter.equals(site.term)) {
@@ -116,12 +122,12 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         if ((parts.length >= 2) && (parts[1].equals(BrightspaceMigratorHandler.URL_FRAGMENT)))
         {
             try {
-                if (!isInstructor()) {
+                if (!isAllowedToMigrateSitesToBrightspace()) {
                     return NEXT;
                 }
 
                 String siteId = StringUtils.trimToNull(req.getParameter("site_id"));
-                if (instructorSites().containsKey(siteId)) {
+                if (siteId != null && SecurityService.unlock("site.upd", "/site/" + siteId)) {
                     queueSiteForArchive(siteId);
                 }
                 res.getWriter().write("{'success':true}");
@@ -135,7 +141,7 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         return NEXT;
     }
 
-    public boolean isInstructor() {
+    public boolean isAllowedToMigrateSitesToBrightspace() {
         if (!"true".equals(HotReloadConfigurationService.getString("brightspace.selfservice.enabled", "true"))) {
             // Self-service is disabled!
             return false;
@@ -182,40 +188,50 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         return result;
     }
 
-    private Map<String, SiteToArchive> instructorSites() {
-        String netid = UserDirectoryService.getCurrentUser().getEid();
+
+    private List<SiteToArchive> instructorSites() {
         Map<String, SiteToArchive> results = new HashMap<>();
+        List<String> sortedSiteIds = new ArrayList<>();
 
+        Connection db = null;
         try {
-            Connection db = sqlService.borrowConnection();
+            db = sqlService.borrowConnection();
 
-            try {
-                PreparedStatement ps = db.prepareStatement("select ss.site_id, ss.title, to_char(ssp.value) as term, saq.*" +
-                        " from SAKAI_SITE ss" +
-                        " inner join SAKAI_SITE_USER ssu on ssu.site_id = ss.site_id" +
-                        " inner join SAKAI_USER_ID_MAP umap on umap.user_id = ssu.user_id" +
-                        " inner join SAKAI_SITE_PROPERTY ssp on ssp.site_id = ss.site_id and ssp.name = 'term_eid'" +
-                        " inner join NYU_T_ACAD_SESSION sess on sess.cle_eid = to_char(ssp.value)" +
-                        " left join NYU_T_SITE_ARCHIVES_QUEUE saq on saq.site_id = ss.site_id" +
-                        " where umap.eid = ?" +
-                        " and ssu.permission = -1" +
-                        " and sess.strm >= 1194" + //Spring 2019
-                        " order by ss.createdon desc, saq.queued_at asc");
-                ps.setString(1, netid);
+            int start = 1;
+            int pageSize = 100;
+            int last = start + pageSize - 1;
+
+            PagingPosition paging = new PagingPosition();
+            while (true) {
+                paging.setPosition(start, last);
+                List<Site> userSites = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.UPDATE, null, null, null, org.sakaiproject.site.api.SiteService.SortType.CREATED_BY_DESC, paging);
+                List<String> chunkSiteIds = new ArrayList<>();
+
+                for (Site userSite : userSites) {
+                    sortedSiteIds.add(userSite.getId());
+                    chunkSiteIds.add(userSite.getId());
+                    SiteToArchive siteToArchive = new SiteToArchive();
+                    siteToArchive.siteId = userSite.getId();
+                    siteToArchive.title = userSite.getTitle();
+                    siteToArchive.term = userSite.getProperties().getProperty("term_eid");
+                    if (siteToArchive.term == null) {
+                        siteToArchive.term = userSite.getType();
+                    }
+                    siteToArchive.requests = new ArrayList<>();
+                    results.put(siteToArchive.siteId, siteToArchive);
+                }
+
+                String placeholders = chunkSiteIds.stream().map(_p -> "?").collect(Collectors.joining(","));
+                PreparedStatement ps = db.prepareStatement("select * from NYU_T_SITE_ARCHIVES_QUEUE where site_id in (" + placeholders + ")");
+
+                for (int i = 0; i < chunkSiteIds.size(); i++) {
+                    ps.setString(i + 1, chunkSiteIds.get(i));
+                }
 
                 ResultSet rs = ps.executeQuery();
                 try {
                     while (rs.next()) {
                         String siteId = rs.getString("site_id");
-
-                        if (!results.containsKey(siteId)) {
-                            SiteToArchive site = new SiteToArchive();
-                            site.siteId = siteId;
-                            site.title = rs.getString("title");
-                            site.term = rs.getString("term");
-                            site.requests = new ArrayList<>();
-                            results.put(siteId, site);
-                        }
 
                         if (rs.getString("queued_by") != null) {
                             SiteArchiveRequest request = new SiteArchiveRequest();
@@ -231,14 +247,79 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                 } finally {
                     rs.close();
                 }
-            } finally {
-                sqlService.returnConnection(db);
+
+                if (userSites.size() < pageSize) {
+                    break;
+                }
+
+                start = last + 1;
+                last = start + pageSize - 1;
             }
         } catch (SQLException e) {
             M_log.error(this + ".instructorSites: " + e);
+        } finally {
+            if (db != null) {
+                sqlService.returnConnection(db);
+            }
         }
 
-        return results;
+        return sortedSiteIds.stream().map((siteId) -> results.get(siteId)).collect(Collectors.toList());
+//        String netid = UserDirectoryService.getCurrentUser().getEid();
+//        Map<String, SiteToArchive> results = new HashMap<>();
+//
+//        try {
+//            Connection db = sqlService.borrowConnection();
+//
+//            try {
+//                PreparedStatement ps = db.prepareStatement("select ss.site_id, ss.title, to_char(ssp.value) as term, saq.*" +
+//                        " from SAKAI_SITE ss" +
+//                        " inner join SAKAI_SITE_USER ssu on ssu.site_id = ss.site_id" +
+//                        " inner join SAKAI_USER_ID_MAP umap on umap.user_id = ssu.user_id" +
+//                        " inner join SAKAI_SITE_PROPERTY ssp on ssp.site_id = ss.site_id and ssp.name = 'term_eid'" +
+//                        " inner join NYU_T_ACAD_SESSION sess on sess.cle_eid = to_char(ssp.value)" +
+//                        " left join NYU_T_SITE_ARCHIVES_QUEUE saq on saq.site_id = ss.site_id" +
+//                        " where umap.eid = ?" +
+//                        " and ssu.permission = -1" +
+//                        " and sess.strm >= 1194" + //Spring 2019
+//                        " order by ss.createdon desc, saq.queued_at asc");
+//                ps.setString(1, netid);
+//
+//                ResultSet rs = ps.executeQuery();
+//                try {
+//                    while (rs.next()) {
+//                        String siteId = rs.getString("site_id");
+//
+//                        if (!results.containsKey(siteId)) {
+//                            SiteToArchive site = new SiteToArchive();
+//                            site.siteId = siteId;
+//                            site.title = rs.getString("title");
+//                            site.term = rs.getString("term");
+//                            site.requests = new ArrayList<>();
+//                            results.put(siteId, site);
+//                        }
+//
+//                        if (rs.getString("queued_by") != null) {
+//                            SiteArchiveRequest request = new SiteArchiveRequest();
+//                            request.queuedAt = rs.getLong("queued_at");
+//                            request.queuedBy = rs.getString("queued_by");
+//                            request.archivedAt = rs.getLong("archived_at");
+//                            request.uploadedAt = rs.getLong("uploaded_at");
+//                            request.completedAt = rs.getLong("completed_at");
+//                            request.brightspaceOrgUnitId = rs.getLong("brightspace_org_unit_id");
+//                            results.get(siteId).requests.add(request);
+//                        }
+//                    }
+//                } finally {
+//                    rs.close();
+//                }
+//            } finally {
+//                sqlService.returnConnection(db);
+//            }
+//        } catch (SQLException e) {
+//            M_log.error(this + ".instructorSites: " + e);
+//        }
+//
+//        return results;
     }
 
     private void queueSiteForArchive(String siteId) {

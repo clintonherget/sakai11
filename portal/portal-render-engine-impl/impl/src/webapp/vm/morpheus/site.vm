@@ -270,7 +270,7 @@
         #parse("/vm/morpheus/connection-manager.vm")
         #end
 
-        #if ($nyuIsIntructor)
+        #if ($nyuAllowedToMigrate)
           <link rel="stylesheet" href="$!{portalCDNPath}/portal/styles/brightspace-migrator.css$!{portalCDNQuery}"/>
           <script src="$!{portalCDNPath}/portal/scripts/brightspace-migrator.js$!{portalCDNQuery}"></script>
           <script type="text/template" id="nyuBrightspaceMigratorModalTemplate">

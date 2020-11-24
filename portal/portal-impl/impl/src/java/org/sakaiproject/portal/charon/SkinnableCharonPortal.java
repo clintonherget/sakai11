@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.Properties;
 import java.util.TimeZone;
-import java.text.SimpleDateFormat;
 import java.net.URLEncoder;
 
 import javax.servlet.ServletConfig;
@@ -44,7 +43,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.sakaiproject.authz.api.Role;
@@ -114,7 +112,6 @@ import org.sakaiproject.portal.util.PortalUtils;
 import org.sakaiproject.portal.util.ToolURLManagerImpl;
 import org.sakaiproject.portal.util.ToolUtils;
 import org.sakaiproject.portal.util.URLUtils;
-import org.sakaiproject.portal.util.PortalUtils;
 import edu.nyu.classes.externalhelp.api.ExternalHelpSystem;
 import edu.nyu.classes.externalhelp.api.ExternalHelp;
 import org.sakaiproject.site.api.Site;
@@ -1170,9 +1167,9 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		rcontext.put("userSiteRole", role != null ? role.getId() : "");
 		rcontext.put("editorType", editorType);
 		if (StringUtils.isNotBlank(currentUser.getId())) {
-			rcontext.put("nyuIsIntructor", new BrightspaceMigratorHandler().isInstructor());
+			rcontext.put("nyuAllowedToMigrate", new BrightspaceMigratorHandler().isAllowedToMigrateSitesToBrightspace());
 		} else {
-			rcontext.put("nyuIsIntructor", false);
+			rcontext.put("nyuAllowedToMigrate", false);
 		}
 
 		rcontext.put("loggedOutUrl",ServerConfigurationService.getLoggedOutUrl());
