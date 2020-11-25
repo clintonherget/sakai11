@@ -31,10 +31,19 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
 
     private static final String URL_FRAGMENT = "brightspace-migrator";
     private static final String SESSION_KEY_ALLOWED_TO_MIGRATE = "NYU_ALLOWED_TO_MIGRATE";
+
+    private static final String SESSION_KEY_NETID_LAST_CHECK_TIME = "SESSION_KEY_NETID_LAST_CHECK_TIME";
+    private static final String SESSION_KEY_NETID_LAST_VALUE = "SESSION_KEY_NETID_LAST_VALUE";
+    private static final String SESSION_KEY_RULE_LAST_CHECK_TIME = "SESSION_KEY_RULE_LAST_CHECK_TIME";
+    private static final String SESSION_KEY_RULE_LAST_VALUE = "SESSION_KEY_RULE_LAST_VALUE";
+
     private SqlService sqlService;
     private static Log M_log = LogFactory.getLog(BrightspaceMigratorHandler.class);
 
     private AuthzGroupService authzGroupService = (AuthzGroupService)ComponentManager.get("org.sakaiproject.authz.api.AuthzGroupService");
+
+    private static long NETID_RECHECK_INTERVAL_MS = 60000;
+    private static long RULE_RECHECK_INTERVAL_MS = 3600000;
 
     public BrightspaceMigratorHandler()
     {
@@ -156,72 +165,105 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
             return false;
         }
 
+        String netid = UserDirectoryService.getCurrentUser().getEid();
         Session session = SessionManager.getCurrentSession();
-        if (session.getAttribute(SESSION_KEY_ALLOWED_TO_MIGRATE) != null) {
-            return (boolean)session.getAttribute(SESSION_KEY_ALLOWED_TO_MIGRATE);
-        }
 
         long timerStartTime = System.currentTimeMillis();
 
-        boolean result = false;
-
-        String netid = UserDirectoryService.getCurrentUser().getEid();
-
         try {
-            Connection db = sqlService.borrowConnection();
-
-            try {
-                // First, let's check if the netid has been approved
-                PreparedStatement ps = db.prepareStatement("select count(1) " +
-                        " from NYU_T_SELF_SERVICE_ACCESS ssa" +
-                        " where ssa.netid = ?" +
-                        " and ssa.rule_type = 'netid'");
-                ps.setString(1, netid);
-
-                ResultSet rs = ps.executeQuery();
-                try {
-                    if (rs.next()) {
-                        result = rs.getInt(1) > 0;
-                    }
-                } finally {
-                    rs.close();
-                    ps.close();
-                }
-
-                if (!result) {
-                    // Secondly, let's check if the user is an instructor of any approved schools/departments
-                    RuleSet ruleSet = new RuleSet();
-
-                    ps = db.prepareStatement("select * " +
-                            " from NYU_T_SELF_SERVICE_ACCESS ssa" +
-                            " where ssa.rule_type != 'netid'");
-
-                    rs = ps.executeQuery();
-                    try {
-                        while (rs.next()) {
-                            ruleSet.addRule(rs.getString("school"), rs.getString("department"));
-                        }
-                    } finally {
-                        rs.close();
-                        ps.close();
-                    }
-
-                    result = instructorSites().stream().anyMatch(s -> ruleSet.matches(s));
-                }
-            } finally {
-                sqlService.returnConnection(db);
+            if (netIdExplicitlyAllowed(netid, session)) {
+                return true;
+            } else if (allowedByRule(netid, session)) {
+                return true;
+            } else {
+                return false;
             }
-        } catch (SQLException e) {
-            M_log.warn(this + ".isInstructor: " + e);
+        } finally {
+            long timerEndTime = System.currentTimeMillis();
+            M_log.info(String.format("isAllowedToMigrateSitesToBrightspace took %d ms to complete", timerEndTime - timerStartTime));
+        }
+    }
+
+    public boolean netIdExplicitlyAllowed(String netid, Session session) {
+        Long lastCheckTime = (Long)session.getAttribute(SESSION_KEY_NETID_LAST_CHECK_TIME);
+        if (lastCheckTime == null) {
+            lastCheckTime = 0L;
         }
 
-        session.setAttribute(SESSION_KEY_ALLOWED_TO_MIGRATE, result);
+        if ((System.currentTimeMillis() - lastCheckTime) > NETID_RECHECK_INTERVAL_MS) {
+            // Refresh our value
+            boolean result = false;
 
-        long timerEndTime = System.currentTimeMillis();
+            Connection db = null;
+            try {
+                db = sqlService.borrowConnection();
 
-        M_log.info(String.format("isAllowedToMigrateSitesToBrightspace took %d ms to complete", timerEndTime - timerStartTime));
+                // First, let's check if the netid has been approved
+                try (PreparedStatement ps = db.prepareStatement("select count(1) " +
+                                                                " from NYU_T_SELF_SERVICE_ACCESS ssa" +
+                                                                " where ssa.netid = ?" +
+                                                                " and ssa.rule_type = 'netid'")) {
+                    ps.setString(1, netid);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            result = rs.getInt(1) > 0;
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                M_log.warn(this + ".netIdExplicitlyAllowed: " + e);
+            } finally {
+                if (db != null) {
+                    sqlService.returnConnection(db);
+                }
+            }
 
-        return result;
+            session.setAttribute(SESSION_KEY_NETID_LAST_CHECK_TIME, System.currentTimeMillis());
+            session.setAttribute(SESSION_KEY_NETID_LAST_VALUE, result);
+        }
+
+        return (boolean)session.getAttribute(SESSION_KEY_NETID_LAST_VALUE);
+    }
+
+    public boolean allowedByRule(String netid, Session session) {
+        Long lastCheckTime = (Long)session.getAttribute(SESSION_KEY_RULE_LAST_CHECK_TIME);
+        if (lastCheckTime == null) {
+            lastCheckTime = 0L;
+        }
+
+        if ((System.currentTimeMillis() - lastCheckTime) > RULE_RECHECK_INTERVAL_MS) {
+            // Refresh our value
+            boolean result = false;
+
+            Connection db = null;
+            try {
+                db = sqlService.borrowConnection();
+
+                RuleSet ruleSet = new RuleSet();
+
+                try (PreparedStatement ps = db.prepareStatement("select * " +
+                                                                " from NYU_T_SELF_SERVICE_ACCESS ssa" +
+                                                                " where ssa.rule_type != 'netid'");
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        ruleSet.addRule(rs.getString("school"), rs.getString("department"));
+                    }
+                }
+
+                result = instructorSites().stream().anyMatch(s -> ruleSet.matches(s));
+            } catch (SQLException e) {
+                M_log.warn(this + ".netIdExplicitlyAllowed: " + e);
+            } finally {
+                if (db != null) {
+                    sqlService.returnConnection(db);
+                }
+            }
+
+            session.setAttribute(SESSION_KEY_RULE_LAST_CHECK_TIME, System.currentTimeMillis());
+            session.setAttribute(SESSION_KEY_RULE_LAST_VALUE, result);
+        }
+
+        return (boolean)session.getAttribute(SESSION_KEY_RULE_LAST_VALUE);
     }
 
 
