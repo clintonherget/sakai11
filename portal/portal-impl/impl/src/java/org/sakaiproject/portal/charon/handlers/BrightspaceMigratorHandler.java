@@ -240,7 +240,7 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
             PagingPosition paging = new PagingPosition();
             while (true) {
                 paging.setPosition(start, last);
-                List<Site> userSites = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.UPDATE, null, null, null, org.sakaiproject.site.api.SiteService.SortType.CREATED_BY_DESC, paging);
+                List<Site> userSites = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.UPDATE, null, null, null, org.sakaiproject.site.api.SiteService.SortType.CREATED_ON_DESC, paging);
                 userSites = userSites.stream().filter(s -> {
                                 String termEid = s.getProperties().getProperty("term_eid");
                                 return termEid == null || allowedTermEids.contains(termEid);
