@@ -5,9 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.AuthzGroupService;
-import org.sakaiproject.authz.api.GroupNotDefinedException;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.HotReloadConfigurationService;
@@ -27,13 +25,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class BrightspaceMigratorHandler extends BasePortalHandler {
 
     private static final String URL_FRAGMENT = "brightspace-migrator";
-    private static final String SESSION_KEY_IS_INSTRUCTOR = "NYU_IS_INSTRUCTOR";
+    private static final String SESSION_KEY_ALLOWED_TO_MIGRATE = "NYU_ALLOWED_TO_MIGRATE";
     private SqlService sqlService;
     private static Log M_log = LogFactory.getLog(BrightspaceMigratorHandler.class);
 
@@ -160,9 +157,11 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         }
 
         Session session = SessionManager.getCurrentSession();
-        if (session.getAttribute(SESSION_KEY_IS_INSTRUCTOR) != null) {
-            return (boolean)session.getAttribute(SESSION_KEY_IS_INSTRUCTOR);
+        if (session.getAttribute(SESSION_KEY_ALLOWED_TO_MIGRATE) != null) {
+            return (boolean)session.getAttribute(SESSION_KEY_ALLOWED_TO_MIGRATE);
         }
+
+        long timerStartTime = System.currentTimeMillis();
 
         boolean result = false;
 
@@ -172,13 +171,12 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
             Connection db = sqlService.borrowConnection();
 
             try {
+                // First, let's check if the netid has been approved
                 PreparedStatement ps = db.prepareStatement("select count(1) " +
-                        " from CM_MEMBERSHIP_T mem" +
-                        " where mem.user_id = ?" +
-                        " and mem.role = ?" +
-                        " and rownum < 2");
+                        " from NYU_T_SELF_SERVICE_ACCESS ssa" +
+                        " where ssa.netid = ?" +
+                        " and ssa.rule_type = 'netid'");
                 ps.setString(1, netid);
-                ps.setString(2, "I");
 
                 ResultSet rs = ps.executeQuery();
                 try {
@@ -187,6 +185,28 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                     }
                 } finally {
                     rs.close();
+                    ps.close();
+                }
+
+                if (!result) {
+                    // Secondly, let's check if the user is an instructor of any approved schools/departments
+                    RuleSet ruleSet = new RuleSet();
+
+                    ps = db.prepareStatement("select * " +
+                            " from NYU_T_SELF_SERVICE_ACCESS ssa" +
+                            " where ssa.rule_type != 'netid'");
+
+                    rs = ps.executeQuery();
+                    try {
+                        while (rs.next()) {
+                            ruleSet.addRule(rs.getString("school"), rs.getString("department"));
+                        }
+                    } finally {
+                        rs.close();
+                        ps.close();
+                    }
+
+                    result = instructorSites().stream().anyMatch(s -> ruleSet.matches(s));
                 }
             } finally {
                 sqlService.returnConnection(db);
@@ -195,7 +215,11 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
             M_log.warn(this + ".isInstructor: " + e);
         }
 
-        session.setAttribute(SESSION_KEY_IS_INSTRUCTOR, result);
+        session.setAttribute(SESSION_KEY_ALLOWED_TO_MIGRATE, result);
+
+        long timerEndTime = System.currentTimeMillis();
+
+        M_log.info(String.format("isAllowedToMigrateSitesToBrightspace took %d ms to complete", timerEndTime - timerStartTime));
 
         return result;
     }
@@ -232,6 +256,9 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                     }
                     siteToArchive.requests = new ArrayList<>();
                     siteToArchive.rosters = new ArrayList<>(authzGroupService.getProviderIds(String.format("/site/%s", userSite.getId())));
+
+                    siteToArchive.school = userSite.getProperties().getProperty("School");
+                    siteToArchive.department = userSite.getProperties().getProperty("Department");
 
                     results.put(siteToArchive.siteId, siteToArchive);
                 }
@@ -316,6 +343,8 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         public String siteId;
         public String title;
         public String term;
+        public String school;
+        public String department;
         public List<SiteArchiveRequest> requests;
         public List<String> rosters;
     }
@@ -340,6 +369,38 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
             } else {
                 return "READY_FOR_ARCHIVE";
             }
+        }
+    }
+
+    private class AccessRule {
+        public String school;
+        public String department;
+    }
+
+    private class RuleSet {
+        public Map<String, List<AccessRule>> rules = new HashMap<>();
+
+        public void addRule(String school, String department) {
+            if (!rules.containsKey(school)) {
+                rules.put(school, new ArrayList<>());
+            }
+            AccessRule rule = new AccessRule();
+            rule.school = school;
+            rule.department = department;
+
+            rules.get(school).add(rule);
+        }
+
+        public boolean matches(SiteToArchive site) {
+            if (rules.containsKey(site.school)) {
+                List<AccessRule> matched = rules.get(site.school);
+
+                return matched.stream().anyMatch(r -> {
+                    return r.department == null || r.department.equals(site.department);
+                });
+            }
+
+            return false;
         }
     }
 }
