@@ -201,7 +201,11 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
             }
         } finally {
             long timerEndTime = System.currentTimeMillis();
-            M_log.info(String.format("isAllowedToMigrateSitesToBrightspace took %d ms to complete", timerEndTime - timerStartTime));
+            long duration = timerEndTime - timerStartTime;
+
+            if (duration > 2000) {
+                M_log.warn(String.format("isAllowedToMigrateSitesToBrightspace took %d ms to complete", duration));
+            }
         }
     }
 
