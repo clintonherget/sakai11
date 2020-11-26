@@ -308,30 +308,28 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                 List<String> chunkSiteIds = userSites.stream().map(s -> s.getId()).collect(Collectors.toList());
 
                 String placeholders = chunkSiteIds.stream().map(_p -> "?").collect(Collectors.joining(","));
-                PreparedStatement ps = db.prepareStatement("select * from NYU_T_SITE_ARCHIVES_QUEUE where site_id in (" + placeholders + ")");
 
-                for (int i = 0; i < chunkSiteIds.size(); i++) {
-                    ps.setString(i + 1, chunkSiteIds.get(i));
-                }
+                try (PreparedStatement ps = db.prepareStatement("select * from NYU_T_SITE_ARCHIVES_QUEUE where site_id in (" + placeholders + ")")) {
+                    for (int i = 0; i < chunkSiteIds.size(); i++) {
+                        ps.setString(i + 1, chunkSiteIds.get(i));
+                    }
 
-                ResultSet rs = ps.executeQuery();
-                try {
-                    while (rs.next()) {
-                        String siteId = rs.getString("site_id");
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            String siteId = rs.getString("site_id");
 
-                        if (rs.getString("queued_by") != null) {
-                            SiteArchiveRequest request = new SiteArchiveRequest();
-                            request.queuedAt = rs.getLong("queued_at");
-                            request.queuedBy = rs.getString("queued_by");
-                            request.archivedAt = rs.getLong("archived_at");
-                            request.uploadedAt = rs.getLong("uploaded_at");
-                            request.completedAt = rs.getLong("completed_at");
-                            request.brightspaceOrgUnitId = rs.getLong("brightspace_org_unit_id");
-                            results.get(siteId).requests.add(request);
+                            if (rs.getString("queued_by") != null) {
+                                SiteArchiveRequest request = new SiteArchiveRequest();
+                                request.queuedAt = rs.getLong("queued_at");
+                                request.queuedBy = rs.getString("queued_by");
+                                request.archivedAt = rs.getLong("archived_at");
+                                request.uploadedAt = rs.getLong("uploaded_at");
+                                request.completedAt = rs.getLong("completed_at");
+                                request.brightspaceOrgUnitId = rs.getLong("brightspace_org_unit_id");
+                                results.get(siteId).requests.add(request);
+                            }
                         }
                     }
-                } finally {
-                    rs.close();
                 }
 
                 if (userSites.size() < pageSize) {
@@ -355,24 +353,24 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
     private void queueSiteForArchive(String siteId) {
         String netid = UserDirectoryService.getCurrentUser().getEid();
 
+        Connection db = null;
         try {
-            Connection db = sqlService.borrowConnection();
+            db = sqlService.borrowConnection();
 
-            try {
-                PreparedStatement ps = db.prepareStatement("insert into NYU_T_SITE_ARCHIVES_QUEUE (site_id, queued_at, queued_by)" +
-                                                           " values (?, ?, ?)");
+            try (PreparedStatement ps = db.prepareStatement("insert into NYU_T_SITE_ARCHIVES_QUEUE (site_id, queued_at, queued_by)" +
+                    " values (?, ?, ?)")) {
                 ps.setString(1, siteId);
                 ps.setLong(2, System.currentTimeMillis());
                 ps.setString(3, netid);
-
                 ps.executeUpdate();
-
                 db.commit();
-            } finally {
-                sqlService.returnConnection(db);
             }
         } catch (SQLException e) {
             M_log.error(this + ".queueSiteForArchive: " + e);
+        } finally {
+            if (db != null) {
+                sqlService.returnConnection(db);
+            }
         }
     }
 
