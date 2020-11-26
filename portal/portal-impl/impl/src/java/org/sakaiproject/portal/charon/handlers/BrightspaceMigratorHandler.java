@@ -80,8 +80,20 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                         continue;
                     }
 
-                    if (queryFilter != null && !site.title.toLowerCase().contains(queryFilter.toLowerCase())) {
-                        continue;
+                    if (queryFilter != null) {
+                        boolean matchesTitle = site.title.toLowerCase().contains(queryFilter.toLowerCase());
+
+                        if (!matchesTitle) {
+                            boolean matchesRoster = site.rosters.stream().anyMatch(r -> r.toLowerCase().equals(queryFilter.toLowerCase()));
+
+                            if (!matchesRoster) {
+                                boolean matchesInstructor = site.instructors.stream().anyMatch(instructor -> instructor.get("netid").toLowerCase().equals(queryFilter.toLowerCase()));
+
+                                if (!matchesInstructor) {
+                                    continue;
+                                }
+                            }
+                        }
                     }
 
                     JSONObject siteJSON = new JSONObject();
@@ -94,6 +106,15 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                         rostersJSON.add(roster);
                     }
                     siteJSON.put("rosters", rostersJSON);
+
+                    JSONArray instructorsJSON = new JSONArray();
+                    for (Map<String, String> instructor : site.instructors) {
+                        JSONObject instructorJSON = new JSONObject();
+                        instructorJSON.put("netid", instructor.get("netid"));
+                        instructorJSON.put("display", instructor.get("displayName"));
+                        instructorsJSON.add(instructorJSON);
+                    }
+                    siteJSON.put("instructors", instructorsJSON);
 
                     boolean queued = false;
                     for (SiteArchiveRequest request : site.requests) {
@@ -298,6 +319,7 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                     }
                     siteToArchive.requests = new ArrayList<>();
                     siteToArchive.rosters = new ArrayList<>(authzGroupService.getProviderIds(String.format("/site/%s", userSite.getId())));
+                    siteToArchive.instructors = new ArrayList<>();
 
                     siteToArchive.school = userSite.getProperties().getProperty("School");
                     siteToArchive.department = userSite.getProperties().getProperty("Department");
@@ -328,6 +350,38 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                                 request.brightspaceOrgUnitId = rs.getLong("brightspace_org_unit_id");
                                 results.get(siteId).requests.add(request);
                             }
+                        }
+                    }
+                }
+
+                try (PreparedStatement ps = db.prepareStatement("select distinct ss.site_id, memb.user_id, usr.fname, usr.lname" +
+                                                                " from cm_member_container_t cont" +
+                                                                " inner join cm_membership_t memb on cont.member_container_id = memb.member_container_id AND memb.role = 'I'" +
+                                                                " inner join sakai_realm_provider srp on srp.provider_id = cont.enterprise_id" +
+                                                                " inner join sakai_realm sr on srp.realm_key = sr.realm_key" +
+                                                                " inner join sakai_site ss on sr.realm_id = concat('/site/', ss.site_id)" +
+                                                                " left outer join NYU_T_USERS usr on usr.netid = memb.user_id" +
+                                                                " where ss.site_id in (" + placeholders + ")")) {
+                    for (int i = 0; i < chunkSiteIds.size(); i++) {
+                        ps.setString(i + 1, chunkSiteIds.get(i));
+                    }
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            String siteId = rs.getString("site_id");
+                            String netid = rs.getString("user_id");
+
+                            Map<String, String> instructor = new HashMap<>();
+                            instructor.put("netid", netid);
+                            String firstName = rs.getString("fname");
+                            String lastName = rs.getString("lname");
+                            String displayName = netid;
+                            if (firstName != null && lastName != null) {
+                                displayName = String.format("%s %s (%s)", firstName, lastName, netid);
+                            }
+                            instructor.put("displayName", displayName);
+
+                            results.get(siteId).instructors.add(instructor);
                         }
                     }
                 }
@@ -387,6 +441,7 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
         public String department;
         public List<SiteArchiveRequest> requests;
         public List<String> rosters;
+        public List<Map<String, String>> instructors;
     }
 
     private class SiteArchiveRequest {

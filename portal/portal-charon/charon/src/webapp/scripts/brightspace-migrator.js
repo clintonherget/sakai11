@@ -57,6 +57,15 @@ BrightspaceMigrator.prototype.refreshData = function() {
             $tr.data('site', site);
             var $siteTitleCell = $('<td>');
             $siteTitleCell.append($('<a>').text(site.title).attr('href', '/portal/site/'+site.site_id).attr('target', '_blank'));
+            if (site.instructors && site.instructors.length > 0) {
+              var $instructorsList = $('<ul>');
+              for (var i=0; i<site.instructors.length; i++) {
+                var instructor = site.instructors[i];
+                $instructorsList.append($('<li>').text(instructor.display));
+              }
+              $siteTitleCell.append($('<div>').text('Instructors:'));
+              $siteTitleCell.append($instructorsList);
+            }
             if (site.rosters && site.rosters.length > 0) {
               var $rosterList = $('<ul>');
               for (var i=0; i<Math.min(site.rosters.length, 5); i++) {
@@ -65,6 +74,7 @@ BrightspaceMigrator.prototype.refreshData = function() {
               if (site.rosters.length > 5) {
                 $rosterList.append($('<li>').text('...'));
               }
+              $siteTitleCell.append($('<div>').text('Rosters:'));
               $siteTitleCell.append($rosterList);
             }
             $tr.append($siteTitleCell);
