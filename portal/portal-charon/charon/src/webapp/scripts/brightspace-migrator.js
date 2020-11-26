@@ -119,7 +119,7 @@ BrightspaceMigrator.prototype.refreshData = function() {
                     .attr('target','_blank')
                     .addClass('button')
                     .addClass('pull-right')
-                    .html('🐒 View in Brightspace'))
+                    .html('View in Brightspace'))
               }
             } else {
               $tr.append($('<td>').html($('<button class="btn-primary nyu-trigger-brightspace-migration">Queue for Export</button>')));
