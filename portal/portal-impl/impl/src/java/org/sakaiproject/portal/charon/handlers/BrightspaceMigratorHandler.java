@@ -314,6 +314,10 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                             }).collect(Collectors.toList());
 
                 for (Site userSite : userSites) {
+                    if (userSite.getType() == null) {
+                        continue;
+                    }
+
                     SiteToArchive siteToArchive = new SiteToArchive();
                     siteToArchive.siteId = userSite.getId();
                     siteToArchive.title = userSite.getTitle();
@@ -397,15 +401,35 @@ public class BrightspaceMigratorHandler extends BasePortalHandler {
                 start = last + 1;
                 last = start + pageSize - 1;
             }
+
+
+            List<SiteToArchive> sites = new ArrayList<>(results.values());
+
+            List<String> termOrdering = new ArrayList<>();
+            try (PreparedStatement ps = db.prepareStatement("select cle_eid from nyu_t_acad_session order by strm desc")) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        termOrdering.add(rs.getString("cle_eid"));
+                    }
+                }
+            }
+
+            termOrdering.add("Sandboxes");
+            termOrdering.add("Project");
+
+            Collections.sort(sites, (s1, s2) -> {
+                    return termOrdering.indexOf(s1.term) - termOrdering.indexOf(s2.term);
+                });
+
+            return sites;
         } catch (SQLException e) {
             M_log.error(this + ".instructorSites: " + e);
+            return new ArrayList<>();
         } finally {
             if (db != null) {
                 sqlService.returnConnection(db);
             }
         }
-
-        return new ArrayList<>(results.values());
     }
 
     private void queueSiteForArchive(String siteId) {
