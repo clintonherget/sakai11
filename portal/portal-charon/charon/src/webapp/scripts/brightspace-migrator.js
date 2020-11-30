@@ -78,7 +78,7 @@ BrightspaceMigrator.prototype.refreshData = function() {
               $siteTitleCell.append($rosterList);
             }
             $tr.append($siteTitleCell);
-            $tr.append($('<td>').text(site.term));
+            $tr.append($('<td>').text(site.term.replace('_', ' ')));
             if (site.queued) {
               var $state = $($('#nyuBrightspaceMigratorStateTemplate').html());
               if (site.queued_at > 0) {
@@ -130,7 +130,7 @@ BrightspaceMigrator.prototype.refreshData = function() {
         $('#nyuBrightspaceMigratorModal .brightspace-migrator-filter-term').empty();
         $('#nyuBrightspaceMigratorModal .brightspace-migrator-filter-term').append($('<option>'));
         self._data.terms.forEach(function(term) {
-          var $option = $('<option>').val(term).text(term);
+          var $option = $('<option>').val(term).text(term.replace('_', ' '));
           $('#nyuBrightspaceMigratorModal .brightspace-migrator-filter-term').append($option);
         });
         if (self.termFilter) {
