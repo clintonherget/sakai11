@@ -314,7 +314,7 @@
                   </div>
                   <div class="modal-footer">
                     <div class="pull-left">
-                      Migrated course sites will be available within the "My Courses" widget in the <a href="https://brightspace.nyu.edu/" target="_blank">NYU LMS (Brightspace)</a>.
+                      You will receive an email notification once your site(s) has/have been migrated to Brightspace. Note that this may take up to 48 hours. Migrated sites will be available within the "My Courses" widget in <a target="_blank" href="https://brightspace.nyu.edu/">NYU LMS (Brightspace)</a>.
                     </div>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                   </div>
