@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.Properties;
 import java.util.TimeZone;
-import java.text.SimpleDateFormat;
 import java.net.URLEncoder;
 
 import javax.servlet.ServletConfig;
@@ -44,7 +43,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.sakaiproject.authz.api.Role;
@@ -72,6 +70,7 @@ import org.sakaiproject.portal.api.SiteNeighbourhoodService;
 import org.sakaiproject.portal.api.SiteView;
 import org.sakaiproject.portal.api.StoredState;
 import org.sakaiproject.portal.charon.handlers.AtomHandler;
+import org.sakaiproject.portal.charon.handlers.BrightspaceMigratorHandler;
 import org.sakaiproject.portal.charon.handlers.DirectToolHandler;
 import org.sakaiproject.portal.charon.handlers.ErrorDoneHandler;
 import org.sakaiproject.portal.charon.handlers.ErrorReportHandler;
@@ -82,8 +81,8 @@ import org.sakaiproject.portal.charon.handlers.JoinHandler;
 import org.sakaiproject.portal.charon.handlers.LMSLoginHandler;
 import org.sakaiproject.portal.charon.handlers.LoginHandler;
 import org.sakaiproject.portal.charon.handlers.LogoutHandler;
-import org.sakaiproject.portal.charon.handlers.NavLoginHandler;
 import org.sakaiproject.portal.charon.handlers.NYUHelpHandler;
+import org.sakaiproject.portal.charon.handlers.NavLoginHandler;
 import org.sakaiproject.portal.charon.handlers.OpmlHandler;
 import org.sakaiproject.portal.charon.handlers.PageHandler;
 import org.sakaiproject.portal.charon.handlers.PageResetHandler;
@@ -92,6 +91,7 @@ import org.sakaiproject.portal.charon.handlers.ReLoginHandler;
 import org.sakaiproject.portal.charon.handlers.RoleSwitchHandler;
 import org.sakaiproject.portal.charon.handlers.RoleSwitchOutHandler;
 import org.sakaiproject.portal.charon.handlers.RssHandler;
+import org.sakaiproject.portal.charon.handlers.SamlLoginHandler;
 import org.sakaiproject.portal.charon.handlers.SiteHandler;
 import org.sakaiproject.portal.charon.handlers.SiteResetHandler;
 import org.sakaiproject.portal.charon.handlers.StaticScriptsHandler;
@@ -102,7 +102,6 @@ import org.sakaiproject.portal.charon.handlers.ToolResetHandler;
 import org.sakaiproject.portal.charon.handlers.WorksiteHandler;
 import org.sakaiproject.portal.charon.handlers.WorksiteResetHandler;
 import org.sakaiproject.portal.charon.handlers.XLoginHandler;
-import org.sakaiproject.portal.charon.handlers.SamlLoginHandler;
 import org.sakaiproject.portal.charon.handlers.YouTubeHandler;
 import org.sakaiproject.portal.charon.site.PortalSiteHelperImpl;
 import org.sakaiproject.portal.render.api.RenderResult;
@@ -113,7 +112,6 @@ import org.sakaiproject.portal.util.PortalUtils;
 import org.sakaiproject.portal.util.ToolURLManagerImpl;
 import org.sakaiproject.portal.util.ToolUtils;
 import org.sakaiproject.portal.util.URLUtils;
-import org.sakaiproject.portal.util.PortalUtils;
 import edu.nyu.classes.externalhelp.api.ExternalHelpSystem;
 import edu.nyu.classes.externalhelp.api.ExternalHelp;
 import org.sakaiproject.site.api.Site;
@@ -1168,6 +1166,11 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		rcontext.put("userType", currentUser.getType());
 		rcontext.put("userSiteRole", role != null ? role.getId() : "");
 		rcontext.put("editorType", editorType);
+		if (StringUtils.isNotBlank(currentUser.getId())) {
+			rcontext.put("nyuAllowedToMigrate", new BrightspaceMigratorHandler().isAllowedToMigrateSitesToBrightspace());
+		} else {
+			rcontext.put("nyuAllowedToMigrate", false);
+		}
 
 		rcontext.put("loggedOutUrl",ServerConfigurationService.getLoggedOutUrl());
 		rcontext.put("portalPath",ServerConfigurationService.getPortalUrl());
@@ -2225,6 +2228,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		addHandler(new GenerateBugReportHandler());
 		addHandler(new YouTubeHandler());
 		addHandler(new NYUHelpHandler());
+		addHandler(new BrightspaceMigratorHandler());
 	}
 
 	/**

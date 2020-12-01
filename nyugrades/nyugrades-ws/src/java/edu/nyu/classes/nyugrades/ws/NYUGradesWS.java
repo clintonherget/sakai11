@@ -56,6 +56,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.regex.Pattern;
+import java.security.MessageDigest;
 
 public class NYUGradesWS extends HttpServlet
 {
@@ -82,7 +83,7 @@ public class NYUGradesWS extends HttpServlet
         nyuGradesSessions = (NYUGradesSessionService) ComponentManager.get("edu.nyu.classes.nyugrades.api.NYUGradesSessionService");
         nyuGrades = (NYUGradesService) ComponentManager.get("edu.nyu.classes.nyugrades.api.NYUGradesService");
 
-        permittedUsernames = serverConfigurationService.getString("nyu.grades-service.allowed_users", "admin").split(", *");
+        permittedUsernames = HotReloadConfigurationService.getString("nyu.grades-service.allowed_users", "admin").split(", *");
     }
 
 
@@ -284,7 +285,30 @@ public class NYUGradesWS extends HttpServlet
 
         private boolean passwordValid(String username, String password)
         {
+            if (!serverConfigurationService.getServerId().startsWith("hercules")) {
+                String testUsername = HotReloadConfigurationService.getString("nyugrades.test-account.username", null);
+                String testPassword = HotReloadConfigurationService.getString("nyugrades.test-account.password", null);
+
+                if (testUsername != null && testPassword != null) {
+                    if (secureEquals(testUsername, username) && secureEquals(testPassword, password)) {
+                        return true;
+                    }
+                }
+            }
+
             return (userDirectoryService.authenticate(username, password) != null);
+        }
+
+
+        private boolean secureEquals(String s1, String s2) {
+            try {
+                byte[] d1 = MessageDigest.getInstance("SHA-256").digest(s1.getBytes("UTF-8"));
+                byte[] d2 = MessageDigest.getInstance("SHA-256").digest(s2.getBytes("UTF-8"));
+
+                return MessageDigest.isEqual(d1, d2);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
 

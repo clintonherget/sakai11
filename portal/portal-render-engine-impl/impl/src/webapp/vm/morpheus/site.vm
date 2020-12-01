@@ -270,5 +270,68 @@
         #parse("/vm/morpheus/connection-manager.vm")
         #end
 
+        #if ($nyuAllowedToMigrate)
+          <link rel="stylesheet" href="$!{portalCDNPath}/portal/styles/brightspace-migrator.css$!{portalCDNQuery}"/>
+          <script src="$!{portalCDNPath}/portal/scripts/brightspace-migrator.js$!{portalCDNQuery}"></script>
+          <script type="text/template" id="nyuBrightspaceMigratorModalTemplate">
+            <div class="modal" tabindex="-1" role="dialog" id="nyuBrightspaceMigratorModal">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <strong class="modal-title">Brightspace Migration Helper</strong>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>
+                            Site
+                          </th>
+                          <th style="width: 140px">
+                            Term
+                          </th>
+                          <th style="width: 400px;">
+                            <span class="sr-only">Status and Actions</span>
+                          </th>
+                        </tr>
+                        <tr class="active">
+                          <td>
+                            <input type="text" class="form-control brightspace-migrator-filter-query"/>
+                          </td>
+                          <td>
+                            <select class="brightspace-migrator-filter-term"></select>
+                          </td>
+                          <td>
+                            <a class="brightspace-migrator-filter-clear" href="javascript:void(0);" style="display: none;">Clear filters</a>
+                          </td>
+                        </tr>
+                      </thead>
+                      <tbody><tr><td colspan="3">Loading your sites...</td></tr></tbody>
+                    </table>
+                  </div>
+                  <div class="modal-footer">
+                    <div class="pull-left text-left">
+                      <p>You will receive an email notification once your site(s) has/have been migrated to Brightspace. Note that this may take up to 48 hours.</p>
+                      <p>Migrated sites will be available within the "My Courses" widget in <a target="_blank" href="https://brightspace.nyu.edu/">NYU LMS (Brightspace)</a>.</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </script>
+          <script type="text/template" id="nyuBrightspaceMigratorStateTemplate">
+            <div style="display: none;" class="brightspace-migrator-state progress">
+              <div class="progress-bar brightspace-migrator-state-queued" role="progressbar" style="width: 25%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="1">Queued</div>
+              <div class="progress-bar brightspace-migrator-state-archived inactive" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="1">Archived</div>
+              <div class="progress-bar brightspace-migrator-state-uploaded inactive" role="progressbar" style="width: 25%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="1">Uploaded</div>
+              <div class="progress-bar brightspace-migrator-state-completed inactive" role="progressbar" style="width: 25%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="1">Completed</div>
+            </div>
+          </script>
+        #end
+
     </body>
 </html>

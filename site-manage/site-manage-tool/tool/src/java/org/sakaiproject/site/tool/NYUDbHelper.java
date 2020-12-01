@@ -431,6 +431,14 @@ public class NYUDbHelper {
 		return result;
 	}
 
+	private boolean equalsAndNonNull(String val1, String val2) {
+		if (val1 == null || val2 == null) {
+			return false;
+		}
+
+		return val1.equals(val2);
+	}
+
 	public List<String> getMatchedProviderIds(String termEid, List<String> providerIds, String action) {
 		List<String> result = new ArrayList<>();
 
@@ -440,24 +448,55 @@ public class NYUDbHelper {
 
 			String placeholders = providerIds.stream().map(e -> "?").collect(Collectors.joining(", "));
 
-			PreparedStatement ps = db.prepareStatement("select replace(cc.stem_name, ':', '_')" +
-				" from nyu_t_course_catalog cc" +
-				" inner join nyu_t_blocked_rosters br on (cc.stem_name = br.stem_name OR cc.acad_org = br.acad_org OR cc.acad_group = br.acad_group)" +
-				" inner join nyu_t_acad_session sess on sess.strm = cc.strm and sess.acad_career = cc.acad_career" +
-				" where br.action = ?" +
-				" and sess.cle_eid = ?" +
-				" and replace(cc.stem_name, ':', '_') in (" + placeholders + ")"); 
+			// Select candidate rosters in our set that MIGHT match one of the relevant
+			// blocked roster rules.  This is a coarse first-pass query that will pull back
+			// some false positives, and we'll whittle down the list in code momentarily.
+			PreparedStatement ps = db.prepareStatement("select" +
+								   "   br.strm as rule_strm," +
+								   "   br.acad_org as rule_acad_org," +
+								   "   br.acad_group as rule_acad_group," +
+								   "   br.stem_name as rule_stem_name," +
+								   "   cc.strm as roster_strm," +
+								   "   cc.acad_org as roster_acad_org," +
+								   "   cc.acad_group as roster_acad_group," +
+								   "   cc.stem_name as roster_stem_name," +
+								   "   replace(cc.stem_name, ':', '_') as roster_id" +
+								   " from nyu_t_course_catalog cc" +
+								   " inner join nyu_t_blocked_rosters br on (cc.stem_name = br.stem_name OR cc.acad_org = br.acad_org OR cc.acad_group = br.acad_group)" +
+								   " inner join nyu_t_acad_session sess on sess.strm = cc.strm and sess.acad_career = cc.acad_career" +
+								   " where br.action = ?" +
+								   "   and sess.cle_eid = ?" +
+								   "   and br.system = 'CLASSES'" +
+								   "   and replace(cc.stem_name, ':', '_') in (" + placeholders + ")");
 			ps.setString(1, action);
 			ps.setString(2, termEid);
 			for (int i=0; i<providerIds.size(); i++) {
-				ps.setString(i+3, providerIds.get(i));
+				ps.setString(i+3, providerIds.get(i).replace(":", "_"));
 			}
 
 			ResultSet rs = null;
 			try {
 				rs = ps.executeQuery();
 				while (rs.next()) {
-					result.add(rs.getString(1));
+					boolean matched = true;
+
+					if (equalsAndNonNull(rs.getString("rule_stem_name"), rs.getString("roster_stem_name"))) {
+						// If the stem names match, that's an immediate match.  Nothing more to check.
+					} else {
+						// Otherwise, AND together the non-null criteria from our rules
+						for (String field : new String[] { "strm", "acad_org", "acad_group" }) {
+							if ("acad_group".equals(field) && "ALL_DEPARTMENTS".equals(rs.getString("rule_acad_group"))) {
+								// Any department is OK
+								continue;
+							}
+
+							matched &= equalsAndNonNull(rs.getString("rule_" + field), rs.getString("roster_" + field));
+						}
+					}
+
+					if (matched) {
+						result.add(rs.getString("roster_id"));
+					}
 				}
 			} finally {
 				if (rs != null) { rs.close(); }

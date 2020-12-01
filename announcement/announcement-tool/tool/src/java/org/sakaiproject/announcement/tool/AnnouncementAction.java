@@ -4065,7 +4065,12 @@ public class AnnouncementAction extends PagedResourceActionII
 			// If we're on the workspace tab, we get everything.
 			// Don't do this if we're the super-user, since we'd be
 			// overwhelmed.
-			if (isOnWorkspaceTab() && !m_securityService.isSuperUser())
+			if (isOnWorkspaceTab() && isSynopticTool())
+			{
+			    // NYU: Don't preload anything in synoptic mode
+			    channelArrayFromConfigParameterValue = new String[] {};
+			}
+			else if (isOnWorkspaceTab() && !m_securityService.isSuperUser())
 			{
 				channelArrayFromConfigParameterValue = mergedAnnouncementList
 						.getAllPermittedChannels(new AnnouncementChannelReferenceMaker());
